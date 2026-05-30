@@ -54,6 +54,10 @@ modules = [
 | `relics-networking` | `stc.networking.enable` | DHCP, DNS Quad9, domaine de recherche |
 | `relics-impermanence` | `stc.impermanence.enable` | Rollback ZFS au démarrage, chemins persistants |
 | `relics-aws` | `stc.aws.enable` | Drivers EC2, NTP AWS, console série, extension EBS |
+| `relics-amd-gpu` | `stc.amdGpu.enable` | GPU AMD : VDPAU, VAAPI, pilotes 32 bits, KMS précoce optionnel |
+| `relics-pipewire` | `stc.pipewire.enable` | Pipewire : RTKit + ALSA 32 bits + compat PulseAudio |
+| `relics-plasma6` | `stc.plasma6.enable` | Bureau KDE Plasma 6 Wayland (SDDM + portail XDG) |
+| `relics-yubikey-system` | `stc.yubikey.enable` | Couche système YubiKey : pcscd + règles udev |
 | `relics-traefik` | `stc.traefik.enable` | Reverse proxy Traefik natif NixOS + Let's Encrypt |
 | `relics-vaultwarden` | `stc.vaultwarden.enable` | Serveur Vaultwarden (Bitwarden-compatible) |
 | `relics-hardening-kernel` | `stc.hardening.kernel.enable` | Sysctl noyau (ASLR, kptr_restrict, dmesg, etc.) |
@@ -70,11 +74,16 @@ modules = [
 |---------------|---------------------|-------|
 | `relics-kitty` | `stc.gui.kitty.enable` | Terminal Kitty + Nerd Fonts |
 | `relics-zen-browser` | `stc.gui.zen-browser.enable` | Zen Browser |
+| `relics-yubikey-user` | `stc.yubikey.enable` | Outils utilisateur YubiKey : ykman, détecteur de toucher, app OATH |
 
 ## Voir aussi
 
 - [Profils Cogitator](/fr/cogitator/) — reliques composées pour les cas d'usage courants
 - [Reliques de durcissement](/fr/relics/hardening/) — les quatre modules de durcissement en détail
+- [AMD GPU](/fr/relics/amd-gpu/) — relique GPU avec compatibilité gaming
+- [Pipewire](/fr/relics/pipewire/) — relique audio
+- [Plasma 6](/fr/relics/plasma6/) — relique bureau KDE Plasma 6
+- [YubiKey](/fr/relics/yubikey/) — configuration YubiKey en deux reliques
 - [Reliques Docker](/fr/relics/docker/) — Traefik, CrowdSec et notify
 - [AWS](/fr/relics/aws/) — drivers EC2 et configuration AWS
 - [Traefik](/fr/relics/traefik/) — reverse proxy natif NixOS

@@ -30,6 +30,8 @@ options. The profile just saves you from enabling each one individually.
 | `cogitator-hardening` | `stc.hardening.enable` | kernel + network + filesystem + SSH hardening |
 | `cogitator-vm` | `stc.cogitator.vm.enable` | fish shell, SSH, primary user, optional Docker, Nix GC |
 | `cogitator-docker-server` | `stc.cogitator.docker-server.enable` | Traefik + CrowdSec + ntfy + Docker daemon |
+| `cogitator-plasma` | `stc.cogitator.plasma.enable` | KDE Plasma 6 Wayland desktop + Pipewire audio |
+| `cogitator-gaming` | `stc.cogitator.gaming.enable` | AMD GPU + Pipewire + Steam |
 
 ### Home Manager Profiles
 
@@ -55,5 +57,7 @@ Use individual relics when:
 - [Hardening profile](/en/cogitator/hardening/)
 - [VM profile](/en/cogitator/vm/)
 - [Docker server profile](/en/cogitator/docker-server/)
+- [Plasma desktop profile](/en/cogitator/plasma/)
+- [Gaming profile](/en/cogitator/gaming/)
 - [Enginseer profile](/en/cogitator/enginseer/)
 - [Desktop profile](/en/cogitator/desktop/)

@@ -30,6 +30,8 @@ sous-jacentes. Le profil t'évite simplement d'activer chacune individuellement.
 | `cogitator-hardening` | `stc.hardening.enable` | Durcissement noyau + réseau + système de fichiers + SSH |
 | `cogitator-vm` | `stc.cogitator.vm.enable` | Shell fish, SSH, utilisateur principal, Docker optionnel, GC Nix |
 | `cogitator-docker-server` | `stc.cogitator.docker-server.enable` | Traefik + CrowdSec + ntfy + démon Docker |
+| `cogitator-plasma` | `stc.cogitator.plasma.enable` | Bureau KDE Plasma 6 Wayland + audio Pipewire |
+| `cogitator-gaming` | `stc.cogitator.gaming.enable` | GPU AMD + Pipewire + Steam |
 
 ### Profils Home Manager
 
@@ -55,5 +57,7 @@ Utilise des reliques individuelles quand :
 - [Profil de durcissement](/fr/cogitator/hardening/)
 - [Profil VM](/fr/cogitator/vm/)
 - [Profil serveur Docker](/fr/cogitator/docker-server/)
+- [Profil bureau Plasma](/fr/cogitator/plasma/)
+- [Profil gaming](/fr/cogitator/gaming/)
 - [Profil Enginseer](/fr/cogitator/enginseer/)
 - [Profil Desktop](/fr/cogitator/desktop/)

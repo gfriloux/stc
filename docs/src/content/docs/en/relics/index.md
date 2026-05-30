@@ -53,6 +53,10 @@ modules = [
 | `relics-networking` | `stc.networking.enable` | DHCP, Quad9 DNS, search domain |
 | `relics-impermanence` | `stc.impermanence.enable` | ZFS rollback at boot, persistent paths |
 | `relics-aws` | `stc.aws.enable` | EC2 drivers, AWS NTP, serial console, EBS extension |
+| `relics-amd-gpu` | `stc.amdGpu.enable` | AMD GPU: VDPAU, VAAPI, 32-bit drivers, optional early KMS |
+| `relics-pipewire` | `stc.pipewire.enable` | Pipewire: RTKit + ALSA 32-bit + PulseAudio compat |
+| `relics-plasma6` | `stc.plasma6.enable` | KDE Plasma 6 Wayland desktop (SDDM + XDG portal) |
+| `relics-yubikey-system` | `stc.yubikey.enable` | YubiKey system layer: pcscd + udev rules |
 | `relics-traefik` | `stc.traefik.enable` | Native NixOS Traefik reverse proxy + Let's Encrypt |
 | `relics-vaultwarden` | `stc.vaultwarden.enable` | Vaultwarden server (Bitwarden-compatible) |
 | `relics-hardening-kernel` | `stc.hardening.kernel.enable` | Kernel sysctl (ASLR, kptr_restrict, dmesg, etc.) |
@@ -69,11 +73,16 @@ modules = [
 |-------------|---------------|---------|
 | `relics-kitty` | `stc.gui.kitty.enable` | Kitty terminal + Nerd Fonts |
 | `relics-zen-browser` | `stc.gui.zen-browser.enable` | Zen Browser |
+| `relics-yubikey-user` | `stc.yubikey.enable` | YubiKey user tools: ykman, touch detector, OATH app |
 
 ## See Also
 
 - [Cogitator profiles](/en/cogitator/) — composed relics for common use cases
 - [Hardening relics](/en/relics/hardening/) — all four hardening modules in detail
+- [AMD GPU](/en/relics/amd-gpu/) — GPU relic with gaming compatibility
+- [Pipewire](/en/relics/pipewire/) — audio relic
+- [Plasma 6](/en/relics/plasma6/) — KDE Plasma 6 desktop relic
+- [YubiKey](/en/relics/yubikey/) — two-relic YubiKey setup
 - [Docker relics](/en/relics/docker/) — Traefik, CrowdSec, and notify
 - [AWS](/en/relics/aws/) — EC2 drivers and AWS configuration
 - [Traefik](/en/relics/traefik/) — native NixOS reverse proxy

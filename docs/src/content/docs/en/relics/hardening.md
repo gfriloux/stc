@@ -17,13 +17,23 @@ Applies sysctl parameters that reduce the kernel attack surface:
 | Category | What it does |
 |----------|-------------|
 | Memory layout | Full ASLR (`randomize_va_space = 2`), hide kernel pointers (`kptr_restrict = 2`), restrict dmesg |
-| Unprivileged capabilities | Block eBPF, perf, and user namespace creation for unprivileged users |
+| Unprivileged capabilities | Block eBPF and perf for unprivileged users; block user namespace creation (see gaming note) |
 | kexec / SysRq | Disable kexec (kernel replacement attack vector), disable SysRq |
 | Core dumps | Disable entirely — core dumps can expose secrets and private keys |
 | Filesystem | Protect hardlinks, symlinks, FIFOs, and regular files from abuse |
 
 Core dumps are also disabled via PAM resource limits (`security.pam.loginLimits`) as
 belt-and-suspenders.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `stc.hardening.kernel.gaming` | bool | `false` | Skip `kernel.unprivileged_userns_clone = 0` — Steam requires user namespaces for its containerised runtime |
+
+:::caution[Steam and user namespaces]
+`kernel.unprivileged_userns_clone = 0` prevents Steam from launching. Set
+`stc.hardening.kernel.gaming = true` on gaming machines. All other kernel
+restrictions remain active.
+:::
 
 ## Network Hardening
 
@@ -58,20 +68,29 @@ and other container setups.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `stc.hardening.filesystem.tmpSize` | string | `"2G"` | Maximum size of the /tmp tmpfs |
+| `stc.hardening.filesystem.shmSize` | string | `"256M"` | Maximum size of the /dev/shm tmpfs |
+| `stc.hardening.filesystem.gaming` | bool | `false` | Remove `noexec` from /tmp and /dev/shm — required for Wine/Proton and DXVK |
 
 Mounts three filesystems with restrictive options:
 
 | Mount | What changes |
 |-------|-------------|
-| `/tmp` | tmpfs with `nosuid,noexec,nodev`, size-capped |
+| `/tmp` | tmpfs with `nosuid,noexec,nodev`, size-capped — `noexec` omitted when `gaming = true` |
 | `/proc` | `hidepid=2,gid=proc` — users only see their own processes; system services retain access via the `proc` group |
-| `/dev/shm` | tmpfs with `nosuid,noexec,nodev`, capped at 256 MiB |
+| `/dev/shm` | tmpfs with `nosuid,noexec,nodev`, size-capped — `noexec` omitted when `gaming = true` |
 
 The `proc` group is created automatically. `systemd-logind` is added to it so
 session management keeps working.
 
 The `/tmp noexec` mount prevents attackers from writing and executing code in a
 world-writable directory — a classic exploitation vector.
+
+:::caution[Wine, Proton, and DXVK]
+Wine and Proton extract and run binaries under `/tmp`. DXVK and VKD3D-Proton
+map executable code into `/dev/shm`. Set `stc.hardening.filesystem.gaming = true`
+on gaming machines and raise `shmSize` to at least `2G` for heavy workloads.
+The `/proc` hardening is unaffected.
+:::
 
 ## SSH Hardening
 
@@ -116,6 +135,22 @@ modules = [
 
   # Firewall is managed separately — open ports here as needed:
   networking.firewall.allowedTCPPorts = [ 22 80 443 ];
+}
+```
+
+Gaming machine with hardening:
+
+```nix
+{
+  stc.hardening.kernel.enable = true;
+  stc.hardening.kernel.gaming = true;      # allow user namespaces for Steam
+
+  stc.hardening.filesystem.enable = true;
+  stc.hardening.filesystem.gaming = true;  # allow exec in /tmp and /dev/shm
+  stc.hardening.filesystem.shmSize = "4G"; # DXVK/VKD3D need more than 256M
+
+  stc.hardening.network.enable = true;
+  stc.hardening.ssh.enable = true;
 }
 ```
 
