@@ -15,7 +15,9 @@ just run      # boots in QEMU/KVM
 just ssh      # SSH as admin on port 2222 (password: changeme)
 ```
 
-Prerequisites: Nix with flakes enabled, host with KVM (`/dev/kvm` accessible). That's it — qemu is provided by the `run` recipe.
+:::tip[RITE · MAGOS COUNSEL]
+Prerequisites: Nix with flakes enabled and a host with KVM (`/dev/kvm` accessible). That's it — qemu is provided by the `run` recipe.
+:::
 
 ## Want an AWS Server?
 
@@ -45,6 +47,10 @@ Add STC as an input in your `flake.nix`:
   };
 }
 ```
+
+:::danger[INTERDICTION · WARNING SEAL]
+Never declare system configuration inside STC itself — that is technical heresy. STC is a toolbox: your production flake declares the system, STC provides the building blocks.
+:::
 
 ### Using a NixOS Module
 

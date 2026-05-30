@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" class="stc-emblem">
+  <defs>
+    <radialGradient id="optic" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff5a48"></stop>
+      <stop offset="55%" stop-color="#d42020"></stop>
+      <stop offset="100%" stop-color="#6e0c0c"></stop>
+    </radialGradient>
+  </defs>
+  
+  <path class="stc-emblem-cog" d="M52.79,10.10 L56.95,3.52 L63.91,5.11 L64.80,12.84 L69.83,15.26 L76.43,11.13 L82.01,15.59 L79.46,22.94 L82.94,27.30 L90.67,26.45 L93.77,32.88 L88.28,38.40 L89.52,43.84 L96.86,46.43 L96.86,53.57 L89.52,56.16 L88.28,61.60 L93.77,67.12 L90.67,73.55 L82.94,72.70 L79.46,77.06 L82.01,84.41 L76.43,88.87 L69.83,84.74 L64.80,87.16 L63.91,94.89 L56.95,96.48 L52.79,89.90 L47.21,89.90 L43.05,96.48 L36.09,94.89 L35.20,87.16 L30.17,84.74 L23.57,88.87 L17.99,84.41 L20.54,77.06 L17.06,72.70 L9.33,73.55 L6.23,67.12 L11.72,61.60 L10.48,56.16 L3.14,53.57 L3.14,46.43 L10.48,43.84 L11.72,38.40 L6.23,32.88 L9.33,26.45 L17.06,27.30 L20.54,22.94 L17.99,15.59 L23.57,11.13 L30.17,15.26 L35.20,12.84 L36.09,5.11 L43.05,3.52 L47.21,10.10 Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"></path>
+  
+  <circle cx="50" cy="50" r="33.5" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.55"></circle>
+  <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" stroke-width="2"></circle>
+  
+  <g stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.85">
+    <line x1="50" y1="20" x2="50" y2="30"></line>
+    <line x1="50" y1="70" x2="50" y2="80"></line>
+    <line x1="20" y1="50" x2="30" y2="50"></line>
+    <line x1="70" y1="50" x2="80" y2="50"></line>
+  </g>
+  
+  <path d="M35 44 Q50 33 65 44" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></path>
+  
+  <path d="M38 46 L45 46 L43 52 L40 52 Z" fill="currentColor" opacity="0.92"></path>
+  <path d="M62 46 L55 46 L57 52 L60 52 Z" fill="currentColor" opacity="0.92"></path>
+  
+  <circle class="stc-emblem-optic" cx="50" cy="50" r="4.6" fill="url(#optic)"></circle>
+  <circle cx="50" cy="50" r="4.6" fill="none" stroke="currentColor" stroke-width="1.2"></circle>
+  
+  <g stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+    <line x1="44" y1="59" x2="44" y2="65"></line>
+    <line x1="48" y1="59.5" x2="48" y2="66.5"></line>
+    <line x1="52" y1="59.5" x2="52" y2="66.5"></line>
+    <line x1="56" y1="59" x2="56" y2="65"></line>
+  </g>
+  <path d="M41 58 Q50 56 59 58" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+</svg>

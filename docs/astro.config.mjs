@@ -11,8 +11,20 @@ export default defineConfig({
       description:
         'The sacred repository of the Adeptus Technicus — a Nix module library for the discerning Techpriest.',
       logo: {
-        alt: 'Adeptus Mechanicus Cog',
-        src: './src/assets/stc-logo.svg',
+        alt: 'STC · Adeptus Mechanicus Cog',
+        src: './src/assets/stc-emblem.svg',
+      },
+      head: [
+        { tag: 'link', attrs: { rel: 'preconnect', href: 'https://fonts.googleapis.com' } },
+        { tag: 'link', attrs: { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: true } },
+        { tag: 'link', attrs: {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap',
+        } },
+        { tag: 'script', attrs: { src: '/stc/stc-fx.js', defer: true } },
+      ],
+      components: {
+        Hero: './src/components/Hero.astro',
       },
       social: [
         {

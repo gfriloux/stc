@@ -1,39 +1,429 @@
-/* STC — Adeptus Mechanicus Color Palette
-   The machine does not forgive. Neither does bad CSS. */
+/* ============================================================================
+   STC · ADEPTUS MECHANICUS THEME FOR STARLIGHT
+   ----------------------------------------------------------------------------
+   Drop-in replacement for docs/src/styles/stc.css  (registered via
+   starlight({ customCss: ['./src/styles/stc.css'] })).
 
+   Targets Starlight's REAL DOM. Class names verified against Starlight ~0.30+.
+   If you bump Starlight and something looks off, the few selectors most likely
+   to drift are flagged with  [VERIFY]  — re-check them in devtools.
+
+   Fonts are loaded via the `head` array in astro.config (see snippet) — not here.
+   "The machine does not forgive. Neither does bad CSS."
+   ========================================================================= */
+
+/* ============================ TOKENS · DARK ============================= */
 :root {
-  /* Mechanicus Red — the sacred color of the Adeptus Mechanicus */
-  --sl-color-accent-low: #3d0a0a;
-  --sl-color-accent: #a01010;
-  --sl-color-accent-high: #d44040;
+  /* Mechanicus red */
+  --stc-red-deep:   #3d0a0a;
+  --stc-red:        #c1141a;
+  --stc-red-bright: #ec4a3a;
+  --stc-red-glow:   rgba(236, 74, 58, 0.55);
+  /* Brass / sanctified gold */
+  --stc-brass-deep:   #6f531a;
+  --stc-brass:        #c9a227;
+  --stc-brass-bright: #ecca6a;
+  /* Warm void + parchment ink */
+  --stc-bg:        #0c0906;
+  --stc-bg-2:      #120d08;
+  --stc-bg-3:      #181009;
+  --stc-bg-inset:  #070503;
+  --stc-ink:       #efe6d2;
+  --stc-text:      #c9bca4;
+  --stc-text-dim:  #968a70;
+  --stc-text-faint:#6c624f;
+  --stc-line:      #2a2017;
+  --stc-line-2:    #3a2c1a;
+  --stc-bone:      #e8ddc8;
+  --stc-hazard-a:  #c9a227;
+  --stc-hazard-b:  #100b06;
 
-  /* Parchment and steel tones for a grimdarker feel */
-  --sl-color-white: #f5f0e8;
-  --sl-color-gray-1: #e8e0d0;
-  --sl-color-gray-2: #c8bca8;
-  --sl-color-gray-3: #8c7d6a;
-  --sl-color-gray-4: #5a4e3e;
-  --sl-color-gray-5: #2e261e;
-  --sl-color-gray-6: #1a1410;
-  --sl-color-black: #0d0b08;
+  /* fonts (families loaded in <head>) */
+  --stc-font-display: "Cinzel", Georgia, serif;
+  --stc-font-body: "IBM Plex Sans", system-ui, sans-serif;
+  --stc-font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* effect dials (driven by stc-fx.js console) */
+  --stc-scanline-opacity: 0.05;
+  --stc-grain-opacity: 0.045;
+  --stc-glow-strength: 1;
+  --stc-anim: 1;
+
+  /* ---- Starlight bridge ---- */
+  --sl-color-accent-low:  var(--stc-red-deep);
+  --sl-color-accent:      var(--stc-red);
+  --sl-color-accent-high: var(--stc-red-bright);
+  --sl-color-white:   var(--stc-ink);
+  --sl-color-gray-1:  #e3d8c4;
+  --sl-color-gray-2:  #c9bca4;
+  --sl-color-gray-3:  #968a70;
+  --sl-color-gray-4:  #6c624f;
+  --sl-color-gray-5:  #2a2017;
+  --sl-color-gray-6:  #181009;
+  --sl-color-black:   var(--stc-bg);
+  --sl-color-bg:         var(--stc-bg);
+  --sl-color-bg-nav:     var(--stc-bg-2);
+  --sl-color-bg-sidebar: var(--stc-bg-2);
+  --sl-color-hairline:        var(--stc-line);
+  --sl-color-hairline-light:  var(--stc-line-2);
+  --sl-color-hairline-shade:  #1a130b;
+  --sl-color-text-accent: var(--stc-brass-bright);
+
+  /* global type */
+  --sl-font: var(--stc-font-body);
+  --sl-font-mono: var(--stc-font-mono);
+  --sl-nav-height: 4rem;
 }
 
-/* Dark mode — the default mode for a proper Techpriest */
-:root[data-theme='dark'] {
-  --sl-color-bg: #0f0c08;
-  --sl-color-bg-nav: #1a1410;
-  --sl-color-bg-sidebar: #120f0a;
-  --sl-color-hairline-light: #2a2018;
-  --sl-color-hairline-shade: #1e1810;
+/* ============================ TOKENS · LIGHT =========================== */
+:root[data-theme="light"] {
+  --stc-red:        #9c1015;
+  --stc-red-bright: #c4231b;
+  --stc-red-glow:   rgba(156, 16, 21, 0.30);
+  --stc-brass-deep:   #6a4f10;
+  --stc-brass:        #8a6a16;
+  --stc-brass-bright: #b08a22;
+  --stc-bg:        #d8cab0;
+  --stc-bg-2:      #e2d6bf;
+  --stc-bg-3:      #ece3d1;
+  --stc-bg-inset:  #20180e;
+  --stc-ink:       #211a10;
+  --stc-text:      #3a2f1f;
+  --stc-text-dim:  #6b5c44;
+  --stc-text-faint:#8a7959;
+  --stc-line:      #c2b08d;
+  --stc-line-2:    #b09a6f;
+  --stc-bone:      #4a3f2c;
+  --stc-scanline-opacity: 0.025;
+  --stc-grain-opacity: 0.06;
+
+  --sl-color-gray-1:  #2a2113;
+  --sl-color-gray-2:  #3a2f1f;
+  --sl-color-gray-3:  #6b5c44;
+  --sl-color-gray-4:  #8a7959;
+  --sl-color-gray-5:  #c2b08d;
+  --sl-color-gray-6:  #e2d6bf;
+  --sl-color-hairline-shade: #cabd9c;
+  --sl-color-text-accent: var(--stc-red);
 }
 
-/* Slightly more personality in the hero */
-.hero > .sl-flex {
-  gap: 2rem;
+/* ============================ BASE / ATMOSPHERE ======================== */
+body {
+  color: var(--stc-text);
+  -webkit-font-smoothing: antialiased;
+}
+/* sanctum vignette + faint forge-light glow */
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(1200px 700px at 80% -8%, color-mix(in oklab, var(--stc-red) 13%, transparent), transparent 60%),
+    radial-gradient(900px 600px at 4% 2%, color-mix(in oklab, var(--stc-brass) 6%, transparent), transparent 55%),
+    radial-gradient(1400px 1000px at 50% 120%, #000 0%, transparent 55%);
+}
+:root[data-theme="light"] body::before { opacity: .5; }
+
+::selection { background: var(--stc-red); color: #fff; }
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: var(--stc-bg-inset); }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(var(--stc-brass-deep), #2a2017);
+  border: 2px solid var(--stc-bg-inset);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--stc-brass); }
+
+/* full-screen texture overlays — injected by stc-fx.js */
+.stc-scanlines {
+  position: fixed; inset: 0; z-index: 9990; pointer-events: none;
+  mix-blend-mode: overlay; opacity: var(--stc-scanline-opacity);
+  background-image: repeating-linear-gradient(to bottom,#000 0,#000 1px,transparent 1px,transparent 3px);
+}
+.stc-grain {
+  position: fixed; inset: -50%; z-index: 9991; pointer-events: none;
+  opacity: var(--stc-grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: stc-grain calc(8s / var(--stc-anim,1)) steps(6) infinite;
+}
+@keyframes stc-grain {
+  0%{transform:translate(0,0)}20%{transform:translate(-4%,3%)}40%{transform:translate(3%,-2%)}
+  60%{transform:translate(-2%,4%)}80%{transform:translate(4%,-3%)}100%{transform:translate(0,0)}
 }
 
-/* Code blocks with more contrast */
+/* ================================ HEADER =============================== */
+/* [VERIFY] Starlight header wrapper = `.header` inside `<header>` */
+.header {
+  background: linear-gradient(var(--stc-bg-2), color-mix(in oklab, var(--stc-bg-2) 86%, #000));
+  border-bottom: 1px solid var(--stc-line-2);
+  box-shadow: 0 1px 0 #000, 0 10px 30px -18px #000;
+}
+header.header::after { /* hazard underline */
+  content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 2px;
+  background-image: repeating-linear-gradient(135deg,
+    color-mix(in oklab, var(--stc-brass) 60%, transparent) 0 8px, transparent 8px 16px);
+  opacity: .5; pointer-events: none;
+}
+/* [VERIFY] site title link */
+a.site-title {
+  font-family: var(--stc-font-display); font-weight: 800;
+  letter-spacing: .2em; color: var(--stc-ink); gap: .6rem;
+}
+a.site-title img { filter: drop-shadow(0 0 6px color-mix(in oklab, var(--stc-red) 40%, transparent)); }
+
+/* ================================ SIDEBAR ============================== */
+.sidebar { border-inline-end: 1px solid var(--stc-line-2);
+  background: linear-gradient(var(--stc-bg-2), var(--stc-bg)); }
+/* group headings — Starlight renders these as <summary> label / .group-label */
+.sidebar-content .group-label > span,            /* [VERIFY] */
+.sidebar-content summary .group-label {
+  font-family: var(--stc-font-display); font-weight: 700; font-size: .78rem;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--stc-brass);
+  display: inline-flex; align-items: center; gap: .5rem;
+}
+.sidebar-content .group-label > span::before {
+  content: ""; width: 7px; height: 7px; flex: none; transform: rotate(45deg);
+  background: var(--stc-red); box-shadow: 0 0 6px var(--stc-red-glow);
+}
+.sidebar-content a {
+  font-size: .86rem; color: var(--stc-text-dim);
+  border-inline-start: 2px solid transparent; transition: .15s;
+}
+.sidebar-content a:hover {
+  color: var(--stc-ink); background: color-mix(in oklab, var(--stc-brass) 7%, transparent);
+  border-inline-start-color: var(--stc-brass-deep);
+}
+/* active page */
+.sidebar-content a[aria-current="page"] {
+  color: var(--stc-ink); font-weight: 600;
+  background: linear-gradient(90deg, color-mix(in oklab, var(--stc-red) 18%, transparent), transparent);
+  border-inline-start-color: var(--stc-red-bright);
+}
+
+/* ============================== RIGHT TOC ============================== */
+.right-sidebar { border-inline-start: 1px solid transparent; }
+starlight-toc a {
+  border-inline-start: 1px solid var(--stc-line-2); color: var(--stc-text-dim);
+  font-size: .8rem; transition: .15s;
+}
+starlight-toc a:hover { color: var(--stc-ink); border-inline-start-color: var(--stc-brass); }
+starlight-toc a[aria-current="true"] {
+  color: var(--stc-red-bright); border-inline-start-color: var(--stc-red-bright);
+  text-shadow: 0 0 12px var(--stc-red-glow);
+}
+/* "On this page" / right-sidebar heading */
+.right-sidebar h2 {
+  font-family: var(--stc-font-mono); font-size: .66rem; letter-spacing: .26em;
+  text-transform: uppercase; color: var(--stc-brass);
+}
+
+/* ============================ MARKDOWN CONTENT ========================= */
+.sl-markdown-content { color: var(--stc-text); }
+.sl-markdown-content h1, .sl-markdown-content h2,
+.sl-markdown-content h3, .sl-markdown-content h4 {
+  font-family: var(--stc-font-display); color: var(--stc-ink); letter-spacing: .01em;
+}
+/* page title (rendered by PageTitle => h1.sl-markdown-content? actually .content-panel h1) */
+.content-panel h1, .sl-markdown-content h1 {
+  font-weight: 800; letter-spacing: .03em;
+  text-shadow: 0 1px 0 #000, 0 2px 22px color-mix(in oklab, var(--stc-red) 26%, transparent);
+}
+.sl-markdown-content h2 {
+  font-weight: 700; position: relative; padding-bottom: .4rem; margin-top: 2.6rem;
+}
+.sl-markdown-content h2::after {
+  content: ""; position: absolute; left: 0; bottom: 0; width: 100%; height: 1px;
+  background: linear-gradient(90deg, var(--stc-brass-deep), transparent 75%);
+}
+.sl-markdown-content h2::before {
+  content: ""; position: absolute; left: 0; bottom: -1px; width: 46px; height: 2px;
+  background: var(--stc-red); box-shadow: 0 0 10px var(--stc-red-glow);
+}
+.sl-markdown-content h3 { color: var(--stc-bone); }
+.sl-markdown-content strong { color: var(--stc-ink); }
+.sl-markdown-content a {
+  color: var(--stc-brass-bright);
+  border-bottom: 1px solid color-mix(in oklab, var(--stc-brass) 40%, transparent);
+  text-decoration: none;
+}
+.sl-markdown-content a:hover { color: var(--stc-red-bright); border-bottom-color: var(--stc-red-bright); }
+/* inline code */
+.sl-markdown-content :not(pre) > code {
+  font-family: var(--stc-font-mono); font-size: .84em;
+  background: var(--stc-bg-inset); color: var(--stc-brass-bright);
+  border: 1px solid var(--stc-line-2); border-radius: 0; padding: .05em .4em;
+}
+/* list markers → red diamonds */
+.sl-markdown-content ul:not(.not-content ul) > li::marker { color: var(--stc-red); }
+
+/* ================================ CARDS =============================== */
+/* Starlight <Card> => .card ; <CardGrid> => .card-grid */
+.sl-markdown-content .card {
+  background: linear-gradient(var(--stc-bg-3), var(--stc-bg-2));
+  border: 1px solid var(--stc-line-2); border-radius: 0; position: relative;
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  transition: .22s;
+}
+.sl-markdown-content .card::before {
+  content: ""; position: absolute; top: 10px; left: 10px; width: 14px; height: 14px;
+  border-top: 2px solid var(--stc-brass-deep); border-left: 2px solid var(--stc-brass-deep); transition: .22s;
+}
+.sl-markdown-content .card:hover {
+  border-color: var(--stc-red); transform: translateY(-3px);
+  box-shadow: 0 18px 40px -22px #000, 0 0 calc(24px*var(--stc-glow-strength)) color-mix(in oklab,var(--stc-red) 20%, transparent);
+}
+.sl-markdown-content .card:hover::before { border-color: var(--stc-red-bright); width: 18px; height: 18px; }
+.sl-markdown-content .card .title {
+  font-family: var(--stc-font-display); font-weight: 700; letter-spacing: .06em; color: var(--stc-ink);
+}
+/* Starlight card icon sits in .card .icon */
+.sl-markdown-content .card .icon {
+  color: var(--stc-brass); background: var(--stc-bg-inset);
+  border: 1px solid var(--stc-line-2); border-radius: 0; padding: .35rem;
+}
+.sl-markdown-content .card:hover .icon { color: var(--stc-red-bright); border-color: var(--stc-red); }
+
+/* ================================ ASIDES ============================== */
+/* Starlight aside => aside.starlight-aside.starlight-aside--TYPE
+   __title / __icon inside. Renamed labels come from i18n (see HANDOFF). */
+.starlight-aside {
+  border-radius: 0; border: 1px solid color-mix(in oklab, var(--stc-asd, var(--stc-brass)) 35%, var(--stc-line));
+  border-inline-start: 4px solid var(--stc-asd, var(--stc-brass));
+  background: color-mix(in oklab, var(--stc-asd, var(--stc-brass)) 8%, var(--stc-bg-3));
+  box-shadow: -4px 0 12px -6px color-mix(in oklab, var(--stc-asd, var(--stc-brass)) 60%, transparent);
+}
+.starlight-aside__title {
+  font-family: var(--stc-font-display); font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--stc-asd, var(--stc-brass));
+}
+.starlight-aside--note    { --stc-asd: #5a8fb0; }
+.starlight-aside--tip     { --stc-asd: var(--stc-brass); }
+.starlight-aside--caution { --stc-asd: #d99a2b; }
+.starlight-aside--danger  { --stc-asd: var(--stc-red-bright);
+  background:
+    repeating-linear-gradient(135deg, transparent 0 22px, color-mix(in oklab,var(--stc-red) 7%, transparent) 22px 24px),
+    color-mix(in oklab, var(--stc-red) 9%, var(--stc-bg-3));
+}
+
+/* ===================== CODE · EXPRESSIVE CODE ========================= */
+/* Cogitator-terminal treatment of EC frames */
 .expressive-code {
-  --ec-frm-edTabBarBg: #1a1410;
-  --ec-frm-edTabBarBrdBtmCol: #a01010;
+  --ec-brdRad: 0px;
+  --ec-brdCol: var(--stc-line-2);
+  --ec-codeBg: var(--stc-bg-inset);
+  --ec-frm-edBg: var(--stc-bg-inset);
+  --ec-frm-trmBg: linear-gradient(#1c1409, #140e07);
+  --ec-frm-edTabBarBg: linear-gradient(#1c1409, #140e07);
+  --ec-frm-edTabBarBrdBtmCol: var(--stc-red);
+  --ec-frm-edActTabBg: var(--stc-bg-inset);
+  --ec-frm-edActTabIndTopCol: var(--stc-red-bright);
+  --ec-frm-frameBoxShdCol: 0 14px 30px -22px #000;
+  --ec-frm-trmTtbDotsFg: var(--stc-brass-deep);
+  --ec-frm-trmTtbBg: linear-gradient(#1c1409, #140e07);
+  --ec-frm-trmTtbBrdBtmCol: var(--stc-red);
+  --ec-uiFontFam: var(--stc-font-mono);
+  --ec-codeFontFam: var(--stc-font-mono);
+  font-size: .9rem;
+}
+.expressive-code .frame {
+  border: 1px solid var(--stc-line-2); position: relative; overflow: hidden;
+}
+/* terminal/editor title → brass mono caps */
+.expressive-code .frame .title {
+  font-family: var(--stc-font-mono); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--stc-brass) !important; font-size: .68rem;
+}
+:root[data-theme="light"] .expressive-code { color-scheme: dark; } /* keep code dark in light mode */
+
+/* ================================ TABLES ============================== */
+.sl-markdown-content table { border-collapse: collapse; border: 1px solid var(--stc-line-2); }
+.sl-markdown-content thead th {
+  background: var(--stc-bg-3); border-bottom: 1px solid var(--stc-red);
+  font-family: var(--stc-font-mono); font-size: .66rem; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--stc-brass); text-align: left;
+}
+.sl-markdown-content td, .sl-markdown-content th { border: none; border-bottom: 1px solid var(--stc-line); padding: .65rem 1rem; }
+.sl-markdown-content tbody tr:nth-child(even) { background: color-mix(in oklab, var(--stc-brass) 3%, transparent); }
+.sl-markdown-content tbody tr:hover { background: color-mix(in oklab, var(--stc-red) 8%, transparent); }
+
+/* ====================== HERO (splash) =================================
+   The markup comes from the Hero.astro override; classes are .stc-hero*.
+   Kept here so the override needs no <style> of its own.            */
+.stc-hero { position: relative; overflow: hidden; padding: 4.5rem 0 1rem; }
+.stc-hero-grid {
+  position: absolute; inset: 0; z-index: 0; opacity: .5;
+  background-image:
+    linear-gradient(color-mix(in oklab,var(--stc-line) 60%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab,var(--stc-line) 60%, transparent) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: radial-gradient(120% 110% at 70% 30%, #000 35%, transparent 78%);
+}
+.stc-hero-cog {
+  position: absolute; right: -90px; top: 50%; translate: 0 -50%;
+  width: 540px; height: 540px; color: var(--stc-brass); opacity: .13; z-index: 0; pointer-events: none;
+  animation: stc-spin calc(120s / var(--stc-anim,1)) linear infinite;
+}
+.stc-hero-cog--inner { width: 300px; height: 300px; right: 40px; opacity: .1; color: var(--stc-red);
+  animation: stc-spin-rev calc(80s / var(--stc-anim,1)) linear infinite; }
+.stc-hero-inner { position: relative; z-index: 2; max-width: 42rem; }
+.stc-hero-emblem {
+  width: 88px; height: 88px; color: var(--stc-brass); margin-bottom: 1.4rem;
+  filter: drop-shadow(0 0 18px color-mix(in oklab,var(--stc-red) 45%, transparent));
+}
+.stc-hero-emblem .stc-emblem-cog { animation: stc-spin calc(60s / var(--stc-anim,1)) linear infinite;
+  transform-origin: 50% 50%; transform-box: fill-box; }
+.stc-eyebrow {
+  font-family: var(--stc-font-mono); font-size: .7rem; letter-spacing: .32em;
+  text-transform: uppercase; color: var(--stc-brass);
+  display: flex; align-items: center; gap: .6rem; margin-bottom: .4rem;
+}
+.stc-eyebrow::before { content: ""; width: 22px; height: 1px; background: var(--stc-brass); }
+.stc-hero-title {
+  font-family: var(--stc-font-display); font-weight: 800; line-height: 1.02; letter-spacing: .03em;
+  font-size: clamp(2.4rem, 6vw, 4.2rem); color: var(--stc-ink); margin: 0 0 .3rem;
+  text-shadow: 0 2px 0 #000, 0 0 40px color-mix(in oklab,var(--stc-red) 28%, transparent);
+}
+.stc-hero-title .accent { color: var(--stc-red-bright); }
+.stc-hero-rule { width: 200px; height: 3px; margin: 1.2rem 0 1.4rem;
+  background-image: repeating-linear-gradient(135deg, var(--stc-brass) 0 9px, var(--stc-hazard-b) 9px 18px); }
+.stc-hero-tagline {
+  font-family: var(--stc-font-mono); font-size: .95rem; line-height: 1.9;
+  color: var(--stc-text); white-space: pre-line;
+}
+.stc-caret { display: inline-block; width: 9px; height: 1.05em; vertical-align: -2px;
+  background: var(--stc-red-bright); margin-left: 3px; box-shadow: 0 0 8px var(--stc-red-glow);
+  animation: stc-blink 1s steps(1) infinite; }
+/* hero action buttons (.action is Starlight's class) */
+.stc-hero .actions, .stc-hero-actions { display: flex; flex-wrap: wrap; gap: .9rem; margin-top: 2rem; }
+.sl-markdown-content .action, .stc-hero .action {
+  display: inline-block; padding: .6rem 1.4rem; text-decoration: none;
+  font-family: var(--stc-font-mono); font-size: .8rem; letter-spacing: .12em; text-transform: uppercase;
+  border-radius: 0; border: 1px solid var(--stc-line-2); color: var(--stc-ink);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+.action.primary, .stc-hero .action.primary {
+  color: #fff; border-color: var(--stc-red);
+  background: linear-gradient(color-mix(in oklab, var(--stc-red) 55%, #1a0606), var(--stc-red-deep));
+  box-shadow: 0 0 calc(16px*var(--stc-glow-strength)) color-mix(in oklab,var(--stc-red) 40%, transparent);
+}
+
+/* ============================== PAGINATION ============================ */
+.pagination-links a {
+  border: 1px solid var(--stc-line-2); border-radius: 0; background: var(--stc-bg-2);
+}
+.pagination-links a:hover { border-color: var(--stc-brass-deep); }
+.pagination-links a span:first-child { color: var(--stc-brass); font-family: var(--stc-font-mono);
+  font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; }
+.pagination-links a .link-title { font-family: var(--stc-font-display); color: var(--stc-ink); }
+
+/* ============================== KEYFRAMES ============================= */
+@keyframes stc-spin { to { transform: rotate(360deg); } }
+@keyframes stc-spin-rev { to { transform: rotate(-360deg); } }
+@keyframes stc-blink { 50% { opacity: 0; } }
+@keyframes stc-rise { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+
+.stc-reveal { opacity: 0; }
+.stc-reveal.is-in { animation: stc-rise .7s cubic-bezier(.2,.7,.2,1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stc-grain, .stc-hero-cog, .stc-hero-emblem .stc-emblem-cog,
+  .expressive-code .frame::after { animation: none; }
+  .stc-reveal, .stc-reveal.is-in { animation: none; opacity: 1; }
 }
