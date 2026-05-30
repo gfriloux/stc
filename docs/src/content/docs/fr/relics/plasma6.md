@@ -20,6 +20,7 @@ entrées (libinput) sont inclus. Le serveur X11 est désactivé.
 | `stc.plasma6.enable` | bool | `false` | Active KDE Plasma 6 |
 | `stc.plasma6.keyboardLayout` | string | `"us"` | Disposition clavier xkb pour SDDM et Plasma |
 | `stc.plasma6.sddmTheme` | string | `""` | Nom du thème SDDM — chaîne vide utilise le thème par défaut de SDDM |
+| `stc.plasma6.wayland` | bool | `true` | Utilise Wayland pour le greeter SDDM. Mettre à `false` pour revenir à X11 (GPU anciens ou incompatibles). |
 
 ### `sddmTheme`
 
@@ -36,7 +37,7 @@ stc.plasma6.sddmTheme = "catppuccin-mocha-mauve";
 
 ```
 services.displayManager.sddm.enable = true
-services.displayManager.sddm.wayland.enable = true
+services.displayManager.sddm.wayland.enable = <wayland>
 services.displayManager.sddm.theme = <sddmTheme>
 services.desktopManager.plasma6.enable = true
 services.gvfs.enable = true

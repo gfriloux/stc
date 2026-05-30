@@ -19,6 +19,7 @@ and file picker integration. Thumbnail generation (tumbler), virtual filesystem
 | `stc.plasma6.enable` | bool | `false` | Enable KDE Plasma 6 |
 | `stc.plasma6.keyboardLayout` | string | `"us"` | xkb keyboard layout for SDDM and Plasma |
 | `stc.plasma6.sddmTheme` | string | `""` | SDDM theme name — empty string uses SDDM default |
+| `stc.plasma6.wayland` | bool | `true` | Use Wayland for the SDDM greeter. Set to `false` to fall back to X11 (older or incompatible GPUs). |
 
 ### `sddmTheme`
 
@@ -34,7 +35,7 @@ stc.plasma6.sddmTheme = "catppuccin-mocha-mauve";
 
 ```
 services.displayManager.sddm.enable = true
-services.displayManager.sddm.wayland.enable = true
+services.displayManager.sddm.wayland.enable = <wayland>
 services.displayManager.sddm.theme = <sddmTheme>
 services.desktopManager.plasma6.enable = true
 services.gvfs.enable = true

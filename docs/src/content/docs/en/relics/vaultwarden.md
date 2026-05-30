@@ -15,6 +15,7 @@ Runs Vaultwarden, a Bitwarden-compatible server written in Rust, as a NixOS serv
 | `stc.vaultwarden.hostname` | string | — | Public domain name (used for Traefik route). **Required.** |
 | `stc.vaultwarden.backup` | bool | `false` | Enable periodic backups to `/var/backup/vaultwarden`. |
 | `stc.vaultwarden.signupsDomains` | list[string] | `[]` | Restrict signups to these email domains. Empty list = all domains accepted. |
+| `stc.vaultwarden.showPasswordHint` | bool | `false` | Show password hints on the login page. Disabled by default for security. |
 
 ## What it does
 

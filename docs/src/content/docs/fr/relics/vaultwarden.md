@@ -15,6 +15,7 @@ Lance Vaultwarden, un serveur Bitwarden-compatible écrit en Rust, comme service
 | `stc.vaultwarden.hostname` | string | — | Nom de domaine public (utilisé pour la route Traefik). **Requis.** |
 | `stc.vaultwarden.backup` | bool | `false` | Active les backups périodiques vers `/var/backup/vaultwarden`. |
 | `stc.vaultwarden.signupsDomains` | list[string] | `[]` | Limiter les inscriptions à ces domaines email. Liste vide = tous les domaines acceptés. |
+| `stc.vaultwarden.showPasswordHint` | bool | `false` | Affiche les indices de mot de passe sur la page de connexion. Désactivé par défaut pour la sécurité. |
 
 ## Ce qu'il fait
 

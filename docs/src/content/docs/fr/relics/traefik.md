@@ -13,6 +13,7 @@ Lance Traefik comme service NixOS natif (sans Docker). Configure automatiquement
 |--------|------|--------|-------------|
 | `stc.traefik.enable` | bool | `false` | Active le reverse proxy Traefik. |
 | `stc.traefik.email` | string | — | Adresse email pour l'enregistrement ACME Let's Encrypt. **Requis.** |
+| `stc.traefik.logLevel` | string | `"INFO"` | Niveau de log : `DEBUG`, `INFO`, `WARN` ou `ERROR`. |
 
 ## Ce qu'il fait
 

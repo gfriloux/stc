@@ -22,6 +22,7 @@ supplied at runtime via a separate file.
 | `stc.docker.traefik.image` | string | `"traefik:v3.7.1"` | Docker image |
 | `stc.docker.traefik.dataDir` | string | `"/srv/docker/traefik"` | Base directory for logs, acme.json, conf |
 | `stc.docker.traefik.acme.email` | string | — | Email for Let's Encrypt ACME registration |
+| `stc.docker.traefik.enableDashboard` | bool | `true` | Enable the Traefik API dashboard on `127.0.0.1:8080`. Disable to reduce attack surface on production servers. |
 | `stc.docker.traefik.dynamicConfigFile` | `null \| string` | `null` | Path to `traefik_dynamic.yml` |
 
 ### What It Does

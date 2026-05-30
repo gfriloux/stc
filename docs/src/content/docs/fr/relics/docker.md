@@ -22,6 +22,7 @@ configuration statique à partir des options Nix. La configuration dynamique
 | `stc.docker.traefik.image` | string | `"traefik:v3.7.1"` | Image Docker |
 | `stc.docker.traefik.dataDir` | string | `"/srv/docker/traefik"` | Répertoire de base pour les logs, acme.json, conf |
 | `stc.docker.traefik.acme.email` | string | — | Email pour l'enregistrement ACME Let's Encrypt |
+| `stc.docker.traefik.enableDashboard` | bool | `true` | Active le dashboard API Traefik sur `127.0.0.1:8080`. Désactiver pour réduire la surface d'attaque en production. |
 | `stc.docker.traefik.dynamicConfigFile` | `null \| string` | `null` | Chemin vers `traefik_dynamic.yml` |
 
 ### Ce qu'elle fait
