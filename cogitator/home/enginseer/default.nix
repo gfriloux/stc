@@ -74,7 +74,11 @@ in
       gum
       just
       ncdu
+      nh
       nix-output-monitor
+      nix-tree
+      nixd
+      nvd
       oh-my-posh
       p7zip
       prettyping

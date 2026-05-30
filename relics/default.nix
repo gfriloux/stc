@@ -48,6 +48,7 @@
 
   flake.homeModules = {
     relics-kitty = ./home/kitty.nix;
+    relics-ghostty = ./home/ghostty.nix;
     relics-yubikey-user = ./home/yubikey.nix;
 
     # plasma-manager requires its upstream module injected via inputs closure.
