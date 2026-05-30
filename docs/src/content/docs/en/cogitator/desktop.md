@@ -5,10 +5,9 @@ description: cogitator-desktop — the full GUI workstation profile for a Techpr
 
 **Module:** `stc.homeModules.cogitator-desktop`
 
-The Desktop profile assembles the full GUI toolkit for a workstation: a
-GPU-accelerated terminal, a privacy-focused browser, an image editor, and a
-media player. It is the Home Manager equivalent of what `nix-gui` provided as a
-single toggle.
+The Desktop profile assembles the full GUI toolkit for a workstation: two
+GPU-accelerated terminals, a privacy-focused browser, an image editor, and a
+media player.
 
 ## Options
 
@@ -21,12 +20,17 @@ single toggle.
 | Component | Source | Notes |
 |-----------|--------|-------|
 | `programs.kitty` | `relics-kitty` | GPU-accelerated terminal + curated Nerd Fonts |
+| `programs.ghostty` | `relics-ghostty` | GPU-accelerated terminal, native GTK4, extended protocol |
 | `programs.zen-browser` | `relics-zen-browser` | Privacy-focused Firefox fork |
 | `pkgs.gimp` | direct package | Image editor |
 | `pkgs.vlc` | direct package | Media player |
 
 GIMP and VLC are installed as plain packages — no Home Manager program module
 exists for them, so there is nothing to configure beyond the install.
+
+Kitty and Ghostty coexist without conflict — each has its own `programs.*`
+namespace. Nerd Fonts are installed via `relics-kitty` and are available to
+both terminals.
 
 Kitty's Nerd Font installation is on by default. To skip it:
 

@@ -1,9 +1,9 @@
 ---
 title: Home Apps
-description: Home Manager relics for GUI applications — Kitty terminal and Zen Browser.
+description: Home Manager relics for GUI applications — Kitty, Ghostty, and Zen Browser.
 ---
 
-Two Home Manager relics for GUI applications that carry real configuration beyond
+Three Home Manager relics for GUI applications that carry real configuration beyond
 a bare package install.
 
 ## Kitty
@@ -40,6 +40,37 @@ modules = [ stc.homeModules.relics-kitty ];
 
 ---
 
+## Ghostty
+
+**Module:** `stc.homeModules.relics-ghostty`
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `stc.gui.ghostty.enable` | bool | `false` | Enable Ghostty terminal emulator |
+
+Enables `programs.ghostty` via Home Manager. Ghostty is a GPU-accelerated terminal
+with a native GTK4 renderer on Linux, an extended terminal protocol, and a Rust/Zig
+implementation.
+
+Ghostty and Kitty can coexist — each has its own configuration namespace and binary.
+
+```nix
+modules = [ stc.homeModules.relics-ghostty ];
+
+# home.nix
+{
+  stc.gui.ghostty.enable = true;
+
+  # Configure via programs.ghostty.settings:
+  programs.ghostty.settings = {
+    font-size = 13;
+    theme = "catppuccin-mocha";
+  };
+}
+```
+
+---
+
 ## Zen Browser
 
 **Module:** `stc.homeModules.relics-zen-browser`
@@ -59,6 +90,6 @@ modules = [ stc.homeModules.relics-zen-browser ];
 ```
 
 :::tip[Desktop profile]
-If you want kitty + zen-browser + GIMP + VLC in one option, use the
+If you want kitty + ghostty + zen-browser + GIMP + VLC in one option, use the
 [`cogitator-desktop`](/en/cogitator/desktop/) profile instead.
 :::

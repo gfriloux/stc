@@ -1,9 +1,9 @@
 ---
 title: Applications graphiques
-description: Reliques Home Manager pour les applications graphiques — terminal Kitty et Zen Browser.
+description: Reliques Home Manager pour les applications graphiques — Kitty, Ghostty et Zen Browser.
 ---
 
-Deux reliques Home Manager pour les applications graphiques qui apportent une
+Trois reliques Home Manager pour les applications graphiques qui apportent une
 vraie configuration au-delà d'une simple installation de paquet.
 
 ## Kitty
@@ -40,6 +40,38 @@ modules = [ stc.homeModules.relics-kitty ];
 
 ---
 
+## Ghostty
+
+**Module :** `stc.homeModules.relics-ghostty`
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `stc.gui.ghostty.enable` | bool | `false` | Active l'émulateur de terminal Ghostty |
+
+Active `programs.ghostty` via Home Manager. Ghostty est un terminal accéléré GPU
+avec un rendu GTK4 natif sous Linux, un protocole terminal étendu, et une
+implémentation Rust/Zig.
+
+Ghostty et Kitty peuvent coexister — chacun a son propre namespace de configuration
+et son propre binaire.
+
+```nix
+modules = [ stc.homeModules.relics-ghostty ];
+
+# home.nix
+{
+  stc.gui.ghostty.enable = true;
+
+  # Configurer via programs.ghostty.settings :
+  programs.ghostty.settings = {
+    font-size = 13;
+    theme = "catppuccin-mocha";
+  };
+}
+```
+
+---
+
 ## Zen Browser
 
 **Module :** `stc.homeModules.relics-zen-browser`
@@ -59,6 +91,6 @@ modules = [ stc.homeModules.relics-zen-browser ];
 ```
 
 :::tip[Profil Desktop]
-Si tu veux kitty + zen-browser + GIMP + VLC en une seule option, utilise le
+Si tu veux kitty + ghostty + zen-browser + GIMP + VLC en une seule option, utilise le
 profil [`cogitator-desktop`](/fr/cogitator/desktop/) à la place.
 :::

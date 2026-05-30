@@ -62,7 +62,11 @@ rites, and aesthetic augmentations.
 | `gum` | Scripting UI components |
 | `just` | Task runner |
 | `ncdu` | Disk usage analyser |
+| `nh` | `nixos-rebuild` / `home-manager` wrapper with better UX |
 | `nix-output-monitor` | Better `nix build` output |
+| `nix-tree` | Interactive Nix dependency graph explorer |
+| `nixd` | Nix language server (LSP) for editor integration |
+| `nvd` | NixOS generation diff — visualises changes between builds |
 | `oh-my-posh` | Shell prompt engine |
 | `p7zip` | Archive tool |
 | `prettyping` | `ping` with graphs |

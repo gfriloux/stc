@@ -62,7 +62,11 @@ shell, outillage de développement, rites git, et augmentations esthétiques.
 | `gum` | Composants UI pour scripts |
 | `just` | Exécuteur de tâches |
 | `ncdu` | Analyseur d'utilisation disque |
+| `nh` | Wrapper de `nixos-rebuild` / `home-manager` avec meilleure UX |
 | `nix-output-monitor` | Meilleur affichage de `nix build` |
+| `nix-tree` | Explorateur interactif du graphe de dépendances Nix |
+| `nixd` | Serveur de langage Nix (LSP) pour l'intégration éditeur |
+| `nvd` | Diff de générations NixOS — visualise les changements entre builds |
 | `oh-my-posh` | Moteur de prompt shell |
 | `p7zip` | Outil d'archive |
 | `prettyping` | `ping` avec graphes |

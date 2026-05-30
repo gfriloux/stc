@@ -72,6 +72,7 @@ modules = [
 | Module name | Enable option | Purpose |
 |-------------|---------------|---------|
 | `relics-kitty` | `stc.gui.kitty.enable` | Kitty terminal + Nerd Fonts |
+| `relics-ghostty` | `stc.gui.ghostty.enable` | Ghostty terminal (GPU-accelerated, native GTK4) |
 | `relics-zen-browser` | `stc.gui.zen-browser.enable` | Zen Browser |
 | `relics-yubikey-user` | `stc.yubikey.enable` | YubiKey user tools: ykman, touch detector, OATH app |
 | `relics-plasma-manager` | `stc.plasmaManager.enable` | Declarative KDE configuration via plasma-manager |
