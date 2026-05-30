@@ -11,6 +11,12 @@ in
       type = lib.types.str;
       description = "Email address used for Let's Encrypt ACME registration.";
     };
+
+    logLevel = lib.mkOption {
+      type = lib.types.enum [ "DEBUG" "INFO" "WARN" "ERROR" ];
+      default = "INFO";
+      description = "Traefik log level.";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -35,7 +41,7 @@ in
         };
 
         log = {
-          level = "INFO";
+          level = cfg.logLevel;
           filePath = "/var/lib/traefik/traefik.log";
           format = "json";
         };

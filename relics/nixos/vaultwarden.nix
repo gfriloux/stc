@@ -23,6 +23,12 @@ in
       default = [ ];
       description = "Restrict self-registration to these email domains. Empty list allows all domains.";
     };
+
+    showPasswordHint = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Show password hints on the login page. Disabled by default for security.";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -35,7 +41,7 @@ in
           ROCKET_PORT = 8222;
           SIGNUPS_ALLOWED = true;
           INVITATIONS_ALLOWED = true;
-          SHOW_PASSWORD_HINT = false;
+          SHOW_PASSWORD_HINT = cfg.showPasswordHint;
           WEBSOCKET_ENABLED = true;
           LOG_LEVEL = "warn";
         } // lib.optionalAttrs (cfg.signupsDomains != [ ]) {

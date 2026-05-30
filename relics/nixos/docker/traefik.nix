@@ -46,7 +46,7 @@ let
         address: "127.0.0.1:8080"
 
     api:
-      dashboard: true
+      dashboard: ${lib.boolToString cfg.enableDashboard}
 
     ping:
       entryPoint: traefik
@@ -98,6 +98,12 @@ in
     acme.email = lib.mkOption {
       type = lib.types.str;
       description = "Email address used for Let's Encrypt ACME registration.";
+    };
+
+    enableDashboard = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Enable the Traefik API dashboard on 127.0.0.1:8080. Disable to reduce attack surface on production servers.";
     };
 
     dynamicConfigFile = lib.mkOption {

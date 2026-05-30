@@ -27,14 +27,19 @@ in
         this relic does not install theme packages.
       '';
     };
+
+    wayland = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Use Wayland for the SDDM greeter. Set to false to fall back to X11 (older or incompatible GPUs).";
+    };
   };
 
   config = lib.mkIf cfg.enable {
     services = {
       displayManager.sddm = {
         enable = true;
-        # Wayland session for SDDM itself — no X11 dependency for the greeter.
-        wayland.enable = true;
+        wayland.enable = cfg.wayland;
         theme = cfg.sddmTheme;
       };
 
