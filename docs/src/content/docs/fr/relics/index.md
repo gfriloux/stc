@@ -75,6 +75,7 @@ modules = [
 | `relics-kitty` | `stc.gui.kitty.enable` | Terminal Kitty + Nerd Fonts |
 | `relics-zen-browser` | `stc.gui.zen-browser.enable` | Zen Browser |
 | `relics-yubikey-user` | `stc.yubikey.enable` | Outils utilisateur YubiKey : ykman, détecteur de toucher, app OATH |
+| `relics-plasma-manager` | `stc.plasmaManager.enable` | Configuration KDE déclarative via plasma-manager |
 
 ## Voir aussi
 
@@ -84,6 +85,7 @@ modules = [
 - [Pipewire](/fr/relics/pipewire/) — relique audio
 - [Plasma 6](/fr/relics/plasma6/) — relique bureau KDE Plasma 6
 - [YubiKey](/fr/relics/yubikey/) — configuration YubiKey en deux reliques
+- [Plasma Manager](/fr/relics/plasma-manager/) — configuration KDE déclarative
 - [Reliques Docker](/fr/relics/docker/) — Traefik, CrowdSec et notify
 - [AWS](/fr/relics/aws/) — drivers EC2 et configuration AWS
 - [Traefik](/fr/relics/traefik/) — reverse proxy natif NixOS
