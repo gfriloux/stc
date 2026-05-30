@@ -50,6 +50,16 @@
     relics-kitty = ./home/kitty.nix;
     relics-yubikey-user = ./home/yubikey.nix;
 
+    # plasma-manager requires its upstream module injected via inputs closure.
+    relics-plasma-manager =
+      { ... }:
+      {
+        imports = [
+          inputs.plasma-manager.homeModules.plasma-manager
+          ./home/plasma-manager.nix
+        ];
+      };
+
     # zen-browser requires its upstream module injected via inputs closure.
     relics-zen-browser =
       { ... }:
