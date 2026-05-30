@@ -9,6 +9,16 @@ in
 {
   options.stc.hardening.kernel = {
     enable = lib.mkEnableOption "kernel sysctl hardening";
+
+    gaming = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Relax kernel restrictions incompatible with Steam and Proton.
+        When true, skips kernel.unprivileged_userns_clone = 0, which Steam
+        requires for its containerised runtime (Steam Runtime).
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -21,7 +31,8 @@ in
       # --- Unprivileged capabilities ---
       "kernel.perf_event_paranoid" = 3; # Block perf for unprivileged users
       "kernel.unprivileged_bpf_disabled" = 1; # Block eBPF for unprivileged users
-      "kernel.unprivileged_userns_clone" = 0; # Block user namespace creation
+      # kernel.unprivileged_userns_clone is conditionally applied below via
+      # lib.optionalAttrs — Steam requires user namespaces for its runtime.
 
       # --- kexec and SysRq ---
       # kexec allows replacing the running kernel — a significant attack vector.
@@ -38,6 +49,10 @@ in
       "fs.protected_symlinks" = 1;
       "fs.protected_fifos" = 2;
       "fs.protected_regular" = 2;
+    } // lib.optionalAttrs (!cfg.gaming) {
+      # Block user namespace creation. Disabled when gaming = true because
+      # Steam uses user namespaces for its containerised runtime.
+      "kernel.unprivileged_userns_clone" = 0;
     };
 
     # Belt-and-suspenders: also disable core dumps via PAM resource limits.

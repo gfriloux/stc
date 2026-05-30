@@ -13,6 +13,10 @@
     cogitator-vm = ./nixos/vm.nix;
     # Full Docker reverse-proxy stack: Traefik + CrowdSec + ntfy notifications.
     cogitator-docker-server = ./nixos/docker-server.nix;
+    # KDE Plasma 6 Wayland desktop: Plasma 6 + Pipewire.
+    cogitator-plasma = ./nixos/plasma.nix;
+    # Gaming setup: AMD GPU + Pipewire + Steam.
+    cogitator-gaming = ./nixos/gaming.nix;
   };
 
   flake.homeModules = {

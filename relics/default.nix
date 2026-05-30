@@ -26,6 +26,16 @@
     relics-hardening-filesystem = ./nixos/hardening/filesystem.nix;
     relics-hardening-ssh = ./nixos/hardening/ssh.nix;
 
+    # --- Hardware ---
+    relics-amd-gpu = ./nixos/amd-gpu.nix;
+
+    # --- Desktop ---
+    relics-pipewire = ./nixos/pipewire.nix;
+    relics-plasma6 = ./nixos/plasma6.nix;
+
+    # --- Security tokens ---
+    relics-yubikey-system = ./nixos/yubikey.nix;
+
     # --- Services (native NixOS, no Docker) ---
     relics-traefik = ./nixos/traefik.nix;
     relics-vaultwarden = ./nixos/vaultwarden.nix;
@@ -38,6 +48,7 @@
 
   flake.homeModules = {
     relics-kitty = ./home/kitty.nix;
+    relics-yubikey-user = ./home/yubikey.nix;
 
     # zen-browser requires its upstream module injected via inputs closure.
     relics-zen-browser =
