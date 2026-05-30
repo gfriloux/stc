@@ -1,0 +1,53 @@
+---
+title: Standard Template Construct
+description: The sacred repository of the Adeptus Technicus — a Nix flake library for the discerning Techpriest.
+template: splash
+hero:
+  tagline: |
+    In the dark millennium, knowledge is power.
+    The STC preserves it.
+    One flake to rule your infrastructure.
+    Praise the Omnissiah.
+  actions:
+    - text: Begin the Rites
+      link: /en/getting-started/
+      icon: right-arrow
+      variant: primary
+    - text: Consult the Schematics
+      link: https://github.com/gfriloux/stc
+      icon: external
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## What is the STC?
+
+In the lore of Warhammer 40,000, **Standard Template Constructs** are ancient databases
+containing the complete technological knowledge of Humanity — blueprints so sacred that
+discovering even a fragment is cause for celebration across an entire sector.
+
+This project borrows that name, and the ambition behind it.
+
+**STC is a Nix flake library** — a curated collection of reusable NixOS and Home Manager
+modules that external flakes consume to build their systems. STC contains no system
+configurations of its own. It is purely a toolkit.
+
+Your production flake declares the system. STC provides the building blocks.
+
+<CardGrid stagger>
+  <Card title="Relics" icon="puzzle">
+    Atomic, reusable NixOS and Home Manager modules. Each relic does one thing well.
+    Compose them freely.
+  </Card>
+  <Card title="Cogitator" icon="approve-check-circle">
+    Pre-assembled profiles for common use cases. Activate a profile and the Cogitator
+    configures everything in its domain.
+  </Card>
+  <Card title="Forge" icon="setting">
+    VM builders, disk layouts, and dev shell templates. The workshop where raw Nix
+    becomes functional artifacts.
+  </Card>
+  <Card title="Rites" icon="open-book">
+    Shared library functions and utilities. The incantations that make everything else work.
+  </Card>
+</CardGrid>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Adeptus Mechanicus inspired cog -->
+  <circle cx="50" cy="50" r="30" stroke="#a01010" stroke-width="3" fill="none"/>
+  <circle cx="50" cy="50" r="15" stroke="#a01010" stroke-width="2" fill="none"/>
+  <!-- Cog teeth -->
+  <rect x="46" y="10" width="8" height="12" rx="1" fill="#a01010"/>
+  <rect x="46" y="78" width="8" height="12" rx="1" fill="#a01010"/>
+  <rect x="10" y="46" width="12" height="8" rx="1" fill="#a01010"/>
+  <rect x="78" y="46" width="12" height="8" rx="1" fill="#a01010"/>
+  <!-- Diagonal teeth -->
+  <rect x="21" y="21" width="8" height="12" rx="1" fill="#a01010" transform="rotate(45 25 27)"/>
+  <rect x="71" y="21" width="8" height="12" rx="1" fill="#a01010" transform="rotate(-45 75 27)"/>
+  <rect x="21" y="71" width="8" height="12" rx="1" fill="#a01010" transform="rotate(-45 25 77)"/>
+  <rect x="71" y="71" width="8" height="12" rx="1" fill="#a01010" transform="rotate(45 75 77)"/>
+  <!-- STC in the center -->
+  <text x="50" y="55" font-family="monospace" font-size="9" font-weight="bold" fill="#a01010" text-anchor="middle">STC</text>
+</svg>

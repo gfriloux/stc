@@ -1,0 +1,62 @@
+# NixOS local VM — ZFS + impermanence + full hardening
+# Run `just` to list all available recipes.
+
+default:
+    @just --list --unsorted
+
+
+# ── Nix ───────────────────────────────────────────────────────────────────────
+
+# Format all Nix files
+fmt:
+    alejandra .
+
+# Check formatting without modifying files
+fmt-check:
+    alejandra --check .
+
+# Run all linters (statix + deadnix)
+lint:
+    statix check .
+    deadnix --fail . --exclude .direnv
+
+# Full CI gate
+ci: fmt-check lint
+
+# Evaluate the full flake
+check:
+    nix flake check --show-trace
+
+# Update flake inputs
+update:
+    nix flake update
+
+
+# ── VM ────────────────────────────────────────────────────────────────────────
+
+VM_RAM      := "4096"
+VM_CPUS     := "2"
+VM_SSH_PORT := "2222"
+
+# Build the qcow2 disk image (ZFS + impermanence — takes a few minutes)
+build:
+    nix build .#nixosConfigurations.local-vm.config.system.build.qcow2 \
+        --show-trace
+
+# Boot the qcow2 image in QEMU/KVM
+# snapshot=on keeps the disk image untouched; every boot starts from the same state.
+run:
+    nix shell nixpkgs#qemu -c qemu-system-x86_64 \
+        -enable-kvm \
+        -m {{VM_RAM}} \
+        -smp {{VM_CPUS}} \
+        -drive file=./result/nixos.root.qcow2,if=virtio,format=qcow2,snapshot=on \
+        -nic user,model=virtio-net-pci,hostfwd=tcp::{{VM_SSH_PORT}}-:22
+
+# SSH into the running VM
+ssh user="admin":
+    ssh \
+        -p {{VM_SSH_PORT}} \
+        -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
+        {{user}}@localhost

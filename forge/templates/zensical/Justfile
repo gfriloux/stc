@@ -1,0 +1,5 @@
+serve:
+	pipenv run zensical serve
+
+build:
+	pipenv run zensical build

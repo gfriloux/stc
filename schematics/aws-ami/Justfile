@@ -1,0 +1,105 @@
+# NixOS AWS AMI — ZFS + impermanence + hardening
+# Run `just` to list all available recipes.
+
+default:
+    @just --list --unsorted
+
+
+# ── Flake ─────────────────────────────────────────────────────────────────────
+
+# Update flake inputs
+update:
+    nix flake update
+
+
+# ── VM (local test) ───────────────────────────────────────────────────────────
+
+VM_RAM      := "4096"
+VM_CPUS     := "2"
+VM_SSH_PORT := "2222"
+
+# Boot the raw image in QEMU/KVM (for local testing before publishing)
+# snapshot=on keeps the disk image untouched; every boot starts from the same state.
+run:
+    nix shell nixpkgs#qemu -c qemu-system-x86_64 \
+        -enable-kvm \
+        -m {{VM_RAM}} \
+        -smp {{VM_CPUS}} \
+        -drive file=./result/nixos.root.img,if=virtio,format=raw,snapshot=on \
+        -nic user,model=virtio-net-pci,hostfwd=tcp::{{VM_SSH_PORT}}-:22
+
+# SSH into the running VM
+ssh:
+    ssh \
+        -p {{VM_SSH_PORT}} \
+        -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
+        admin@localhost
+
+
+# ── AMI build & publish ───────────────────────────────────────────────────────
+#
+# Prerequisites (one-time AWS setup):
+#   1. Create an S3 bucket for the image upload
+#   2. Create the vmimport IAM role:
+#      https://docs.aws.amazon.com/vm-import/latest/userguide/required-permissions.html
+#   3. Configure aws CLI: aws configure
+
+AMI_BUCKET := "your-ami-bucket"
+AMI_REGION := "eu-west-1"
+AMI_NAME   := "nixos-zfs-impermanence"
+
+# Build the raw AMI disk image
+build:
+    nix build .#nixosConfigurations.aws-ami.config.system.build.awsImage \
+        --show-trace
+
+# Upload the raw image to S3 and register it as an AMI.
+# Requires: just build, aws CLI configured, AMI_BUCKET set above.
+publish: build
+    #!/usr/bin/env bash
+    set -euo pipefail
+    img=./result/nixos.root.img
+
+    echo "Uploading image to s3://{{AMI_BUCKET}}/{{AMI_NAME}}.img …"
+    aws s3 cp "$img" "s3://{{AMI_BUCKET}}/{{AMI_NAME}}.img" \
+        --region {{AMI_REGION}}
+
+    echo "Importing snapshot …"
+    task_id=$(aws ec2 import-snapshot \
+        --region {{AMI_REGION}} \
+        --disk-container "{\"Description\":\"{{AMI_NAME}}\",\"Format\":\"RAW\",\"UserBucket\":{\"S3Bucket\":\"{{AMI_BUCKET}}\",\"S3Key\":\"{{AMI_NAME}}.img\"}}" \
+        --query 'ImportTaskId' --output text)
+    echo "Import task: $task_id"
+
+    echo "Waiting for snapshot import to complete …"
+    while true; do
+        status=$(aws ec2 describe-import-snapshot-tasks \
+            --region {{AMI_REGION}} \
+            --import-task-ids "$task_id" \
+            --query 'ImportSnapshotTasks[0].SnapshotTaskDetail.Status' \
+            --output text)
+        echo "  status: $status"
+        [[ "$status" == "completed" ]] && break
+        [[ "$status" == "error" ]] && { echo "Import failed"; exit 1; }
+        sleep 15
+    done
+
+    snap_id=$(aws ec2 describe-import-snapshot-tasks \
+        --region {{AMI_REGION}} \
+        --import-task-ids "$task_id" \
+        --query 'ImportSnapshotTasks[0].SnapshotTaskDetail.SnapshotId' \
+        --output text)
+    echo "Snapshot: $snap_id"
+
+    echo "Registering AMI …"
+    ami_id=$(aws ec2 register-image \
+        --region {{AMI_REGION}} \
+        --name "{{AMI_NAME}}" \
+        --architecture x86_64 \
+        --virtualization-type hvm \
+        --root-device-name /dev/xvda \
+        --boot-mode legacy-bios \
+        --block-device-mappings "[{\"DeviceName\":\"/dev/xvda\",\"Ebs\":{\"SnapshotId\":\"$snap_id\",\"VolumeType\":\"gp3\",\"DeleteOnTermination\":true}}]" \
+        --query 'ImageId' --output text)
+    echo "AMI registered: $ami_id"

@@ -1,0 +1,72 @@
+{ config, lib, ... }:
+
+let
+  cfg = config.stc.traefik;
+in
+{
+  options.stc.traefik = {
+    enable = lib.mkEnableOption "Traefik reverse proxy (native NixOS service)";
+
+    email = lib.mkOption {
+      type = lib.types.str;
+      description = "Email address used for Let's Encrypt ACME registration.";
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+    services.traefik = {
+      enable = true;
+
+      staticConfigOptions = {
+        entryPoints = {
+          web = {
+            address = ":80";
+            asDefault = true;
+            http.redirections.entrypoint = {
+              to = "websecure";
+              scheme = "https";
+            };
+          };
+          websecure = {
+            address = ":443";
+            asDefault = true;
+            http.tls.certResolver = "letsencrypt";
+          };
+        };
+
+        log = {
+          level = "INFO";
+          filePath = "/var/lib/traefik/traefik.log";
+          format = "json";
+        };
+
+        accessLog = {
+          filePath = "/var/lib/traefik/access.log";
+          format = "json";
+          fields = {
+            defaultMode = "keep";
+            headers.defaultMode = "keep";
+          };
+        };
+
+        certificatesResolvers.letsencrypt.acme = {
+          email = cfg.email;
+          httpChallenge.entryPoint = "web";
+        };
+      };
+    };
+
+    networking.firewall.allowedTCPPorts = [ 80 443 ];
+
+    # /var/lib/traefik holds ACME certs — must survive reboots.
+    # Requires relics-impermanence (or any module that defines environment.persistence).
+    environment.persistence."/persist".directories = [
+      {
+        directory = "/var/lib/traefik";
+        user = "traefik";
+        group = "traefik";
+        mode = "0700";
+      }
+    ];
+  };
+}

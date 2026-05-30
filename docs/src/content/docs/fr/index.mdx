@@ -1,0 +1,55 @@
+---
+title: Standard Template Construct
+description: Le dépôt sacré des Technoprêtres — une bibliothèque de modules Nix pour les disciples de l'Omnimessie.
+template: splash
+hero:
+  tagline: |
+    Dans le sombre millénaire, la connaissance est pouvoir.
+    Le STC la préserve.
+    Un flake pour gouverner toute ton infrastructure.
+    Gloire à l'Omnimessie.
+  actions:
+    - text: Commencer les Rites
+      link: /fr/getting-started/
+      icon: right-arrow
+      variant: primary
+    - text: Consulter les Schémas
+      link: https://github.com/gfriloux/stc
+      icon: external
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Qu'est-ce que le STC ?
+
+Dans l'univers de Warhammer 40 000, les **Standard Template Constructs** sont d'anciennes
+bases de données contenant l'intégralité du savoir technologique de l'Humanité — des plans
+si sacrés que la découverte du moindre fragment est célébrée à travers des secteurs entiers.
+
+Ce projet emprunte ce nom, et l'ambition derrière.
+
+**STC est une bibliothèque de flakes Nix** — une collection soigneusement maintenue de
+modules NixOS et Home Manager réutilisables, que des flakes externes consomment pour
+construire leurs systèmes. STC ne contient aucune configuration système en propre.
+C'est un outillage, rien de plus.
+
+Ton flake de production déclare le système. STC fournit les briques.
+
+<CardGrid stagger>
+  <Card title="Reliques" icon="puzzle">
+    Des modules NixOS et Home Manager atomiques et réutilisables. Chaque relique fait
+    une seule chose, mais la fait bien. Compose-les librement.
+  </Card>
+  <Card title="Cogitator" icon="approve-check-circle">
+    Des profils pré-assemblés pour les usages courants. Active un profil et le Cogitator
+    configure tout ce qui est de son ressort.
+  </Card>
+  <Card title="La Forge" icon="setting">
+    Builders de VMs, layouts de disques et templates de dev shells. L'atelier où le Nix
+    brut devient des artefacts fonctionnels.
+  </Card>
+  <Card title="Rites" icon="open-book">
+    Fonctions de bibliothèque et utilitaires partagés. Les incantations qui font tourner
+    tout le reste.
+  </Card>
+</CardGrid>
