@@ -36,5 +36,5 @@ Each schematic contains a Justfile with build / run / ssh recipes.
 
 ## See Also
 
-- [local-vm schematic](/en/schematics/local-vm/)
-- [aws-ami schematic](/en/schematics/aws-ami/)
+- [local-vm schematic](/stc/en/schematics/local-vm/)
+- [aws-ami schematic](/stc/en/schematics/aws-ami/)

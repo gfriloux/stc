@@ -51,6 +51,6 @@ modules = [
 
 ## See Also
 
-- [cogitator-plasma](/en/cogitator/plasma/) — composes this relic with the Plasma 6 desktop
-- [cogitator-gaming](/en/cogitator/gaming/) — composes this relic with AMD GPU and Steam
-- [AMD GPU](/en/relics/amd-gpu/) — the 32-bit GPU driver relic, pairs with Pipewire for gaming
+- [cogitator-plasma](/stc/en/cogitator/plasma/) — composes this relic with the Plasma 6 desktop
+- [cogitator-gaming](/stc/en/cogitator/gaming/) — composes this relic with AMD GPU and Steam
+- [AMD GPU](/stc/en/relics/amd-gpu/) — the 32-bit GPU driver relic, pairs with Pipewire for gaming

@@ -54,10 +54,10 @@ Use individual relics when:
 
 ## See Also
 
-- [Hardening profile](/en/cogitator/hardening/)
-- [VM profile](/en/cogitator/vm/)
-- [Docker server profile](/en/cogitator/docker-server/)
-- [Plasma desktop profile](/en/cogitator/plasma/)
-- [Gaming profile](/en/cogitator/gaming/)
-- [Enginseer profile](/en/cogitator/enginseer/)
-- [Desktop profile](/en/cogitator/desktop/)
+- [Hardening profile](/stc/en/cogitator/hardening/)
+- [VM profile](/stc/en/cogitator/vm/)
+- [Docker server profile](/stc/en/cogitator/docker-server/)
+- [Plasma desktop profile](/stc/en/cogitator/plasma/)
+- [Gaming profile](/stc/en/cogitator/gaming/)
+- [Enginseer profile](/stc/en/cogitator/enginseer/)
+- [Desktop profile](/stc/en/cogitator/desktop/)

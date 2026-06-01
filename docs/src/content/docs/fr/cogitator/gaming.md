@@ -90,7 +90,7 @@ modules = [
 
 ## Voir aussi
 
-- [Relique AMD GPU](/fr/relics/amd-gpu/) — relique GPU autonome
-- [Relique Pipewire](/fr/relics/pipewire/) — relique audio autonome
-- [Reliques de durcissement](/fr/relics/hardening/) — options de compatibilité gaming
-- [cogitator-plasma](/fr/cogitator/plasma/) — profil bureau Plasma, composable avec cogitator-gaming
+- [Relique AMD GPU](/stc/fr/relics/amd-gpu/) — relique GPU autonome
+- [Relique Pipewire](/stc/fr/relics/pipewire/) — relique audio autonome
+- [Reliques de durcissement](/stc/fr/relics/hardening/) — options de compatibilité gaming
+- [cogitator-plasma](/stc/fr/cogitator/plasma/) — profil bureau Plasma, composable avec cogitator-gaming

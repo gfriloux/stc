@@ -45,8 +45,8 @@ Traefik listens on `localhost:8080` for the API/dashboard. For a backend service
 
 ## Combine with
 
-- **[relics-impermanence](/en/relics/impermanence)** (required) — Persists ACME certificates
-- **[relics-vaultwarden](/en/relics/vaultwarden)** — Automatically integrates with Traefik
+- **[relics-impermanence](/stc/en/relics/impermanence)** (required) — Persists ACME certificates
+- **[relics-vaultwarden](/stc/en/relics/vaultwarden)** — Automatically integrates with Traefik
 - **Other NixOS services** — Traefik can route any HTTP service (Nextcloud, Gitea, etc.)
 
 ## Notes

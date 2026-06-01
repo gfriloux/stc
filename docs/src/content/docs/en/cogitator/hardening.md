@@ -52,4 +52,4 @@ modules = [
 
 ## See Also
 
-- [Hardening relics](/en/relics/hardening/) — detailed documentation of each individual relic
+- [Hardening relics](/stc/en/relics/hardening/) — detailed documentation of each individual relic

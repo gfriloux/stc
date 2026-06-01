@@ -87,6 +87,6 @@ a raw disk image.
 
 ## See Also
 
-- [Forge — Layouts](/en/forge/layouts/) — the `zfs-local-vm` disk layout
-- [cogitator-hardening](/en/cogitator/hardening/) — the hardening profile used here
-- [relics-impermanence](/en/relics/impermanence/) — how the rollback works
+- [Forge — Layouts](/stc/en/forge/layouts/) — the `zfs-local-vm` disk layout
+- [cogitator-hardening](/stc/en/cogitator/hardening/) — the hardening profile used here
+- [relics-impermanence](/stc/en/relics/impermanence/) — how the rollback works

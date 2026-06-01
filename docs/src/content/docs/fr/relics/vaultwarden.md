@@ -71,8 +71,8 @@ modules = [
 
 ## À combiner avec
 
-- **[relics-impermanence](/fr/relics/impermanence)** (requis) — Persiste les données Vaultwarden
-- **[relics-traefik](/fr/relics/traefik)** (recommandé) — S'intègre automatiquement pour TLS et domaine public
+- **[relics-impermanence](/stc/fr/relics/impermanence)** (requis) — Persiste les données Vaultwarden
+- **[relics-traefik](/stc/fr/relics/traefik)** (recommandé) — S'intègre automatiquement pour TLS et domaine public
 
 ## Notes
 

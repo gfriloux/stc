@@ -53,6 +53,6 @@ modules = [
 
 ## Voir aussi
 
-- [cogitator-plasma](/fr/cogitator/plasma/) — compose cette relique avec le bureau Plasma 6
-- [cogitator-gaming](/fr/cogitator/gaming/) — compose cette relique avec AMD GPU et Steam
-- [AMD GPU](/fr/relics/amd-gpu/) — la relique pilote GPU 32 bits, se marie avec Pipewire pour le gaming
+- [cogitator-plasma](/stc/fr/cogitator/plasma/) — compose cette relique avec le bureau Plasma 6
+- [cogitator-gaming](/stc/fr/cogitator/gaming/) — compose cette relique avec AMD GPU et Steam
+- [AMD GPU](/stc/fr/relics/amd-gpu/) — la relique pilote GPU 32 bits, se marie avec Pipewire pour le gaming

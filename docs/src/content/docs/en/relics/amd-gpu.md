@@ -53,5 +53,5 @@ modules = [
 
 ## See Also
 
-- [cogitator-gaming](/en/cogitator/gaming/) — composes this relic with Pipewire and Steam
-- [Pipewire](/en/relics/pipewire/) — audio relic, pairs well with AMD GPU on gaming machines
+- [cogitator-gaming](/stc/en/cogitator/gaming/) — composes this relic with Pipewire and Steam
+- [Pipewire](/stc/en/relics/pipewire/) — audio relic, pairs well with AMD GPU on gaming machines

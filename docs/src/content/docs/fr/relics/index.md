@@ -80,14 +80,14 @@ modules = [
 
 ## Voir aussi
 
-- [Profils Cogitator](/fr/cogitator/) — reliques composées pour les cas d'usage courants
-- [Reliques de durcissement](/fr/relics/hardening/) — les quatre modules de durcissement en détail
-- [AMD GPU](/fr/relics/amd-gpu/) — relique GPU avec compatibilité gaming
-- [Pipewire](/fr/relics/pipewire/) — relique audio
-- [Plasma 6](/fr/relics/plasma6/) — relique bureau KDE Plasma 6
-- [YubiKey](/fr/relics/yubikey/) — configuration YubiKey en deux reliques
-- [Plasma Manager](/fr/relics/plasma-manager/) — configuration KDE déclarative
-- [Reliques Docker](/fr/relics/docker/) — Traefik, CrowdSec et notify
-- [AWS](/fr/relics/aws/) — drivers EC2 et configuration AWS
-- [Traefik](/fr/relics/traefik/) — reverse proxy natif NixOS
-- [Vaultwarden](/fr/relics/vaultwarden/) — serveur Bitwarden-compatible
+- [Profils Cogitator](/stc/fr/cogitator/) — reliques composées pour les cas d'usage courants
+- [Reliques de durcissement](/stc/fr/relics/hardening/) — les quatre modules de durcissement en détail
+- [AMD GPU](/stc/fr/relics/amd-gpu/) — relique GPU avec compatibilité gaming
+- [Pipewire](/stc/fr/relics/pipewire/) — relique audio
+- [Plasma 6](/stc/fr/relics/plasma6/) — relique bureau KDE Plasma 6
+- [YubiKey](/stc/fr/relics/yubikey/) — configuration YubiKey en deux reliques
+- [Plasma Manager](/stc/fr/relics/plasma-manager/) — configuration KDE déclarative
+- [Reliques Docker](/stc/fr/relics/docker/) — Traefik, CrowdSec et notify
+- [AWS](/stc/fr/relics/aws/) — drivers EC2 et configuration AWS
+- [Traefik](/stc/fr/relics/traefik/) — reverse proxy natif NixOS
+- [Vaultwarden](/stc/fr/relics/vaultwarden/) — serveur Bitwarden-compatible

@@ -52,8 +52,8 @@ systemd.user.services.wireplumber.wantedBy = [ "default.target" ]
 
 WirePlumber est explicitement ajouté à `default.target` pour que l'audio
 s'initialise correctement au démarrage de Plasma. Associe-le à
-[`relics-pipewire`](/fr/relics/pipewire/) pour une pile audio complète — ou
-utilise [`cogitator-plasma`](/fr/cogitator/plasma/) qui compose les deux reliques.
+[`relics-pipewire`](/stc/fr/relics/pipewire/) pour une pile audio complète — ou
+utilise [`cogitator-plasma`](/stc/fr/cogitator/plasma/) qui compose les deux reliques.
 
 ## Exemple d'utilisation
 
@@ -78,5 +78,5 @@ modules = [
 
 ## Voir aussi
 
-- [cogitator-plasma](/fr/cogitator/plasma/) — compose cette relique avec Pipewire en une seule option
-- [Pipewire](/fr/relics/pipewire/) — relique audio, nécessaire pour l'audio du bureau
+- [cogitator-plasma](/stc/fr/cogitator/plasma/) — compose cette relique avec Pipewire en une seule option
+- [Pipewire](/stc/fr/relics/pipewire/) — relique audio, nécessaire pour l'audio du bureau

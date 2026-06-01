@@ -91,5 +91,5 @@ The rollback runs in the systemd stage-1 initrd. This means
 
 ## Pair With
 
-- [`relics-boot`](/en/relics/boot/) — required for ZFS initrd support
-- [`forge/layouts/zfs-local-vm`](/en/forge/layouts/) — creates the ZFS pool and datasets
+- [`relics-boot`](/stc/en/relics/boot/) — required for ZFS initrd support
+- [`forge/layouts/zfs-local-vm`](/stc/en/forge/layouts/) — creates the ZFS pool and datasets

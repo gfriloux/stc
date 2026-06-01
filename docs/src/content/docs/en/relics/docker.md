@@ -179,7 +179,7 @@ modules = [
 ```
 
 :::tip[cogitator-docker-server]
-The [`cogitator-docker-server`](/en/cogitator/docker-server/) profile enables all
+The [`cogitator-docker-server`](/stc/en/cogitator/docker-server/) profile enables all
 three relics and sets up Docker in one option. Use it when the defaults suit you.
 :::
 

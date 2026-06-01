@@ -152,6 +152,6 @@ the live system still uses systemd-boot.
 
 ## See Also
 
-- [Forge — Layouts](/en/forge/layouts/) — the `zfs-local-vm` disk layout
-- [relics-impermanence](/en/relics/impermanence/) — how the rollback works
-- [cogitator-vm](/en/cogitator/vm/) — the VM base profile options
+- [Forge — Layouts](/stc/en/forge/layouts/) — the `zfs-local-vm` disk layout
+- [relics-impermanence](/stc/en/relics/impermanence/) — how the rollback works
+- [cogitator-vm](/stc/en/cogitator/vm/) — the VM base profile options

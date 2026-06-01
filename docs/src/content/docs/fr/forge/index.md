@@ -32,7 +32,7 @@ un workflow spécifique, plus des hooks `pre-commit` et un exécuteur de tâches
 | `vm` | qemu, nix-tree, nvd, alejandra, statix, deadnix |
 | `nixos` | alejandra, statix, deadnix, nh, nvd, sops, trivy |
 
-Documentation complète : [Forge — Shells](/fr/forge/shells/)
+Documentation complète : [Forge — Shells](/stc/fr/forge/shells/)
 
 ## Layouts
 
@@ -42,7 +42,7 @@ Un layout est disponible pour les machines virtuelles QEMU/KVM :
 |--------|----------------------|---------------|
 | `zfs-local-vm` | `{ poolName ? "vmpool" }` | EFI 1G + reste ZFS, trois datasets |
 
-Documentation complète : [Forge — Layouts](/fr/forge/layouts/)
+Documentation complète : [Forge — Layouts](/stc/fr/forge/layouts/)
 
 ## Templates
 
@@ -56,4 +56,4 @@ Cinq templates de projets initialisent de nouveaux dépôts avec un dev shell et
 | `mkdocs` | `nix flake init -t github:gfriloux/stc#mkdocs` |
 | `zensical` | `nix flake init -t github:gfriloux/stc#zensical` |
 
-Documentation complète : [Forge — Templates](/fr/forge/templates/)
+Documentation complète : [Forge — Templates](/stc/fr/forge/templates/)

@@ -29,7 +29,7 @@ just build    # construit l'AMI
 just publish  # publie sur AWS
 ```
 
-Voir [aws-ami](/fr/schematics/aws-ami/) pour les détails de configuration.
+Voir [aws-ami](/stc/fr/schematics/aws-ami/) pour les détails de configuration.
 
 ## Tu veux intégrer des modules dans ton flake existant ?
 
@@ -136,10 +136,10 @@ Templates disponibles : `ansible`, `terraform`, `mdbook`, `mkdocs`, `zensical`.
 
 | Catégorie | Référence |
 |-----------|-----------|
-| Modules NixOS (reliques) | [Reliques](/fr/relics/) |
-| Modules NixOS (profils) | [Cogitator](/fr/cogitator/) |
-| Modules Home Manager | [Reliques — Apps graphiques](/fr/relics/home-apps/), [Cogitator — Enginseer](/fr/cogitator/enginseer/) |
-| Dev shells | [Forge — Shells](/fr/forge/shells/) |
-| Templates de flake | [Forge — Templates](/fr/forge/templates/) |
-| Layouts de disque | [Forge — Layouts](/fr/forge/layouts/) |
-| Exemples complets | [Schematics](/fr/schematics/) |
+| Modules NixOS (reliques) | [Reliques](/stc/fr/relics/) |
+| Modules NixOS (profils) | [Cogitator](/stc/fr/cogitator/) |
+| Modules Home Manager | [Reliques — Apps graphiques](/stc/fr/relics/home-apps/), [Cogitator — Enginseer](/stc/fr/cogitator/enginseer/) |
+| Dev shells | [Forge — Shells](/stc/fr/forge/shells/) |
+| Templates de flake | [Forge — Templates](/stc/fr/forge/templates/) |
+| Layouts de disque | [Forge — Layouts](/stc/fr/forge/layouts/) |
+| Exemples complets | [Schematics](/stc/fr/schematics/) |

@@ -51,6 +51,6 @@ modules = [
 
 ## Voir aussi
 
-- [Relique Plasma 6](/fr/relics/plasma6/) — module Plasma 6 autonome
-- [Relique Pipewire](/fr/relics/pipewire/) — module audio autonome
-- [cogitator-gaming](/fr/cogitator/gaming/) — profil gaming, compose aussi Pipewire
+- [Relique Plasma 6](/stc/fr/relics/plasma6/) — module Plasma 6 autonome
+- [Relique Pipewire](/stc/fr/relics/pipewire/) — module audio autonome
+- [cogitator-gaming](/stc/fr/cogitator/gaming/) — profil gaming, compose aussi Pipewire

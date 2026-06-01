@@ -51,6 +51,6 @@ modules = [
 
 ## See Also
 
-- [Plasma 6 relic](/en/relics/plasma6/) — standalone Plasma 6 module
-- [Pipewire relic](/en/relics/pipewire/) — standalone audio module
-- [cogitator-gaming](/en/cogitator/gaming/) — gaming profile, also composes Pipewire
+- [Plasma 6 relic](/stc/en/relics/plasma6/) — standalone Plasma 6 module
+- [Pipewire relic](/stc/en/relics/pipewire/) — standalone audio module
+- [cogitator-gaming](/stc/en/cogitator/gaming/) — gaming profile, also composes Pipewire

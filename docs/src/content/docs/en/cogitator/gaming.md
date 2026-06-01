@@ -90,7 +90,7 @@ modules = [
 
 ## See Also
 
-- [AMD GPU relic](/en/relics/amd-gpu/) — standalone GPU relic
-- [Pipewire relic](/en/relics/pipewire/) — standalone audio relic
-- [Hardening relics](/en/relics/hardening/) — gaming compatibility options
-- [cogitator-plasma](/en/cogitator/plasma/) — Plasma desktop profile, composable with cogitator-gaming
+- [AMD GPU relic](/stc/en/relics/amd-gpu/) — standalone GPU relic
+- [Pipewire relic](/stc/en/relics/pipewire/) — standalone audio relic
+- [Hardening relics](/stc/en/relics/hardening/) — gaming compatibility options
+- [cogitator-plasma](/stc/en/cogitator/plasma/) — Plasma desktop profile, composable with cogitator-gaming

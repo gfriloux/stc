@@ -36,5 +36,5 @@ modules = [
 
 ## À combiner avec
 
-- [`relics-zfs`](/fr/relics/zfs/) — noyau compatible ZFS, support des systèmes de fichiers, maintenance des pools
-- [`relics-impermanence`](/fr/relics/impermanence/) — rollback de la racine à chaque démarrage
+- [`relics-zfs`](/stc/fr/relics/zfs/) — noyau compatible ZFS, support des systèmes de fichiers, maintenance des pools
+- [`relics-impermanence`](/stc/fr/relics/impermanence/) — rollback de la racine à chaque démarrage

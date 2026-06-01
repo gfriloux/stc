@@ -157,7 +157,7 @@ Gaming machine with hardening:
 ## The cogitator-hardening Shortcut
 
 For the common case of enabling all four relics with defaults, use
-[`cogitator-hardening`](/en/cogitator/hardening/). One option instead of four:
+[`cogitator-hardening`](/stc/en/cogitator/hardening/). One option instead of four:
 
 ```nix
 modules = [ stc.nixosModules.cogitator-hardening ];

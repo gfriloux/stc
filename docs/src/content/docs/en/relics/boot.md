@@ -36,5 +36,5 @@ modules = [
 
 ## Pair With
 
-- [`relics-zfs`](/en/relics/zfs/) — ZFS-compatible kernel, filesystem support, pool maintenance
-- [`relics-impermanence`](/en/relics/impermanence/) — root rollback at each boot
+- [`relics-zfs`](/stc/en/relics/zfs/) — ZFS-compatible kernel, filesystem support, pool maintenance
+- [`relics-impermanence`](/stc/en/relics/impermanence/) — root rollback at each boot

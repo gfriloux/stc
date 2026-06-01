@@ -159,7 +159,7 @@ Machine gaming avec durcissement :
 ## Le raccourci cogitator-hardening
 
 Pour le cas courant d'activation des quatre reliques avec les valeurs par défaut,
-utilise [`cogitator-hardening`](/fr/cogitator/hardening/). Une option au lieu de quatre :
+utilise [`cogitator-hardening`](/stc/fr/cogitator/hardening/). Une option au lieu de quatre :
 
 ```nix
 modules = [ stc.nixosModules.cogitator-hardening ];

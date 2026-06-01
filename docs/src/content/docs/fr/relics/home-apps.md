@@ -92,5 +92,5 @@ modules = [ stc.homeModules.relics-zen-browser ];
 
 :::tip[Profil Desktop]
 Si tu veux kitty + ghostty + zen-browser + GIMP + VLC en une seule option, utilise le
-profil [`cogitator-desktop`](/fr/cogitator/desktop/) à la place.
+profil [`cogitator-desktop`](/stc/fr/cogitator/desktop/) à la place.
 :::

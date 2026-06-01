@@ -75,5 +75,5 @@ savoir comment le fichier y arrive.
 
 ## Voir aussi
 
-- [Reliques Docker](/fr/relics/docker/) — Traefik, CrowdSec et notify en détail
-- [Schématic : aws-ami](/fr/schematics/aws-ami/) — un exemple de production complet utilisant ce profil
+- [Reliques Docker](/stc/fr/relics/docker/) — Traefik, CrowdSec et notify en détail
+- [Schématic : aws-ami](/stc/fr/schematics/aws-ami/) — un exemple de production complet utilisant ce profil

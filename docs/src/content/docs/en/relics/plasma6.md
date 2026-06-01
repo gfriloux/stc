@@ -49,8 +49,8 @@ systemd.user.services.wireplumber.wantedBy = [ "default.target" ]
 ```
 
 WirePlumber is explicitly added to `default.target` so audio initialises reliably
-when Plasma starts. Pair with [`relics-pipewire`](/en/relics/pipewire/) for a
-complete audio stack — or use [`cogitator-plasma`](/en/cogitator/plasma/) which
+when Plasma starts. Pair with [`relics-pipewire`](/stc/en/relics/pipewire/) for a
+complete audio stack — or use [`cogitator-plasma`](/stc/en/cogitator/plasma/) which
 composes both relics.
 
 ## Usage Example
@@ -76,5 +76,5 @@ modules = [
 
 ## See Also
 
-- [cogitator-plasma](/en/cogitator/plasma/) — composes this relic with Pipewire in one enable option
-- [Pipewire](/en/relics/pipewire/) — audio relic, required for desktop audio
+- [cogitator-plasma](/stc/en/cogitator/plasma/) — composes this relic with Pipewire in one enable option
+- [Pipewire](/stc/en/relics/pipewire/) — audio relic, required for desktop audio

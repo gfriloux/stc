@@ -86,6 +86,6 @@ unique 8-character hex string for every machine.
 
 ## Pair With
 
-- [`relics-boot`](/en/relics/boot/) — systemd-boot + EFI bootloader
-- [`relics-impermanence`](/en/relics/impermanence/) — root rollback at each boot
-- [`forge/layouts/zfs-local-vm`](/en/forge/layouts/) — disko disk layout
+- [`relics-boot`](/stc/en/relics/boot/) — systemd-boot + EFI bootloader
+- [`relics-impermanence`](/stc/en/relics/impermanence/) — root rollback at each boot
+- [`forge/layouts/zfs-local-vm`](/stc/en/forge/layouts/) — disko disk layout

@@ -53,5 +53,5 @@ modules = [
 
 ## Voir aussi
 
-- [cogitator-gaming](/fr/cogitator/gaming/) — compose cette relique avec Pipewire et Steam
-- [Pipewire](/fr/relics/pipewire/) — relique audio, se marie bien avec AMD GPU sur machines gaming
+- [cogitator-gaming](/stc/fr/cogitator/gaming/) — compose cette relique avec Pipewire et Steam
+- [Pipewire](/stc/fr/relics/pipewire/) — relique audio, se marie bien avec AMD GPU sur machines gaming

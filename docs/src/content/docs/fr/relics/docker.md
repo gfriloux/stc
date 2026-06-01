@@ -179,7 +179,7 @@ modules = [
 ```
 
 :::tip[cogitator-docker-server]
-Le profil [`cogitator-docker-server`](/fr/cogitator/docker-server/) active les
+Le profil [`cogitator-docker-server`](/stc/fr/cogitator/docker-server/) active les
 trois reliques et configure Docker en une seule option. Utilise-le quand les
 valeurs par défaut te conviennent.
 :::

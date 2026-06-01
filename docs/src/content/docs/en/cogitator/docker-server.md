@@ -75,5 +75,5 @@ file gets there.
 
 ## See Also
 
-- [Docker relics](/en/relics/docker/) — Traefik, CrowdSec, and notify in detail
-- [Schematic: aws-ami](/en/schematics/aws-ami/) — a complete production example using this profile
+- [Docker relics](/stc/en/relics/docker/) — Traefik, CrowdSec, and notify in detail
+- [Schematic: aws-ami](/stc/en/schematics/aws-ami/) — a complete production example using this profile

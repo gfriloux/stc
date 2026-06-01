@@ -67,5 +67,5 @@ for the full option reference.
 
 ## See Also
 
-- [Plasma 6 relic](/en/relics/plasma6/) — system-level Plasma 6 setup (NixOS)
-- [cogitator-plasma](/en/cogitator/plasma/) — NixOS Plasma + Pipewire profile
+- [Plasma 6 relic](/stc/en/relics/plasma6/) — system-level Plasma 6 setup (NixOS)
+- [cogitator-plasma](/stc/en/cogitator/plasma/) — NixOS Plasma + Pipewire profile

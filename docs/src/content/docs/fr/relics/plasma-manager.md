@@ -69,5 +69,5 @@ pour la référence complète des options.
 
 ## Voir aussi
 
-- [Relique Plasma 6](/fr/relics/plasma6/) — configuration système Plasma 6 (NixOS)
-- [cogitator-plasma](/fr/cogitator/plasma/) — profil NixOS Plasma + Pipewire
+- [Relique Plasma 6](/stc/fr/relics/plasma6/) — configuration système Plasma 6 (NixOS)
+- [cogitator-plasma](/stc/fr/cogitator/plasma/) — profil NixOS Plasma + Pipewire

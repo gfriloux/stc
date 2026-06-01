@@ -98,6 +98,6 @@ pour que le disque soit visible dans l'initrd avant que ZFS ne tente d'importer 
 
 ## Voir aussi
 
-- [Schématic : local-vm](/fr/schematics/local-vm/) — exemple complet utilisant ce layout
-- [relics-boot](/fr/relics/boot/) — fournit le noyau ZFS
-- [relics-impermanence](/fr/relics/impermanence/) — utilise le snapshot `@blank` créé ici
+- [Schématic : local-vm](/stc/fr/schematics/local-vm/) — exemple complet utilisant ce layout
+- [relics-boot](/stc/fr/relics/boot/) — fournit le noyau ZFS
+- [relics-impermanence](/stc/fr/relics/impermanence/) — utilise le snapshot `@blank` créé ici

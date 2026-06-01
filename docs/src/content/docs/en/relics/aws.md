@@ -61,6 +61,6 @@ For Xen (older instances) :
 
 ## Combine with
 
-- **[relics-zfs](/en/relics/zfs)** (required) — ZFS pool for EBS expansion
-- **[relics-impermanence](/en/relics/impermanence)** — Recommended for ephemeral rootfs on EC2
+- **[relics-zfs](/stc/en/relics/zfs)** (required) — ZFS pool for EBS expansion
+- **[relics-impermanence](/stc/en/relics/impermanence)** — Recommended for ephemeral rootfs on EC2
 - **schematic aws-ami** — Template to build NixOS AMIs

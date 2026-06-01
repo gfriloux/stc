@@ -91,5 +91,5 @@ hook `postDeviceCommands` n'est pas utilisé.
 
 ## À combiner avec
 
-- [`relics-boot`](/fr/relics/boot/) — requis pour le support ZFS dans l'initrd
-- [`forge/layouts/zfs-local-vm`](/fr/forge/layouts/) — crée le pool ZFS et les datasets
+- [`relics-boot`](/stc/fr/relics/boot/) — requis pour le support ZFS dans l'initrd
+- [`forge/layouts/zfs-local-vm`](/stc/fr/forge/layouts/) — crée le pool ZFS et les datasets

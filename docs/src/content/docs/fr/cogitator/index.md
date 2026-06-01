@@ -54,10 +54,10 @@ Utilise des reliques individuelles quand :
 
 ## Voir aussi
 
-- [Profil de durcissement](/fr/cogitator/hardening/)
-- [Profil VM](/fr/cogitator/vm/)
-- [Profil serveur Docker](/fr/cogitator/docker-server/)
-- [Profil bureau Plasma](/fr/cogitator/plasma/)
-- [Profil gaming](/fr/cogitator/gaming/)
-- [Profil Enginseer](/fr/cogitator/enginseer/)
-- [Profil Desktop](/fr/cogitator/desktop/)
+- [Profil de durcissement](/stc/fr/cogitator/hardening/)
+- [Profil VM](/stc/fr/cogitator/vm/)
+- [Profil serveur Docker](/stc/fr/cogitator/docker-server/)
+- [Profil bureau Plasma](/stc/fr/cogitator/plasma/)
+- [Profil gaming](/stc/fr/cogitator/gaming/)
+- [Profil Enginseer](/stc/fr/cogitator/enginseer/)
+- [Profil Desktop](/stc/fr/cogitator/desktop/)

@@ -79,6 +79,6 @@ modules = [
 
 ## See Also
 
-- [cogitator-hardening](/en/cogitator/hardening/) — pair with this for a hardened VM
-- [cogitator-enginseer](/en/cogitator/enginseer/) — pair with this for the full CLI toolkit
-- [Schematic: local-vm](/en/schematics/local-vm/) — complete working example
+- [cogitator-hardening](/stc/en/cogitator/hardening/) — pair with this for a hardened VM
+- [cogitator-enginseer](/stc/en/cogitator/enginseer/) — pair with this for the full CLI toolkit
+- [Schematic: local-vm](/stc/en/schematics/local-vm/) — complete working example

@@ -99,6 +99,6 @@ visible in the initrd before ZFS tries to import the pool.
 
 ## See Also
 
-- [Schematic: local-vm](/en/schematics/local-vm/) — complete example using this layout
-- [relics-boot](/en/relics/boot/) — provides the ZFS kernel
-- [relics-impermanence](/en/relics/impermanence/) — uses the `@blank` snapshot created here
+- [Schematic: local-vm](/stc/en/schematics/local-vm/) — complete example using this layout
+- [relics-boot](/stc/en/relics/boot/) — provides the ZFS kernel
+- [relics-impermanence](/stc/en/relics/impermanence/) — uses the `@blank` snapshot created here

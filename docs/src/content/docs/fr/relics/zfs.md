@@ -90,6 +90,6 @@ pour chaque machine.
 
 ## À combiner avec
 
-- [`relics-boot`](/fr/relics/boot/) — chargeur de démarrage systemd-boot + EFI
-- [`relics-impermanence`](/fr/relics/impermanence/) — rollback de la racine à chaque démarrage
-- [`forge/layouts/zfs-local-vm`](/fr/forge/layouts/) — layout de disque disko
+- [`relics-boot`](/stc/fr/relics/boot/) — chargeur de démarrage systemd-boot + EFI
+- [`relics-impermanence`](/stc/fr/relics/impermanence/) — rollback de la racine à chaque démarrage
+- [`forge/layouts/zfs-local-vm`](/stc/fr/forge/layouts/) — layout de disque disko

@@ -52,4 +52,4 @@ modules = [
 
 ## Voir aussi
 
-- [Reliques de durcissement](/fr/relics/hardening/) — documentation détaillée de chaque relique individuelle
+- [Reliques de durcissement](/stc/fr/relics/hardening/) — documentation détaillée de chaque relique individuelle

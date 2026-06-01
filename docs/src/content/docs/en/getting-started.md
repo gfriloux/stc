@@ -29,7 +29,7 @@ just build    # builds the AMI
 just publish  # publishes to AWS
 ```
 
-See [aws-ami](/en/schematics/aws-ami/) for configuration details.
+See [aws-ami](/stc/en/schematics/aws-ami/) for configuration details.
 
 ## Want to Integrate Modules into Your Existing Flake?
 
@@ -136,10 +136,10 @@ Available templates: `ansible`, `terraform`, `mdbook`, `mkdocs`, `zensical`.
 
 | Category | Reference |
 |----------|-----------|
-| NixOS modules (relics) | [Relics](/en/relics/) |
-| NixOS modules (profiles) | [Cogitator](/en/cogitator/) |
-| Home Manager modules | [Relics — Home Apps](/en/relics/home-apps/), [Cogitator — Enginseer](/en/cogitator/enginseer/) |
-| Dev shells | [Forge — Shells](/en/forge/shells/) |
-| Flake templates | [Forge — Templates](/en/forge/templates/) |
-| Disk layouts | [Forge — Layouts](/en/forge/layouts/) |
-| Full examples | [Schematics](/en/schematics/) |
+| NixOS modules (relics) | [Relics](/stc/en/relics/) |
+| NixOS modules (profiles) | [Cogitator](/stc/en/cogitator/) |
+| Home Manager modules | [Relics — Home Apps](/stc/en/relics/home-apps/), [Cogitator — Enginseer](/stc/en/cogitator/enginseer/) |
+| Dev shells | [Forge — Shells](/stc/en/forge/shells/) |
+| Flake templates | [Forge — Templates](/stc/en/forge/templates/) |
+| Disk layouts | [Forge — Layouts](/stc/en/forge/layouts/) |
+| Full examples | [Schematics](/stc/en/schematics/) |
