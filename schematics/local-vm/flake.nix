@@ -2,8 +2,11 @@
 # A QEMU/KVM virtual machine with ZFS + impermanence + full hardening.
 # Use this as a starting point for local development VMs.
 #
-# Build the qcow2 image:
-#   nix build .#nixosConfigurations.local-vm.config.system.build.qcow2
+# Pre-flight:
+#   1. Generate a unique hostId: head -c4 /dev/urandom | od -A none -t x4 | tr -d ' \n'
+#      Replace the placeholder networking.hostId below with your value.
+#   2. Add your SSH public key to stc.cogitator.vm.authorizedKeys.
+#   3. nix build .#nixosConfigurations.local-vm.config.system.build.qcow2
 #
 # Boot with QEMU:
 #   qemu-system-x86_64 -enable-kvm -m 4096 -drive file=result,format=qcow2
@@ -17,95 +20,58 @@
       url = "path:../..";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    # disko's NixOS module is not injected by any STC module, so the consumer
-    # must import it. Reuse STC's exact version to avoid drift.
-    disko.follows = "stc/disko";
   };
 
-  outputs =
-    {
-      nixpkgs,
-      stc,
-      disko,
-      ...
-    }:
-    {
-      nixosConfigurations.local-vm = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        modules = [
-          # disko defines the `disko.devices` option used by the layout below.
-          # impermanence is NOT imported here — relics-impermanence injects it internally.
-          disko.nixosModules.disko
+  outputs = {
+    nixpkgs,
+    stc,
+    ...
+  }: {
+    nixosConfigurations.local-vm = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        # Disk image builder: ZFS + impermanence + hardening + qcow2.
+        # Injects disko and impermanence modules automatically.
+        stc.nixosModules.cogitator-sarcophagus-kvm
 
-          # STC relics
-          stc.nixosModules.relics-boot
-          stc.nixosModules.relics-zfs
-          stc.nixosModules.relics-networking
-          stc.nixosModules.relics-impermanence
+        # Base user profile: fish, SSH, optional Docker, Nix GC.
+        stc.nixosModules.cogitator-vm
 
-          # STC cogitators
-          stc.nixosModules.cogitator-hardening
-          stc.nixosModules.cogitator-vm
+        (
+          {...}: {
+            stc.cogitator.sarcophagus-kvm = {
+              enable = true;
+              # poolName = "vmpool";  # default
+              impermanence.extraDirectories = ["/var/db/sudo/lectured"];
+            };
 
-          # Disk layout
-          (stc.lib.layouts.zfs-local-vm { poolName = "vmpool"; })
+            stc.cogitator.vm = {
+              enable = true;
+              username = "admin";
+              authorizedKeys = [
+                # "ssh-ed25519 AAAA... you@host"
+              ];
+              docker.enable = false;
+            };
 
-          # qcow2 image builder
-          ./qcow2.nix
+            networking.hostName = "local-vm";
+            # Generate with: head -c4 /dev/urandom | od -A none -t x4 | tr -d ' \n'
+            networking.hostId = "deadc0de";
 
-          # System configuration
-          (
-            { ... }:
-            {
-              stc = {
-                boot.enable = true;
-                zfs.enable = true;
-                networking.enable = true;
-                hardening.enable = true;
-                impermanence = {
-                  enable = true;
-                  poolName = "vmpool";
-                  extraDirectories = [
-                    "/var/db/sudo/lectured"
-                  ];
-                };
-                cogitator.vm = {
-                  enable = true;
-                  username = "admin";
-                  authorizedKeys = [
-                    # "ssh-ed25519 AAAA... you@host"
-                  ];
-                  docker.enable = false;
-                };
-              };
+            users.mutableUsers = false;
+            users.users.admin.initialPassword = "changeme";
+            users.users.root.initialPassword = "changeme";
 
-              # QEMU virtio drivers — must be loaded early so /dev/vda exists
-              # before ZFS tries to import the pool.
-              boot.initrd.kernelModules = [ "virtio_pci" "virtio_blk" ];
+            security.sudo.wheelNeedsPassword = false;
 
-              # virtio disks have no by-id entries in QEMU.
-              boot.zfs.devNodes = "/dev";
+            time.timeZone = "UTC";
+            i18n.defaultLocale = "fr_FR.UTF-8";
+            console.keyMap = "fr";
 
-              networking.hostName = "local-vm";
-              # Generate with: head -c4 /dev/urandom | od -A none -t x4 | tr -d ' \n'
-              networking.hostId = "deadc0de";
-
-              users.mutableUsers = false;
-              users.users.admin.initialPassword = "changeme";
-              users.users.root.initialPassword = "changeme";
-
-              security.sudo.wheelNeedsPassword = false;
-
-              time.timeZone = "UTC";
-              i18n.defaultLocale = "fr_FR.UTF-8";
-              console.keyMap = "fr";
-
-              environment.systemPackages = [ ];
-              system.stateVersion = "24.11";
-            }
-          )
-        ];
-      };
+            system.stateVersion = "24.11";
+          }
+        )
+      ];
     };
+  };
 }

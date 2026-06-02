@@ -5,9 +5,15 @@ description: Une AMI NixOS pour AWS EC2 avec ZFS, impermanence et durcissement.
 
 **Source :** `schematics/aws-ami/`
 
-Une image AMI NixOS pour AWS EC2, avec stockage ZFS, impermanence et durcissement
-complet. L'AMI utilise le même layout de disque `zfs-local-vm` que le schématic
-local-vm — la structure du pool ZFS est identique.
+Une image AMI NixOS pour AWS EC2, avec stockage ZFS, impermanence et durcissement complet.
+
+Ce schématic utilise [cogitator-sarcophagus-aws](/stc/fr/cogitator/sarcophagus-aws/),
+qui intègre le schéma disque, la configuration de plateforme AWS, l'override GRUB et
+le constructeur d'image brute — aucun import `disko` séparé ni module `image.nix`
+n'est nécessaire.
+
+Les instances déployées depuis cette AMI sont destinées à être gérées avec
+[cogitator-dreadnought](/stc/fr/cogitator/dreadnought/).
 
 ## Prérequis
 
@@ -35,25 +41,7 @@ tu ne pourras pas te connecter à l'instance.
 
 | Module | Objet |
 |--------|-------|
-| `disko.nixosModules.disko` | Partitionnement déclaratif du disque |
-| `stc.nixosModules.relics-boot` | systemd-boot + noyau compatible ZFS |
-| `stc.nixosModules.relics-zfs` | Scrub auto, TRIM, ZED |
-| `stc.nixosModules.relics-networking` | DHCP, DNS Quad9 |
-| `stc.nixosModules.relics-impermanence` | Rollback racine à chaque démarrage |
-| `stc.nixosModules.cogitator-hardening` | Suite de durcissement complète |
-| `stc.lib.layouts.zfs-local-vm` | Layout disque EFI + ZFS |
-| `./image.nix` | Builder d'image raw (override GRUB pour le build) |
-
-## Modules noyau spécifiques AWS
-
-Les instances AWS nécessitent des drivers pour le matériel Nitro (moderne) et Xen (legacy) :
-
-```nix
-# Instances Nitro : stockage NVMe + réseau ENA
-# Instances Xen : périphérique bloc + frontend réseau
-boot.initrd.availableKernelModules = [ "nvme" "xen_blkfront" ];
-boot.kernelModules = [ "ena" "xen_netfront" ];
-```
+| `stc.nixosModules.cogitator-sarcophagus-aws` | ZFS + impermanence + durcissement + plateforme AWS + schéma disque + constructeur d'image brute |
 
 ## Recettes du Justfile
 
@@ -76,17 +64,61 @@ Le flux de publication complet :
 3. Attente jusqu'à la fin de l'import
 4. Enregistrement du snapshot comme AMI (`aws ec2 register-image`)
 
-## image.nix
+## flake.nix complet
 
-Même override GRUB/BIOS que `local-vm/qcow2.nix`. Le builder `make-single-disk-zfs-image.nix`
-crée un layout de partition BIOS ; GRUB est forcé pour le build. L'AMI enregistrée démarre
-correctement car GRUB utilise les UUIDs de partition, pas les noms de périphériques.
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    stc = {
+      url = "github:gfriloux/stc";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
 
-L'image est construite au format `raw` (pas qcow2) — `aws ec2 import-snapshot` nécessite
-une image disque brute.
+  outputs = { nixpkgs, stc, ... }: {
+    nixosConfigurations.aws-ami = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        stc.nixosModules.cogitator-sarcophagus-aws
+        ({ ... }: {
+          stc.cogitator.sarcophagus-aws = {
+            enable = true;
+            impermanence.extraDirectories = [ "/var/db/sudo/lectured" ];
+          };
+          networking.hostName = "aws-ami";
+          networking.hostId = "cafebabe";  # remplace par le tien
+          users = {
+            mutableUsers = false;
+            users.root.initialPassword = "changeme";
+            users.admin = {
+              isNormalUser = true;
+              extraGroups = [ "wheel" ];
+              initialPassword = "changeme";
+              openssh.authorizedKeys.keys = [
+                # "ssh-ed25519 AAAA... toi@hote"
+              ];
+            };
+          };
+          security.sudo.wheelNeedsPassword = false;
+          time.timeZone = "UTC";
+          i18n.defaultLocale = "en_US.UTF-8";
+          system.stateVersion = "24.11";
+        })
+      ];
+    };
+  };
+}
+```
+
+:::caution[Changer le hostId]
+`networking.hostId = "cafebabe"` est un placeholder. Chaque machine ZFS doit avoir
+un hostId unique. Génère-en un : `head -c4 /dev/urandom | od -A none -t x4 | tr -d ' \n'`
+:::
 
 ## Voir aussi
 
-- [Forge — Layouts](/stc/fr/forge/layouts/) — le layout disque `zfs-local-vm`
-- [cogitator-hardening](/stc/fr/cogitator/hardening/) — le profil de durcissement utilisé ici
+- [cogitator-sarcophagus-aws](/stc/fr/cogitator/sarcophagus-aws/) — référence complète des options du constructeur d'image
+- [cogitator-dreadnought](/stc/fr/cogitator/dreadnought/) — profil pour gérer les instances déployées depuis cette AMI
+- [relics-aws](/stc/fr/relics/aws/) — la relique de plateforme AWS
 - [relics-impermanence](/stc/fr/relics/impermanence/) — comment fonctionne le rollback

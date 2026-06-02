@@ -527,10 +527,6 @@
     },
     "root": {
       "inputs": {
-        "disko": [
-          "stc",
-          "disko"
-        ],
         "nixpkgs": "nixpkgs",
         "stc": "stc"
       }

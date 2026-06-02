@@ -17,85 +17,63 @@
       url = "path:../..";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    # Reuse the exact versions STC depends on to avoid version drift.
-    disko.follows = "stc/disko";
   };
 
-  outputs =
-    {
-      nixpkgs,
-      stc,
-      disko,
-      ...
-    }:
-    {
-      nixosConfigurations.aws-ami = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        modules = [
-          disko.nixosModules.disko
+  outputs = {
+    nixpkgs,
+    stc,
+    ...
+  }: {
+    nixosConfigurations.aws-ami = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        # Disk image builder: ZFS + impermanence + hardening + AWS platform + raw image.
+        # Injects disko and impermanence modules automatically.
+        stc.nixosModules.cogitator-sarcophagus-aws
 
-          stc.nixosModules.relics-boot
-          stc.nixosModules.relics-zfs
-          stc.nixosModules.relics-networking
-          stc.nixosModules.relics-impermanence
-          stc.nixosModules.relics-aws
-          stc.nixosModules.cogitator-hardening
+        (
+          {...}: {
+            stc.cogitator.sarcophagus-aws = {
+              enable = true;
+              # poolName = "vmpool";    # default
+              # rootSize = 4096;        # MiB — default
+              impermanence.extraDirectories = ["/var/db/sudo/lectured"];
+            };
 
-          (stc.lib.layouts.zfs-local-vm { poolName = "vmpool"; })
+            networking.hostName = "aws-ami";
+            # Replace with a unique value before deploying.
+            # Generate with: head -c4 /dev/urandom | od -A none -t x4 | tr -d ' \n'
+            networking.hostId = "cafebabe";
 
-          ./image.nix
-
-          (
-            { ... }:
-            {
-              stc = {
-                boot.enable = true;
-                zfs.enable = true;
-                networking.enable = true;
-                hardening.enable = true;
-                impermanence = {
-                  enable = true;
-                  poolName = "vmpool";
-                  extraDirectories = [ "/var/db/sudo/lectured" ];
-                };
-                aws = {
-                  enable = true;
-                  poolName = "vmpool";
-                };
+            users = {
+              mutableUsers = false;
+              users.root.initialPassword = "changeme";
+              users.admin = {
+                isNormalUser = true;
+                extraGroups = ["wheel"];
+                initialPassword = "changeme";
+                openssh.authorizedKeys.keys = [
+                  # "ssh-ed25519 AAAA... you@host"
+                ];
               };
+            };
 
-              # virtio drivers for QEMU local testing (harmless on real AWS hardware).
-              boot.initrd.kernelModules = [ "virtio_pci" "virtio_blk" ];
+            # Virtio block driver must be loaded early so /dev/vda is present
+            # before ZFS tries to import the pool.
+            boot.initrd.kernelModules = [
+              "virtio_pci"
+              "virtio_blk"
+            ];
 
-              networking.hostName = "aws-ami";
-              # Replace with a unique value before deploying.
-              # Generate with: head -c4 /dev/urandom | od -A none -t x4 | tr -d ' \n'
-              networking.hostId = "cafebabe";
+            security.sudo.wheelNeedsPassword = false;
 
-              users = {
-                mutableUsers = false;
-                users.root.initialPassword = "changeme";
-                users.admin = {
-                  isNormalUser = true;
-                  extraGroups = [ "wheel" ];
-                  initialPassword = "changeme";
-                  openssh.authorizedKeys.keys = [
-                    # "ssh-ed25519 AAAA... you@host"
-                  ];
-                };
-              };
+            time.timeZone = "UTC";
+            i18n.defaultLocale = "en_US.UTF-8";
 
-              security.sudo.wheelNeedsPassword = false;
-
-              time.timeZone = "UTC";
-              i18n.defaultLocale = "en_US.UTF-8";
-
-              environment.systemPackages = [ ];
-              system.stateVersion = "24.11";
-            }
-          )
-        ];
-      };
+            system.stateVersion = "24.11";
+          }
+        )
+      ];
     };
+  };
 }

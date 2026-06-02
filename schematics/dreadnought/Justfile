@@ -1,0 +1,58 @@
+# NixOS EC2 Dreadnought — ZFS + impermanence + hardening, deployed via deploy-rs
+# Run `just` to list all available recipes.
+#
+# Before use:
+#   1. Set deploy.nodes.dreadnought.hostname in flake.nix to your EC2 IP or DNS.
+#   2. Set HOST below to the same value for the ssh recipe.
+
+default:
+    @just --list --unsorted
+
+
+# ── Nix ───────────────────────────────────────────────────────────────────────
+
+# Format all Nix files
+fmt:
+    alejandra .
+
+# Check formatting without modifying files
+fmt-check:
+    alejandra --check .
+
+# Run all linters (statix + deadnix)
+lint:
+    statix check .
+    deadnix --fail . --exclude .direnv
+
+# Full CI gate
+ci: fmt-check lint
+
+# Evaluate the full flake (includes deploy-rs checks)
+check:
+    nix flake check --show-trace
+
+# Update flake inputs
+update:
+    nix flake update
+
+
+# ── Build ─────────────────────────────────────────────────────────────────────
+
+# Build the NixOS system closure (does not deploy)
+build:
+    nix build .#nixosConfigurations.dreadnought.config.system.build.toplevel \
+        --show-trace
+
+
+# ── Deploy ────────────────────────────────────────────────────────────────────
+
+# EC2 instance public IP or DNS — must match deploy.nodes.dreadnought.hostname in flake.nix
+HOST := "REPLACE_WITH_EC2_IP_OR_DNS"
+
+# Deploy the system to the EC2 instance via deploy-rs
+deploy:
+    nix develop --command deploy .#dreadnought
+
+# SSH into the EC2 instance
+ssh:
+    ssh admin@{{HOST}}

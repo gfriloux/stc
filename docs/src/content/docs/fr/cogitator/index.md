@@ -32,6 +32,9 @@ sous-jacentes. Le profil t'évite simplement d'activer chacune individuellement.
 | `cogitator-docker-server` | `stc.cogitator.docker-server.enable` | Traefik + CrowdSec + ntfy + démon Docker |
 | `cogitator-plasma` | `stc.cogitator.plasma.enable` | Bureau KDE Plasma 6 Wayland + audio Pipewire |
 | `cogitator-gaming` | `stc.cogitator.gaming.enable` | GPU AMD + Pipewire + Steam |
+| `cogitator-sarcophagus-kvm` | `stc.cogitator.sarcophagus-kvm.enable` | Image disque QEMU/KVM : ZFS + impermanence + durcissement + constructeur qcow2 |
+| `cogitator-sarcophagus-aws` | `stc.cogitator.sarcophagus-aws.enable` | Image disque AMI AWS : ZFS + impermanence + durcissement + plateforme AWS + constructeur raw |
+| `cogitator-dreadnought` | `stc.cogitator.dreadnought.enable` | Profil système EC2 : ZFS + impermanence + durcissement + plateforme AWS |
 
 ### Profils Home Manager
 
@@ -61,3 +64,6 @@ Utilise des reliques individuelles quand :
 - [Profil gaming](/stc/fr/cogitator/gaming/)
 - [Profil Enginseer](/stc/fr/cogitator/enginseer/)
 - [Profil Desktop](/stc/fr/cogitator/desktop/)
+- [Profil Sarcophagus KVM](/stc/fr/cogitator/sarcophagus-kvm/)
+- [Profil Sarcophagus AWS](/stc/fr/cogitator/sarcophagus-aws/)
+- [Profil Dreadnought](/stc/fr/cogitator/dreadnought/)
