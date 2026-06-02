@@ -6,8 +6,13 @@ description: A NixOS AMI for AWS EC2 with ZFS, impermanence, and hardening.
 **Source:** `schematics/aws-ami/`
 
 A NixOS AMI image for AWS EC2, with ZFS storage, impermanence, and full hardening.
-The AMI uses the same `zfs-local-vm` disk layout as the local-vm schematic — the
-ZFS pool structure is identical.
+
+This schematic uses [cogitator-sarcophagus-aws](/stc/en/cogitator/sarcophagus-aws/),
+which embeds the disk layout, AWS platform configuration, GRUB override, and raw
+image builder — no separate `disko` import or `image.nix` module required.
+
+Instances deployed from this AMI are intended to be managed with
+[cogitator-dreadnought](/stc/en/cogitator/dreadnought/).
 
 ## Prerequisites
 
@@ -35,25 +40,7 @@ key, you will not be able to connect to the instance.
 
 | Module | Purpose |
 |--------|---------|
-| `disko.nixosModules.disko` | Declarative disk partitioning |
-| `stc.nixosModules.relics-boot` | systemd-boot + ZFS-compatible kernel |
-| `stc.nixosModules.relics-zfs` | Auto-scrub, TRIM, ZED |
-| `stc.nixosModules.relics-networking` | DHCP, Quad9 DNS |
-| `stc.nixosModules.relics-impermanence` | Root rollback on each boot |
-| `stc.nixosModules.cogitator-hardening` | Full hardening suite |
-| `stc.lib.layouts.zfs-local-vm` | EFI + ZFS disk layout |
-| `./image.nix` | Raw image builder (GRUB override for build) |
-
-## AWS-Specific Kernel Modules
-
-AWS instances require drivers for Nitro (modern) and Xen (legacy) hardware:
-
-```nix
-# Nitro instances: NVMe storage + ENA networking
-# Xen instances: block device + network frontend
-boot.initrd.availableKernelModules = [ "nvme" "xen_blkfront" ];
-boot.kernelModules = [ "ena" "xen_netfront" ];
-```
+| `stc.nixosModules.cogitator-sarcophagus-aws` | ZFS + impermanence + hardening + AWS platform + disk layout + raw image builder |
 
 ## Justfile Recipes
 
@@ -76,17 +63,61 @@ The full publish flow:
 3. Poll until the import completes
 4. Register the snapshot as an AMI (`aws ec2 register-image`)
 
-## image.nix
+## Complete flake.nix
 
-Same GRUB/BIOS override as `local-vm/qcow2.nix`. The `make-single-disk-zfs-image.nix`
-builder creates a BIOS partition layout; GRUB is forced for the build. The registered
-AMI boots correctly because GRUB uses partition UUIDs, not device names.
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    stc = {
+      url = "github:gfriloux/stc";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
 
-The image is built in `raw` format (not qcow2) — AWS `import-snapshot` requires
-a raw disk image.
+  outputs = { nixpkgs, stc, ... }: {
+    nixosConfigurations.aws-ami = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        stc.nixosModules.cogitator-sarcophagus-aws
+        ({ ... }: {
+          stc.cogitator.sarcophagus-aws = {
+            enable = true;
+            impermanence.extraDirectories = [ "/var/db/sudo/lectured" ];
+          };
+          networking.hostName = "aws-ami";
+          networking.hostId = "cafebabe";  # replace with your own
+          users = {
+            mutableUsers = false;
+            users.root.initialPassword = "changeme";
+            users.admin = {
+              isNormalUser = true;
+              extraGroups = [ "wheel" ];
+              initialPassword = "changeme";
+              openssh.authorizedKeys.keys = [
+                # "ssh-ed25519 AAAA... you@host"
+              ];
+            };
+          };
+          security.sudo.wheelNeedsPassword = false;
+          time.timeZone = "UTC";
+          i18n.defaultLocale = "en_US.UTF-8";
+          system.stateVersion = "24.11";
+        })
+      ];
+    };
+  };
+}
+```
+
+:::caution[Change the hostId]
+`networking.hostId = "cafebabe"` is a placeholder. Every ZFS machine must have a
+unique hostId. Generate one: `head -c4 /dev/urandom | od -A none -t x4 | tr -d ' \n'`
+:::
 
 ## See Also
 
-- [Forge — Layouts](/stc/en/forge/layouts/) — the `zfs-local-vm` disk layout
-- [cogitator-hardening](/stc/en/cogitator/hardening/) — the hardening profile used here
+- [cogitator-sarcophagus-aws](/stc/en/cogitator/sarcophagus-aws/) — full options reference for the image builder
+- [cogitator-dreadnought](/stc/en/cogitator/dreadnought/) — profile for managing instances deployed from this AMI
+- [relics-aws](/stc/en/relics/aws/) — the AWS platform relic
 - [relics-impermanence](/stc/en/relics/impermanence/) — how the rollback works

@@ -19,8 +19,7 @@ Les schématics remplissent deux objectifs :
 Chaque schématic se compose de :
 
 - `flake.nix` — le flake racine avec les inputs et `nixosConfigurations`
-- Un ou plusieurs fichiers de modules (`qcow2.nix`, `image.nix`) — overrides du builder d'image
-- `Justfile` — exécuteur de tâches avec des recettes standard (build, run, publish, ssh)
+- `Justfile` — exécuteur de tâches avec des recettes standard (build, deploy, run, ssh)
 
 Le `flake.nix` d'un schématic montre exactement quels modules STC sont importés et
 quelles valeurs de configuration ils nécessitent. Les commentaires expliquent les
@@ -32,10 +31,12 @@ Chaque schématic contient un Justfile avec les recettes build / run / ssh.
 
 | Schématic | Ce qu'il construit | Composants STC clés |
 |-----------|-------------------|---------------------|
-| `local-vm` | VM de développement QEMU/KVM avec ZFS + impermanence | relics-boot, relics-zfs, relics-impermanence, cogitator-hardening, cogitator-vm, layout zfs-local-vm |
-| `aws-ami` | AMI AWS EC2 avec ZFS + impermanence + durcissement | relics-boot, relics-zfs, relics-aws, relics-impermanence, cogitator-hardening, layout zfs-local-vm |
+| `local-vm` | VM de développement QEMU/KVM avec ZFS + impermanence | `cogitator-sarcophagus-kvm`, `cogitator-vm` |
+| `aws-ami` | AMI AWS EC2 avec ZFS + impermanence + durcissement | `cogitator-sarcophagus-aws` |
+| `dreadnought` | Instance EC2 NixOS gérée via deploy-rs | `cogitator-dreadnought` |
 
 ## Voir aussi
 
 - [Schématic local-vm](/stc/fr/schematics/local-vm/)
 - [Schématic aws-ami](/stc/fr/schematics/aws-ami/)
+- [Schématic dreadnought](/stc/fr/schematics/dreadnought/)

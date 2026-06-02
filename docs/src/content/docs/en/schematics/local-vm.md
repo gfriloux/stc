@@ -9,6 +9,10 @@ A local QEMU/KVM virtual machine running NixOS with ZFS storage, impermanence
 (root rolls back to `@blank` on every boot), and full hardening. Use this as a
 development or staging VM.
 
+This schematic uses [cogitator-sarcophagus-kvm](/stc/en/cogitator/sarcophagus-kvm/),
+which embeds the disk layout, GRUB override, and qcow2 builder — no separate
+`disko` import or `qcow2.nix` module required.
+
 ## Prerequisites
 
 - Nix with flakes enabled
@@ -19,33 +23,8 @@ development or staging VM.
 
 | Module | Purpose |
 |--------|---------|
-| `disko.nixosModules.disko` | Declarative disk partitioning |
-| `stc.nixosModules.relics-boot` | systemd-boot + EFI |
-| `stc.nixosModules.relics-zfs` | ZFS-compatible kernel, auto-scrub, TRIM, ZED |
-| `stc.nixosModules.relics-networking` | DHCP, Quad9 DNS |
-| `stc.nixosModules.relics-impermanence` | Root rollback on each boot |
-| `stc.nixosModules.cogitator-hardening` | Full hardening suite |
+| `stc.nixosModules.cogitator-sarcophagus-kvm` | ZFS + impermanence + hardening + disk layout + qcow2 builder |
 | `stc.nixosModules.cogitator-vm` | fish, SSH, admin user, optional Docker, Nix GC |
-| `stc.lib.layouts.zfs-local-vm` | EFI + ZFS disk layout |
-| `./qcow2.nix` | qcow2 image builder (GRUB override for build) |
-
-## Critical QEMU Configuration
-
-Two settings are mandatory for virtio-based QEMU VMs:
-
-```nix
-# virtio drivers must be loaded in the initrd so /dev/vda exists
-# before ZFS tries to import the pool.
-boot.initrd.kernelModules = [ "virtio_pci" "virtio_blk" ];
-
-# QEMU virtio disks have no /dev/disk/by-id/ entries.
-# ZFS defaults to searching there — redirect it to /dev.
-boot.zfs.devNodes = "/dev";
-```
-
-Without `virtio_pci` and `virtio_blk` in the initrd, the disk is invisible when
-ZFS tries to import the pool and the VM will not boot. Without `devNodes = "/dev"`,
-ZFS will fail to find the pool by the device path it expects.
 
 ## Justfile Recipes
 
@@ -81,55 +60,36 @@ just check        # nix flake check --show-trace
       url = "github:gfriloux/stc";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    disko.follows = "stc/disko";
   };
 
-  outputs = { nixpkgs, stc, disko, ... }: {
+  outputs = { nixpkgs, stc, ... }: {
     nixosConfigurations.local-vm = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
-        disko.nixosModules.disko
-        stc.nixosModules.relics-boot
-        stc.nixosModules.relics-zfs
-        stc.nixosModules.relics-networking
-        stc.nixosModules.relics-impermanence
-        stc.nixosModules.cogitator-hardening
+        stc.nixosModules.cogitator-sarcophagus-kvm
         stc.nixosModules.cogitator-vm
-        (stc.lib.layouts.zfs-local-vm { poolName = "vmpool"; })
-        ./qcow2.nix
         ({ ... }: {
-          stc = {
-            boot.enable = true;
-            zfs.enable = true;
-            networking.enable = true;
-            hardening.enable = true;
-            impermanence = {
-              enable = true;
-              poolName = "vmpool";
-              extraDirectories = [ "/var/db/sudo/lectured" ];
-            };
-            cogitator.vm = {
-              enable = true;
-              username = "admin";
-              authorizedKeys = [
-                # "ssh-ed25519 AAAA... you@host"
-              ];
-              docker.enable = false;
-            };
+          stc.cogitator.sarcophagus-kvm = {
+            enable = true;
+            impermanence.extraDirectories = [ "/var/db/sudo/lectured" ];
           };
-
-          boot.initrd.kernelModules = [ "virtio_pci" "virtio_blk" ];
-          boot.zfs.devNodes = "/dev";
-
+          stc.cogitator.vm = {
+            enable = true;
+            username = "admin";
+            authorizedKeys = [
+              # "ssh-ed25519 AAAA... you@host"
+            ];
+            docker.enable = false;
+          };
           networking.hostName = "local-vm";
           networking.hostId = "deadc0de";  # replace with your own
-
           users.mutableUsers = false;
           users.users.admin.initialPassword = "changeme";
           users.users.root.initialPassword = "changeme";
           security.sudo.wheelNeedsPassword = false;
-
           time.timeZone = "UTC";
+          i18n.defaultLocale = "fr_FR.UTF-8";
+          console.keyMap = "fr";
           system.stateVersion = "24.11";
         })
       ];
@@ -143,15 +103,8 @@ just check        # nix flake check --show-trace
 unique hostId. Generate one: `head -c4 /dev/urandom | od -A none -t x4 | tr -d ' \n'`
 :::
 
-## qcow2.nix
-
-The `qcow2.nix` module overrides the boot loader for the image build. The NixOS
-`make-single-disk-zfs-image.nix` builder uses a BIOS partition layout, and
-systemd-boot refuses to install there. GRUB is forced for the image build only;
-the live system still uses systemd-boot.
-
 ## See Also
 
-- [Forge — Layouts](/stc/en/forge/layouts/) — the `zfs-local-vm` disk layout
+- [cogitator-sarcophagus-kvm](/stc/en/cogitator/sarcophagus-kvm/) — full options reference for the image builder
 - [relics-impermanence](/stc/en/relics/impermanence/) — how the rollback works
 - [cogitator-vm](/stc/en/cogitator/vm/) — the VM base profile options

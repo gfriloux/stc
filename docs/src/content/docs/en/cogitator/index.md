@@ -32,6 +32,9 @@ options. The profile just saves you from enabling each one individually.
 | `cogitator-docker-server` | `stc.cogitator.docker-server.enable` | Traefik + CrowdSec + ntfy + Docker daemon |
 | `cogitator-plasma` | `stc.cogitator.plasma.enable` | KDE Plasma 6 Wayland desktop + Pipewire audio |
 | `cogitator-gaming` | `stc.cogitator.gaming.enable` | AMD GPU + Pipewire + Steam |
+| `cogitator-sarcophagus-kvm` | `stc.cogitator.sarcophagus-kvm.enable` | QEMU/KVM disk image: ZFS + impermanence + hardening + qcow2 builder |
+| `cogitator-sarcophagus-aws` | `stc.cogitator.sarcophagus-aws.enable` | AWS AMI disk image: ZFS + impermanence + hardening + AWS platform + raw builder |
+| `cogitator-dreadnought` | `stc.cogitator.dreadnought.enable` | EC2 running-system profile: ZFS + impermanence + hardening + AWS platform |
 
 ### Home Manager Profiles
 
@@ -61,3 +64,6 @@ Use individual relics when:
 - [Gaming profile](/stc/en/cogitator/gaming/)
 - [Enginseer profile](/stc/en/cogitator/enginseer/)
 - [Desktop profile](/stc/en/cogitator/desktop/)
+- [Sarcophagus KVM profile](/stc/en/cogitator/sarcophagus-kvm/)
+- [Sarcophagus AWS profile](/stc/en/cogitator/sarcophagus-aws/)
+- [Dreadnought profile](/stc/en/cogitator/dreadnought/)
