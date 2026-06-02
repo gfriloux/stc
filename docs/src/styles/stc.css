@@ -333,7 +333,7 @@ starlight-toc a[aria-current="true"] {
 :root[data-theme="light"] .expressive-code { color-scheme: dark; } /* keep code dark in light mode */
 
 /* ================================ TABLES ============================== */
-.sl-markdown-content table { border-collapse: collapse; border: 1px solid var(--stc-line-2); }
+.sl-markdown-content table { display: table; width: 100%; border-collapse: collapse; border: 1px solid var(--stc-line-2); }
 .sl-markdown-content thead th {
   background: var(--stc-bg-3); border-bottom: 1px solid var(--stc-red);
   font-family: var(--stc-font-mono); font-size: .66rem; letter-spacing: .16em;
