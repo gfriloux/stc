@@ -12,6 +12,14 @@
 
 let
   cfg = config.stc.impermanence;
+  rollbackScript = pkgs.writeShellScript "zfs-rollback" ''
+      snapshot="${cfg.poolName}/${cfg.datasetName}@blank"
+      if ! ${pkgs.zfs}/bin/zfs list "$snapshot" 2>/dev/null; then
+        ${pkgs.zfs}/bin/zfs snapshot "$snapshot"
+      fi
+      ${pkgs.zfs}/bin/zfs rollback -r "$snapshot"
+    '';
+
 in
 {
   options.stc.impermanence = {
@@ -58,6 +66,7 @@ in
     # -------------------------------------------------------------------------
     boot.initrd.systemd = {
       enable = true;
+      storePaths = [ rollbackScript ];
 
       services.zfs-rollback = {
         description = "Rollback ${cfg.poolName}/${cfg.datasetName} to @blank";
@@ -67,13 +76,7 @@ in
         unitConfig.DefaultDependencies = "no";
         serviceConfig = {
           Type = "oneshot";
-          ExecStart = pkgs.writeShellScript "zfs-rollback" ''
-            snapshot="${cfg.poolName}/${cfg.datasetName}@blank"
-            if ! ${pkgs.zfs}/bin/zfs list "$snapshot" 2>/dev/null; then
-              ${pkgs.zfs}/bin/zfs snapshot "$snapshot"
-            fi
-            ${pkgs.zfs}/bin/zfs rollback -r "$snapshot"
-          '';
+          ExecStart = rollbackScript;
         };
       };
     };
