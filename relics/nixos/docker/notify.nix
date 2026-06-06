@@ -101,7 +101,7 @@ in
         }
         // lib.mapAttrs (_: _: {
           unitConfig = {
-            OnFailure = "stc-notify-failure@%n.service";
+            OnFailure = "stc-notify-failure@%p.service";
             StartLimitBurst = 3;
             StartLimitIntervalSec = "300s";
           };
