@@ -1,16 +1,17 @@
 # Relic: Kernel Hardening
 # sysctl parameters that reduce the kernel attack surface.
 # Recommended for any internet-facing machine. Non-negotiable for production.
-{ config, lib, ... }:
-
-let
-  cfg = config.stc.relics.hardening.kernel;
-in
 {
+  config,
+  lib,
+  ...
+}: let
+  cfg = config.stc.relics.hardening.kernel;
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "hardening" "kernel" "enable" ] [ "stc" "relics" "hardening" "kernel" "enable" ])
-    (lib.mkRemovedOptionModule [ "stc" "hardening" "kernel" "gaming" ] "The gaming option has been removed. kernel.unprivileged_userns_clone is a Debian/Arch-hardened sysctl that has no effect on the vanilla NixOS kernel.")
-    (lib.mkRemovedOptionModule [ "stc" "relics" "hardening" "kernel" "gaming" ] "The gaming option has been removed. kernel.unprivileged_userns_clone is a Debian/Arch-hardened sysctl that has no effect on the vanilla NixOS kernel.")
+    (lib.mkRenamedOptionModule ["stc" "hardening" "kernel" "enable"] ["stc" "relics" "hardening" "kernel" "enable"])
+    (lib.mkRemovedOptionModule ["stc" "hardening" "kernel" "gaming"] "The gaming option has been removed. kernel.unprivileged_userns_clone is a Debian/Arch-hardened sysctl that has no effect on the vanilla NixOS kernel.")
+    (lib.mkRemovedOptionModule ["stc" "relics" "hardening" "kernel" "gaming"] "The gaming option has been removed. kernel.unprivileged_userns_clone is a Debian/Arch-hardened sysctl that has no effect on the vanilla NixOS kernel.")
   ];
 
   options.stc.relics.hardening.kernel = {

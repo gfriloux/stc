@@ -5,11 +5,14 @@
 # and automatic Nix GC to keep store bloat under control.
 #
 # Compose with stc.cogitator.hardening and stc.cogitator.enginseer as needed.
-{ config, lib, pkgs, ... }:
-let
-  cfg = config.stc.cogitator.vm;
-in
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+  cfg = config.stc.cogitator.vm;
+in {
   options.stc.cogitator.vm = {
     enable = lib.mkEnableOption "STC base VM profile";
 
@@ -21,7 +24,7 @@ in
 
     authorizedKeys = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ ];
+      default = [];
       description = "SSH authorized keys for the primary user.";
     };
 
@@ -71,7 +74,7 @@ in
 
     users.users.${cfg.username} = {
       isNormalUser = true;
-      extraGroups = [ "wheel" ] ++ lib.optional cfg.docker.enable "docker";
+      extraGroups = ["wheel"] ++ lib.optional cfg.docker.enable "docker";
       shell = pkgs.fish;
       linger = true;
       openssh.authorizedKeys.keys = cfg.authorizedKeys;

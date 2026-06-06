@@ -1,15 +1,17 @@
-{ config, lib, options, ... }:
-
-let
-  cfg = config.stc.relics.vaultwarden;
-in
 {
+  config,
+  lib,
+  options,
+  ...
+}: let
+  cfg = config.stc.relics.vaultwarden;
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "vaultwarden" "enable" ] [ "stc" "relics" "vaultwarden" "enable" ])
-    (lib.mkRenamedOptionModule [ "stc" "vaultwarden" "hostname" ] [ "stc" "relics" "vaultwarden" "hostname" ])
-    (lib.mkRenamedOptionModule [ "stc" "vaultwarden" "backup" ] [ "stc" "relics" "vaultwarden" "backup" ])
-    (lib.mkRenamedOptionModule [ "stc" "vaultwarden" "signupsDomains" ] [ "stc" "relics" "vaultwarden" "signupsDomains" ])
-    (lib.mkRenamedOptionModule [ "stc" "vaultwarden" "showPasswordHint" ] [ "stc" "relics" "vaultwarden" "showPasswordHint" ])
+    (lib.mkRenamedOptionModule ["stc" "vaultwarden" "enable"] ["stc" "relics" "vaultwarden" "enable"])
+    (lib.mkRenamedOptionModule ["stc" "vaultwarden" "hostname"] ["stc" "relics" "vaultwarden" "hostname"])
+    (lib.mkRenamedOptionModule ["stc" "vaultwarden" "backup"] ["stc" "relics" "vaultwarden" "backup"])
+    (lib.mkRenamedOptionModule ["stc" "vaultwarden" "signupsDomains"] ["stc" "relics" "vaultwarden" "signupsDomains"])
+    (lib.mkRenamedOptionModule ["stc" "vaultwarden" "showPasswordHint"] ["stc" "relics" "vaultwarden" "showPasswordHint"])
   ];
 
   options.stc.relics.vaultwarden = {
@@ -40,7 +42,7 @@ in
 
     signupsDomains = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ ];
+      default = [];
       description = "Restrict self-registration to these email domains. Empty list allows all domains. Only has effect when signupsAllowed = true.";
     };
 
@@ -56,17 +58,19 @@ in
       {
         enable = true;
 
-        config = {
-          ROCKET_ADDRESS = "127.0.0.1";
-          ROCKET_PORT = 8222;
-          SIGNUPS_ALLOWED = cfg.signupsAllowed;
-          INVITATIONS_ALLOWED = cfg.invitationsAllowed;
-          SHOW_PASSWORD_HINT = cfg.showPasswordHint;
-          WEBSOCKET_ENABLED = true;
-          LOG_LEVEL = "warn";
-        } // lib.optionalAttrs (cfg.signupsDomains != [ ]) {
-          SIGNUPS_DOMAINS_WHITELIST = lib.concatStringsSep "," cfg.signupsDomains;
-        };
+        config =
+          {
+            ROCKET_ADDRESS = "127.0.0.1";
+            ROCKET_PORT = 8222;
+            SIGNUPS_ALLOWED = cfg.signupsAllowed;
+            INVITATIONS_ALLOWED = cfg.invitationsAllowed;
+            SHOW_PASSWORD_HINT = cfg.showPasswordHint;
+            WEBSOCKET_ENABLED = true;
+            LOG_LEVEL = "warn";
+          }
+          // lib.optionalAttrs (cfg.signupsDomains != []) {
+            SIGNUPS_DOMAINS_WHITELIST = lib.concatStringsSep "," cfg.signupsDomains;
+          };
       }
       // lib.optionalAttrs cfg.backup {
         backupDir = "/var/backup/vaultwarden";
@@ -77,12 +81,12 @@ in
       http = {
         routers.vaultwarden = {
           rule = "Host(`${cfg.hostname}`)";
-          entryPoints = [ "websecure" ];
+          entryPoints = ["websecure"];
           service = "vaultwarden";
           tls.certResolver = "letsencrypt";
         };
         services.vaultwarden = {
-          loadBalancer.servers = [ { url = "http://127.0.0.1:8222"; } ];
+          loadBalancer.servers = [{url = "http://127.0.0.1:8222";}];
         };
       };
     };

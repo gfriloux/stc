@@ -11,12 +11,13 @@
 #
 # Home Manager packages (Heroic, protonup-ng, emulators, etc.) are not managed
 # here — add them to home.packages in your Home Manager configuration.
-{ config, lib, ... }:
-
-let
-  cfg = config.stc.cogitator.gaming;
-in
 {
+  config,
+  lib,
+  ...
+}: let
+  cfg = config.stc.cogitator.gaming;
+in {
   imports = [
     ../../relics/nixos/amd-gpu.nix
     ../../relics/nixos/pipewire.nix

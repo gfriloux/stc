@@ -1,14 +1,15 @@
-{ config, lib, ... }:
-
-let
-  cfg = config.stc.relics.hardening.filesystem;
-in
 {
+  config,
+  lib,
+  ...
+}: let
+  cfg = config.stc.relics.hardening.filesystem;
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "hardening" "filesystem" "enable" ] [ "stc" "relics" "hardening" "filesystem" "enable" ])
-    (lib.mkRenamedOptionModule [ "stc" "hardening" "filesystem" "tmpSize" ] [ "stc" "relics" "hardening" "filesystem" "tmpSize" ])
-    (lib.mkRenamedOptionModule [ "stc" "hardening" "filesystem" "shmSize" ] [ "stc" "relics" "hardening" "filesystem" "shmSize" ])
-    (lib.mkRenamedOptionModule [ "stc" "hardening" "filesystem" "gaming" ] [ "stc" "relics" "hardening" "filesystem" "gaming" ])
+    (lib.mkRenamedOptionModule ["stc" "hardening" "filesystem" "enable"] ["stc" "relics" "hardening" "filesystem" "enable"])
+    (lib.mkRenamedOptionModule ["stc" "hardening" "filesystem" "tmpSize"] ["stc" "relics" "hardening" "filesystem" "tmpSize"])
+    (lib.mkRenamedOptionModule ["stc" "hardening" "filesystem" "shmSize"] ["stc" "relics" "hardening" "filesystem" "shmSize"])
+    (lib.mkRenamedOptionModule ["stc" "hardening" "filesystem" "gaming"] ["stc" "relics" "hardening" "filesystem" "gaming"])
   ];
 
   options.stc.relics.hardening.filesystem = {
@@ -53,7 +54,8 @@ in
       "/tmp" = lib.mkForce {
         device = "tmpfs";
         fsType = "tmpfs";
-        options = [ "defaults" "nosuid" "nodev" "size=${cfg.tmpSize}" "mode=1777" ]
+        options =
+          ["defaults" "nosuid" "nodev" "size=${cfg.tmpSize}" "mode=1777"]
           ++ lib.optional (!cfg.gaming) "noexec";
       };
 
@@ -62,7 +64,7 @@ in
       "/proc" = {
         device = "proc";
         fsType = "proc";
-        options = [ "nosuid" "noexec" "nodev" "hidepid=2" "gid=proc" ];
+        options = ["nosuid" "noexec" "nodev" "hidepid=2" "gid=proc"];
       };
 
       # noexec and size cap on /dev/shm.
@@ -71,15 +73,16 @@ in
       "/dev/shm" = {
         device = "tmpfs";
         fsType = "tmpfs";
-        options = [ "defaults" "nosuid" "nodev" "size=${cfg.shmSize}" ]
+        options =
+          ["defaults" "nosuid" "nodev" "size=${cfg.shmSize}"]
           ++ lib.optional (!cfg.gaming) "noexec";
       };
     };
 
     # Group required by hidepid=2,gid=proc — members bypass the process hide.
-    users.groups.proc = { };
+    users.groups.proc = {};
 
     # logind manages sessions and needs to see all PIDs to function correctly.
-    systemd.services.systemd-logind.serviceConfig.SupplementaryGroups = [ "proc" ];
+    systemd.services.systemd-logind.serviceConfig.SupplementaryGroups = ["proc"];
   };
 }

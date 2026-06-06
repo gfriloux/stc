@@ -3,8 +3,10 @@
 # Rust-based documentation site generator.
 # rumdl catches markdown lint issues before they become CI failures.
 # just provides a standard task interface (serve, build, clean).
-{ pkgs, preCommitConfig }:
-
+{
+  pkgs,
+  preCommitConfig,
+}:
 pkgs.mkShell {
   name = "stc-mdbook";
 

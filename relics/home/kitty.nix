@@ -2,15 +2,17 @@
 # A GPU-accelerated terminal. Fast, extensible, and worthy of an Enginseer.
 # The fonts option installs a curated collection of Nerd Fonts —
 # because a Techpriest reads glyphs others cannot perceive.
-{ config, lib, pkgs, ... }:
-
-let
-  cfg = config.stc.relics.gui.kitty;
-in
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+  cfg = config.stc.relics.gui.kitty;
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "gui" "kitty" "enable" ] [ "stc" "relics" "gui" "kitty" "enable" ])
-    (lib.mkRenamedOptionModule [ "stc" "gui" "kitty" "fonts" "enable" ] [ "stc" "relics" "gui" "kitty" "fonts" "enable" ])
+    (lib.mkRenamedOptionModule ["stc" "gui" "kitty" "enable"] ["stc" "relics" "gui" "kitty" "enable"])
+    (lib.mkRenamedOptionModule ["stc" "gui" "kitty" "fonts" "enable"] ["stc" "relics" "gui" "kitty" "fonts" "enable"])
   ];
 
   options.stc.relics.gui.kitty = {

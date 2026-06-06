@@ -8,8 +8,12 @@
 #
 # Secrets: point stc.relics.docker.notify.ntfy.topicFile at the file containing
 # the ntfy topic name (one line, no newline required).
-{ config, lib, pkgs, ... }:
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.stc.relics.docker.notify;
 
   notifyScript = pkgs.writeShellScript "stc-notify-failure" ''
@@ -30,9 +34,11 @@ let
     fi
   '';
 
-  watched = lib.filterAttrs (
-    _: c: (c.labels or { }) ? ${cfg.watchLabel}
-  ) config.virtualisation.oci-containers.containers;
+  watched =
+    lib.filterAttrs (
+      _: c: (c.labels or {}) ? ${cfg.watchLabel}
+    )
+    config.virtualisation.oci-containers.containers;
 
   # Each watched container maps to two distinct identifiers that must not be
   # conflated:
@@ -43,18 +49,19 @@ let
   #                `docker inspect` / `docker kill` in the health-watch instance.
   # Conflating them (using the attribute name as the unit) silently misfires for
   # any third-party container that does not set serviceName.
-  watchedList = lib.mapAttrsToList (name: c: {
-    container = name;
-    unit = c.serviceName or "docker-${name}";
-  }) watched;
-in
-{
+  watchedList =
+    lib.mapAttrsToList (name: c: {
+      container = name;
+      unit = c.serviceName or "docker-${name}";
+    })
+    watched;
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "docker" "notify" "enable" ] [ "stc" "relics" "docker" "notify" "enable" ])
-    (lib.mkRenamedOptionModule [ "stc" "docker" "notify" "hostname" ] [ "stc" "relics" "docker" "notify" "hostname" ])
-    (lib.mkRenamedOptionModule [ "stc" "docker" "notify" "watchLabel" ] [ "stc" "relics" "docker" "notify" "watchLabel" ])
-    (lib.mkRenamedOptionModule [ "stc" "docker" "notify" "ntfy" "baseUrl" ] [ "stc" "relics" "docker" "notify" "ntfy" "baseUrl" ])
-    (lib.mkRenamedOptionModule [ "stc" "docker" "notify" "ntfy" "topicFile" ] [ "stc" "relics" "docker" "notify" "ntfy" "topicFile" ])
+    (lib.mkRenamedOptionModule ["stc" "docker" "notify" "enable"] ["stc" "relics" "docker" "notify" "enable"])
+    (lib.mkRenamedOptionModule ["stc" "docker" "notify" "hostname"] ["stc" "relics" "docker" "notify" "hostname"])
+    (lib.mkRenamedOptionModule ["stc" "docker" "notify" "watchLabel"] ["stc" "relics" "docker" "notify" "watchLabel"])
+    (lib.mkRenamedOptionModule ["stc" "docker" "notify" "ntfy" "baseUrl"] ["stc" "relics" "docker" "notify" "ntfy" "baseUrl"])
+    (lib.mkRenamedOptionModule ["stc" "docker" "notify" "ntfy" "topicFile"] ["stc" "relics" "docker" "notify" "ntfy" "topicFile"])
   ];
 
   options.stc.relics.docker.notify = {
@@ -127,7 +134,8 @@ in
                 RestartSec = "30s";
               };
             };
-          }) watchedList
+          })
+          watchedList
         );
 
       timers = builtins.listToAttrs (
@@ -135,15 +143,16 @@ in
           name = "stc-docker-health-watch@${w.container}";
           value = {
             description = "STC: Docker health watch timer for ${w.container}";
-            wantedBy = [ "timers.target" ];
-            partOf = [ "${w.unit}.service" ];
+            wantedBy = ["timers.target"];
+            partOf = ["${w.unit}.service"];
             timerConfig = {
               OnBootSec = "240s";
               OnUnitActiveSec = "30s";
               Unit = "stc-docker-health-watch@${w.container}.service";
             };
           };
-        }) watchedList
+        })
+        watchedList
       );
     };
   };

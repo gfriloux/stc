@@ -1,11 +1,12 @@
-{ config, lib, ... }:
-
-let
-  cfg = config.stc.relics.hardening.network;
-in
 {
+  config,
+  lib,
+  ...
+}: let
+  cfg = config.stc.relics.hardening.network;
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "hardening" "network" "enable" ] [ "stc" "relics" "hardening" "network" "enable" ])
+    (lib.mkRenamedOptionModule ["stc" "hardening" "network" "enable"] ["stc" "relics" "hardening" "network" "enable"])
   ];
 
   options.stc.relics.hardening.network = {

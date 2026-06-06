@@ -6,18 +6,21 @@
 #
 # Secrets: point stc.relics.docker.crowdsec.envFile at whatever your secrets
 # provider materialises (sops-nix, agenix, etc.).
-{ config, lib, pkgs, ... }:
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.stc.relics.docker.crowdsec;
   dockerLib = import ./_lib.nix;
   traefikCfg = config.stc.relics.docker.traefik;
-in
-{
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "docker" "crowdsec" "enable" ] [ "stc" "relics" "docker" "crowdsec" "enable" ])
-    (lib.mkRenamedOptionModule [ "stc" "docker" "crowdsec" "image" ] [ "stc" "relics" "docker" "crowdsec" "image" ])
-    (lib.mkRenamedOptionModule [ "stc" "docker" "crowdsec" "dataDir" ] [ "stc" "relics" "docker" "crowdsec" "dataDir" ])
-    (lib.mkRenamedOptionModule [ "stc" "docker" "crowdsec" "envFile" ] [ "stc" "relics" "docker" "crowdsec" "envFile" ])
+    (lib.mkRenamedOptionModule ["stc" "docker" "crowdsec" "enable"] ["stc" "relics" "docker" "crowdsec" "enable"])
+    (lib.mkRenamedOptionModule ["stc" "docker" "crowdsec" "image"] ["stc" "relics" "docker" "crowdsec" "image"])
+    (lib.mkRenamedOptionModule ["stc" "docker" "crowdsec" "dataDir"] ["stc" "relics" "docker" "crowdsec" "dataDir"])
+    (lib.mkRenamedOptionModule ["stc" "docker" "crowdsec" "envFile"] ["stc" "relics" "docker" "crowdsec" "envFile"])
   ];
 
   options.stc.relics.docker.crowdsec = {
@@ -58,7 +61,7 @@ in
           "${cfg.dataDir}/etc:/etc/crowdsec"
         ]
         ++ lib.optional traefikCfg.enable
-          "${traefikCfg.dataDir}/logs:/var/log/traefik:ro";
+        "${traefikCfg.dataDir}/logs:/var/log/traefik:ro";
 
       extraOptions = dockerLib.mkHealthCheck {
         cmd = "wget -q -O /dev/null http://localhost:8080/health";
@@ -69,7 +72,7 @@ in
         "stc.docker/health-watch" = "true";
       };
 
-      networks = [ "web" ];
+      networks = ["web"];
     };
 
     systemd.tmpfiles.rules = [

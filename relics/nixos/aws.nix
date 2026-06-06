@@ -1,14 +1,16 @@
-{ config, lib, pkgs, ... }:
-
-let
-  cfg = config.stc.relics.aws;
-in
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+  cfg = config.stc.relics.aws;
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "aws" "enable" ] [ "stc" "relics" "aws" "enable" ])
-    (lib.mkRenamedOptionModule [ "stc" "aws" "poolName" ] [ "stc" "relics" "aws" "poolName" ])
-    (lib.mkRenamedOptionModule [ "stc" "aws" "ebsDisk" ] [ "stc" "relics" "aws" "ebsDisk" ])
-    (lib.mkRenamedOptionModule [ "stc" "aws" "ebsPartition" ] [ "stc" "relics" "aws" "ebsPartition" ])
+    (lib.mkRenamedOptionModule ["stc" "aws" "enable"] ["stc" "relics" "aws" "enable"])
+    (lib.mkRenamedOptionModule ["stc" "aws" "poolName"] ["stc" "relics" "aws" "poolName"])
+    (lib.mkRenamedOptionModule ["stc" "aws" "ebsDisk"] ["stc" "relics" "aws" "ebsDisk"])
+    (lib.mkRenamedOptionModule ["stc" "aws" "ebsPartition"] ["stc" "relics" "aws" "ebsPartition"])
   ];
 
   options.stc.relics.aws = {
@@ -40,11 +42,11 @@ in
       # Nitro instances : nvme (disk) + ena (network)
       # Xen instances   : xen_blkfront (disk) + xen_netfront (network)
       # ---------------------------------------------------------------------------
-      initrd.availableKernelModules = [ "nvme" "ena" "xen_blkfront" ];
-      kernelModules = [ "ena" "xen_netfront" ];
+      initrd.availableKernelModules = ["nvme" "ena" "xen_blkfront"];
+      kernelModules = ["ena" "xen_netfront"];
 
       # xen_fbfront causes a 30-second boot delay on Xen instances.
-      blacklistedKernelModules = [ "xen_fbfront" ];
+      blacklistedKernelModules = ["xen_fbfront"];
 
       kernelParams = [
         # Required for AWS serial console output (EC2 Connect, CloudWatch).
@@ -60,7 +62,7 @@ in
     };
 
     # AWS internal NTP endpoint — always reachable from EC2, no internet required.
-    networking.timeServers = [ "169.254.169.123" ];
+    networking.timeServers = ["169.254.169.123"];
 
     # Serial console service — pairs with console=ttyS0 above.
     systemd.services."serial-getty@ttyS0".enable = true;
@@ -69,7 +71,7 @@ in
     services.udisks2.enable = false;
 
     # EC2 instance metadata and udev rules for NVMe device naming.
-    services.udev.packages = [ pkgs.amazon-ec2-utils ];
+    services.udev.packages = [pkgs.amazon-ec2-utils];
 
     # Expand the ZFS pool to fill the EBS volume when it is larger than the image.
     # Idempotent: || true absorbs the no-op exit code when already at full size.

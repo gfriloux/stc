@@ -11,8 +11,7 @@
 #   vmpool/persist → /persist persistent — explicit state only
 #
 # Pair with: stc.boot.enable + stc.impermanence.enable (poolName = "vmpool")
-{ poolName ? "vmpool" }:
-{
+{poolName ? "vmpool"}: {
   disko.devices = {
     disk.main = {
       type = "disk";

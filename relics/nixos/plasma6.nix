@@ -2,17 +2,18 @@
 # Wayland-first Plasma 6 desktop: SDDM display manager, XDG portals, gvfs,
 # tumbler (thumbnail service), and libinput. xserver is disabled — Plasma runs
 # purely under Wayland. Keyboard layout and SDDM theme are configurable options.
-{ config, lib, ... }:
-
-let
-  cfg = config.stc.relics.plasma6;
-in
 {
+  config,
+  lib,
+  ...
+}: let
+  cfg = config.stc.relics.plasma6;
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "plasma6" "enable" ] [ "stc" "relics" "plasma6" "enable" ])
-    (lib.mkRenamedOptionModule [ "stc" "plasma6" "keyboardLayout" ] [ "stc" "relics" "plasma6" "keyboardLayout" ])
-    (lib.mkRenamedOptionModule [ "stc" "plasma6" "sddmTheme" ] [ "stc" "relics" "plasma6" "sddmTheme" ])
-    (lib.mkRenamedOptionModule [ "stc" "plasma6" "wayland" ] [ "stc" "relics" "plasma6" "wayland" ])
+    (lib.mkRenamedOptionModule ["stc" "plasma6" "enable"] ["stc" "relics" "plasma6" "enable"])
+    (lib.mkRenamedOptionModule ["stc" "plasma6" "keyboardLayout"] ["stc" "relics" "plasma6" "keyboardLayout"])
+    (lib.mkRenamedOptionModule ["stc" "plasma6" "sddmTheme"] ["stc" "relics" "plasma6" "sddmTheme"])
+    (lib.mkRenamedOptionModule ["stc" "plasma6" "wayland"] ["stc" "relics" "plasma6" "wayland"])
   ];
 
   options.stc.relics.plasma6 = {
@@ -73,13 +74,13 @@ in
     # The GTK portal provides a fallback for non-KDE applications.
     xdg.portal = {
       enable = true;
-      extraPortals = [ ];
+      extraPortals = [];
       # Wildcard default lets each app pick the best available portal.
       config.common.default = "*";
     };
 
     # WirePlumber must be started as part of the graphical session.
     # Without this, audio may not initialise when Plasma launches.
-    systemd.user.services.wireplumber.wantedBy = [ "default.target" ];
+    systemd.user.services.wireplumber.wantedBy = ["default.target"];
   };
 }

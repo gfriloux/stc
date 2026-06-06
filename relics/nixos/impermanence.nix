@@ -8,26 +8,28 @@
 # Explicit persistence: anything you want to survive a reboot must be
 # declared in extraDirectories or extraFiles. If it's not listed, it's gone.
 # This is a feature, not a bug.
-{ config, lib, pkgs, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.stc.relics.impermanence;
   rollbackScript = pkgs.writeShellScript "zfs-rollback" ''
-      snapshot="${cfg.poolName}/${cfg.datasetName}@blank"
-      if ! ${pkgs.zfs}/bin/zfs list "$snapshot" 2>/dev/null; then
-        ${pkgs.zfs}/bin/zfs snapshot "$snapshot"
-      fi
-      ${pkgs.zfs}/bin/zfs rollback -r "$snapshot"
-    '';
-in
-{
+    snapshot="${cfg.poolName}/${cfg.datasetName}@blank"
+    if ! ${pkgs.zfs}/bin/zfs list "$snapshot" 2>/dev/null; then
+      ${pkgs.zfs}/bin/zfs snapshot "$snapshot"
+    fi
+    ${pkgs.zfs}/bin/zfs rollback -r "$snapshot"
+  '';
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "impermanence" "enable" ] [ "stc" "relics" "impermanence" "enable" ])
-    (lib.mkRenamedOptionModule [ "stc" "impermanence" "poolName" ] [ "stc" "relics" "impermanence" "poolName" ])
-    (lib.mkRenamedOptionModule [ "stc" "impermanence" "datasetName" ] [ "stc" "relics" "impermanence" "datasetName" ])
-    (lib.mkRenamedOptionModule [ "stc" "impermanence" "persistPath" ] [ "stc" "relics" "impermanence" "persistPath" ])
-    (lib.mkRenamedOptionModule [ "stc" "impermanence" "extraDirectories" ] [ "stc" "relics" "impermanence" "extraDirectories" ])
-    (lib.mkRenamedOptionModule [ "stc" "impermanence" "extraFiles" ] [ "stc" "relics" "impermanence" "extraFiles" ])
+    (lib.mkRenamedOptionModule ["stc" "impermanence" "enable"] ["stc" "relics" "impermanence" "enable"])
+    (lib.mkRenamedOptionModule ["stc" "impermanence" "poolName"] ["stc" "relics" "impermanence" "poolName"])
+    (lib.mkRenamedOptionModule ["stc" "impermanence" "datasetName"] ["stc" "relics" "impermanence" "datasetName"])
+    (lib.mkRenamedOptionModule ["stc" "impermanence" "persistPath"] ["stc" "relics" "impermanence" "persistPath"])
+    (lib.mkRenamedOptionModule ["stc" "impermanence" "extraDirectories"] ["stc" "relics" "impermanence" "extraDirectories"])
+    (lib.mkRenamedOptionModule ["stc" "impermanence" "extraFiles"] ["stc" "relics" "impermanence" "extraFiles"])
   ];
 
   options.stc.relics.impermanence = {
@@ -59,13 +61,13 @@ in
 
     extraDirectories = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ ];
+      default = [];
       description = "Additional directories under persistPath to bind-mount into /.";
     };
 
     extraFiles = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ ];
+      default = [];
       description = "Additional files under persistPath to bind-mount into /.";
     };
   };
@@ -80,13 +82,13 @@ in
     # -------------------------------------------------------------------------
     boot.initrd.systemd = {
       enable = true;
-      storePaths = [ rollbackScript ];
+      storePaths = [rollbackScript];
 
       services.zfs-rollback = {
         description = "Rollback ${cfg.poolName}/${cfg.datasetName} to @blank";
-        wantedBy = [ "initrd.target" ];
-        after = [ "zfs-import-${cfg.poolName}.service" ];
-        before = [ "sysroot.mount" ];
+        wantedBy = ["initrd.target"];
+        after = ["zfs-import-${cfg.poolName}.service"];
+        before = ["sysroot.mount"];
         unitConfig.DefaultDependencies = "no";
         serviceConfig = {
           Type = "oneshot";
@@ -114,18 +116,22 @@ in
     environment.persistence."${cfg.persistPath}" = {
       hideMounts = true;
 
-      directories = [
-        "/var/lib/nixos"
-        "/var/log"
-      ] ++ cfg.extraDirectories;
+      directories =
+        [
+          "/var/lib/nixos"
+          "/var/log"
+        ]
+        ++ cfg.extraDirectories;
 
-      files = [
-        "/etc/machine-id"
-        "/etc/ssh/ssh_host_rsa_key"
-        "/etc/ssh/ssh_host_rsa_key.pub"
-        "/etc/ssh/ssh_host_ed25519_key"
-        "/etc/ssh/ssh_host_ed25519_key.pub"
-      ] ++ cfg.extraFiles;
+      files =
+        [
+          "/etc/machine-id"
+          "/etc/ssh/ssh_host_rsa_key"
+          "/etc/ssh/ssh_host_rsa_key.pub"
+          "/etc/ssh/ssh_host_ed25519_key"
+          "/etc/ssh/ssh_host_ed25519_key.pub"
+        ]
+        ++ cfg.extraFiles;
     };
   };
 }

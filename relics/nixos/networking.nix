@@ -3,16 +3,17 @@
 #
 # Quad9 (9.9.9.9) was chosen as default: privacy-respecting, no query logging,
 # malware-blocking, DNSSEC-validating. Change if your threat model differs.
-{ config, lib, ... }:
-
-let
-  cfg = config.stc.relics.networking;
-in
 {
+  config,
+  lib,
+  ...
+}: let
+  cfg = config.stc.relics.networking;
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "networking" "enable" ] [ "stc" "relics" "networking" "enable" ])
-    (lib.mkRenamedOptionModule [ "stc" "networking" "domain" ] [ "stc" "relics" "networking" "domain" ])
-    (lib.mkRenamedOptionModule [ "stc" "networking" "nameservers" ] [ "stc" "relics" "networking" "nameservers" ])
+    (lib.mkRenamedOptionModule ["stc" "networking" "enable"] ["stc" "relics" "networking" "enable"])
+    (lib.mkRenamedOptionModule ["stc" "networking" "domain"] ["stc" "relics" "networking" "domain"])
+    (lib.mkRenamedOptionModule ["stc" "networking" "nameservers"] ["stc" "relics" "networking" "nameservers"])
   ];
 
   options.stc.relics.networking = {
@@ -26,7 +27,7 @@ in
 
     nameservers = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ "9.9.9.9" "149.112.112.112" ];
+      default = ["9.9.9.9" "149.112.112.112"];
       description = "DNS resolvers. Defaults to Quad9 (privacy-respecting, DNSSEC, no logging).";
     };
   };

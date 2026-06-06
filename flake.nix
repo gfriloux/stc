@@ -70,11 +70,14 @@
       url = "github:gfriloux/nix-checks";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
   };
 
-  outputs = inputs @ { flake-parts, nixpkgs-stable, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
+  outputs = inputs @ {
+    flake-parts,
+    nixpkgs-stable,
+    ...
+  }:
+    flake-parts.lib.mkFlake {inherit inputs;} {
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -89,7 +92,7 @@
         ./rites
       ];
 
-      perSystem = { pkgs, ... }: {
+      perSystem = {pkgs, ...}: {
         formatter = pkgs.alejandra;
 
         devShells.default = pkgs.mkShell {
@@ -119,7 +122,7 @@
 
         devShells.docs = pkgs.mkShell {
           name = "stc-docs";
-          packages = with pkgs; [ nodejs just ];
+          packages = with pkgs; [nodejs just];
           shellHook = ''
             echo ""
             echo "  STC — Documentation Scriptorium"
