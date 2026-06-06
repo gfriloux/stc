@@ -22,7 +22,7 @@ supplied at runtime via a separate file.
 | `stc.relics.docker.traefik.image` | string | `"traefik:v3.7.1"` | Docker image |
 | `stc.relics.docker.traefik.dataDir` | string | `"/srv/docker/traefik"` | Base directory for logs, acme.json, conf |
 | `stc.relics.docker.traefik.acme.email` | string | — | Email for Let's Encrypt ACME registration |
-| `stc.relics.docker.traefik.enableDashboard` | bool | `true` | Enable the Traefik API dashboard on `127.0.0.1:8080`. Disable to reduce attack surface on production servers. |
+| `stc.relics.docker.traefik.enableDashboard` | bool | `false` | Enable the Traefik API dashboard. The `traefik` entrypoint port (`127.0.0.1:8080`) is not published, so this alone does not expose it — publish/forward the port or add a route to reach it. |
 | `stc.relics.docker.traefik.dynamicConfigFile` | `null \| string` | `null` | Path to `traefik_dynamic.yml` |
 
 ### What It Does
@@ -30,7 +30,7 @@ supplied at runtime via a separate file.
 - Runs Traefik on ports 80 and 443 (both opened in the firewall automatically)
 - HTTP on port 80 redirects to HTTPS on port 443
 - ACME/Let's Encrypt via TLS challenge, email from `acme.email`
-- Dashboard on `127.0.0.1:8080` (localhost only)
+- Dashboard off by default; when enabled it binds the in-container `traefik` entrypoint (`127.0.0.1:8080`), which is **not** published — forward the port yourself to reach it
 - Access logs in JSON format at `dataDir/logs/traefik.log`, rotated daily (14 days)
 - Docker provider watching the `web` network; file provider reading `traefik_dynamic.yml`
 - Creates the `web` Docker network as a systemd service

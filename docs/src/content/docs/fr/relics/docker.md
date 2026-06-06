@@ -22,7 +22,7 @@ configuration statique à partir des options Nix. La configuration dynamique
 | `stc.relics.docker.traefik.image` | string | `"traefik:v3.7.1"` | Image Docker |
 | `stc.relics.docker.traefik.dataDir` | string | `"/srv/docker/traefik"` | Répertoire de base pour les logs, acme.json, conf |
 | `stc.relics.docker.traefik.acme.email` | string | — | Email pour l'enregistrement ACME Let's Encrypt |
-| `stc.relics.docker.traefik.enableDashboard` | bool | `true` | Active le dashboard API Traefik sur `127.0.0.1:8080`. Désactiver pour réduire la surface d'attaque en production. |
+| `stc.relics.docker.traefik.enableDashboard` | bool | `false` | Active le dashboard API Traefik. Le port de l'entrypoint `traefik` (`127.0.0.1:8080`) n'est pas publié, donc l'activer seul ne l'expose pas — publie/forward le port ou ajoute une route pour y accéder. |
 | `stc.relics.docker.traefik.dynamicConfigFile` | `null \| string` | `null` | Chemin vers `traefik_dynamic.yml` |
 
 ### Ce qu'elle fait
@@ -30,7 +30,7 @@ configuration statique à partir des options Nix. La configuration dynamique
 - Exécute Traefik sur les ports 80 et 443 (les deux ouverts dans le pare-feu automatiquement)
 - Le port 80 HTTP redirige vers le port 443 HTTPS
 - ACME/Let's Encrypt via challenge TLS, email de `acme.email`
-- Dashboard sur `127.0.0.1:8080` (localhost uniquement)
+- Dashboard désactivé par défaut ; activé, il écoute sur l'entrypoint `traefik` interne (`127.0.0.1:8080`), qui n'est **pas** publié — forward le port toi-même pour y accéder
 - Logs d'accès en format JSON à `dataDir/logs/traefik.log`, rotation quotidienne (14 jours)
 - Provider Docker surveillant le réseau `web` ; provider fichier lisant `traefik_dynamic.yml`
 - Crée le réseau Docker `web` comme service systemd

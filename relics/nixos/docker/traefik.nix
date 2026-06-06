@@ -128,8 +128,16 @@ in {
 
     enableDashboard = lib.mkOption {
       type = lib.types.bool;
-      default = true;
-      description = "Enable the Traefik API dashboard on 127.0.0.1:8080. Disable to reduce attack surface on production servers.";
+      default = false;
+      description = ''
+        Enable the Traefik API dashboard. Off by default to keep the attack
+        surface minimal on production servers.
+
+        Note: the dashboard listens on the in-container `traefik` entrypoint
+        (127.0.0.1:8080) but that port is not published, so enabling this alone
+        does not expose it. To actually reach it, publish/forward the port
+        yourself (e.g. an SSH tunnel) or add a dynamic-config route.
+      '';
     };
 
     dynamicConfigFile = lib.mkOption {
