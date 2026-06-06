@@ -87,7 +87,14 @@ in {
       baseUrl = lib.mkOption {
         type = lib.types.str;
         default = "https://ntfy.sh";
-        description = "ntfy server base URL (without trailing slash).";
+        description = ''
+          ntfy server base URL (without trailing slash).
+
+          The default is the public ntfy.sh: failure notifications (hostname and
+          failed service names) leave your network to a third party, and the topic
+          is the only secret — anyone who guesses it can read your alerts. For
+          anything sensitive, self-host ntfy and/or use a long random topic.
+        '';
       };
 
       topicFile = lib.mkOption {

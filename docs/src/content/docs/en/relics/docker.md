@@ -156,6 +156,13 @@ monitoring automatically.
 | `stc.relics.docker.notify.ntfy.baseUrl` | string | `"https://ntfy.sh"` | ntfy server base URL |
 | `stc.relics.docker.notify.ntfy.topicFile` | string | — | Path to file containing the ntfy topic name |
 
+:::caution[Public ntfy.sh by default]
+`baseUrl` defaults to the public `https://ntfy.sh`. Failure notifications
+(hostname and failed service names) leave your network to a third party, and
+the topic is the only secret — anyone who guesses it can read your alerts. For
+anything sensitive, self-host ntfy and/or use a long random topic.
+:::
+
 ### Secrets Pattern
 
 ```nix
