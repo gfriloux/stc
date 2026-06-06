@@ -35,7 +35,7 @@ modules = [
 
 {
   stc.relics.impermanence.enable = true;
-  stc.traefik = {
+  stc.relics.traefik = {
     enable = true;
     email = "admin@example.com";
   };

@@ -221,7 +221,7 @@ modules = [
 # configuration.nix
 { config, ... }:
 {
-  stc.docker = {
+  stc.relics.docker = {
     traefik = {
       enable = true;
       acme.email = "ops@example.com";

@@ -68,7 +68,7 @@ back to on every boot.
 {
   stc.relics.boot.enable = true;
   stc.relics.zfs.enable = true;
-  stc.impermanence = {
+  stc.relics.impermanence = {
     enable = true;
     poolName = "vmpool";   # must match the layout argument
   };

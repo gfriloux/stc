@@ -38,7 +38,7 @@ modules = [
 
 {
   stc.relics.zfs.enable = true;
-  stc.aws = {
+  stc.relics.aws = {
     enable = true;
     poolName = "rpool";
     # ebsDisk = "nvme0n1";      # default: Nitro
@@ -51,7 +51,7 @@ For Xen (older instances) :
 
 ```nix
 {
-  stc.aws = {
+  stc.relics.aws = {
     enable = true;
     poolName = "rpool";
     ebsDisk = "xvda";

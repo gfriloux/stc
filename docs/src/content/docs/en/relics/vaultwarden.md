@@ -42,11 +42,11 @@ modules = [
 
 {
   stc.relics.impermanence.enable = true;
-  stc.traefik = {
+  stc.relics.traefik = {
     enable = true;
     email = "admin@example.com";
   };
-  stc.vaultwarden = {
+  stc.relics.vaultwarden = {
     enable = true;
     hostname = "vault.example.com";
     backup = true;
@@ -65,7 +65,7 @@ modules = [
 
 {
   stc.relics.impermanence.enable = true;
-  stc.vaultwarden = {
+  stc.relics.vaultwarden = {
     enable = true;
     hostname = "localhost";  # or local IP
   };

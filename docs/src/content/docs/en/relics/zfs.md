@@ -58,7 +58,7 @@ modules = [
 # configuration.nix
 {
   stc.relics.boot.enable = true;
-  stc.zfs = {
+  stc.relics.zfs = {
     enable = true;
 
     # Optional: periodic snapshots
