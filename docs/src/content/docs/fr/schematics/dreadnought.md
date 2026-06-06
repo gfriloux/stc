@@ -52,6 +52,15 @@ de l'AMI sarcophagus-aws :
 
 Ajoute ta clé publique dans `users.users.admin.openssh.authorizedKeys.keys`.
 
+:::danger[Ne pas déployer tel quel]
+Cette schématique livre `users.allowNoPasswordLogin = true` (uniquement pour
+qu'elle s'évalue avant que tu ajoutes une clé), `security.sudo.wheelNeedsPassword = false`
+(sudo sans mot de passe pour wheel) et un `networking.hostId = "cafebabe"` factice.
+Après avoir ajouté ta clé SSH, passe `allowNoPasswordLogin = false` et remplace le
+hostId. Avec SSH par clé uniquement et sudo sans mot de passe, quiconque détient la
+clé de `admin` a un accès root direct — fais-en un choix délibéré.
+:::
+
 ## Modules utilisés
 
 | Module | Objet |
