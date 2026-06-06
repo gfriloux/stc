@@ -123,12 +123,12 @@
 
         devShells.docs = pkgs.mkShell {
           name = "stc-docs";
-          packages = with pkgs; [ nodejs ];
+          packages = with pkgs; [ nodejs just ];
           shellHook = ''
             echo ""
             echo "  STC — Documentation Scriptorium"
             echo "  Node.js $(node --version) ready."
-            echo "  cd docs && npm install && npm run dev"
+            echo "  just docs-dev"
             echo ""
           '';
         };
