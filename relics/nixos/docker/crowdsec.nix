@@ -50,7 +50,7 @@ in {
 
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers."crowdsec" = {
-      image = cfg.image;
+      inherit (cfg) image;
       serviceName = "crowdsec";
 
       environmentFiles = lib.optional (cfg.envFile != null) cfg.envFile;

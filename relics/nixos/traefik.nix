@@ -76,7 +76,7 @@ in {
         };
 
         certificatesResolvers.letsencrypt.acme = {
-          email = cfg.email;
+          inherit (cfg) email;
           httpChallenge.entryPoint = "web";
         };
       };

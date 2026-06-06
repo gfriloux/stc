@@ -67,7 +67,7 @@ in {
     stc.cogitator.hardening.enable = true;
     stc.relics.impermanence = {
       enable = true;
-      poolName = cfg.poolName;
+      inherit (cfg) poolName;
       inherit (cfg.impermanence) extraDirectories extraFiles;
     };
 
@@ -167,8 +167,8 @@ in {
       inherit pkgs lib config;
       format = "qcow2";
       rootPoolName = cfg.poolName;
-      rootSize = cfg.rootSize;
-      memSize = cfg.memSize;
+      inherit (cfg) rootSize;
+      inherit (cfg) memSize;
       includeChannel = false;
       datasets = {
         "${cfg.poolName}/root" = {

@@ -145,7 +145,7 @@ in {
 
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers."traefik" = {
-      image = cfg.image;
+      inherit (cfg) image;
       serviceName = "traefik";
 
       volumes =

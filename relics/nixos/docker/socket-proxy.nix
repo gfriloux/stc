@@ -64,7 +64,7 @@ in {
 
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers."docker-socket-proxy" = {
-      image = cfg.image;
+      inherit (cfg) image;
       serviceName = "docker-socket-proxy";
 
       # The raw socket is exposed to the proxy only, read-only.
