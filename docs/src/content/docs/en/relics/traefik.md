@@ -21,6 +21,7 @@ Runs Traefik as a native NixOS service (without Docker). Automatically configure
 - **Port 80 :** Automatically redirects to HTTPS
 - **Port 443 :** TLS with Let's Encrypt certificates, HTTP-01 challenge
 - **JSON logs :** Traefik and access logs in JSON format in `/var/lib/traefik/`
+- **Header redaction :** the access log drops request headers by default and only keeps non-sensitive diagnostic ones (`User-Agent`, `X-Real-Ip`, `X-Forwarded-For`, `X-Forwarded-Proto`). `Authorization` and `Cookie` are never written, even though the log is persisted.
 - **Firewall :** Automatically opens ports 80 and 443
 - **Persistence :** Saves ACME certificates to `/persist` — **requires `relics-impermanence`**
 
