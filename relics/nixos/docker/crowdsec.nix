@@ -9,7 +9,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }: let
   cfg = config.stc.relics.docker.crowdsec;
