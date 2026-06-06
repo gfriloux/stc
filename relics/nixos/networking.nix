@@ -6,10 +6,16 @@
 { config, lib, ... }:
 
 let
-  cfg = config.stc.networking;
+  cfg = config.stc.relics.networking;
 in
 {
-  options.stc.networking = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "networking" "enable" ] [ "stc" "relics" "networking" "enable" ])
+    (lib.mkRenamedOptionModule [ "stc" "networking" "domain" ] [ "stc" "relics" "networking" "domain" ])
+    (lib.mkRenamedOptionModule [ "stc" "networking" "nameservers" ] [ "stc" "relics" "networking" "nameservers" ])
+  ];
+
+  options.stc.relics.networking = {
     enable = lib.mkEnableOption "base networking configuration";
 
     domain = lib.mkOption {

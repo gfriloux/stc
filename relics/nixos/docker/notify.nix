@@ -3,14 +3,14 @@
 # Sends ntfy push notifications when a watched Docker container fails,
 # and restarts unhealthy containers automatically.
 #
-# Containers opt in by setting the label defined in stc.docker.notify.watchLabel.
+# Containers opt in by setting the label defined in stc.relics.docker.notify.watchLabel.
 # The relic then wires systemd OnFailure + a health-watch timer for each one.
 #
-# Secrets: point stc.docker.notify.ntfy.topicFile at the file containing
+# Secrets: point stc.relics.docker.notify.ntfy.topicFile at the file containing
 # the ntfy topic name (one line, no newline required).
 { config, lib, pkgs, ... }:
 let
-  cfg = config.stc.docker.notify;
+  cfg = config.stc.relics.docker.notify;
 
   notifyScript = pkgs.writeShellScript "stc-notify-failure" ''
     SERVICE="$1"
@@ -35,7 +35,15 @@ let
   ) config.virtualisation.oci-containers.containers;
 in
 {
-  options.stc.docker.notify = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "docker" "notify" "enable" ] [ "stc" "relics" "docker" "notify" "enable" ])
+    (lib.mkRenamedOptionModule [ "stc" "docker" "notify" "hostname" ] [ "stc" "relics" "docker" "notify" "hostname" ])
+    (lib.mkRenamedOptionModule [ "stc" "docker" "notify" "watchLabel" ] [ "stc" "relics" "docker" "notify" "watchLabel" ])
+    (lib.mkRenamedOptionModule [ "stc" "docker" "notify" "ntfy" "baseUrl" ] [ "stc" "relics" "docker" "notify" "ntfy" "baseUrl" ])
+    (lib.mkRenamedOptionModule [ "stc" "docker" "notify" "ntfy" "topicFile" ] [ "stc" "relics" "docker" "notify" "ntfy" "topicFile" ])
+  ];
+
+  options.stc.relics.docker.notify = {
     enable = lib.mkEnableOption "Docker container failure notifications via ntfy";
 
     hostname = lib.mkOption {

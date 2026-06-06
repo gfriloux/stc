@@ -7,10 +7,15 @@
 { config, lib, ... }:
 
 let
-  cfg = config.stc.hardening.ssh;
+  cfg = config.stc.relics.hardening.ssh;
 in
 {
-  options.stc.hardening.ssh = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "hardening" "ssh" "enable" ] [ "stc" "relics" "hardening" "ssh" "enable" ])
+    (lib.mkRenamedOptionModule [ "stc" "hardening" "ssh" "allowedTCPForwarding" ] [ "stc" "relics" "hardening" "ssh" "allowedTCPForwarding" ])
+  ];
+
+  options.stc.relics.hardening.ssh = {
     enable = lib.mkEnableOption "hardened OpenSSH server configuration";
 
     allowedTCPForwarding = lib.mkOption {

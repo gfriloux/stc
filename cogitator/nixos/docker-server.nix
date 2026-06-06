@@ -1,13 +1,13 @@
 # Cogitator: docker-server
 #
 # Full Docker reverse-proxy stack: Traefik + CrowdSec WAF + failure notifications.
-# Enabling this is equivalent to enabling stc.docker.{traefik,crowdsec,notify}
+# Enabling this is equivalent to enabling stc.relics.docker.{traefik,crowdsec,notify}
 # individually — use those directly if you need finer control.
 #
 # You still need to supply the machine-specific options:
-#   stc.docker.traefik.acme.email = "you@example.com";
-#   stc.docker.crowdsec.dataDir = "/srv/docker/crowdsec";
-#   stc.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
+#   stc.relics.docker.traefik.acme.email = "you@example.com";
+#   stc.relics.docker.crowdsec.dataDir = "/srv/docker/crowdsec";
+#   stc.relics.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
 { config, lib, ... }:
 let
   cfg = config.stc.cogitator.docker-server;
@@ -24,7 +24,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    stc.docker = {
+    stc.relics.docker = {
       traefik.enable = true;
       crowdsec.enable = true;
       notify.enable = true;

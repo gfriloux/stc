@@ -65,15 +65,15 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
-    stc.zfs.enable = true;
-    stc.networking.enable = true;
-    stc.hardening.enable = true;
-    stc.impermanence = {
+    stc.relics.zfs.enable = true;
+    stc.relics.networking.enable = true;
+    stc.cogitator.hardening.enable = true;
+    stc.relics.impermanence = {
       enable = true;
       poolName = cfg.poolName;
       inherit (cfg.impermanence) extraDirectories extraFiles;
     };
-    stc.aws = {
+    stc.relics.aws = {
       enable = true;
       poolName = cfg.poolName;
       inherit (cfg) ebsDisk ebsPartition;

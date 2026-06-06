@@ -1,10 +1,18 @@
 { config, lib, ... }:
 
 let
-  cfg = config.stc.vaultwarden;
+  cfg = config.stc.relics.vaultwarden;
 in
 {
-  options.stc.vaultwarden = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "vaultwarden" "enable" ] [ "stc" "relics" "vaultwarden" "enable" ])
+    (lib.mkRenamedOptionModule [ "stc" "vaultwarden" "hostname" ] [ "stc" "relics" "vaultwarden" "hostname" ])
+    (lib.mkRenamedOptionModule [ "stc" "vaultwarden" "backup" ] [ "stc" "relics" "vaultwarden" "backup" ])
+    (lib.mkRenamedOptionModule [ "stc" "vaultwarden" "signupsDomains" ] [ "stc" "relics" "vaultwarden" "signupsDomains" ])
+    (lib.mkRenamedOptionModule [ "stc" "vaultwarden" "showPasswordHint" ] [ "stc" "relics" "vaultwarden" "showPasswordHint" ])
+  ];
+
+  options.stc.relics.vaultwarden = {
     enable = lib.mkEnableOption "Vaultwarden — unofficial Bitwarden-compatible server";
 
     hostname = lib.mkOption {

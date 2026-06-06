@@ -3,11 +3,11 @@
 #
 # Activates kernel, network, filesystem, and SSH hardening in a single toggle.
 # For surgical control, import the individual relics instead and enable them
-# à la carte: stc.hardening.kernel.enable, stc.hardening.ssh.enable, etc.
+# à la carte: stc.relics.hardening.kernel.enable, stc.relics.hardening.ssh.enable, etc.
 { config, lib, ... }:
 
 let
-  cfg = config.stc.hardening;
+  cfg = config.stc.cogitator.hardening;
 in
 {
   imports = [
@@ -15,16 +15,17 @@ in
     ../../relics/nixos/hardening/network.nix
     ../../relics/nixos/hardening/filesystem.nix
     ../../relics/nixos/hardening/ssh.nix
+    (lib.mkRenamedOptionModule [ "stc" "hardening" "enable" ] [ "stc" "cogitator" "hardening" "enable" ])
   ];
 
-  options.stc.hardening = {
+  options.stc.cogitator.hardening = {
     enable = lib.mkEnableOption "full hardening suite (kernel + network + filesystem + SSH)";
   };
 
   config = lib.mkIf cfg.enable {
-    stc.hardening.kernel.enable = true;
-    stc.hardening.network.enable = true;
-    stc.hardening.filesystem.enable = true;
-    stc.hardening.ssh.enable = true;
+    stc.relics.hardening.kernel.enable = true;
+    stc.relics.hardening.network.enable = true;
+    stc.relics.hardening.filesystem.enable = true;
+    stc.relics.hardening.ssh.enable = true;
   };
 }

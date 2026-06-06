@@ -15,9 +15,9 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    stc.gui.kitty.enable = true;
-    stc.gui.ghostty.enable = true;
-    stc.gui.zen-browser.enable = true;
+    stc.relics.gui.kitty.enable = true;
+    stc.relics.gui.ghostty.enable = true;
+    stc.relics.gui.zen-browser.enable = true;
 
     home.packages = with pkgs; [
       gimp

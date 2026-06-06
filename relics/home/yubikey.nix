@@ -6,10 +6,14 @@
 { config, lib, pkgs, ... }:
 
 let
-  cfg = config.stc.yubikey;
+  cfg = config.stc.relics.yubikey;
 in
 {
-  options.stc.yubikey = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "yubikey" "enable" ] [ "stc" "relics" "yubikey" "enable" ])
+  ];
+
+  options.stc.relics.yubikey = {
     enable = lib.mkEnableOption "YubiKey user tools (manager, touch detector, OATH app)";
   };
 

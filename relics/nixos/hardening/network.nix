@@ -1,10 +1,14 @@
 { config, lib, ... }:
 
 let
-  cfg = config.stc.hardening.network;
+  cfg = config.stc.relics.hardening.network;
 in
 {
-  options.stc.hardening.network = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "hardening" "network" "enable" ] [ "stc" "relics" "hardening" "network" "enable" ])
+  ];
+
+  options.stc.relics.hardening.network = {
     enable = lib.mkEnableOption "network sysctl hardening (spoofing, redirects, SYN flood)";
   };
 

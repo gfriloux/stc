@@ -4,10 +4,15 @@
 { config, lib, ... }:
 
 let
-  cfg = config.stc.hardening.kernel;
+  cfg = config.stc.relics.hardening.kernel;
 in
 {
-  options.stc.hardening.kernel = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "hardening" "kernel" "enable" ] [ "stc" "relics" "hardening" "kernel" "enable" ])
+    (lib.mkRenamedOptionModule [ "stc" "hardening" "kernel" "gaming" ] [ "stc" "relics" "hardening" "kernel" "gaming" ])
+  ];
+
+  options.stc.relics.hardening.kernel = {
     enable = lib.mkEnableOption "kernel sysctl hardening";
 
     gaming = lib.mkOption {

@@ -2,18 +2,25 @@
 #
 # Runs CrowdSec in a Docker container as a WAF/IDS layer.
 # Reads Traefik access logs to detect and block malicious traffic.
-# Designed to work alongside stc.docker.traefik (optional but common).
+# Designed to work alongside stc.relics.docker.traefik (optional but common).
 #
-# Secrets: point stc.docker.crowdsec.envFile at whatever your secrets
+# Secrets: point stc.relics.docker.crowdsec.envFile at whatever your secrets
 # provider materialises (sops-nix, agenix, etc.).
 { config, lib, pkgs, ... }:
 let
-  cfg = config.stc.docker.crowdsec;
+  cfg = config.stc.relics.docker.crowdsec;
   dockerLib = import ./_lib.nix;
-  traefikCfg = config.stc.docker.traefik;
+  traefikCfg = config.stc.relics.docker.traefik;
 in
 {
-  options.stc.docker.crowdsec = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "docker" "crowdsec" "enable" ] [ "stc" "relics" "docker" "crowdsec" "enable" ])
+    (lib.mkRenamedOptionModule [ "stc" "docker" "crowdsec" "image" ] [ "stc" "relics" "docker" "crowdsec" "image" ])
+    (lib.mkRenamedOptionModule [ "stc" "docker" "crowdsec" "dataDir" ] [ "stc" "relics" "docker" "crowdsec" "dataDir" ])
+    (lib.mkRenamedOptionModule [ "stc" "docker" "crowdsec" "envFile" ] [ "stc" "relics" "docker" "crowdsec" "envFile" ])
+  ];
+
+  options.stc.relics.docker.crowdsec = {
     enable = lib.mkEnableOption "CrowdSec WAF container";
 
     image = lib.mkOption {

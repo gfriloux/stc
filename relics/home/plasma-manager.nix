@@ -10,10 +10,14 @@
 { config, lib, ... }:
 
 let
-  cfg = config.stc.plasmaManager;
+  cfg = config.stc.relics.plasmaManager;
 in
 {
-  options.stc.plasmaManager = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "plasmaManager" "enable" ] [ "stc" "relics" "plasmaManager" "enable" ])
+  ];
+
+  options.stc.relics.plasmaManager = {
     enable = lib.mkEnableOption "plasma-manager declarative KDE configuration";
   };
 

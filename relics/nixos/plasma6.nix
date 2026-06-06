@@ -5,10 +5,17 @@
 { config, lib, ... }:
 
 let
-  cfg = config.stc.plasma6;
+  cfg = config.stc.relics.plasma6;
 in
 {
-  options.stc.plasma6 = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "plasma6" "enable" ] [ "stc" "relics" "plasma6" "enable" ])
+    (lib.mkRenamedOptionModule [ "stc" "plasma6" "keyboardLayout" ] [ "stc" "relics" "plasma6" "keyboardLayout" ])
+    (lib.mkRenamedOptionModule [ "stc" "plasma6" "sddmTheme" ] [ "stc" "relics" "plasma6" "sddmTheme" ])
+    (lib.mkRenamedOptionModule [ "stc" "plasma6" "wayland" ] [ "stc" "relics" "plasma6" "wayland" ])
+  ];
+
+  options.stc.relics.plasma6 = {
     enable = lib.mkEnableOption "KDE Plasma 6 desktop (SDDM + Wayland + XDG portal)";
 
     keyboardLayout = lib.mkOption {

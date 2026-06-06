@@ -1,10 +1,14 @@
 { config, lib, ... }:
 
 let
-  cfg = config.stc.boot;
+  cfg = config.stc.relics.boot;
 in
 {
-  options.stc.boot = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "boot" "enable" ] [ "stc" "relics" "boot" "enable" ])
+  ];
+
+  options.stc.relics.boot = {
     enable = lib.mkEnableOption "systemd-boot + EFI bootloader configuration";
   };
 

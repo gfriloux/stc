@@ -1,10 +1,17 @@
 { config, lib, pkgs, ... }:
 
 let
-  cfg = config.stc.aws;
+  cfg = config.stc.relics.aws;
 in
 {
-  options.stc.aws = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "aws" "enable" ] [ "stc" "relics" "aws" "enable" ])
+    (lib.mkRenamedOptionModule [ "stc" "aws" "poolName" ] [ "stc" "relics" "aws" "poolName" ])
+    (lib.mkRenamedOptionModule [ "stc" "aws" "ebsDisk" ] [ "stc" "relics" "aws" "ebsDisk" ])
+    (lib.mkRenamedOptionModule [ "stc" "aws" "ebsPartition" ] [ "stc" "relics" "aws" "ebsPartition" ])
+  ];
+
+  options.stc.relics.aws = {
     enable = lib.mkEnableOption "AWS EC2 platform configuration (drivers, NTP, serial console, EBS grow)";
 
     poolName = lib.mkOption {

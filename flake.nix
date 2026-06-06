@@ -52,8 +52,13 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    impermanence.url = "github:nix-community/impermanence";
+    impermanence = {
+      url = "github:nix-community/impermanence";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
+    # nixos-25.05 stable — used by forge/builders for tools not yet on unstable
+    # (e.g. specific Terraform/Ansible versions requiring stable package sets).
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.05";
 
     ansible-recap = {
@@ -72,7 +77,7 @@
     };
   };
 
-  outputs = inputs @ { flake-parts, ... }:
+  outputs = inputs @ { flake-parts, nixpkgs-stable, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [
         "x86_64-linux"
@@ -98,7 +103,6 @@
             deadnix
             git
             just
-            nodejs
             nix-tree
             statix
           ];
@@ -113,6 +117,18 @@
             echo "  Standard Template Construct"
             echo "  Welcome to the Forge, Techpriest."
             echo "  Praise the Omnissiah."
+            echo ""
+          '';
+        };
+
+        devShells.docs = pkgs.mkShell {
+          name = "stc-docs";
+          packages = with pkgs; [ nodejs ];
+          shellHook = ''
+            echo ""
+            echo "  STC — Documentation Scriptorium"
+            echo "  Node.js $(node --version) ready."
+            echo "  cd docs && npm install && npm run dev"
             echo ""
           '';
         };

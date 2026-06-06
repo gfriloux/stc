@@ -11,7 +11,7 @@
 { config, lib, pkgs, ... }:
 
 let
-  cfg = config.stc.impermanence;
+  cfg = config.stc.relics.impermanence;
   rollbackScript = pkgs.writeShellScript "zfs-rollback" ''
       snapshot="${cfg.poolName}/${cfg.datasetName}@blank"
       if ! ${pkgs.zfs}/bin/zfs list "$snapshot" 2>/dev/null; then
@@ -19,10 +19,18 @@ let
       fi
       ${pkgs.zfs}/bin/zfs rollback -r "$snapshot"
     '';
-
 in
 {
-  options.stc.impermanence = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "impermanence" "enable" ] [ "stc" "relics" "impermanence" "enable" ])
+    (lib.mkRenamedOptionModule [ "stc" "impermanence" "poolName" ] [ "stc" "relics" "impermanence" "poolName" ])
+    (lib.mkRenamedOptionModule [ "stc" "impermanence" "datasetName" ] [ "stc" "relics" "impermanence" "datasetName" ])
+    (lib.mkRenamedOptionModule [ "stc" "impermanence" "persistPath" ] [ "stc" "relics" "impermanence" "persistPath" ])
+    (lib.mkRenamedOptionModule [ "stc" "impermanence" "extraDirectories" ] [ "stc" "relics" "impermanence" "extraDirectories" ])
+    (lib.mkRenamedOptionModule [ "stc" "impermanence" "extraFiles" ] [ "stc" "relics" "impermanence" "extraFiles" ])
+  ];
+
+  options.stc.relics.impermanence = {
     enable = lib.mkEnableOption "ZFS-based impermanence (rollback root dataset at every boot)";
 
     poolName = lib.mkOption {

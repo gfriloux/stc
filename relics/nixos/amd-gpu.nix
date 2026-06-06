@@ -4,10 +4,15 @@
 { config, lib, pkgs, ... }:
 
 let
-  cfg = config.stc.amdGpu;
+  cfg = config.stc.relics.amdGpu;
 in
 {
-  options.stc.amdGpu = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "amdGpu" "enable" ] [ "stc" "relics" "amdGpu" "enable" ])
+    (lib.mkRenamedOptionModule [ "stc" "amdGpu" "initrd" ] [ "stc" "relics" "amdGpu" "initrd" ])
+  ];
+
+  options.stc.relics.amdGpu = {
     enable = lib.mkEnableOption "AMD GPU support (VDPAU, VAAPI, 32-bit, optional early KMS)";
 
     initrd = lib.mkOption {

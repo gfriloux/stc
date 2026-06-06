@@ -1,10 +1,17 @@
 { config, lib, ... }:
 
 let
-  cfg = config.stc.hardening.filesystem;
+  cfg = config.stc.relics.hardening.filesystem;
 in
 {
-  options.stc.hardening.filesystem = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "hardening" "filesystem" "enable" ] [ "stc" "relics" "hardening" "filesystem" "enable" ])
+    (lib.mkRenamedOptionModule [ "stc" "hardening" "filesystem" "tmpSize" ] [ "stc" "relics" "hardening" "filesystem" "tmpSize" ])
+    (lib.mkRenamedOptionModule [ "stc" "hardening" "filesystem" "shmSize" ] [ "stc" "relics" "hardening" "filesystem" "shmSize" ])
+    (lib.mkRenamedOptionModule [ "stc" "hardening" "filesystem" "gaming" ] [ "stc" "relics" "hardening" "filesystem" "gaming" ])
+  ];
+
+  options.stc.relics.hardening.filesystem = {
     enable = lib.mkEnableOption "filesystem hardening (/tmp noexec, /proc hidepid, /dev/shm restricted)";
 
     tmpSize = lib.mkOption {

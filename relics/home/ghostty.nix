@@ -5,10 +5,14 @@
 { config, lib, ... }:
 
 let
-  cfg = config.stc.gui.ghostty;
+  cfg = config.stc.relics.gui.ghostty;
 in
 {
-  options.stc.gui.ghostty = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "gui" "ghostty" "enable" ] [ "stc" "relics" "gui" "ghostty" "enable" ])
+  ];
+
+  options.stc.relics.gui.ghostty = {
     enable = lib.mkEnableOption "Ghostty terminal emulator";
   };
 

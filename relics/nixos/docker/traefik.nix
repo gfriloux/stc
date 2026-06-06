@@ -4,17 +4,17 @@
 # Auto-generates the static config from Nix options.
 # The dynamic config (routes, middlewares) is supplied at runtime via dynamicConfigFile.
 #
-# When stc.docker.crowdsec.enable = true, the CrowdSec bouncer plugin is
+# When stc.relics.docker.crowdsec.enable = true, the CrowdSec bouncer plugin is
 # automatically wired into the static config and traefik waits for crowdsec.
 #
-# Secrets: point stc.docker.traefik.dynamicConfigFile at whatever your
+# Secrets: point stc.relics.docker.traefik.dynamicConfigFile at whatever your
 # secrets provider materialises.
 { config, lib, pkgs, ... }:
 let
-  cfg = config.stc.docker.traefik;
+  cfg = config.stc.relics.docker.traefik;
   dockerLib = import ./_lib.nix;
 
-  crowdsecEnabled = config.stc.docker.crowdsec.enable;
+  crowdsecEnabled = config.stc.relics.docker.crowdsec.enable;
 
   crowdsecPlugin = lib.optionalString crowdsecEnabled ''
 
@@ -80,7 +80,16 @@ let
   '';
 in
 {
-  options.stc.docker.traefik = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "docker" "traefik" "enable" ] [ "stc" "relics" "docker" "traefik" "enable" ])
+    (lib.mkRenamedOptionModule [ "stc" "docker" "traefik" "image" ] [ "stc" "relics" "docker" "traefik" "image" ])
+    (lib.mkRenamedOptionModule [ "stc" "docker" "traefik" "dataDir" ] [ "stc" "relics" "docker" "traefik" "dataDir" ])
+    (lib.mkRenamedOptionModule [ "stc" "docker" "traefik" "acme" "email" ] [ "stc" "relics" "docker" "traefik" "acme" "email" ])
+    (lib.mkRenamedOptionModule [ "stc" "docker" "traefik" "enableDashboard" ] [ "stc" "relics" "docker" "traefik" "enableDashboard" ])
+    (lib.mkRenamedOptionModule [ "stc" "docker" "traefik" "dynamicConfigFile" ] [ "stc" "relics" "docker" "traefik" "dynamicConfigFile" ])
+  ];
+
+  options.stc.relics.docker.traefik = {
     enable = lib.mkEnableOption "Traefik reverse proxy container";
 
     image = lib.mkOption {

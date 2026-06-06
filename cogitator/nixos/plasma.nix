@@ -4,8 +4,8 @@
 # the Pipewire relic (RTKit + ALSA 32-bit + PulseAudio compat).
 #
 # Individual relic options remain tunable after activation:
-#   stc.plasma6.keyboardLayout, stc.plasma6.sddmTheme
-#   stc.pipewire.enable (already true — override only to disable)
+#   stc.relics.plasma6.keyboardLayout, stc.relics.plasma6.sddmTheme
+#   stc.relics.pipewire.enable (already true — override only to disable)
 { config, lib, ... }:
 
 let
@@ -22,7 +22,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    stc.plasma6.enable = true;
-    stc.pipewire.enable = true;
+    stc.relics.plasma6.enable = true;
+    stc.relics.pipewire.enable = true;
   };
 }

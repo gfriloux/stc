@@ -4,10 +4,14 @@
 { config, lib, ... }:
 
 let
-  cfg = config.stc.gui.zen-browser;
+  cfg = config.stc.relics.gui.zen-browser;
 in
 {
-  options.stc.gui.zen-browser = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "gui" "zen-browser" "enable" ] [ "stc" "relics" "gui" "zen-browser" "enable" ])
+  ];
+
+  options.stc.relics.gui.zen-browser = {
     enable = lib.mkEnableOption "Zen Browser";
   };
 

@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 
 let
-  cfg = config.stc.zfs;
+  cfg = config.stc.relics.zfs;
 
   zfsCompatibleKernelPackages = lib.filterAttrs (
     name: kernelPackages:
@@ -17,7 +17,15 @@ let
   );
 in
 {
-  options.stc.zfs = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "zfs" "enable" ] [ "stc" "relics" "zfs" "enable" ])
+    (lib.mkRenamedOptionModule [ "stc" "zfs" "scrubInterval" ] [ "stc" "relics" "zfs" "scrubInterval" ])
+    (lib.mkRenamedOptionModule [ "stc" "zfs" "autoSnapshot" "enable" ] [ "stc" "relics" "zfs" "autoSnapshot" "enable" ])
+    (lib.mkRenamedOptionModule [ "stc" "zfs" "autoSnapshot" "daily" ] [ "stc" "relics" "zfs" "autoSnapshot" "daily" ])
+    (lib.mkRenamedOptionModule [ "stc" "zfs" "autoSnapshot" "poolName" ] [ "stc" "relics" "zfs" "autoSnapshot" "poolName" ])
+  ];
+
+  options.stc.relics.zfs = {
     enable = lib.mkEnableOption "ZFS kernel, boot support, and pool maintenance (scrub, TRIM, ZED)";
 
     scrubInterval = lib.mkOption {

@@ -1,10 +1,16 @@
 { config, lib, ... }:
 
 let
-  cfg = config.stc.traefik;
+  cfg = config.stc.relics.traefik;
 in
 {
-  options.stc.traefik = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "traefik" "enable" ] [ "stc" "relics" "traefik" "enable" ])
+    (lib.mkRenamedOptionModule [ "stc" "traefik" "email" ] [ "stc" "relics" "traefik" "email" ])
+    (lib.mkRenamedOptionModule [ "stc" "traefik" "logLevel" ] [ "stc" "relics" "traefik" "logLevel" ])
+  ];
+
+  options.stc.relics.traefik = {
     enable = lib.mkEnableOption "Traefik reverse proxy (native NixOS service)";
 
     email = lib.mkOption {

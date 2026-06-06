@@ -5,10 +5,14 @@
 { config, lib, ... }:
 
 let
-  cfg = config.stc.pipewire;
+  cfg = config.stc.relics.pipewire;
 in
 {
-  options.stc.pipewire = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "pipewire" "enable" ] [ "stc" "relics" "pipewire" "enable" ])
+  ];
+
+  options.stc.relics.pipewire = {
     enable = lib.mkEnableOption "Pipewire audio server (RTKit + ALSA 32-bit + PulseAudio compat)";
   };
 

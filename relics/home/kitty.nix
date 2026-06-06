@@ -5,10 +5,15 @@
 { config, lib, pkgs, ... }:
 
 let
-  cfg = config.stc.gui.kitty;
+  cfg = config.stc.relics.gui.kitty;
 in
 {
-  options.stc.gui.kitty = {
+  imports = [
+    (lib.mkRenamedOptionModule [ "stc" "gui" "kitty" "enable" ] [ "stc" "relics" "gui" "kitty" "enable" ])
+    (lib.mkRenamedOptionModule [ "stc" "gui" "kitty" "fonts" "enable" ] [ "stc" "relics" "gui" "kitty" "fonts" "enable" ])
+  ];
+
+  options.stc.relics.gui.kitty = {
     enable = lib.mkEnableOption "Kitty terminal emulator";
 
     fonts.enable = lib.mkOption {
