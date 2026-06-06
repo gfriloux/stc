@@ -27,6 +27,15 @@ choix non évidents.
 
 Chaque schématic contient un Justfile avec les recettes build / run / ssh.
 
+:::note[Chaque schématic a son propre flake.lock]
+Les schématics épinglent STC via `stc.url = "path:../.."` et embarquent leur
+**propre** `flake.lock`. C'est un compromis délibéré : ça garde chaque schématic
+autonome et exécutable seul, mais c'est une seconde source de vérité pour
+`nixpkgs` (il peut diverger du lock racine) et le lock se périme dès que le dépôt
+parent change. Après une mise à jour de STC, lance `nix flake update stc` dans le
+schématic concerné pour rafraîchir son pin.
+:::
+
 ## Schématics disponibles
 
 | Schématic | Ce qu'il construit | Composants STC clés |

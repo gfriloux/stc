@@ -26,6 +26,15 @@ what configuration values they need. The comments explain the non-obvious choice
 
 Each schematic contains a Justfile with build / run / ssh recipes.
 
+:::note[Each schematic has its own flake.lock]
+Schematics pin STC as `stc.url = "path:../.."` and carry their **own**
+`flake.lock`. This is a deliberate trade-off: it keeps each schematic
+self-contained and runnable on its own, but it is a second source of truth for
+`nixpkgs` (it can drift from the repo-root lock) and the lock goes stale
+whenever the parent repo changes. After updating STC, run `nix flake update stc`
+inside the schematic you are working with to refresh its pin.
+:::
+
 ## Available Schematics
 
 | Schematic | What it builds | Key STC components |
