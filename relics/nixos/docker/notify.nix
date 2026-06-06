@@ -36,7 +36,9 @@
 
   watched =
     lib.filterAttrs (
-      _: c: (c.labels or {}) ? ${cfg.watchLabel}
+      # Opt-in is the label set to "true", not merely present: a container
+      # carrying "<watchLabel>" = "false" must stay unwatched.
+      _: c: (c.labels.${cfg.watchLabel} or "false") == "true"
     )
     config.virtualisation.oci-containers.containers;
 
