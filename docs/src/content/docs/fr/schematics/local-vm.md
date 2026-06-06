@@ -103,6 +103,13 @@ just check        # nix flake check --show-trace
 un hostId unique. Génère-en un : `head -c4 /dev/urandom | od -A none -t x4 | tr -d ' \n'`
 :::
 
+:::caution[Changer les mots de passe]
+`initialPassword = "changeme"` est livré avec `mutableUsers = false` : le mot de
+passe ne pourra jamais être changé avec `passwd` — il reste `changeme`. Remplace-le
+par un vrai `hashedPassword` (ex. `mkpasswd -m sha-512`) avant de builder autre chose
+qu'une VM jetable. Le build émet des warnings tant que ces placeholders sont en place.
+:::
+
 ## Voir aussi
 
 - [cogitator-sarcophagus-kvm](/stc/fr/cogitator/sarcophagus-kvm/) — référence complète des options du constructeur d'image

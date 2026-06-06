@@ -103,6 +103,13 @@ just check        # nix flake check --show-trace
 unique hostId. Generate one: `head -c4 /dev/urandom | od -A none -t x4 | tr -d ' \n'`
 :::
 
+:::caution[Change the passwords]
+`initialPassword = "changeme"` ships with `mutableUsers = false`, so the password
+can never be changed with `passwd` — it stays `changeme`. Replace it with a real
+`hashedPassword` (e.g. `mkpasswd -m sha-512`) before building anything but a
+throwaway VM. The build emits warnings while these placeholders are still in place.
+:::
+
 ## See Also
 
 - [cogitator-sarcophagus-kvm](/stc/en/cogitator/sarcophagus-kvm/) — full options reference for the image builder
