@@ -50,6 +50,7 @@
 
     # --- Docker stack (individual relics for surgical use) ---
     relics-docker-traefik = ./nixos/docker/traefik.nix;
+    relics-docker-socket-proxy = ./nixos/docker/socket-proxy.nix;
     relics-docker-crowdsec = ./nixos/docker/crowdsec.nix;
     relics-docker-notify = ./nixos/docker/notify.nix;
   };

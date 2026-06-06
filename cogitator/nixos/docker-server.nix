@@ -15,6 +15,7 @@ in
 {
   imports = [
     ../../relics/nixos/docker/traefik.nix
+    ../../relics/nixos/docker/socket-proxy.nix
     ../../relics/nixos/docker/crowdsec.nix
     ../../relics/nixos/docker/notify.nix
   ];
@@ -26,6 +27,9 @@ in
   config = lib.mkIf cfg.enable {
     stc.relics.docker = {
       traefik.enable = true;
+      # Secure default: Traefik reaches the Docker API through the filtering
+      # socket-proxy instead of bind-mounting the raw socket.
+      socketProxy.enable = true;
       crowdsec.enable = true;
       notify.enable = true;
     };

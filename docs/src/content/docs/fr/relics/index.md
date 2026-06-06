@@ -65,6 +65,7 @@ modules = [
 | `relics-hardening-filesystem` | `stc.relics.hardening.filesystem.enable` | /tmp noexec, /proc hidepid, /dev/shm restreint |
 | `relics-hardening-ssh` | `stc.relics.hardening.ssh.enable` | OpenSSH durci, auth par clé uniquement |
 | `relics-docker-traefik` | `stc.relics.docker.traefik.enable` | Conteneur reverse proxy Traefik v3 (Docker) |
+| `relics-docker-socket-proxy` | `stc.relics.docker.socketProxy.enable` | Proxy filtrant devant le socket Docker |
 | `relics-docker-crowdsec` | `stc.relics.docker.crowdsec.enable` | Conteneur WAF CrowdSec |
 | `relics-docker-notify` | `stc.relics.docker.notify.enable` | Notifications d'échec de conteneur via ntfy |
 
@@ -87,7 +88,7 @@ modules = [
 - [Plasma 6](/stc/fr/relics/plasma6/) — relique bureau KDE Plasma 6
 - [YubiKey](/stc/fr/relics/yubikey/) — configuration YubiKey en deux reliques
 - [Plasma Manager](/stc/fr/relics/plasma-manager/) — configuration KDE déclarative
-- [Reliques Docker](/stc/fr/relics/docker/) — Traefik, CrowdSec et notify
+- [Reliques Docker](/stc/fr/relics/docker/) — Traefik, socket-proxy, CrowdSec et notify
 - [AWS](/stc/fr/relics/aws/) — drivers EC2 et configuration AWS
 - [Traefik](/stc/fr/relics/traefik/) — reverse proxy natif NixOS
 - [Vaultwarden](/stc/fr/relics/vaultwarden/) — serveur Bitwarden-compatible
