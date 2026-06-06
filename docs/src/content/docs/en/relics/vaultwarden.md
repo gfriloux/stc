@@ -5,7 +5,7 @@ description: Alternative Bitwarden server — self-hosted password manager, auto
 
 **Module :** `stc.nixosModules.relics-vaultwarden`
 
-Runs Vaultwarden, a Bitwarden-compatible server written in Rust, as a NixOS service. Automatically synchronizes with Traefik if enabled. Persists data to `/persist` and supports periodic backups. Enables automatic registration and can restrict signups to specific email domains.
+Runs Vaultwarden, a Bitwarden-compatible server written in Rust, as a NixOS service. Automatically synchronizes with Traefik if enabled. Persists data to `/persist` and supports periodic backups. Signups and invitations are disabled by default.
 
 ## Options
 
@@ -14,7 +14,9 @@ Runs Vaultwarden, a Bitwarden-compatible server written in Rust, as a NixOS serv
 | `stc.relics.vaultwarden.enable` | bool | `false` | Enable Vaultwarden server. |
 | `stc.relics.vaultwarden.hostname` | string | — | Public domain name (used for Traefik route). **Required.** |
 | `stc.relics.vaultwarden.backup` | bool | `false` | Enable periodic backups to `/var/backup/vaultwarden`. |
-| `stc.relics.vaultwarden.signupsDomains` | list[string] | `[]` | Restrict signups to these email domains. Empty list = all domains accepted. |
+| `stc.relics.vaultwarden.signupsAllowed` | bool | `false` | Allow new user self-registration. Disabled by default. |
+| `stc.relics.vaultwarden.invitationsAllowed` | bool | `false` | Allow organization invitations. Disabled by default. |
+| `stc.relics.vaultwarden.signupsDomains` | list[string] | `[]` | Restrict signups to these email domains. Only applies when `signupsAllowed = true`. |
 | `stc.relics.vaultwarden.showPasswordHint` | bool | `false` | Show password hints on the login page. Disabled by default for security. |
 
 ## What it does
@@ -25,8 +27,9 @@ Runs Vaultwarden, a Bitwarden-compatible server written in Rust, as a NixOS serv
 - **WebSocket :** Enables real-time synchronization between devices
 - **Persistence :** Saves data to `/persist` — **requires `relics-impermanence`**
 - **Optional backups :** Periodic backups to `/var/backup/vaultwarden` if `backup = true`
-- **Signup restriction :** Optional — limit new accounts to specific domains
-- **Invitations :** Enables invitations (invitation-based registration)
+- **Signups :** Disabled by default — set `signupsAllowed = true` to allow registration
+- **Invitations :** Disabled by default — set `invitationsAllowed = true` to allow org invitations
+- **Signup restriction :** Optional — limit new accounts to specific domains via `signupsDomains`
 
 ## Example usage (with Traefik)
 

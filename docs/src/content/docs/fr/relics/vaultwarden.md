@@ -5,7 +5,7 @@ description: Serveur Bitwarden alternatif — gestionnaire de mots de passe self
 
 **Module :** `stc.nixosModules.relics-vaultwarden`
 
-Lance Vaultwarden, un serveur Bitwarden-compatible écrit en Rust, comme service NixOS. Se synchronise automatiquement avec Traefik si activé. Persiste les données sur `/persist` et supporte les backups périodiques. Permet l'enregistrement automatique et restreint les inscriptions à des domaines email spécifiques.
+Lance Vaultwarden, un serveur Bitwarden-compatible écrit en Rust, comme service NixOS. Se synchronise automatiquement avec Traefik si activé. Persiste les données sur `/persist` et supporte les backups périodiques. Les inscriptions et invitations sont désactivées par défaut.
 
 ## Options
 
@@ -14,7 +14,9 @@ Lance Vaultwarden, un serveur Bitwarden-compatible écrit en Rust, comme service
 | `stc.relics.vaultwarden.enable` | bool | `false` | Active le serveur Vaultwarden. |
 | `stc.relics.vaultwarden.hostname` | string | — | Nom de domaine public (utilisé pour la route Traefik). **Requis.** |
 | `stc.relics.vaultwarden.backup` | bool | `false` | Active les backups périodiques vers `/var/backup/vaultwarden`. |
-| `stc.relics.vaultwarden.signupsDomains` | list[string] | `[]` | Limiter les inscriptions à ces domaines email. Liste vide = tous les domaines acceptés. |
+| `stc.relics.vaultwarden.signupsAllowed` | bool | `false` | Autorise l'auto-inscription des nouveaux utilisateurs. Désactivé par défaut. |
+| `stc.relics.vaultwarden.invitationsAllowed` | bool | `false` | Autorise les invitations d'organisation. Désactivé par défaut. |
+| `stc.relics.vaultwarden.signupsDomains` | list[string] | `[]` | Limiter les inscriptions à ces domaines email. N'a d'effet que si `signupsAllowed = true`. |
 | `stc.relics.vaultwarden.showPasswordHint` | bool | `false` | Affiche les indices de mot de passe sur la page de connexion. Désactivé par défaut pour la sécurité. |
 
 ## Ce qu'il fait
@@ -25,8 +27,9 @@ Lance Vaultwarden, un serveur Bitwarden-compatible écrit en Rust, comme service
 - **WebSocket :** Active les synchronisations en temps réel entre appareils
 - **Persistence :** Sauvegarde les données sur `/persist` — **nécessite `relics-impermanence`**
 - **Backups optionnels :** Backups périodiques vers `/var/backup/vaultwarden` si `backup = true`
-- **Restriction d'inscriptions :** Optionnel — limiter les nouveaux comptes à des domaines spécifiques
-- **Invitations :** Permet les invitations (enregistrement par invitation)
+- **Inscriptions :** Désactivées par défaut — passer `signupsAllowed = true` pour ouvrir
+- **Invitations :** Désactivées par défaut — passer `invitationsAllowed = true` pour autoriser
+- **Restriction d'inscriptions :** Optionnel — limiter les nouveaux comptes à des domaines spécifiques via `signupsDomains`
 
 ## Exemple d'utilisation (avec Traefik)
 
