@@ -1,11 +1,30 @@
-name: Nix flake check
+name: Nix CI
 
 on:
   push:
     branches: [main]
   pull_request:
 
+# Least privilege: the workflow only reads the repo.
+permissions:
+  contents: read
+
+# Cancel superseded runs on the same ref to save runners.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: DeterminateSystems/nix-installer-action@v16
+
+      - name: Format check + lint (alejandra, statix, deadnix)
+        run: nix develop --command just fmt-check lint
+
   check:
     runs-on: ubuntu-latest
     steps:

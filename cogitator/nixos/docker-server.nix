@@ -8,11 +8,13 @@
 #   stc.relics.docker.traefik.acme.email = "you@example.com";
 #   stc.relics.docker.crowdsec.dataDir = "/srv/docker/crowdsec";
 #   stc.relics.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
-{ config, lib, ... }:
-let
-  cfg = config.stc.cogitator.docker-server;
-in
 {
+  config,
+  lib,
+  ...
+}: let
+  cfg = config.stc.cogitator.docker-server;
+in {
   imports = [
     ../../relics/nixos/docker/traefik.nix
     ../../relics/nixos/docker/socket-proxy.nix

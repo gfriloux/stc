@@ -1,11 +1,12 @@
-{ config, lib, ... }:
-
-let
-  cfg = config.stc.relics.boot;
-in
 {
+  config,
+  lib,
+  ...
+}: let
+  cfg = config.stc.relics.boot;
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "boot" "enable" ] [ "stc" "relics" "boot" "enable" ])
+    (lib.mkRenamedOptionModule ["stc" "boot" "enable"] ["stc" "relics" "boot" "enable"])
   ];
 
   options.stc.relics.boot = {

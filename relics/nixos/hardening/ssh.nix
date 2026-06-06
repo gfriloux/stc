@@ -4,15 +4,16 @@
 # Password authentication is disabled. Keys only.
 # The Omnissiah does not accept weak authentication.
 # If you lose your key, that's between you and the Machine God.
-{ config, lib, ... }:
-
-let
-  cfg = config.stc.relics.hardening.ssh;
-in
 {
+  config,
+  lib,
+  ...
+}: let
+  cfg = config.stc.relics.hardening.ssh;
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "hardening" "ssh" "enable" ] [ "stc" "relics" "hardening" "ssh" "enable" ])
-    (lib.mkRenamedOptionModule [ "stc" "hardening" "ssh" "allowedTCPForwarding" ] [ "stc" "relics" "hardening" "ssh" "allowedTCPForwarding" ])
+    (lib.mkRenamedOptionModule ["stc" "hardening" "ssh" "enable"] ["stc" "relics" "hardening" "ssh" "enable"])
+    (lib.mkRenamedOptionModule ["stc" "hardening" "ssh" "allowedTCPForwarding"] ["stc" "relics" "hardening" "ssh" "allowedTCPForwarding"])
   ];
 
   options.stc.relics.hardening.ssh = {

@@ -80,12 +80,12 @@ in {
     stc.cogitator.hardening.enable = true;
     stc.relics.impermanence = {
       enable = true;
-      poolName = cfg.poolName;
+      inherit (cfg) poolName;
       inherit (cfg.impermanence) extraDirectories extraFiles;
     };
     stc.relics.aws = {
       enable = true;
-      poolName = cfg.poolName;
+      inherit (cfg) poolName;
       inherit (cfg) ebsDisk ebsPartition;
     };
 
@@ -189,8 +189,8 @@ in {
       format = "raw";
       name = "nixos-aws-ami";
       rootPoolName = cfg.poolName;
-      rootSize = cfg.rootSize;
-      memSize = cfg.memSize;
+      inherit (cfg) rootSize;
+      inherit (cfg) memSize;
       includeChannel = false;
       datasets = {
         "${cfg.poolName}/root" = {

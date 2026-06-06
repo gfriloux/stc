@@ -2,14 +2,16 @@
 # Enables the PC/SC daemon (pcscd) for smart card communication and installs
 # the YubiKey udev rules so the key is recognised without root privileges.
 # Pair with the home relic (relics-yubikey-user) for the user-facing tools.
-{ config, lib, pkgs, ... }:
-
-let
-  cfg = config.stc.relics.yubikey;
-in
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+  cfg = config.stc.relics.yubikey;
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "yubikey" "enable" ] [ "stc" "relics" "yubikey" "enable" ])
+    (lib.mkRenamedOptionModule ["stc" "yubikey" "enable"] ["stc" "relics" "yubikey" "enable"])
   ];
 
   options.stc.relics.yubikey = {
@@ -21,6 +23,6 @@ in
     services.pcscd.enable = true;
 
     # udev rules so the YubiKey is accessible to the current user without sudo.
-    services.udev.packages = [ pkgs.yubikey-personalization ];
+    services.udev.packages = [pkgs.yubikey-personalization];
   };
 }

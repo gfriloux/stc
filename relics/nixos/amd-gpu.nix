@@ -1,15 +1,17 @@
 # Relic: AMD GPU
 # Enables hardware graphics acceleration for AMD GPUs: VDPAU, VAAPI, 32-bit
 # driver support (required by Steam and DXVK/Proton), and optional early KMS.
-{ config, lib, pkgs, ... }:
-
-let
-  cfg = config.stc.relics.amdGpu;
-in
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+  cfg = config.stc.relics.amdGpu;
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "amdGpu" "enable" ] [ "stc" "relics" "amdGpu" "enable" ])
-    (lib.mkRenamedOptionModule [ "stc" "amdGpu" "initrd" ] [ "stc" "relics" "amdGpu" "initrd" ])
+    (lib.mkRenamedOptionModule ["stc" "amdGpu" "enable"] ["stc" "relics" "amdGpu" "enable"])
+    (lib.mkRenamedOptionModule ["stc" "amdGpu" "initrd"] ["stc" "relics" "amdGpu" "initrd"])
   ];
 
   options.stc.relics.amdGpu = {
@@ -39,6 +41,6 @@ in
 
     # Load amdgpu in initrd for KMS framebuffer at boot time.
     # Skipped by default — only useful when early display output is needed.
-    boot.initrd.kernelModules = lib.mkIf cfg.initrd [ "amdgpu" ];
+    boot.initrd.kernelModules = lib.mkIf cfg.initrd ["amdgpu"];
   };
 }

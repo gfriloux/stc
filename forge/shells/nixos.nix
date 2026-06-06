@@ -3,8 +3,10 @@
 # Development shell for managing NixOS system configurations.
 # Covers formatting, linting, secrets, deployment inspection,
 # and generation diffing — the full NixOS operator toolkit.
-{ pkgs, preCommitConfig }:
-
+{
+  pkgs,
+  preCommitConfig,
+}:
 pkgs.mkShell {
   name = "stc-nixos";
 

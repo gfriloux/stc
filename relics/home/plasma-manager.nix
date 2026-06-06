@@ -7,14 +7,15 @@
 # The upstream plasma-manager module is injected via the inputs closure
 # in relics/default.nix — consumers do not need to add plasma-manager
 # as an input to their own flake.
-{ config, lib, ... }:
-
-let
-  cfg = config.stc.relics.plasmaManager;
-in
 {
+  config,
+  lib,
+  ...
+}: let
+  cfg = config.stc.relics.plasmaManager;
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "plasmaManager" "enable" ] [ "stc" "relics" "plasmaManager" "enable" ])
+    (lib.mkRenamedOptionModule ["stc" "plasmaManager" "enable"] ["stc" "relics" "plasmaManager" "enable"])
   ];
 
   options.stc.relics.plasmaManager = {

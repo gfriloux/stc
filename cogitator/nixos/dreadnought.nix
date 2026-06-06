@@ -70,12 +70,12 @@ in {
     stc.cogitator.hardening.enable = true;
     stc.relics.impermanence = {
       enable = true;
-      poolName = cfg.poolName;
+      inherit (cfg) poolName;
       inherit (cfg.impermanence) extraDirectories extraFiles;
     };
     stc.relics.aws = {
       enable = true;
-      poolName = cfg.poolName;
+      inherit (cfg) poolName;
       inherit (cfg) ebsDisk ebsPartition;
     };
 

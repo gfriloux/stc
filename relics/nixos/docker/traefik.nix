@@ -9,8 +9,13 @@
 #
 # Secrets: point stc.relics.docker.traefik.dynamicConfigFile at whatever your
 # secrets provider materialises.
-{ config, lib, pkgs, options, ... }:
-let
+{
+  config,
+  lib,
+  pkgs,
+  options,
+  ...
+}: let
   cfg = config.stc.relics.docker.traefik;
   dockerLib = import ./_lib.nix;
 
@@ -91,15 +96,14 @@ let
         filename: "/etc/traefik/traefik_dynamic.yml"
     ${crowdsecPlugin}
   '';
-in
-{
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "docker" "traefik" "enable" ] [ "stc" "relics" "docker" "traefik" "enable" ])
-    (lib.mkRenamedOptionModule [ "stc" "docker" "traefik" "image" ] [ "stc" "relics" "docker" "traefik" "image" ])
-    (lib.mkRenamedOptionModule [ "stc" "docker" "traefik" "dataDir" ] [ "stc" "relics" "docker" "traefik" "dataDir" ])
-    (lib.mkRenamedOptionModule [ "stc" "docker" "traefik" "acme" "email" ] [ "stc" "relics" "docker" "traefik" "acme" "email" ])
-    (lib.mkRenamedOptionModule [ "stc" "docker" "traefik" "enableDashboard" ] [ "stc" "relics" "docker" "traefik" "enableDashboard" ])
-    (lib.mkRenamedOptionModule [ "stc" "docker" "traefik" "dynamicConfigFile" ] [ "stc" "relics" "docker" "traefik" "dynamicConfigFile" ])
+    (lib.mkRenamedOptionModule ["stc" "docker" "traefik" "enable"] ["stc" "relics" "docker" "traefik" "enable"])
+    (lib.mkRenamedOptionModule ["stc" "docker" "traefik" "image"] ["stc" "relics" "docker" "traefik" "image"])
+    (lib.mkRenamedOptionModule ["stc" "docker" "traefik" "dataDir"] ["stc" "relics" "docker" "traefik" "dataDir"])
+    (lib.mkRenamedOptionModule ["stc" "docker" "traefik" "acme" "email"] ["stc" "relics" "docker" "traefik" "acme" "email"])
+    (lib.mkRenamedOptionModule ["stc" "docker" "traefik" "enableDashboard"] ["stc" "relics" "docker" "traefik" "enableDashboard"])
+    (lib.mkRenamedOptionModule ["stc" "docker" "traefik" "dynamicConfigFile"] ["stc" "relics" "docker" "traefik" "dynamicConfigFile"])
   ];
 
   options.stc.relics.docker.traefik = {
@@ -141,7 +145,7 @@ in
 
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers."traefik" = {
-      image = cfg.image;
+      inherit (cfg) image;
       serviceName = "traefik";
 
       volumes =
@@ -152,16 +156,15 @@ in
           "${cfg.dataDir}/logs:/logs"
         ]
         ++ (
-          if cfg.dynamicConfigFile != null then
-            [
-              "${cfg.dataDir}/conf/traefik.yml:/etc/traefik/traefik.yml"
-              "${cfg.dynamicConfigFile}:/etc/traefik/traefik_dynamic.yml"
-            ]
-          else
-            [
-              "${cfg.dataDir}/conf/traefik.yml:/etc/traefik/traefik.yml"
-              "${cfg.dataDir}/conf/traefik_dynamic.yml:/etc/traefik/traefik_dynamic.yml"
-            ]
+          if cfg.dynamicConfigFile != null
+          then [
+            "${cfg.dataDir}/conf/traefik.yml:/etc/traefik/traefik.yml"
+            "${cfg.dynamicConfigFile}:/etc/traefik/traefik_dynamic.yml"
+          ]
+          else [
+            "${cfg.dataDir}/conf/traefik.yml:/etc/traefik/traefik.yml"
+            "${cfg.dataDir}/conf/traefik_dynamic.yml:/etc/traefik/traefik_dynamic.yml"
+          ]
         );
 
       extraOptions = dockerLib.mkHealthCheck {
@@ -179,7 +182,7 @@ in
         "443:443/tcp"
       ];
 
-      networks = [ "web" ] ++ lib.optional socketProxyEnabled socketProxyNetwork;
+      networks = ["web"] ++ lib.optional socketProxyEnabled socketProxyNetwork;
     };
 
     services.logrotate.settings.traefik = {
@@ -200,23 +203,24 @@ in
 
     systemd = {
       services = {
-        "traefik" =
-          let
-            deps =
-              lib.optional crowdsecEnabled "crowdsec.service"
-              ++ lib.optional socketProxyEnabled "docker-socket-proxy.service";
-          in
-          lib.mkIf (deps != [ ]) {
+        "traefik" = let
+          deps =
+            lib.optional crowdsecEnabled "crowdsec.service"
+            ++ lib.optional socketProxyEnabled "docker-socket-proxy.service";
+        in
+          lib.mkIf (deps != []) {
             after = deps;
             requires = deps;
           };
-        "docker-network-web" = dockerLib.mkNetwork pkgs "web" // {
-          # Traefik joins the "web" network at startup. Without ordering, on the
-          # first boot Traefik can race ahead of network creation and fail.
-          # requiredBy + before guarantee the network exists first.
-          requiredBy = [ "traefik.service" ];
-          before = [ "traefik.service" ];
-        };
+        "docker-network-web" =
+          dockerLib.mkNetwork pkgs "web"
+          // {
+            # Traefik joins the "web" network at startup. Without ordering, on the
+            # first boot Traefik can race ahead of network creation and fail.
+            # requiredBy + before guarantee the network exists first.
+            requiredBy = ["traefik.service"];
+            before = ["traefik.service"];
+          };
       };
       tmpfiles.rules = [
         "d ${cfg.dataDir}/logs 0750 0 0 -"

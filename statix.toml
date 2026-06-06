@@ -1,0 +1,8 @@
+# statix lint configuration.
+#
+# repeated_keys (W20) is disabled: in NixOS/Home Manager modules, flat option
+# paths like `stc.relics.zfs.enable = true; stc.relics.networking.enable = true;`
+# or `fileSystems."/" = {...}; fileSystems."/nix" = {...};` are idiomatic and
+# clearer than the nested form W20 suggests (and sometimes impossible to merge,
+# e.g. a leaf `.enable` alongside a submodule attrset).
+disabled = ["repeated_keys"]

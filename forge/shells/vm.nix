@@ -3,8 +3,10 @@
 # Development shell for building and running NixOS VM images.
 # qemu covers both image inspection (qemu-img) and booting the result.
 # nix-tree + nvd help introspect closures and compare generations.
-{ pkgs, preCommitConfig }:
-
+{
+  pkgs,
+  preCommitConfig,
+}:
 pkgs.mkShell {
   name = "stc-vm";
 

@@ -10,7 +10,7 @@
 #
 # Using the legacy namespace emits a NixOS deprecation warning at eval time.
 # The legacy namespace will be removed in STC v3.0 (January 2027).
-{ inputs, ... }: {
+{inputs, ...}: {
   flake.nixosModules = {
     # --- System ---
     relics-boot = ./nixos/boot.nix;
@@ -19,14 +19,12 @@
     relics-aws = ./nixos/aws.nix;
 
     # Impermanence needs the upstream module injected via inputs closure.
-    relics-impermanence =
-      { ... }:
-      {
-        imports = [
-          inputs.impermanence.nixosModules.impermanence
-          ./nixos/impermanence.nix
-        ];
-      };
+    relics-impermanence = {...}: {
+      imports = [
+        inputs.impermanence.nixosModules.impermanence
+        ./nixos/impermanence.nix
+      ];
+    };
 
     # --- Hardening (individual relics for surgical use) ---
     relics-hardening-kernel = ./nixos/hardening/kernel.nix;
@@ -61,23 +59,19 @@
     relics-yubikey-user = ./home/yubikey.nix;
 
     # plasma-manager requires its upstream module injected via inputs closure.
-    relics-plasma-manager =
-      { ... }:
-      {
-        imports = [
-          inputs.plasma-manager.homeModules.plasma-manager
-          ./home/plasma-manager.nix
-        ];
-      };
+    relics-plasma-manager = {...}: {
+      imports = [
+        inputs.plasma-manager.homeModules.plasma-manager
+        ./home/plasma-manager.nix
+      ];
+    };
 
     # zen-browser requires its upstream module injected via inputs closure.
-    relics-zen-browser =
-      { ... }:
-      {
-        imports = [
-          inputs.zen-browser.homeModules.beta
-          ./home/zen-browser.nix
-        ];
-      };
+    relics-zen-browser = {...}: {
+      imports = [
+        inputs.zen-browser.homeModules.beta
+        ./home/zen-browser.nix
+      ];
+    };
   };
 }

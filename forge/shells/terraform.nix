@@ -8,8 +8,10 @@
 #   tfsec           — static security analysis
 #   just            — task runner (replaces Makefile for common operations)
 #   glow            — render markdown docs in the terminal
-{ pkgs, preCommitConfig }:
-
+{
+  pkgs,
+  preCommitConfig,
+}:
 pkgs.mkShell {
   name = "stc-terraform";
 

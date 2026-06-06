@@ -6,12 +6,13 @@
 # Individual relic options remain tunable after activation:
 #   stc.relics.plasma6.keyboardLayout, stc.relics.plasma6.sddmTheme
 #   stc.relics.pipewire.enable (already true — override only to disable)
-{ config, lib, ... }:
-
-let
-  cfg = config.stc.cogitator.plasma;
-in
 {
+  config,
+  lib,
+  ...
+}: let
+  cfg = config.stc.cogitator.plasma;
+in {
   imports = [
     ../../relics/nixos/plasma6.nix
     ../../relics/nixos/pipewire.nix

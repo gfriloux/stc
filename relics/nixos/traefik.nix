@@ -1,13 +1,15 @@
-{ config, lib, options, ... }:
-
-let
-  cfg = config.stc.relics.traefik;
-in
 {
+  config,
+  lib,
+  options,
+  ...
+}: let
+  cfg = config.stc.relics.traefik;
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "traefik" "enable" ] [ "stc" "relics" "traefik" "enable" ])
-    (lib.mkRenamedOptionModule [ "stc" "traefik" "email" ] [ "stc" "relics" "traefik" "email" ])
-    (lib.mkRenamedOptionModule [ "stc" "traefik" "logLevel" ] [ "stc" "relics" "traefik" "logLevel" ])
+    (lib.mkRenamedOptionModule ["stc" "traefik" "enable"] ["stc" "relics" "traefik" "enable"])
+    (lib.mkRenamedOptionModule ["stc" "traefik" "email"] ["stc" "relics" "traefik" "email"])
+    (lib.mkRenamedOptionModule ["stc" "traefik" "logLevel"] ["stc" "relics" "traefik" "logLevel"])
   ];
 
   options.stc.relics.traefik = {
@@ -19,7 +21,7 @@ in
     };
 
     logLevel = lib.mkOption {
-      type = lib.types.enum [ "DEBUG" "INFO" "WARN" "ERROR" ];
+      type = lib.types.enum ["DEBUG" "INFO" "WARN" "ERROR"];
       default = "INFO";
       description = "Traefik log level.";
     };
@@ -74,13 +76,13 @@ in
         };
 
         certificatesResolvers.letsencrypt.acme = {
-          email = cfg.email;
+          inherit (cfg) email;
           httpChallenge.entryPoint = "web";
         };
       };
     };
 
-    networking.firewall.allowedTCPPorts = [ 80 443 ];
+    networking.firewall.allowedTCPPorts = [80 443];
 
     # /var/lib/traefik holds ACME certs — must survive reboots.
     # Only emitted when the impermanence relic is present (so Traefik stays

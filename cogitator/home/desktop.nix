@@ -1,9 +1,11 @@
-{ config, lib, pkgs, ... }:
-
-let
-  cfg = config.stc.cogitator.desktop;
-in
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+  cfg = config.stc.cogitator.desktop;
+in {
   imports = [
     ../../relics/home/kitty.nix
     ../../relics/home/zen-browser.nix

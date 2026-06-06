@@ -2,14 +2,15 @@
 # A GPU-accelerated terminal written in Rust and Zig, with a native GTK4 renderer
 # on Linux. Distinct from Kitty by its native GTK integration and extended terminal
 # protocol support. Both can coexist — each has its own configuration namespace.
-{ config, lib, ... }:
-
-let
-  cfg = config.stc.relics.gui.ghostty;
-in
 {
+  config,
+  lib,
+  ...
+}: let
+  cfg = config.stc.relics.gui.ghostty;
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "gui" "ghostty" "enable" ] [ "stc" "relics" "gui" "ghostty" "enable" ])
+    (lib.mkRenamedOptionModule ["stc" "gui" "ghostty" "enable"] ["stc" "relics" "gui" "ghostty" "enable"])
   ];
 
   options.stc.relics.gui.ghostty = {

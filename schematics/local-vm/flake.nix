@@ -38,7 +38,7 @@
         stc.nixosModules.cogitator-vm
 
         (
-          {...}: {
+          _: {
             stc.cogitator.sarcophagus-kvm = {
               enable = true;
               # poolName = "vmpool";  # default

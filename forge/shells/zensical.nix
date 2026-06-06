@@ -7,8 +7,10 @@
 #
 # On shell entry, `pipenv install` pulls the project's Pipfile.
 # First run requires network access. Subsequent runs use the lockfile.
-{ pkgs, preCommitConfig }:
-
+{
+  pkgs,
+  preCommitConfig,
+}:
 pkgs.mkShell {
   name = "stc-zensical";
 

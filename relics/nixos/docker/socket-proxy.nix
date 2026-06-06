@@ -10,15 +10,21 @@
 # protocol — a process can still POST to the API (create a privileged container,
 # i.e. root on the host). The proxy is the real mitigation: POST is disabled and
 # only the GET endpoints listed in `permissions` are forwarded.
-{ config, lib, pkgs, ... }:
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.stc.relics.docker.socketProxy;
   dockerLib = import ./_lib.nix;
 
   # bool -> "1"/"0" for the proxy's env-var API toggles.
-  toFlag = b: if b then "1" else "0";
-in
-{
+  toFlag = b:
+    if b
+    then "1"
+    else "0";
+in {
   options.stc.relics.docker.socketProxy = {
     enable = lib.mkEnableOption "filtering proxy in front of the Docker socket";
 
@@ -58,18 +64,20 @@ in
 
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers."docker-socket-proxy" = {
-      image = cfg.image;
+      inherit (cfg) image;
       serviceName = "docker-socket-proxy";
 
       # The raw socket is exposed to the proxy only, read-only.
-      volumes = [ "/run/docker.sock:/var/run/docker.sock:ro" ];
+      volumes = ["/run/docker.sock:/var/run/docker.sock:ro"];
 
       # Enable the whitelisted GET sections; never POST.
-      environment = (lib.mapAttrs (_: toFlag) cfg.permissions) // {
-        POST = "0";
-      };
+      environment =
+        (lib.mapAttrs (_: toFlag) cfg.permissions)
+        // {
+          POST = "0";
+        };
 
-      networks = [ cfg.network ];
+      networks = [cfg.network];
     };
 
     # Dedicated network bridging the proxy to its clients, created before the
@@ -77,8 +85,8 @@ in
     systemd.services."docker-network-${cfg.network}" =
       dockerLib.mkNetwork pkgs cfg.network
       // {
-        requiredBy = [ "docker-socket-proxy.service" ];
-        before = [ "docker-socket-proxy.service" ];
+        requiredBy = ["docker-socket-proxy.service"];
+        before = ["docker-socket-proxy.service"];
       };
   };
 }

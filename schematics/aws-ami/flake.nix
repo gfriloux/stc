@@ -32,7 +32,7 @@
         stc.nixosModules.cogitator-sarcophagus-aws
 
         (
-          {...}: {
+          _: {
             stc.cogitator.sarcophagus-aws = {
               enable = true;
               # poolName = "vmpool";    # default

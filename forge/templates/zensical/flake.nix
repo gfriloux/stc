@@ -15,9 +15,12 @@
     };
   };
 
-  outputs =
-    inputs @ { flake-parts, stc, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
+  outputs = inputs @ {
+    flake-parts,
+    stc,
+    ...
+  }:
+    flake-parts.lib.mkFlake {inherit inputs;} {
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -25,22 +28,19 @@
         "aarch64-darwin"
       ];
 
-      perSystem =
-        { system, ... }:
-        let
-          inherit (stc.inputs.nix-checks.lib.${system}) checks;
-        in
-        {
-          checks = {
-            nix = checks.nix ./.;
-            gitleaks = checks.gitleaks ./.;
-            markdown = checks.markdown {
-              path = ./.;
-              args = "-d MD046,MD005,MD013,MD031,MD007,MD038,MD034";
-            };
+      perSystem = {system, ...}: let
+        inherit (stc.inputs.nix-checks.lib.${system}) checks;
+      in {
+        checks = {
+          nix = checks.nix ./.;
+          gitleaks = checks.gitleaks ./.;
+          markdown = checks.markdown {
+            path = ./.;
+            args = "-d MD046,MD005,MD013,MD031,MD007,MD038,MD034";
           };
-
-          devShells.default = stc.devShells.${system}.zensical;
         };
+
+        devShells.default = stc.devShells.${system}.zensical;
+      };
     };
 }

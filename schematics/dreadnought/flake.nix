@@ -47,7 +47,7 @@
         # stc.nixosModules.cogitator-docker-server
         # stc.nixosModules.cogitator-vm
         (
-          {...}: {
+          _: {
             stc.cogitator.dreadnought = {
               enable = true;
               # poolName must match the pool name used when building the AMI (default: "vmpool").

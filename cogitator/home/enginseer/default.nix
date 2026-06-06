@@ -7,12 +7,14 @@
 #
 # This profile assembles the full CLI toolkit of a seasoned Enginseer:
 # shell enhancements, dev tooling, git rites, and aesthetic augmentations.
-{ config, lib, pkgs, ... }:
-
-let
-  cfg = config.stc.cogitator.enginseer;
-in
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+  cfg = config.stc.cogitator.enginseer;
+in {
   options.stc.cogitator.enginseer = {
     enable = lib.mkEnableOption "Enginseer CLI profile — full field-deployment toolkit";
   };

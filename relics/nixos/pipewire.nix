@@ -2,14 +2,15 @@
 # Modern audio server replacing PulseAudio. RTKit gives Pipewire real-time
 # scheduling priority. ALSA 32-bit support is required by Steam and Wine.
 # PulseAudio compat keeps legacy applications working without changes.
-{ config, lib, ... }:
-
-let
-  cfg = config.stc.relics.pipewire;
-in
 {
+  config,
+  lib,
+  ...
+}: let
+  cfg = config.stc.relics.pipewire;
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "pipewire" "enable" ] [ "stc" "relics" "pipewire" "enable" ])
+    (lib.mkRenamedOptionModule ["stc" "pipewire" "enable"] ["stc" "relics" "pipewire" "enable"])
   ];
 
   options.stc.relics.pipewire = {

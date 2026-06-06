@@ -15,9 +15,12 @@
     };
   };
 
-  outputs =
-    inputs @ { flake-parts, stc, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
+  outputs = inputs @ {
+    flake-parts,
+    stc,
+    ...
+  }:
+    flake-parts.lib.mkFlake {inherit inputs;} {
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -25,20 +28,17 @@
         "aarch64-darwin"
       ];
 
-      perSystem =
-        { system, ... }:
-        let
-          inherit (stc.inputs.nix-checks.lib.${system}) checks;
-        in
-        {
-          checks = {
-            nix = checks.nix ./.;
-            gitleaks = checks.gitleaks ./.;
-            ansible = checks.ansible ./.;
-            shell = checks.shell ./.;
-          };
-
-          devShells.default = stc.devShells.${system}.ansible;
+      perSystem = {system, ...}: let
+        inherit (stc.inputs.nix-checks.lib.${system}) checks;
+      in {
+        checks = {
+          nix = checks.nix ./.;
+          gitleaks = checks.gitleaks ./.;
+          ansible = checks.ansible ./.;
+          shell = checks.shell ./.;
         };
+
+        devShells.default = stc.devShells.${system}.ansible;
+      };
     };
 }

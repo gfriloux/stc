@@ -1,28 +1,33 @@
-{ config, lib, pkgs, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.stc.relics.zfs;
 
-  zfsCompatibleKernelPackages = lib.filterAttrs (
-    name: kernelPackages:
-    (builtins.match "linux_[0-9]+_[0-9]+" name) != null
-    && (builtins.tryEval kernelPackages).success
-    && (!kernelPackages.${config.boot.zfs.package.kernelModuleAttribute}.meta.broken)
-  ) pkgs.linuxKernel.packages;
+  zfsCompatibleKernelPackages =
+    lib.filterAttrs (
+      name: kernelPackages:
+        (builtins.match "linux_[0-9]+_[0-9]+" name)
+        != null
+        && (builtins.tryEval kernelPackages).success
+        && (!kernelPackages.${config.boot.zfs.package.kernelModuleAttribute}.meta.broken)
+    )
+    pkgs.linuxKernel.packages;
 
   latestKernelPackage = lib.last (
     lib.sort (a: b: (lib.versionOlder a.kernel.version b.kernel.version)) (
       builtins.attrValues zfsCompatibleKernelPackages
     )
   );
-in
-{
+in {
   imports = [
-    (lib.mkRenamedOptionModule [ "stc" "zfs" "enable" ] [ "stc" "relics" "zfs" "enable" ])
-    (lib.mkRenamedOptionModule [ "stc" "zfs" "scrubInterval" ] [ "stc" "relics" "zfs" "scrubInterval" ])
-    (lib.mkRenamedOptionModule [ "stc" "zfs" "autoSnapshot" "enable" ] [ "stc" "relics" "zfs" "autoSnapshot" "enable" ])
-    (lib.mkRenamedOptionModule [ "stc" "zfs" "autoSnapshot" "daily" ] [ "stc" "relics" "zfs" "autoSnapshot" "daily" ])
-    (lib.mkRenamedOptionModule [ "stc" "zfs" "autoSnapshot" "poolName" ] [ "stc" "relics" "zfs" "autoSnapshot" "poolName" ])
+    (lib.mkRenamedOptionModule ["stc" "zfs" "enable"] ["stc" "relics" "zfs" "enable"])
+    (lib.mkRenamedOptionModule ["stc" "zfs" "scrubInterval"] ["stc" "relics" "zfs" "scrubInterval"])
+    (lib.mkRenamedOptionModule ["stc" "zfs" "autoSnapshot" "enable"] ["stc" "relics" "zfs" "autoSnapshot" "enable"])
+    (lib.mkRenamedOptionModule ["stc" "zfs" "autoSnapshot" "daily"] ["stc" "relics" "zfs" "autoSnapshot" "daily"])
+    (lib.mkRenamedOptionModule ["stc" "zfs" "autoSnapshot" "poolName"] ["stc" "relics" "zfs" "autoSnapshot" "poolName"])
   ];
 
   options.stc.relics.zfs = {
@@ -54,8 +59,8 @@ in
     boot = {
       kernelPackages = latestKernelPackage;
 
-      supportedFilesystems = [ "zfs" ];
-      initrd.supportedFilesystems = [ "zfs" ];
+      supportedFilesystems = ["zfs"];
+      initrd.supportedFilesystems = ["zfs"];
 
       # Force-import the root pool so the system boots even when the pool
       # was last used on a different host (e.g. after nixos-anywhere install).
