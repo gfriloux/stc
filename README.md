@@ -97,7 +97,7 @@ See the `schematics/` directory for complete working examples:
 | `relics-hardening-ssh` | `stc.relics.hardening.ssh` | OpenSSH hardened config |
 | `relics-docker-traefik` | `stc.relics.docker.traefik` | Traefik v3 Docker container |
 | `relics-docker-socket-proxy` | `stc.relics.docker.socketProxy` | Filtering proxy in front of the Docker socket |
-| `relics-docker-crowdsec` | `stc.relics.docker.crowdsec` | CrowdSec WAF Docker container |
+| `relics-docker-crowdsec` | `stc.relics.docker.crowdsec` | CrowdSec IDS/IPS Docker container |
 | `relics-docker-notify` | `stc.relics.docker.notify` | ntfy failure notifications for Docker |
 
 ### nixosModules (cogitators)

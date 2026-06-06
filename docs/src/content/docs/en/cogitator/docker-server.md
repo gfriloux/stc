@@ -5,7 +5,7 @@ description: cogitator-docker-server — full Docker reverse proxy stack in one 
 
 **Module:** `stc.nixosModules.cogitator-docker-server`
 
-Full Docker reverse-proxy stack: Traefik + a filtering socket-proxy + CrowdSec WAF
+Full Docker reverse-proxy stack: Traefik + a filtering socket-proxy + CrowdSec IDS/IPS
 + failure notifications. Enabling this is equivalent to enabling
 `stc.relics.docker.traefik`, `stc.relics.docker.socketProxy`,
 `stc.relics.docker.crowdsec`, and `stc.relics.docker.notify` individually, plus
