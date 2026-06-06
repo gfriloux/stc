@@ -21,6 +21,24 @@
       builtins.attrValues zfsCompatibleKernelPackages
     )
   );
+
+  # Known LTS kernel series, newest first. ZFS supports LTS releases longest;
+  # non-LTS kernels often reach EOL before ZFS supports the next one (see the
+  # nixpkgs zfs.latestCompatibleLinuxPackages deprecation note). Add a newer
+  # series here when it lands.
+  ltsKernelSeries = ["linux_6_12" "linux_6_6" "linux_6_1" "linux_5_15"];
+
+  ltsKernelPackage = let
+    available = builtins.filter (n: zfsCompatibleKernelPackages ? ${n}) ltsKernelSeries;
+  in
+    if available == []
+    then throw "stc.relics.zfs: no ZFS-compatible LTS kernel found among ${toString ltsKernelSeries}; set stc.relics.zfs.kernel = \"latest\" or update ltsKernelSeries."
+    else zfsCompatibleKernelPackages.${builtins.head available};
+
+  selectedKernelPackage =
+    if cfg.kernel == "lts"
+    then ltsKernelPackage
+    else latestKernelPackage;
 in {
   imports = [
     (lib.mkRenamedOptionModule ["stc" "zfs" "enable"] ["stc" "relics" "zfs" "enable"])
@@ -32,6 +50,20 @@ in {
 
   options.stc.relics.zfs = {
     enable = lib.mkEnableOption "ZFS kernel, boot support, and pool maintenance (scrub, TRIM, ZED)";
+
+    kernel = lib.mkOption {
+      type = lib.types.enum ["lts" "latest"];
+      default = "lts";
+      description = ''
+        Which ZFS-compatible kernel to track.
+        - "lts" (default): newest ZFS-compatible long-term-support kernel — stable,
+          minimal churn, the right choice for production/servers.
+        - "latest": newest ZFS-compatible kernel — follows nixpkgs closely, more churn.
+
+        ZFS supports LTS kernels longest; non-LTS releases often reach EOL before
+        ZFS supports the next one, which can force manual intervention.
+      '';
+    };
 
     scrubInterval = lib.mkOption {
       type = lib.types.str;
@@ -57,7 +89,7 @@ in {
 
   config = lib.mkIf cfg.enable {
     boot = {
-      kernelPackages = latestKernelPackage;
+      kernelPackages = selectedKernelPackage;
 
       supportedFilesystems = ["zfs"];
       initrd.supportedFilesystems = ["zfs"];

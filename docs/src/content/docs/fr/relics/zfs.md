@@ -14,6 +14,7 @@ maintenance continue (scrub, TRIM, ZED).
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
 | `stc.relics.zfs.enable` | bool | `false` | Active le noyau ZFS, le support au démarrage et la maintenance des pools |
+| `stc.relics.zfs.kernel` | enum `"lts"` \| `"latest"` | `"lts"` | Quel noyau compatible ZFS suivre. `"lts"` = dernier LTS (stable, peu de churn) ; `"latest"` = dernier compatible (suit nixpkgs de près). |
 | `stc.relics.zfs.scrubInterval` | string | `"monthly"` | Expression de calendrier systemd pour le scrub automatique |
 | `stc.relics.zfs.autoSnapshot.enable` | bool | `false` | Active les snapshots périodiques ZFS sur le dataset persist |
 | `stc.relics.zfs.autoSnapshot.daily` | int | `7` | Nombre de snapshots journaliers à conserver |
@@ -21,9 +22,13 @@ maintenance continue (scrub, TRIM, ZED).
 
 ## Ce qu'elle fait
 
-**Noyau** — sélectionne le dernier noyau LTS compatible avec le module ZFS hors-arbre,
-en filtrant les noyaux cassés ou non-LTS. ZFS livre un module hors-arbre qui peut
-prendre du retard sur le noyau ; une paire non assortie échoue à compiler.
+**Noyau** — sélectionne un noyau compatible avec le module ZFS hors-arbre (ZFS peut
+prendre du retard sur le noyau ; une paire non assortie échoue à compiler). Avec
+`kernel = "lts"` (défaut), il choisit la dernière série LTS compatible ZFS — stable
+et peu de churn, le bon choix en production. Avec `kernel = "latest"`, il choisit le
+dernier noyau compatible, suivant nixpkgs de près. Les LTS restent compatibles ZFS le
+plus longtemps ; les noyaux non-LTS atteignent souvent l'EOL avant que ZFS ne supporte
+le suivant.
 
 **Support système de fichiers** — ajoute `"zfs"` à `boot.supportedFilesystems` et
 `boot.initrd.supportedFilesystems` pour que l'initrd puisse importer les pools au

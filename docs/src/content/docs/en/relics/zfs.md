@@ -13,6 +13,7 @@ initrd, pool import settings, and ongoing maintenance (scrub, TRIM, ZED).
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `stc.relics.zfs.enable` | bool | `false` | Enable ZFS kernel, boot support, and pool maintenance |
+| `stc.relics.zfs.kernel` | enum `"lts"` \| `"latest"` | `"lts"` | Which ZFS-compatible kernel to track. `"lts"` = newest LTS (stable, minimal churn); `"latest"` = newest compatible (follows nixpkgs closely). |
 | `stc.relics.zfs.scrubInterval` | string | `"monthly"` | systemd calendar expression for auto-scrub |
 | `stc.relics.zfs.autoSnapshot.enable` | bool | `false` | Enable periodic ZFS snapshots on the persist dataset |
 | `stc.relics.zfs.autoSnapshot.daily` | int | `7` | Number of daily snapshots to keep |
@@ -20,9 +21,13 @@ initrd, pool import settings, and ongoing maintenance (scrub, TRIM, ZED).
 
 ## What It Does
 
-**Kernel** — selects the latest LTS kernel compatible with the out-of-tree ZFS
-module by filtering broken or non-LTS kernels. ZFS ships an out-of-tree module
-that occasionally lags behind the kernel; a mismatched pair fails to build.
+**Kernel** — selects a kernel compatible with the out-of-tree ZFS module (ZFS
+occasionally lags behind the kernel; a mismatched pair fails to build). With
+`kernel = "lts"` (default) it picks the newest ZFS-compatible LTS series —
+stable and low-churn, the right choice for production. With `kernel = "latest"`
+it picks the newest compatible kernel, tracking nixpkgs closely. LTS releases
+stay ZFS-compatible longest; non-LTS kernels often reach EOL before ZFS supports
+the next one.
 
 **Filesystem support** — adds `"zfs"` to `boot.supportedFilesystems` and
 `boot.initrd.supportedFilesystems` so the initrd can import pools at boot.
