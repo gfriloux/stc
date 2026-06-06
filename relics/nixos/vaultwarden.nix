@@ -26,10 +26,22 @@ in
       description = "Enable periodic database backups to /var/backup/vaultwarden.";
     };
 
+    signupsAllowed = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Allow new user self-registration. Disabled by default — enable only if you intend to expose registration to users.";
+    };
+
+    invitationsAllowed = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Allow organization invitations. Disabled by default.";
+    };
+
     signupsDomains = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ];
-      description = "Restrict self-registration to these email domains. Empty list allows all domains.";
+      description = "Restrict self-registration to these email domains. Empty list allows all domains. Only has effect when signupsAllowed = true.";
     };
 
     showPasswordHint = lib.mkOption {
@@ -47,8 +59,8 @@ in
         config = {
           ROCKET_ADDRESS = "127.0.0.1";
           ROCKET_PORT = 8222;
-          SIGNUPS_ALLOWED = true;
-          INVITATIONS_ALLOWED = true;
+          SIGNUPS_ALLOWED = cfg.signupsAllowed;
+          INVITATIONS_ALLOWED = cfg.invitationsAllowed;
           SHOW_PASSWORD_HINT = cfg.showPasswordHint;
           WEBSOCKET_ENABLED = true;
           LOG_LEVEL = "warn";
