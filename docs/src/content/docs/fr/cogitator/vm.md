@@ -19,7 +19,7 @@ complète.
 | `stc.cogitator.vm.enable` | bool | `false` | Active le profil VM de base STC |
 | `stc.cogitator.vm.username` | string | `"admin"` | Compte utilisateur principal créé sur la VM |
 | `stc.cogitator.vm.authorizedKeys` | liste de strings | `[]` | Clés SSH autorisées pour l'utilisateur principal |
-| `stc.cogitator.vm.docker.enable` | bool | `true` | Active Docker et ajoute l'utilisateur principal au groupe docker |
+| `stc.cogitator.vm.docker.enable` | bool | `false` | Active Docker et ajoute l'utilisateur principal au groupe docker (≈ root — opt-in) |
 | `stc.cogitator.vm.nix.gc.enable` | bool | `true` | Active le garbage collection Nix automatique |
 | `stc.cogitator.vm.nix.gc.dates` | string | `"weekly"` | Quand exécuter le GC Nix (expression de calendrier systemd) |
 | `stc.cogitator.vm.nix.gc.keepDays` | int | `5` | Supprimer les chemins du store Nix plus anciens que ce nombre de jours |
@@ -40,6 +40,27 @@ Lorsqu'il est activé :
   - Clés SSH autorisées depuis `authorizedKeys`
 - Active `services.openssh`
 - Si `docker.enable = true` : active `virtualisation.docker` et installe `docker-compose`
+
+:::caution[Groupe docker ≈ root, et sudo avec SSH par clé]
+`docker.enable` est désactivé par défaut : ajouter l'utilisateur au groupe
+`docker` équivaut à un accès root, donc c'est opt-in plutôt qu'un défaut
+silencieux.
+
+L'utilisateur est créé avec SSH par clé uniquement et **sans mot de passe**,
+donc `sudo` est inutilisable tel quel. Si tu as besoin de `sudo`, pose
+`security.sudo.wheelNeedsPassword = false` (sans mot de passe — pratique pour
+une machine en SSH par clé, mais comprends le trade-off) ou attribue un mot de
+passe à l'utilisateur par un autre moyen.
+
+`linger = true` est posé pour que les services utilisateur (et les charges
+rootless) continuent de tourner quand l'utilisateur n'est pas connecté.
+:::
+
+:::note[Changement cassant]
+`docker.enable` valait `true` par défaut auparavant. Si tu comptais sur
+l'activation implicite de Docker, pose explicitement
+`stc.cogitator.vm.docker.enable = true;`.
+:::
 
 ## Exemple d'utilisation
 

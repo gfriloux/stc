@@ -31,8 +31,15 @@ in {
     docker = {
       enable = lib.mkOption {
         type = lib.types.bool;
-        default = true;
-        description = "Enable Docker and add the primary user to the docker group.";
+        default = false;
+        description = ''
+          Enable Docker and add the primary user to the `docker` group.
+
+          Off by default: membership of the `docker` group is equivalent to root
+          (the daemon runs as root and the socket grants full control), so it is
+          opt-in rather than a silent default. Enable it only when the VM is meant
+          to run containers.
+        '';
       };
     };
 
