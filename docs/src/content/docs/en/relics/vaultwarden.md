@@ -24,7 +24,7 @@ Runs Vaultwarden, a Bitwarden-compatible server written in Rust, as a NixOS serv
 - **Vaultwarden service :** Self-hosted password manager, compatible with Bitwarden clients
 - **Localhost only :** Listens on `127.0.0.1:8222` (never exposed directly)
 - **Traefik integration :** Automatically creates HTTPS route if `relics-traefik` is enabled
-- **WebSocket :** Enables real-time synchronization between devices
+- **WebSocket :** real-time sync is served on the main port automatically (Vaultwarden ≥ 1.29 — the old `WEBSOCKET_ENABLED` flag is no longer needed)
 - **Persistence :** on impermanence systems, persists `/var/lib/vaultwarden` (and the backup dir) through `relics-impermanence` when it is enabled, following its `persistPath`. Evaluates fine without impermanence — the persistence block is simply omitted.
 - **Optional backups :** Periodic backups to `/var/backup/vaultwarden` if `backup = true`
 - **Signups :** Disabled by default — set `signupsAllowed = true` to allow registration

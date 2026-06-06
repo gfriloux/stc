@@ -65,7 +65,6 @@ in {
             SIGNUPS_ALLOWED = cfg.signupsAllowed;
             INVITATIONS_ALLOWED = cfg.invitationsAllowed;
             SHOW_PASSWORD_HINT = cfg.showPasswordHint;
-            WEBSOCKET_ENABLED = true;
             LOG_LEVEL = "warn";
           }
           // lib.optionalAttrs (cfg.signupsDomains != []) {
