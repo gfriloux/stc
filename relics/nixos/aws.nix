@@ -54,6 +54,10 @@ in {
         # Amazon recommendation for EBS NVMe reliability.
         # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nvme-ebs-volumes.html
         "nvme_core.io_timeout=4294967295"
+        # Trust the CPU RNG (RDRAND) to seed the kernel entropy pool, avoiding
+        # slow first-boot entropy starvation on headless EC2 instances. Trade-off:
+        # it places trust in the CPU vendor's RNG. Reasonable on a cloud host where
+        # you already trust the hypervisor; remove it if your threat model differs.
         "random.trust_cpu=on"
       ];
 

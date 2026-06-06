@@ -22,7 +22,7 @@ supplied at runtime via a separate file.
 | `stc.relics.docker.traefik.image` | string | `"traefik:v3.7.1"` | Docker image |
 | `stc.relics.docker.traefik.dataDir` | string | `"/srv/docker/traefik"` | Base directory for logs, acme.json, conf |
 | `stc.relics.docker.traefik.acme.email` | string | — | Email for Let's Encrypt ACME registration |
-| `stc.relics.docker.traefik.enableDashboard` | bool | `true` | Enable the Traefik API dashboard on `127.0.0.1:8080`. Disable to reduce attack surface on production servers. |
+| `stc.relics.docker.traefik.enableDashboard` | bool | `false` | Enable the Traefik API dashboard. The `traefik` entrypoint port (`127.0.0.1:8080`) is not published, so this alone does not expose it — publish/forward the port or add a route to reach it. |
 | `stc.relics.docker.traefik.dynamicConfigFile` | `null \| string` | `null` | Path to `traefik_dynamic.yml` |
 
 ### What It Does
@@ -30,7 +30,7 @@ supplied at runtime via a separate file.
 - Runs Traefik on ports 80 and 443 (both opened in the firewall automatically)
 - HTTP on port 80 redirects to HTTPS on port 443
 - ACME/Let's Encrypt via TLS challenge, email from `acme.email`
-- Dashboard on `127.0.0.1:8080` (localhost only)
+- Dashboard off by default; when enabled it binds the in-container `traefik` entrypoint (`127.0.0.1:8080`), which is **not** published — forward the port yourself to reach it
 - Access logs in JSON format at `dataDir/logs/traefik.log`, rotated daily (14 days)
 - Docker provider watching the `web` network; file provider reading `traefik_dynamic.yml`
 - Creates the `web` Docker network as a systemd service
@@ -46,6 +46,18 @@ supplied at runtime via a separate file.
 ```nix
 stc.relics.docker.traefik.dynamicConfigFile = config.sops.secrets."traefik/dynamic".path;
 ```
+
+:::caution[ACME resolver renamed to `letsencrypt`]
+The ACME cert resolver is named `letsencrypt` (matching the native `relics-traefik`).
+It was previously `lets-encrypt`. In your dynamic route config, reference it as:
+
+```yaml
+tls:
+  certResolver: letsencrypt
+```
+
+If you were using `lets-encrypt`, update your dynamic config.
+:::
 
 ---
 
@@ -156,6 +168,13 @@ monitoring automatically.
 | `stc.relics.docker.notify.ntfy.baseUrl` | string | `"https://ntfy.sh"` | ntfy server base URL |
 | `stc.relics.docker.notify.ntfy.topicFile` | string | — | Path to file containing the ntfy topic name |
 
+:::caution[Public ntfy.sh by default]
+`baseUrl` defaults to the public `https://ntfy.sh`. Failure notifications
+(hostname and failed service names) leave your network to a third party, and
+the topic is the only secret — anyone who guesses it can read your alerts. For
+anything sensitive, self-host ntfy and/or use a long random topic.
+:::
+
 ### Secrets Pattern
 
 ```nix
@@ -202,7 +221,7 @@ modules = [
 # configuration.nix
 { config, ... }:
 {
-  stc.docker = {
+  stc.relics.docker = {
     traefik = {
       enable = true;
       acme.email = "ops@example.com";

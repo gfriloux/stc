@@ -19,7 +19,7 @@ developer VM.
 | `stc.cogitator.vm.enable` | bool | `false` | Enable the STC base VM profile |
 | `stc.cogitator.vm.username` | string | `"admin"` | Primary user account created on the VM |
 | `stc.cogitator.vm.authorizedKeys` | list of strings | `[]` | SSH authorized keys for the primary user |
-| `stc.cogitator.vm.docker.enable` | bool | `true` | Enable Docker and add the primary user to the docker group |
+| `stc.cogitator.vm.docker.enable` | bool | `false` | Enable Docker and add the primary user to the docker group (≈ root — opt-in) |
 | `stc.cogitator.vm.nix.gc.enable` | bool | `true` | Enable automatic Nix garbage collection |
 | `stc.cogitator.vm.nix.gc.dates` | string | `"weekly"` | When to run Nix GC (systemd calendar expression) |
 | `stc.cogitator.vm.nix.gc.keepDays` | int | `5` | Delete Nix store paths older than this many days |
@@ -40,6 +40,24 @@ When enabled:
   - SSH authorized keys from `authorizedKeys`
 - Enables `services.openssh`
 - If `docker.enable = true`: enables `virtualisation.docker` and installs `docker-compose`
+
+:::caution[docker group ≈ root, and sudo with key-only SSH]
+`docker.enable` is off by default: adding the user to the `docker` group is
+equivalent to root access, so it is opt-in rather than a silent default.
+
+The user is created with key-only SSH and **no password**, so `sudo` is
+unusable as-is. If you need `sudo`, set `security.sudo.wheelNeedsPassword = false`
+(passwordless — convenient for an SSH-key-only box, but understand the
+trade-off) or assign the user a password out of band.
+
+`linger = true` is set so user services (and rootless workloads) keep running
+when the user is not logged in.
+:::
+
+:::note[Breaking change]
+`docker.enable` previously defaulted to `true`. If you relied on Docker being
+enabled implicitly, set `stc.cogitator.vm.docker.enable = true;` explicitly.
+:::
 
 ## Usage Example
 

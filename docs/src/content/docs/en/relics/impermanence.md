@@ -61,7 +61,7 @@ modules = [
 
 # configuration.nix
 {
-  stc.impermanence = {
+  stc.relics.impermanence = {
     enable = true;
     poolName = "vmpool";      # must match your disko layout
     # datasetName = "root";   # default is fine if your dataset is poolName/root

@@ -22,7 +22,7 @@ configuration statique à partir des options Nix. La configuration dynamique
 | `stc.relics.docker.traefik.image` | string | `"traefik:v3.7.1"` | Image Docker |
 | `stc.relics.docker.traefik.dataDir` | string | `"/srv/docker/traefik"` | Répertoire de base pour les logs, acme.json, conf |
 | `stc.relics.docker.traefik.acme.email` | string | — | Email pour l'enregistrement ACME Let's Encrypt |
-| `stc.relics.docker.traefik.enableDashboard` | bool | `true` | Active le dashboard API Traefik sur `127.0.0.1:8080`. Désactiver pour réduire la surface d'attaque en production. |
+| `stc.relics.docker.traefik.enableDashboard` | bool | `false` | Active le dashboard API Traefik. Le port de l'entrypoint `traefik` (`127.0.0.1:8080`) n'est pas publié, donc l'activer seul ne l'expose pas — publie/forward le port ou ajoute une route pour y accéder. |
 | `stc.relics.docker.traefik.dynamicConfigFile` | `null \| string` | `null` | Chemin vers `traefik_dynamic.yml` |
 
 ### Ce qu'elle fait
@@ -30,7 +30,7 @@ configuration statique à partir des options Nix. La configuration dynamique
 - Exécute Traefik sur les ports 80 et 443 (les deux ouverts dans le pare-feu automatiquement)
 - Le port 80 HTTP redirige vers le port 443 HTTPS
 - ACME/Let's Encrypt via challenge TLS, email de `acme.email`
-- Dashboard sur `127.0.0.1:8080` (localhost uniquement)
+- Dashboard désactivé par défaut ; activé, il écoute sur l'entrypoint `traefik` interne (`127.0.0.1:8080`), qui n'est **pas** publié — forward le port toi-même pour y accéder
 - Logs d'accès en format JSON à `dataDir/logs/traefik.log`, rotation quotidienne (14 jours)
 - Provider Docker surveillant le réseau `web` ; provider fichier lisant `traefik_dynamic.yml`
 - Crée le réseau Docker `web` comme service systemd
@@ -46,6 +46,19 @@ configuration statique à partir des options Nix. La configuration dynamique
 ```nix
 stc.relics.docker.traefik.dynamicConfigFile = config.sops.secrets."traefik/dynamic".path;
 ```
+
+:::caution[Resolver ACME renommé en `letsencrypt`]
+Le resolver de certificats ACME s'appelle `letsencrypt` (comme le `relics-traefik`
+natif). Il s'appelait auparavant `lets-encrypt`. Dans ta config de routes dynamiques,
+référence-le ainsi :
+
+```yaml
+tls:
+  certResolver: letsencrypt
+```
+
+Si tu utilisais `lets-encrypt`, mets à jour ta config dynamique.
+:::
 
 ---
 
@@ -156,6 +169,13 @@ automatiquement la surveillance.
 | `stc.relics.docker.notify.ntfy.baseUrl` | string | `"https://ntfy.sh"` | URL de base du serveur ntfy |
 | `stc.relics.docker.notify.ntfy.topicFile` | string | — | Chemin vers le fichier contenant le nom du topic ntfy |
 
+:::caution[ntfy.sh public par défaut]
+`baseUrl` vaut par défaut le service public `https://ntfy.sh`. Les notifications
+d'échec (hostname et noms de services en échec) quittent ton réseau vers un tiers,
+et le topic est l'unique secret — quiconque le devine peut lire tes alertes. Pour
+tout ce qui est sensible, auto-héberge ntfy et/ou utilise un topic long et aléatoire.
+:::
+
 ### Modèle pour les secrets
 
 ```nix
@@ -202,7 +222,7 @@ modules = [
 # configuration.nix
 { config, ... }:
 {
-  stc.docker = {
+  stc.relics.docker = {
     traefik = {
       enable = true;
       acme.email = "ops@example.com";

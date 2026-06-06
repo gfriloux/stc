@@ -51,6 +51,15 @@ The following must match the values used when building the sarcophagus-aws AMI:
 
 Add your public key to `users.users.admin.openssh.authorizedKeys.keys`.
 
+:::danger[Do not deploy as-is]
+This schematic ships `users.allowNoPasswordLogin = true` (only so it evaluates
+before you add a key), `security.sudo.wheelNeedsPassword = false` (passwordless
+sudo for wheel), and a placeholder `networking.hostId = "cafebabe"`. After adding
+your SSH key, set `allowNoPasswordLogin = false` and replace the hostId. With
+key-only SSH and passwordless sudo, anyone holding `admin`'s key has a direct
+root path — make that an intentional choice.
+:::
+
 ## Modules Used
 
 | Module | Purpose |

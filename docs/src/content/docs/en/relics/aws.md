@@ -22,6 +22,7 @@ Automatically configures NixOS to run on AWS EC2. Loads required drivers (NVMe, 
 - **Blacklist xen_fbfront :** Prevents 30-second boot delay on Xen instances
 - **Serial console :** Enables `ttyS0` for AWS Systems Manager or EC2 Connect (keyless SSH access)
 - **NVMe timeouts :** Sets `nvme_core.io_timeout=4294967295` (Amazon EBS recommendation)
+- **CPU RNG trust :** Sets `random.trust_cpu=on` to avoid first-boot entropy starvation on headless instances. Trade-off: it trusts the CPU vendor's RNG — reasonable when you already trust the hypervisor; remove it if your threat model differs.
 - **AWS internal NTP :** Uses `169.254.169.123` — always available, no internet required
 - **Disables udisks2 :** Removes unnecessary GTK dependencies from headless servers
 - **Udev rules :** Installs `amazon-ec2-utils` for full compatibility
@@ -37,7 +38,7 @@ modules = [
 
 {
   stc.relics.zfs.enable = true;
-  stc.aws = {
+  stc.relics.aws = {
     enable = true;
     poolName = "rpool";
     # ebsDisk = "nvme0n1";      # default: Nitro
@@ -50,7 +51,7 @@ For Xen (older instances) :
 
 ```nix
 {
-  stc.aws = {
+  stc.relics.aws = {
     enable = true;
     poolName = "rpool";
     ebsDisk = "xvda";
