@@ -82,7 +82,7 @@
             X-Forwarded-Proto: keep
 
     certificatesResolvers:
-      lets-encrypt:
+      letsencrypt:
         acme:
           email: "${cfg.acme.email}"
           storage: "acme.json"

@@ -47,6 +47,18 @@ supplied at runtime via a separate file.
 stc.relics.docker.traefik.dynamicConfigFile = config.sops.secrets."traefik/dynamic".path;
 ```
 
+:::caution[ACME resolver renamed to `letsencrypt`]
+The ACME cert resolver is named `letsencrypt` (matching the native `relics-traefik`).
+It was previously `lets-encrypt`. In your dynamic route config, reference it as:
+
+```yaml
+tls:
+  certResolver: letsencrypt
+```
+
+If you were using `lets-encrypt`, update your dynamic config.
+:::
+
 ---
 
 ## Docker Socket Proxy
