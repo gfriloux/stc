@@ -1,4 +1,4 @@
-name: Nix flake check
+name: Nix CI
 
 on:
   push:
@@ -6,6 +6,16 @@ on:
   pull_request:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: DeterminateSystems/nix-installer-action@v16
+
+      - name: Format check + lint (alejandra, statix, deadnix)
+        run: nix develop --command just fmt-check lint
+
   check:
     runs-on: ubuntu-latest
     steps:
