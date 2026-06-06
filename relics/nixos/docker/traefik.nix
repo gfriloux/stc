@@ -14,7 +14,10 @@ let
   cfg = config.stc.relics.docker.traefik;
   dockerLib = import ./_lib.nix;
 
-  crowdsecEnabled = config.stc.relics.docker.crowdsec.enable;
+  # Guarded on the option existing so this relic stays usable on its own:
+  # the crowdsec relic declares stc.relics.docker.crowdsec only when imported.
+  crowdsecEnabled =
+    (options.stc.relics.docker ? crowdsec) && config.stc.relics.docker.crowdsec.enable;
 
   # When the socket-proxy relic is enabled, Traefik talks to the Docker API over
   # TCP through the filtering proxy instead of bind-mounting the raw socket.
