@@ -24,9 +24,10 @@ lint:
 lint-fix:
     statix fix .
 
-# Evaluate the full flake (modules, shells, templates, lib)
+# Evaluate the full flake (modules, shells, templates, lib).
+# Flags kept in lockstep with .github/workflows/nix.yml so local and CI match.
 check:
-    nix flake check --show-trace
+    nix flake check --no-write-lock-file --show-trace
 
 # Update all flake inputs
 update:
@@ -36,8 +37,8 @@ update:
 show:
     nix flake show
 
-# Full CI gate: formatting + linting + flake check
-ci: fmt-check lint check
+# Full CI gate: formatting + linting + flake check + doc parity
+ci: fmt-check lint check docs-parity
 
 
 # ── Documentation ─────────────────────────────────────────────────────────────
@@ -57,3 +58,7 @@ docs-build: docs-install
 # Preview the built site locally
 docs-preview: docs-build
     cd docs && npm run preview
+
+# Fail if the en/ and fr/ documentation trees diverge
+docs-parity:
+    bash scripts/check-docs-parity.sh
