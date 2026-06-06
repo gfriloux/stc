@@ -6,9 +6,8 @@
 #
 # Hardening note: if cogitator-hardening or the hardening relics are active,
 # you must set:
-#   stc.relics.hardening.kernel.gaming = true;
 #   stc.relics.hardening.filesystem.gaming = true;
-# Steam requires user namespaces and exec access to /tmp and /dev/shm.
+# Steam requires exec access to /tmp and /dev/shm.
 #
 # Home Manager packages (Heroic, protonup-ng, emulators, etc.) are not managed
 # here — add them to home.packages in your Home Manager configuration.
