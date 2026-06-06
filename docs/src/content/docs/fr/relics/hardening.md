@@ -73,6 +73,17 @@ Monte trois systèmes de fichiers avec des options restrictives :
 Le groupe `proc` est créé automatiquement. `systemd-logind` y est ajouté pour que
 la gestion des sessions continue de fonctionner.
 
+:::caution[hidepid et desktop / supervision]
+`hidepid=2` masque aussi les processus des autres utilisateurs à polkit, aux agents
+D-Bus utilisateur et à plusieurs exporters Prometheus, ce qui peut les faire
+dysfonctionner. Seul `systemd-logind` est câblé d'office dans le groupe `proc`.
+Quand tu composes le durcissement filesystem avec un desktop (ex. `cogitator-plasma`)
+ou des exporters, ajoute les services concernés au groupe `proc` via
+`systemd SupplementaryGroups`, ou laisse le durcissement filesystem désactivé sur ces
+hôtes. La relique émet un warning de build quand elle détecte un desktop avec ce
+durcissement.
+:::
+
 Le montage `/tmp noexec` empêche les attaquants d'écrire et d'exécuter du code dans un
 répertoire accessible à tous — un vecteur d'exploitation classique.
 
@@ -102,7 +113,8 @@ Configure OpenSSH avec :
 - X11, agent forwarding, tunneling, gateway ports : tous désactivés
 - Chiffrements forts : ChaCha20-Poly1305, AES-256-GCM, AES-128-GCM
 - MACs ETM uniquement : HMAC-SHA2-512-etm, HMAC-SHA2-256-etm
-- Échange de clés : curve25519-sha256, DH groupe 16
+- Échange de clés : hybrides post-quantiques en tête (mlkem768x25519-sha256,
+  sntrup761x25519-sha512), puis curve25519-sha256 et DH groupe 16
 
 ## Exemple d'utilisation
 

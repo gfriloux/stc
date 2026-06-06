@@ -60,6 +60,10 @@ in {
 
         config =
           {
+            # DOMAIN must match the public URL Vaultwarden is served on. Without
+            # it, WebAuthn/passkeys, attachments and invitation links break behind
+            # a reverse proxy. The hostname is already known from the Traefik route.
+            DOMAIN = "https://${cfg.hostname}";
             ROCKET_ADDRESS = "127.0.0.1";
             ROCKET_PORT = 8222;
             SIGNUPS_ALLOWED = cfg.signupsAllowed;

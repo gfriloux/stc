@@ -72,6 +72,16 @@ Mounts three filesystems with restrictive options:
 The `proc` group is created automatically. `systemd-logind` is added to it so
 session management keeps working.
 
+:::caution[hidepid and desktops / monitoring]
+`hidepid=2` also hides other users' processes from polkit, user D-Bus agents and
+several Prometheus exporters, which can make them misbehave. Only `systemd-logind`
+is wired into the `proc` group out of the box. When you compose filesystem
+hardening with a desktop (e.g. `cogitator-plasma`) or process exporters, add the
+affected services to the `proc` group via `systemd SupplementaryGroups`, or leave
+filesystem hardening off on those hosts. The relic emits a build warning when it
+detects a desktop alongside this hardening.
+:::
+
 The `/tmp noexec` mount prevents attackers from writing and executing code in a
 world-writable directory — a classic exploitation vector.
 
@@ -100,7 +110,8 @@ Configures OpenSSH with:
 - X11, agent forwarding, tunneling, gateway ports: all disabled
 - Strong ciphers: ChaCha20-Poly1305, AES-256-GCM, AES-128-GCM
 - ETM MACs only: HMAC-SHA2-512-etm, HMAC-SHA2-256-etm
-- Key exchange: curve25519-sha256, DH group 16
+- Key exchange: post-quantum hybrids first (mlkem768x25519-sha256,
+  sntrup761x25519-sha512), then curve25519-sha256 and DH group 16
 
 ## Usage Example
 

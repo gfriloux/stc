@@ -5,7 +5,7 @@ description: cogitator-docker-server — pile Docker reverse proxy complète en 
 
 **Module :** `stc.nixosModules.cogitator-docker-server`
 
-Pile Docker reverse-proxy complète : Traefik + un socket-proxy filtrant + WAF CrowdSec
+Pile Docker reverse-proxy complète : Traefik + un socket-proxy filtrant + CrowdSec IDS/IPS
 + notifications d'échec. Activer ceci est équivalent à activer
 `stc.relics.docker.traefik`, `stc.relics.docker.socketProxy`,
 `stc.relics.docker.crowdsec`, et `stc.relics.docker.notify` individuellement, plus

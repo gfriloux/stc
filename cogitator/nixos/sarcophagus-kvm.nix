@@ -2,7 +2,9 @@
 #
 # Builds a QEMU/KVM NixOS disk image (qcow2) with ZFS + impermanence.
 # Composes: ZFS, networking, impermanence, and the full hardening suite.
-# Disk layout: GPT on /dev/vda — 1G EFI + ZFS pool (root/nix/persist).
+# Disk layout: GPT on /dev/vda — 1G FAT32 /boot + ZFS pool (root/nix/persist).
+# Boot is BIOS/GRUB, not EFI: the /boot partition is typed EF00 and labelled ESP
+# by the builder but carries no EFI role (see the boot.loader notes below).
 #
 # The image builder uses BIOS/GRUB (make-single-disk-zfs-image.nix requires it).
 # At runtime, ZFS rolls back the root dataset to @blank on every boot.

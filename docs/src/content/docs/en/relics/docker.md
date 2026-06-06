@@ -83,7 +83,7 @@ container, i.e. root on the host). The proxy is the real mitigation: it disables
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `stc.relics.docker.socketProxy.enable` | bool | `false` | Enable the filtering socket proxy |
-| `stc.relics.docker.socketProxy.image` | string | `"tecnativa/docker-socket-proxy:0.3.0"` | Docker image |
+| `stc.relics.docker.socketProxy.image` | string | `"tecnativa/docker-socket-proxy:0.3.0@sha256:9e4b…"` | Docker image, **pinned by digest** (this container holds the Docker socket) |
 | `stc.relics.docker.socketProxy.network` | string | `"socket-proxy"` | Docker network shared with clients (e.g. Traefik) |
 | `stc.relics.docker.socketProxy.permissions` | attrs of bool | `{ CONTAINERS = true; NETWORKS = true; EVENTS = true; PING = true; VERSION = true; }` | Docker API sections to expose. `POST` is always forced off. |
 
@@ -114,16 +114,21 @@ this by default.
 
 **Module:** `stc.nixosModules.relics-docker-crowdsec`
 
-Runs CrowdSec as a WAF/IDS layer. Reads Traefik access logs to detect and block
+Runs CrowdSec as a behavioral IDS/IPS layer (log-based, not a WAF: STC does not
+configure the AppSec component). Reads Traefik access logs to detect and block
 malicious traffic. When both Traefik and CrowdSec are enabled, the CrowdSec bouncer
 plugin is automatically wired into the Traefik static config, and the `traefik`
-systemd service gets `After = crowdsec.service` / `Requires = crowdsec.service`.
+systemd service gets `After = crowdsec.service` (ordering) and `Wants = crowdsec.service`
+(a soft dependency — a failing CrowdSec never drags the reverse proxy down with it).
+
+CrowdSec joins the `web` Docker network. When Traefik is enabled it owns that
+network; when CrowdSec runs without Traefik, it creates the network itself.
 
 ### Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.relics.docker.crowdsec.enable` | bool | `false` | Enable CrowdSec WAF container |
+| `stc.relics.docker.crowdsec.enable` | bool | `false` | Enable CrowdSec IDS/IPS container |
 | `stc.relics.docker.crowdsec.image` | string | `"crowdsecurity/crowdsec:v1.7.8"` | Docker image |
 | `stc.relics.docker.crowdsec.dataDir` | string | — | Base directory for CrowdSec data and config |
 | `stc.relics.docker.crowdsec.envFile` | `null \| string` | `null` | Path to environment file with secrets |
@@ -140,7 +145,7 @@ When `stc.relics.docker.crowdsec.enable = true` and `stc.relics.docker.traefik.e
 
 1. The CrowdSec bouncer plugin (`maxlerebourg/crowdsec-bouncer-traefik-plugin v1.5.1`)
    is automatically added to Traefik's static config under `experimental.plugins`
-2. Traefik waits for CrowdSec to be healthy before starting
+2. Traefik is ordered after CrowdSec, but only via `Wants` (soft) — see above
 3. CrowdSec mounts the Traefik log directory read-only to parse access logs
 
 No manual wiring required.

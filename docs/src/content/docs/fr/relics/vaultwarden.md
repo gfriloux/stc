@@ -24,6 +24,7 @@ Lance Vaultwarden, un serveur Bitwarden-compatible écrit en Rust, comme service
 - **Service Vaultwarden :** Gestionnaire de mots de passe self-hosted, compatible avec les clients Bitwarden
 - **Localhost uniquement :** Écoute sur `127.0.0.1:8222` (jamais exposé directement)
 - **Intégration Traefik :** Crée automatiquement la route HTTPS si `relics-traefik` est activé
+- **Domaine :** `DOMAIN` est défini automatiquement à `https://${hostname}`. Indispensable pour que WebAuthn/passkeys, les pièces jointes et les liens d'invitation fonctionnent derrière le proxy
 - **WebSocket :** la synchro temps réel est servie automatiquement sur le port principal (Vaultwarden ≥ 1.29 — l'ancien flag `WEBSOCKET_ENABLED` n'est plus nécessaire)
 - **Persistence :** sur les systèmes impermanence, persiste `/var/lib/vaultwarden` (et le répertoire de backup) via `relics-impermanence` quand il est activé, en suivant son `persistPath`. S'évalue sans souci sans impermanence — le bloc de persistence est alors simplement omis.
 - **Backups optionnels :** Backups périodiques vers `/var/backup/vaultwarden` si `backup = true`

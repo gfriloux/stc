@@ -26,7 +26,7 @@ Automatically configures NixOS to run on AWS EC2. Loads required drivers (NVMe, 
 - **AWS internal NTP :** Uses `169.254.169.123` — always available, no internet required
 - **Disables udisks2 :** Removes unnecessary GTK dependencies from headless servers
 - **Udev rules :** Installs `amazon-ec2-utils` for full compatibility
-- **EBS expansion :** Activation script that grows partition and ZFS pool if EBS volume is larger than built image
+- **EBS expansion :** Boot-time oneshot (`stc-grow-pool`) that grows the partition and ZFS pool when the EBS volume is larger than the built image. Runs each boot (so it picks up a resized volume) but **not** on every `nixos-rebuild switch`, and surfaces real `growpart` failures instead of swallowing them
 
 ## Example usage
 

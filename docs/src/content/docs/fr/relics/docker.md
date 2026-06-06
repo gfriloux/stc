@@ -85,7 +85,7 @@ il désactive `POST` et ne transmet que les endpoints `GET` de la whitelist.
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
 | `stc.relics.docker.socketProxy.enable` | bool | `false` | Active le proxy filtrant du socket |
-| `stc.relics.docker.socketProxy.image` | string | `"tecnativa/docker-socket-proxy:0.3.0"` | Image Docker |
+| `stc.relics.docker.socketProxy.image` | string | `"tecnativa/docker-socket-proxy:0.3.0@sha256:9e4b…"` | Image Docker, **épinglée par digest** (ce conteneur détient la socket Docker) |
 | `stc.relics.docker.socketProxy.network` | string | `"socket-proxy"` | Réseau Docker partagé avec les clients (ex. Traefik) |
 | `stc.relics.docker.socketProxy.permissions` | attrs de bool | `{ CONTAINERS = true; NETWORKS = true; EVENTS = true; PING = true; VERSION = true; }` | Sections de l'API Docker exposées. `POST` est toujours forcé à off. |
 
@@ -115,16 +115,23 @@ Le profil [`cogitator-docker-server`](/stc/fr/cogitator/docker-server/) l'active
 
 **Module :** `stc.nixosModules.relics-docker-crowdsec`
 
-Exécute CrowdSec comme couche WAF/IDS. Lit les logs d'accès Traefik pour détecter
+Exécute CrowdSec comme couche IDS/IPS comportementale (basée sur les logs, ce
+n'est pas un WAF : STC ne configure pas le composant AppSec). Lit les logs d'accès
+Traefik pour détecter
 et bloquer le trafic malveillant. Quand Traefik et CrowdSec sont tous les deux activés,
 le plugin bouncer CrowdSec est automatiquement câblé dans la config statique Traefik,
-et le service systemd `traefik` reçoit `After = crowdsec.service` / `Requires = crowdsec.service`.
+et le service systemd `traefik` reçoit `After = crowdsec.service` (ordonnancement) et
+`Wants = crowdsec.service` (dépendance souple — un CrowdSec en panne n'entraîne jamais
+la chute du reverse proxy).
+
+CrowdSec rejoint le réseau Docker `web`. Quand Traefik est activé, c'est lui qui
+possède ce réseau ; quand CrowdSec tourne sans Traefik, il le crée lui-même.
 
 ### Options
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
-| `stc.relics.docker.crowdsec.enable` | bool | `false` | Active le conteneur WAF CrowdSec |
+| `stc.relics.docker.crowdsec.enable` | bool | `false` | Active le conteneur IDS/IPS CrowdSec |
 | `stc.relics.docker.crowdsec.image` | string | `"crowdsecurity/crowdsec:v1.7.8"` | Image Docker |
 | `stc.relics.docker.crowdsec.dataDir` | string | — | Répertoire de base pour les données et la config CrowdSec |
 | `stc.relics.docker.crowdsec.envFile` | `null \| string` | `null` | Chemin vers le fichier d'environnement avec les secrets |
@@ -141,7 +148,7 @@ Quand `stc.relics.docker.crowdsec.enable = true` et `stc.relics.docker.traefik.e
 
 1. Le plugin bouncer CrowdSec (`maxlerebourg/crowdsec-bouncer-traefik-plugin v1.5.1`)
    est automatiquement ajouté à la config statique Traefik sous `experimental.plugins`
-2. Traefik attend que CrowdSec soit sain avant de démarrer
+2. Traefik est ordonné après CrowdSec, mais seulement via `Wants` (souple) — voir ci-dessus
 3. CrowdSec monte le répertoire de logs Traefik en lecture seule pour parser les logs d'accès
 
 Aucun câblage manuel requis.

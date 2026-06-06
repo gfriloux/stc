@@ -26,7 +26,7 @@ Configure automatiquement NixOS pour tourner sur AWS EC2. Charge les drivers req
 - **NTP interne AWS :** Utilise `169.254.169.123` — toujours accessible, pas d'accès internet requis
 - **Désactive udisks2 :** Supprime les dépendances GTK inutiles sur serveur headless
 - **Udev rules :** Installe `amazon-ec2-utils` pour compatibilité complète
-- **Expansion EBS :** Script d'activation qui étend la partition et le pool ZFS si le volume EBS est plus grand que l'image buildée
+- **Expansion EBS :** Oneshot au démarrage (`stc-grow-pool`) qui étend la partition et le pool ZFS quand le volume EBS est plus grand que l'image buildée. S'exécute à chaque boot (pour prendre en compte un volume redimensionné) mais **pas** à chaque `nixos-rebuild switch`, et remonte les vraies erreurs `growpart` au lieu de les avaler
 
 ## Exemple d'utilisation
 

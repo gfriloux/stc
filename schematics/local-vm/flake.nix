@@ -38,7 +38,11 @@
         stc.nixosModules.cogitator-vm
 
         (
-          _: {
+          {
+            config,
+            lib,
+            ...
+          }: {
             stc.cogitator.sarcophagus-kvm = {
               enable = true;
               # poolName = "vmpool";  # default
@@ -69,6 +73,20 @@
             console.keyMap = "fr";
 
             system.stateVersion = "24.11";
+
+            # Loud nudges so the copy-paste placeholders never ship silently.
+            warnings =
+              lib.optional (config.networking.hostId == "deadc0de") ''
+                local-vm: networking.hostId is still the placeholder "deadc0de".
+                Generate a unique one (head -c4 /dev/urandom | od -A none -t x4 |
+                tr -d ' \n') before deploying — duplicate hostIds collide on ZFS
+                import (and zfs.nix forces import, which would hide the collision).
+              ''
+              ++ lib.optional (config.users.users.admin.initialPassword == "changeme") ''
+                local-vm: admin/root initialPassword is still "changeme", and
+                mutableUsers = false means it can never be changed with passwd.
+                Set a real hashedPassword before building anything but a throwaway VM.
+              '';
           }
         )
       ];

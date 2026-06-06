@@ -30,8 +30,13 @@ in {
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "tecnativa/docker-socket-proxy:0.3.0";
-      description = "Docker image to use for the socket proxy.";
+      default = "tecnativa/docker-socket-proxy:0.3.0@sha256:9e4b9e7517a6b660f2cc903a19b257b1852d5b3344794e3ea334ff00ae677ac2";
+      description = ''
+        Docker image to use for the socket proxy. Pinned by digest because this
+        container holds the Docker socket — a mutable tag is the one image you
+        least want silently swapped. The tag is kept for readability; the digest
+        is authoritative.
+      '';
     };
 
     network = lib.mkOption {

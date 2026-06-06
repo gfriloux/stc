@@ -7,6 +7,10 @@ description: Reverse proxy Traefik — TLS automatique Let's Encrypt, redirectio
 
 Lance Traefik comme service NixOS natif (sans Docker). Configure automatiquement un reverse proxy avec TLS Let's Encrypt, redirection HTTP vers HTTPS, et logs structurés en JSON. Les certificats sont automatiquement provisionnés et renouvelés.
 
+:::note
+STC fournit **deux déploiements Traefik indépendants** : celui-ci, natif, et un conteneur Docker (`relics-docker-traefik`, voir la [pile Docker](/fr/relics/docker/)). Choisis-en un par hôte. Ils diffèrent par leur challenge ACME — le natif utilise HTTP-01, le conteneur TLS-ALPN-01 — mais les deux nomment leur resolver `letsencrypt`, donc les routes de config dynamique référençant `certResolver = "letsencrypt"` sont portables de l'un à l'autre.
+:::
+
 ## Options
 
 | Option | Type | Défaut | Description |

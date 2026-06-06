@@ -4,6 +4,11 @@
 # Auto-generates the static config from Nix options.
 # The dynamic config (routes, middlewares) is supplied at runtime via dynamicConfigFile.
 #
+# This is the container deployment. STC also ships a native Traefik
+# (`relics-traefik`, services.traefik) for non-Docker hosts. They are separate —
+# pick one per host. This one uses the TLS-ALPN-01 challenge (`tlsChallenge`)
+# rather than the native's HTTP-01, but both name their resolver `letsencrypt`.
+#
 # When stc.relics.docker.crowdsec.enable = true, the CrowdSec bouncer plugin is
 # automatically wired into the static config and traefik waits for crowdsec.
 #
@@ -201,7 +206,10 @@ in {
       delaycompress = true;
       missingok = true;
       notifempty = true;
-      copytruncate = true;
+      # No copytruncate: it leaves a window where log lines written during the
+      # copy are lost — lines CrowdSec would otherwise tail, so missed attacks.
+      # Instead, rotate by rename and tell Traefik to reopen its log (USR1).
+      postrotate = "${pkgs.docker}/bin/docker kill -s USR1 traefik || true";
     };
 
     networking.firewall.allowedTCPPorts = [
@@ -212,22 +220,28 @@ in {
     systemd = {
       services = {
         "traefik" = let
-          deps =
-            lib.optional crowdsecEnabled "crowdsec.service"
-            ++ lib.optional socketProxyEnabled "docker-socket-proxy.service";
+          crowdsecDep = lib.optional crowdsecEnabled "crowdsec.service";
+          socketDep = lib.optional socketProxyEnabled "docker-socket-proxy.service";
+          deps = crowdsecDep ++ socketDep;
         in
           lib.mkIf (deps != []) {
             after = deps;
-            requires = deps;
+            # The socket-proxy is load-bearing for Traefik's Docker provider, so
+            # it stays a hard requirement. CrowdSec is only a Wants: an IDS/IPS
+            # that fails (and gets `docker kill`ed by the health-watch) must not
+            # drag the reverse proxy — and everything it serves — down with it.
+            requires = socketDep;
+            wants = crowdsecDep;
           };
         "docker-network-web" =
           dockerLib.mkNetwork pkgs "web"
           // {
-            # Traefik joins the "web" network at startup. Without ordering, on the
-            # first boot Traefik can race ahead of network creation and fail.
-            # requiredBy + before guarantee the network exists first.
-            requiredBy = ["traefik.service"];
-            before = ["traefik.service"];
+            # Traefik (and CrowdSec, when enabled) joins the "web" network at
+            # startup. Without ordering, on the first boot a consumer can race
+            # ahead of network creation and fail. requiredBy + before guarantee
+            # the network exists before every consumer, not just Traefik.
+            requiredBy = ["traefik.service"] ++ lib.optional crowdsecEnabled "crowdsec.service";
+            before = ["traefik.service"] ++ lib.optional crowdsecEnabled "crowdsec.service";
           };
       };
       tmpfiles.rules = [

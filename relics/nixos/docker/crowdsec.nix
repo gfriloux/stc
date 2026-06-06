@@ -1,7 +1,9 @@
 # Relic: docker-crowdsec
 #
-# Runs CrowdSec in a Docker container as a WAF/IDS layer.
-# Reads Traefik access logs to detect and block malicious traffic.
+# Runs CrowdSec in a Docker container as a behavioral IDS/IPS layer.
+# Reads Traefik access logs to detect and block malicious traffic. This is
+# log-based behavioral detection, not a WAF: STC does not configure the CrowdSec
+# AppSec component, so it does not inspect request bodies inline.
 # Designed to work alongside stc.relics.docker.traefik (optional but common).
 #
 # Secrets: point stc.relics.docker.crowdsec.envFile at whatever your secrets
@@ -9,10 +11,17 @@
 {
   config,
   lib,
+  pkgs,
+  options,
   ...
 }: let
   cfg = config.stc.relics.docker.crowdsec;
   dockerLib = import ./_lib.nix;
+
+  # Guarded on the option existing so this relic stays usable on its own:
+  # the traefik relic declares stc.relics.docker.traefik only when imported.
+  traefikEnabled =
+    (options.stc.relics.docker ? traefik) && config.stc.relics.docker.traefik.enable;
   traefikCfg = config.stc.relics.docker.traefik;
 in {
   imports = [
@@ -23,7 +32,7 @@ in {
   ];
 
   options.stc.relics.docker.crowdsec = {
-    enable = lib.mkEnableOption "CrowdSec WAF container";
+    enable = lib.mkEnableOption "CrowdSec IDS/IPS container";
 
     image = lib.mkOption {
       type = lib.types.str;
@@ -59,7 +68,7 @@ in {
           "${cfg.dataDir}/data:/var/lib/crowdsec/data"
           "${cfg.dataDir}/etc:/etc/crowdsec"
         ]
-        ++ lib.optional traefikCfg.enable
+        ++ lib.optional traefikEnabled
         "${traefikCfg.dataDir}/logs:/var/log/traefik:ro";
 
       extraOptions = dockerLib.mkHealthCheck {
@@ -74,9 +83,24 @@ in {
       networks = ["web"];
     };
 
-    systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir}/data 0750 0 0 -"
-      "d ${cfg.dataDir}/etc 0750 0 0 -"
-    ];
+    systemd = {
+      tmpfiles.rules = [
+        "d ${cfg.dataDir}/data 0750 0 0 -"
+        "d ${cfg.dataDir}/etc 0750 0 0 -"
+      ];
+
+      # CrowdSec joins the "web" network. When Traefik is enabled it owns the
+      # docker-network-web unit (and orders it before crowdsec too). When Traefik
+      # is absent, CrowdSec must create the network itself, otherwise nothing
+      # does — and it must start before the container that joins it.
+      services = lib.mkIf (!traefikEnabled) {
+        "docker-network-web" =
+          dockerLib.mkNetwork pkgs "web"
+          // {
+            requiredBy = ["crowdsec.service"];
+            before = ["crowdsec.service"];
+          };
+      };
+    };
   };
 }
