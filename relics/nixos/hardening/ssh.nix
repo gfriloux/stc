@@ -49,14 +49,28 @@ in {
         AllowTcpForwarding = cfg.allowedTCPForwarding;
         PermitTunnel = false;
         GatewayPorts = "no";
-      };
 
-      # Forward secrecy only. Algorithms chosen for resistance to known attacks.
-      extraConfig = ''
-        Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com
-        MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com
-        KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group16-sha512
-      '';
+        # Forward secrecy only, declared through typed settings so the NixOS
+        # module validates them (extraConfig would bypass that). Post-quantum
+        # hybrid key exchanges come first: hardening must not drop the PQ
+        # protection that recent OpenSSH defaults already provide.
+        KexAlgorithms = [
+          "mlkem768x25519-sha256"
+          "sntrup761x25519-sha512@openssh.com"
+          "curve25519-sha256"
+          "curve25519-sha256@libssh.org"
+          "diffie-hellman-group16-sha512"
+        ];
+        Ciphers = [
+          "chacha20-poly1305@openssh.com"
+          "aes256-gcm@openssh.com"
+          "aes128-gcm@openssh.com"
+        ];
+        Macs = [
+          "hmac-sha2-512-etm@openssh.com"
+          "hmac-sha2-256-etm@openssh.com"
+        ];
+      };
     };
   };
 }

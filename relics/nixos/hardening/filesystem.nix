@@ -84,5 +84,20 @@ in {
 
     # logind manages sessions and needs to see all PIDs to function correctly.
     systemd.services.systemd-logind.serviceConfig.SupplementaryGroups = ["proc"];
+
+    # hidepid=2 also breaks anything that expects to see other users' processes:
+    # polkit, user D-Bus agents and several Prometheus exporters. logind is
+    # handled above; on a desktop or monitored host, add the relevant services
+    # to the "proc" group (SupplementaryGroups) too. Warn rather than guess.
+    warnings =
+      lib.optional
+      (config.services.xserver.enable or config.services.desktopManager.plasma6.enable or false)
+      ''
+        stc.relics.hardening.filesystem enables hidepid=2 on /proc and a desktop
+        is also enabled. polkit, user D-Bus agents and some exporters may misbehave
+        because they cannot see other users' processes. Add the affected services
+        to the "proc" group via systemd SupplementaryGroups (as done here for
+        systemd-logind), or disable filesystem hardening on desktop hosts.
+      '';
   };
 }
