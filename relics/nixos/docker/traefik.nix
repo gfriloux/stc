@@ -133,7 +133,7 @@ in
 
       volumes =
         [
-          "/run/docker.sock:/var/run/docker.sock"
+          "/run/docker.sock:/var/run/docker.sock:ro"
           "${cfg.dataDir}/acme.json:/acme.json"
           "${cfg.dataDir}/logs:/logs"
         ]
