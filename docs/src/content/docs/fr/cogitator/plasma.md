@@ -14,8 +14,8 @@ Une seule option remplace l'activation et le câblage manuel de deux reliques.
 
 | Relique | Option activée | Rôle |
 |---------|----------------|------|
-| `relics-plasma6` | `stc.plasma6.enable = true` | SDDM + Wayland + Plasma 6 + portails XDG |
-| `relics-pipewire` | `stc.pipewire.enable = true` | RTKit + Pipewire + ALSA 32 bits + compat PulseAudio |
+| `relics-plasma6` | `stc.relics.plasma6.enable = true` | SDDM + Wayland + Plasma 6 + portails XDG |
+| `relics-pipewire` | `stc.relics.pipewire.enable = true` | RTKit + Pipewire + ALSA 32 bits + compat PulseAudio |
 
 ## Options
 
@@ -26,8 +26,8 @@ Une seule option remplace l'activation et le câblage manuel de deux reliques.
 Les options des reliques sous-jacentes restent réglables après activation :
 
 ```nix
-stc.plasma6.keyboardLayout = "fr";                 # disposition clavier
-stc.plasma6.sddmTheme = "catppuccin-mocha-mauve";  # thème SDDM
+stc.relics.plasma6.keyboardLayout = "fr";                 # disposition clavier
+stc.relics.plasma6.sddmTheme = "catppuccin-mocha-mauve";  # thème SDDM
 ```
 
 ## Exemple d'utilisation
@@ -43,8 +43,8 @@ modules = [
   stc.cogitator.plasma.enable = true;
 
   # Réglages des reliques sous-jacentes si nécessaire :
-  stc.plasma6.keyboardLayout = "fr";
-  stc.plasma6.sddmTheme = "catppuccin-mocha-mauve";
+  stc.relics.plasma6.keyboardLayout = "fr";
+  stc.relics.plasma6.sddmTheme = "catppuccin-mocha-mauve";
   environment.systemPackages = [ pkgs.catppuccin-sddm ];
 }
 ```

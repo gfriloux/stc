@@ -13,17 +13,17 @@ instead and enable them independently.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.hardening.enable` | bool | `false` | Enable the full hardening suite (kernel + network + filesystem + SSH) |
+| `stc.cogitator.hardening.enable` | bool | `false` | Enable the full hardening suite (kernel + network + filesystem + SSH) |
 
 ## What It Composes
 
-Enabling `stc.hardening.enable = true` is equivalent to setting all four of these:
+Enabling `stc.cogitator.hardening.enable = true` is equivalent to setting all four of these:
 
 ```nix
-stc.hardening.kernel.enable = true;
-stc.hardening.network.enable = true;
-stc.hardening.filesystem.enable = true;
-stc.hardening.ssh.enable = true;
+stc.relics.hardening.kernel.enable = true;
+stc.relics.hardening.network.enable = true;
+stc.relics.hardening.filesystem.enable = true;
+stc.relics.hardening.ssh.enable = true;
 ```
 
 The individual relic options — `allowedTCPPorts`, `tmpSize`, `allowedTCPForwarding` — remain
@@ -40,13 +40,13 @@ modules = [
 
 # configuration.nix
 {
-  stc.hardening.enable = true;
+  stc.cogitator.hardening.enable = true;
 
   # Open additional ports beyond SSH (22)
-  stc.hardening.network.allowedTCPPorts = [ 22 80 443 ];
+  stc.relics.hardening.network.allowedTCPPorts = [ 22 80 443 ];
 
   # Increase /tmp size on memory-rich machines
-  stc.hardening.filesystem.tmpSize = "4G";
+  stc.relics.hardening.filesystem.tmpSize = "4G";
 }
 ```
 

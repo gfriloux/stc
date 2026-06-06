@@ -29,7 +29,7 @@ foundation for an AMD GPU machine.
 Underlying relic options remain tunable:
 
 ```nix
-stc.amdGpu.initrd = true;   # early KMS framebuffer at boot
+stc.relics.amdGpu.initrd = true;   # early KMS framebuffer at boot
 ```
 
 ## Hardening compatibility
@@ -38,9 +38,9 @@ If `cogitator-hardening` or individual hardening relics are active, add these
 options — without them, Steam cannot start:
 
 ```nix
-stc.hardening.kernel.gaming = true;      # Steam needs user namespaces
-stc.hardening.filesystem.gaming = true;  # Wine/Proton need exec in /tmp and /dev/shm
-stc.hardening.filesystem.shmSize = "4G"; # DXVK/VKD3D need more than 256M
+stc.relics.hardening.kernel.gaming = true;      # Steam needs user namespaces
+stc.relics.hardening.filesystem.gaming = true;  # Wine/Proton need exec in /tmp and /dev/shm
+stc.relics.hardening.filesystem.shmSize = "4G"; # DXVK/VKD3D need more than 256M
 ```
 
 ## Home Manager packages
@@ -80,11 +80,11 @@ modules = [
   stc.cogitator.gaming.enable = true;
 
   # If hardening is active:
-  stc.hardening.kernel.enable = true;
-  stc.hardening.kernel.gaming = true;
-  stc.hardening.filesystem.enable = true;
-  stc.hardening.filesystem.gaming = true;
-  stc.hardening.filesystem.shmSize = "4G";
+  stc.relics.hardening.kernel.enable = true;
+  stc.relics.hardening.kernel.gaming = true;
+  stc.relics.hardening.filesystem.enable = true;
+  stc.relics.hardening.filesystem.gaming = true;
+  stc.relics.hardening.filesystem.shmSize = "4G";
 }
 ```
 

@@ -5,7 +5,7 @@ description: Relique Pipewire — ordonnancement temps-réel RTKit, ALSA 32 bits
 
 **Module :** `stc.nixosModules.relics-pipewire`
 
-**Option d'activation :** `stc.pipewire.enable`
+**Option d'activation :** `stc.relics.pipewire.enable`
 
 Configure Pipewire comme serveur audio système. Remplace PulseAudio, active RTKit
 pour la priorité d'ordonnancement temps-réel, et active les couches de compatibilité
@@ -16,7 +16,7 @@ reconfiguration.
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
-| `stc.pipewire.enable` | bool | `false` | Active le serveur audio Pipewire |
+| `stc.relics.pipewire.enable` | bool | `false` | Active le serveur audio Pipewire |
 
 ## Ce que ça configure
 
@@ -48,7 +48,7 @@ modules = [
 ];
 
 # configuration.nix
-{ stc.pipewire.enable = true; }
+{ stc.relics.pipewire.enable = true; }
 ```
 
 ## Voir aussi

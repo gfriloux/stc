@@ -11,9 +11,9 @@ Valeurs réseau sensées. DHCP sur toutes les interfaces, DNS Quad9.
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
-| `stc.networking.enable` | bool | `false` | Active la configuration réseau de base |
-| `stc.networking.domain` | `null \| string` | `null` | Domaine de recherche DNS. `null` signifie qu'aucun domaine n'est défini |
-| `stc.networking.nameservers` | liste de strings | `[ "9.9.9.9" "149.112.112.112" ]` | Résolveurs DNS |
+| `stc.relics.networking.enable` | bool | `false` | Active la configuration réseau de base |
+| `stc.relics.networking.domain` | `null \| string` | `null` | Domaine de recherche DNS. `null` signifie qu'aucun domaine n'est défini |
+| `stc.relics.networking.nameservers` | liste de strings | `[ "9.9.9.9" "149.112.112.112" ]` | Résolveurs DNS |
 
 ## Ce qu'elle fait
 
@@ -46,11 +46,11 @@ modules = [
 
 # configuration.nix
 {
-  stc.networking.enable = true;
+  stc.relics.networking.enable = true;
 
   # Surcharges optionnelles
-  stc.networking.domain = "corp.example.com";
-  stc.networking.nameservers = [ "192.168.1.1" ];
+  stc.relics.networking.domain = "corp.example.com";
+  stc.relics.networking.nameservers = [ "192.168.1.1" ];
 
   # Au niveau NixOS : le hostname et le hostId ZFS
   networking.hostName = "my-server";

@@ -5,7 +5,7 @@ description: Pipewire audio relic — RTKit real-time scheduling, ALSA 32-bit, a
 
 **Module:** `stc.nixosModules.relics-pipewire`
 
-**Enable option:** `stc.pipewire.enable`
+**Enable option:** `stc.relics.pipewire.enable`
 
 Configures Pipewire as the system audio server. Replaces PulseAudio, enables
 RTKit for real-time scheduling priority, and activates both ALSA and PulseAudio
@@ -15,7 +15,7 @@ compatibility layers so all existing applications work without reconfiguration.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.pipewire.enable` | bool | `false` | Enable Pipewire audio server |
+| `stc.relics.pipewire.enable` | bool | `false` | Enable Pipewire audio server |
 
 ## What it configures
 
@@ -46,7 +46,7 @@ modules = [
 ];
 
 # configuration.nix
-{ stc.pipewire.enable = true; }
+{ stc.relics.pipewire.enable = true; }
 ```
 
 ## See Also

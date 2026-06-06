@@ -10,7 +10,7 @@ surface and can be enabled individually.
 
 **Module:** `stc.nixosModules.relics-hardening-kernel`
 
-**Enable option:** `stc.hardening.kernel.enable`
+**Enable option:** `stc.relics.hardening.kernel.enable`
 
 Applies sysctl parameters that reduce the kernel attack surface:
 
@@ -27,11 +27,11 @@ belt-and-suspenders.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.hardening.kernel.gaming` | bool | `false` | Skip `kernel.unprivileged_userns_clone = 0` — Steam requires user namespaces for its containerised runtime |
+| `stc.relics.hardening.kernel.gaming` | bool | `false` | Skip `kernel.unprivileged_userns_clone = 0` — Steam requires user namespaces for its containerised runtime |
 
 :::caution[Steam and user namespaces]
 `kernel.unprivileged_userns_clone = 0` prevents Steam from launching. Set
-`stc.hardening.kernel.gaming = true` on gaming machines. All other kernel
+`stc.relics.hardening.kernel.gaming = true` on gaming machines. All other kernel
 restrictions remain active.
 :::
 
@@ -39,7 +39,7 @@ restrictions remain active.
 
 **Module:** `stc.nixosModules.relics-hardening-network`
 
-**Enable option:** `stc.hardening.network.enable`
+**Enable option:** `stc.relics.hardening.network.enable`
 
 Applies network sysctl hardening only. Does **not** manage the firewall — use
 `networking.firewall` or your own nftables/iptables rules for port control.
@@ -63,13 +63,13 @@ and other container setups.
 
 **Module:** `stc.nixosModules.relics-hardening-filesystem`
 
-**Enable option:** `stc.hardening.filesystem.enable`
+**Enable option:** `stc.relics.hardening.filesystem.enable`
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.hardening.filesystem.tmpSize` | string | `"2G"` | Maximum size of the /tmp tmpfs |
-| `stc.hardening.filesystem.shmSize` | string | `"256M"` | Maximum size of the /dev/shm tmpfs |
-| `stc.hardening.filesystem.gaming` | bool | `false` | Remove `noexec` from /tmp and /dev/shm — required for Wine/Proton and DXVK |
+| `stc.relics.hardening.filesystem.tmpSize` | string | `"2G"` | Maximum size of the /tmp tmpfs |
+| `stc.relics.hardening.filesystem.shmSize` | string | `"256M"` | Maximum size of the /dev/shm tmpfs |
+| `stc.relics.hardening.filesystem.gaming` | bool | `false` | Remove `noexec` from /tmp and /dev/shm — required for Wine/Proton and DXVK |
 
 Mounts three filesystems with restrictive options:
 
@@ -87,7 +87,7 @@ world-writable directory — a classic exploitation vector.
 
 :::caution[Wine, Proton, and DXVK]
 Wine and Proton extract and run binaries under `/tmp`. DXVK and VKD3D-Proton
-map executable code into `/dev/shm`. Set `stc.hardening.filesystem.gaming = true`
+map executable code into `/dev/shm`. Set `stc.relics.hardening.filesystem.gaming = true`
 on gaming machines and raise `shmSize` to at least `2G` for heavy workloads.
 The `/proc` hardening is unaffected.
 :::
@@ -96,11 +96,11 @@ The `/proc` hardening is unaffected.
 
 **Module:** `stc.nixosModules.relics-hardening-ssh`
 
-**Enable option:** `stc.hardening.ssh.enable`
+**Enable option:** `stc.relics.hardening.ssh.enable`
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.hardening.ssh.allowedTCPForwarding` | bool | `false` | Allow TCP forwarding |
+| `stc.relics.hardening.ssh.allowedTCPForwarding` | bool | `false` | Allow TCP forwarding |
 
 Configures OpenSSH with:
 - Password authentication disabled (keys only)
@@ -127,11 +127,11 @@ modules = [
 
 # configuration.nix
 {
-  stc.hardening.kernel.enable = true;
-  stc.hardening.network.enable = true;
-  stc.hardening.filesystem.enable = true;
-  stc.hardening.filesystem.tmpSize = "4G";
-  stc.hardening.ssh.enable = true;
+  stc.relics.hardening.kernel.enable = true;
+  stc.relics.hardening.network.enable = true;
+  stc.relics.hardening.filesystem.enable = true;
+  stc.relics.hardening.filesystem.tmpSize = "4G";
+  stc.relics.hardening.ssh.enable = true;
 
   # Firewall is managed separately — open ports here as needed:
   networking.firewall.allowedTCPPorts = [ 22 80 443 ];
@@ -142,15 +142,15 @@ Gaming machine with hardening:
 
 ```nix
 {
-  stc.hardening.kernel.enable = true;
-  stc.hardening.kernel.gaming = true;      # allow user namespaces for Steam
+  stc.relics.hardening.kernel.enable = true;
+  stc.relics.hardening.kernel.gaming = true;      # allow user namespaces for Steam
 
-  stc.hardening.filesystem.enable = true;
-  stc.hardening.filesystem.gaming = true;  # allow exec in /tmp and /dev/shm
-  stc.hardening.filesystem.shmSize = "4G"; # DXVK/VKD3D need more than 256M
+  stc.relics.hardening.filesystem.enable = true;
+  stc.relics.hardening.filesystem.gaming = true;  # allow exec in /tmp and /dev/shm
+  stc.relics.hardening.filesystem.shmSize = "4G"; # DXVK/VKD3D need more than 256M
 
-  stc.hardening.network.enable = true;
-  stc.hardening.ssh.enable = true;
+  stc.relics.hardening.network.enable = true;
+  stc.relics.hardening.ssh.enable = true;
 }
 ```
 
@@ -163,9 +163,9 @@ For the common case of enabling all four relics with defaults, use
 modules = [ stc.nixosModules.cogitator-hardening ];
 
 # configuration.nix
-{ stc.hardening.enable = true; }
+{ stc.cogitator.hardening.enable = true; }
 ```
 
 The cogitator does not prevent you from tuning individual options afterward —
-`stc.hardening.filesystem.tmpSize` and `stc.hardening.ssh.allowedTCPForwarding`
+`stc.relics.hardening.filesystem.tmpSize` and `stc.relics.hardening.ssh.allowedTCPForwarding`
 remain configurable.

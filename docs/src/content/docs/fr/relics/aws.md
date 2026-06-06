@@ -11,10 +11,10 @@ Configure automatiquement NixOS pour tourner sur AWS EC2. Charge les drivers req
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
-| `stc.aws.enable` | bool | `false` | Active la configuration AWS EC2. |
-| `stc.aws.poolName` | string | — | Nom du pool ZFS à étendre lors de l'expansion de l'EBS. **Requis.** |
-| `stc.aws.ebsDisk` | string | `"nvme0n1"` | Périphérique de bloc EBS (sans `/dev/`). `nvme0n1` pour instances Nitro, `xvda` pour Xen. |
-| `stc.aws.ebsPartition` | int | `3` | Numéro de partition contenant le pool ZFS. Par défaut : schéma make-single-disk-zfs-image (bios_grub=1, ESP=2, ZFS=3). |
+| `stc.relics.aws.enable` | bool | `false` | Active la configuration AWS EC2. |
+| `stc.relics.aws.poolName` | string | — | Nom du pool ZFS à étendre lors de l'expansion de l'EBS. **Requis.** |
+| `stc.relics.aws.ebsDisk` | string | `"nvme0n1"` | Périphérique de bloc EBS (sans `/dev/`). `nvme0n1` pour instances Nitro, `xvda` pour Xen. |
+| `stc.relics.aws.ebsPartition` | int | `3` | Numéro de partition contenant le pool ZFS. Par défaut : schéma make-single-disk-zfs-image (bios_grub=1, ESP=2, ZFS=3). |
 
 ## Ce qu'il fait
 
@@ -36,7 +36,7 @@ modules = [
 ];
 
 {
-  stc.zfs.enable = true;
+  stc.relics.zfs.enable = true;
   stc.aws = {
     enable = true;
     poolName = "rpool";

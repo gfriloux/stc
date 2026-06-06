@@ -5,7 +5,7 @@ description: KDE Plasma 6 relic — Wayland-first desktop with SDDM, XDG portals
 
 **Module:** `stc.nixosModules.relics-plasma6`
 
-**Enable option:** `stc.plasma6.enable`
+**Enable option:** `stc.relics.plasma6.enable`
 
 Configures a Wayland-first KDE Plasma 6 desktop. SDDM runs under Wayland, Plasma
 6 is the desktop manager, and the XDG portal stack is enabled for screen sharing
@@ -16,10 +16,10 @@ and file picker integration. Thumbnail generation (tumbler), virtual filesystem
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.plasma6.enable` | bool | `false` | Enable KDE Plasma 6 |
-| `stc.plasma6.keyboardLayout` | string | `"us"` | xkb keyboard layout for SDDM and Plasma |
-| `stc.plasma6.sddmTheme` | string | `""` | SDDM theme name — empty string uses SDDM default |
-| `stc.plasma6.wayland` | bool | `true` | Use Wayland for the SDDM greeter. Set to `false` to fall back to X11 (older or incompatible GPUs). |
+| `stc.relics.plasma6.enable` | bool | `false` | Enable KDE Plasma 6 |
+| `stc.relics.plasma6.keyboardLayout` | string | `"us"` | xkb keyboard layout for SDDM and Plasma |
+| `stc.relics.plasma6.sddmTheme` | string | `""` | SDDM theme name — empty string uses SDDM default |
+| `stc.relics.plasma6.wayland` | bool | `true` | Use Wayland for the SDDM greeter. Set to `false` to fall back to X11 (older or incompatible GPUs). |
 
 ### `sddmTheme`
 
@@ -28,7 +28,7 @@ install any theme package. When using a custom theme, add the package yourself:
 
 ```nix
 environment.systemPackages = [ pkgs.catppuccin-sddm ];
-stc.plasma6.sddmTheme = "catppuccin-mocha-mauve";
+stc.relics.plasma6.sddmTheme = "catppuccin-mocha-mauve";
 ```
 
 ## What it configures
@@ -64,11 +64,11 @@ modules = [
 
 # configuration.nix
 {
-  stc.plasma6.enable = true;
-  stc.plasma6.keyboardLayout = "fr";
-  stc.plasma6.sddmTheme = "catppuccin-mocha-mauve";
+  stc.relics.plasma6.enable = true;
+  stc.relics.plasma6.keyboardLayout = "fr";
+  stc.relics.plasma6.sddmTheme = "catppuccin-mocha-mauve";
 
-  stc.pipewire.enable = true;
+  stc.relics.pipewire.enable = true;
 
   environment.systemPackages = [ pkgs.catppuccin-sddm ];
 }

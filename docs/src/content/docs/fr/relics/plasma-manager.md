@@ -5,7 +5,7 @@ description: Relique plasma-manager — configuration KDE Plasma déclarative vi
 
 **Module :** `stc.homeModules.relics-plasma-manager`
 
-**Option d'activation :** `stc.plasmaManager.enable`
+**Option d'activation :** `stc.relics.plasmaManager.enable`
 
 Active [plasma-manager](https://github.com/nix-community/plasma-manager), le module
 Home Manager pour la configuration déclarative de KDE. Une fois activé, l'ensemble
@@ -20,7 +20,7 @@ consommateurs n'ont **pas** besoin de l'ajouter à leur propre `flake.nix`.
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
-| `stc.plasmaManager.enable` | bool | `false` | Active la configuration KDE déclarative via plasma-manager |
+| `stc.relics.plasmaManager.enable` | bool | `false` | Active la configuration KDE déclarative via plasma-manager |
 
 Toute la configuration KDE se fait via les options `programs.plasma.*` fournies
 par plasma-manager lui-même — STC ne les enveloppe pas.
@@ -33,7 +33,7 @@ homeManagerModules = [ stc.homeModules.relics-plasma-manager ];
 
 # home.nix
 {
-  stc.plasmaManager.enable = true;
+  stc.relics.plasmaManager.enable = true;
 
   programs.plasma = {
     workspace = {
@@ -59,7 +59,7 @@ installés séparément — ajoute-les à `home.packages` ou
 ## Ce que ça configure
 
 ```
-programs.plasma.enable = true   # via stc.plasmaManager.enable
+programs.plasma.enable = true   # via stc.relics.plasmaManager.enable
 ```
 
 Tout le reste — apparence du workspace, raccourcis, panneaux, widgets — se

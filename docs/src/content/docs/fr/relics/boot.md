@@ -13,7 +13,7 @@ de la technologie concernée (`relics-zfs`, etc.).
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
-| `stc.boot.enable` | bool | `false` | Active la configuration systemd-boot + EFI |
+| `stc.relics.boot.enable` | bool | `false` | Active la configuration systemd-boot + EFI |
 
 ## Ce qu'elle fait
 
@@ -31,7 +31,7 @@ modules = [
 ];
 
 # configuration.nix
-{ stc.boot.enable = true; }
+{ stc.relics.boot.enable = true; }
 ```
 
 ## À combiner avec

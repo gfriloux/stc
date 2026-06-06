@@ -67,8 +67,8 @@ modules = [
     };
   };
 
-  stc.hardening.enable = true;
-  stc.hardening.network.allowedTCPPorts = [ 22 ];
+  stc.cogitator.hardening.enable = true;
+  stc.relics.hardening.network.allowedTCPPorts = [ 22 ];
 
   networking.hostName = "dev-vm";
   networking.hostId = "a1b2c3d4";

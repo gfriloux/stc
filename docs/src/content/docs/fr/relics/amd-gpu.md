@@ -5,7 +5,7 @@ description: Relique AMD GPU — VDPAU, VAAPI, support 32 bits et KMS précoce o
 
 **Module :** `stc.nixosModules.relics-amd-gpu`
 
-**Option d'activation :** `stc.amdGpu.enable`
+**Option d'activation :** `stc.relics.amdGpu.enable`
 
 Configure l'accélération graphique matérielle pour les GPU AMD. Active la pile de
 pilotes 32 bits requise par Steam et DXVK/Proton, et installe les bibliothèques
@@ -15,8 +15,8 @@ VDPAU et VAAPI pour le décodage vidéo matériel.
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
-| `stc.amdGpu.enable` | bool | `false` | Active le support GPU AMD |
-| `stc.amdGpu.initrd` | bool | `false` | Charge amdgpu dans l'initrd pour le framebuffer KMS précoce |
+| `stc.relics.amdGpu.enable` | bool | `false` | Active le support GPU AMD |
+| `stc.relics.amdGpu.initrd` | bool | `false` | Charge amdgpu dans l'initrd pour le framebuffer KMS précoce |
 
 ### `initrd`
 
@@ -46,8 +46,8 @@ modules = [
 
 # configuration.nix
 {
-  stc.amdGpu.enable = true;
-  stc.amdGpu.initrd = true;  # optionnel — KMS précoce
+  stc.relics.amdGpu.enable = true;
+  stc.relics.amdGpu.initrd = true;  # optionnel — KMS précoce
 }
 ```
 

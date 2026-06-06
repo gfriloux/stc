@@ -5,7 +5,7 @@ description: cogitator-sarcophagus-aws — NixOS AMI disk image with ZFS, imperm
 
 **Module:** `stc.nixosModules.cogitator-sarcophagus-aws`
 
-The Sarcophagus is the preservation chamber of a Dreadnought, and the AWS variant is a mobile forge—a war machine sealed and ready for deployment into the campaign. This cogitator builds a raw disk image inscribed with ZFS, impermanence, and hardening, forged as an AMI awaiting awakening in the cloud. Your configuration encased in this mobile Sarcophagus is prepared not for local trials but for real combat on distant EC2 battlefields.
+The Sarcophagus is the hermetically sealed pod that preserves the remains of a mortally wounded Space Marine — not the Dreadnought itself, which refers to the complete assembly (armoured chassis + sarcophagus). This cogitator seals your system into a raw disk image inscribed with ZFS, impermanence, and hardening: the inert sarcophagus, preserving your configuration's essence while awaiting deployment on the AWS battlefields. Once imported as an AMI and awakened in an EC2 instance, this sarcophagus becomes the living core of the complete Dreadnought.
 
 Builds a raw NixOS disk image suitable for import as an AWS AMI, with ZFS,
 impermanence, and full hardening. Includes the AWS platform relic (NVMe/ENA

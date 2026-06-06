@@ -50,9 +50,9 @@ STC modules are exposed in two namespaces:
 All STC options live under `stc.*`:
 
 ```nix
-stc.networking.enable = true;
-stc.gui.zen-browser.enable = true;
-stc.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
+stc.relics.networking.enable = true;
+stc.relics.gui.zen-browser.enable = true;
+stc.relics.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
 ```
 
 No collision with other modules. No surprises.
@@ -95,10 +95,10 @@ pointing to a file path. How that file gets there is your concern, not STC's:
 
 ```nix
 # sops-nix example
-stc.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
+stc.relics.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
 
 # agenix example
-stc.docker.crowdsec.envFile = config.age.secrets.crowdsec-env.path;
+stc.relics.docker.crowdsec.envFile = config.age.secrets.crowdsec-env.path;
 ```
 
 Whether you use sops-nix, agenix, or a shell script of dubious provenance from

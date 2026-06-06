@@ -18,12 +18,12 @@ supplied at runtime via a separate file.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.docker.traefik.enable` | bool | `false` | Enable Traefik reverse proxy container |
-| `stc.docker.traefik.image` | string | `"traefik:v3.7.1"` | Docker image |
-| `stc.docker.traefik.dataDir` | string | `"/srv/docker/traefik"` | Base directory for logs, acme.json, conf |
-| `stc.docker.traefik.acme.email` | string | — | Email for Let's Encrypt ACME registration |
-| `stc.docker.traefik.enableDashboard` | bool | `true` | Enable the Traefik API dashboard on `127.0.0.1:8080`. Disable to reduce attack surface on production servers. |
-| `stc.docker.traefik.dynamicConfigFile` | `null \| string` | `null` | Path to `traefik_dynamic.yml` |
+| `stc.relics.docker.traefik.enable` | bool | `false` | Enable Traefik reverse proxy container |
+| `stc.relics.docker.traefik.image` | string | `"traefik:v3.7.1"` | Docker image |
+| `stc.relics.docker.traefik.dataDir` | string | `"/srv/docker/traefik"` | Base directory for logs, acme.json, conf |
+| `stc.relics.docker.traefik.acme.email` | string | — | Email for Let's Encrypt ACME registration |
+| `stc.relics.docker.traefik.enableDashboard` | bool | `true` | Enable the Traefik API dashboard on `127.0.0.1:8080`. Disable to reduce attack surface on production servers. |
+| `stc.relics.docker.traefik.dynamicConfigFile` | `null \| string` | `null` | Path to `traefik_dynamic.yml` |
 
 ### What It Does
 
@@ -40,7 +40,7 @@ supplied at runtime via a separate file.
 `dynamicConfigFile` points to wherever your secrets provider materialises the file:
 
 ```nix
-stc.docker.traefik.dynamicConfigFile = config.sops.secrets."traefik/dynamic".path;
+stc.relics.docker.traefik.dynamicConfigFile = config.sops.secrets."traefik/dynamic".path;
 ```
 
 ---
@@ -58,20 +58,20 @@ systemd service gets `After = crowdsec.service` / `Requires = crowdsec.service`.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.docker.crowdsec.enable` | bool | `false` | Enable CrowdSec WAF container |
-| `stc.docker.crowdsec.image` | string | `"crowdsecurity/crowdsec:v1.7.8"` | Docker image |
-| `stc.docker.crowdsec.dataDir` | string | — | Base directory for CrowdSec data and config |
-| `stc.docker.crowdsec.envFile` | `null \| string` | `null` | Path to environment file with secrets |
+| `stc.relics.docker.crowdsec.enable` | bool | `false` | Enable CrowdSec WAF container |
+| `stc.relics.docker.crowdsec.image` | string | `"crowdsecurity/crowdsec:v1.7.8"` | Docker image |
+| `stc.relics.docker.crowdsec.dataDir` | string | — | Base directory for CrowdSec data and config |
+| `stc.relics.docker.crowdsec.envFile` | `null \| string` | `null` | Path to environment file with secrets |
 
 ### Secrets Pattern
 
 ```nix
-stc.docker.crowdsec.envFile = config.sops.secrets."crowdsec/env".path;
+stc.relics.docker.crowdsec.envFile = config.sops.secrets."crowdsec/env".path;
 ```
 
 ### CrowdSec-Traefik Integration
 
-When `stc.docker.crowdsec.enable = true` and `stc.docker.traefik.enable = true`:
+When `stc.relics.docker.crowdsec.enable = true` and `stc.relics.docker.traefik.enable = true`:
 
 1. The CrowdSec bouncer plugin (`maxlerebourg/crowdsec-bouncer-traefik-plugin v1.5.1`)
    is automatically added to Traefik's static config under `experimental.plugins`
@@ -97,16 +97,16 @@ monitoring automatically.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.docker.notify.enable` | bool | `false` | Enable failure notifications via ntfy |
-| `stc.docker.notify.hostname` | string | `config.networking.hostName` | Hostname shown in notification titles |
-| `stc.docker.notify.watchLabel` | string | `"stc.docker/health-watch"` | Label marking containers for health monitoring |
-| `stc.docker.notify.ntfy.baseUrl` | string | `"https://ntfy.sh"` | ntfy server base URL |
-| `stc.docker.notify.ntfy.topicFile` | string | — | Path to file containing the ntfy topic name |
+| `stc.relics.docker.notify.enable` | bool | `false` | Enable failure notifications via ntfy |
+| `stc.relics.docker.notify.hostname` | string | `config.networking.hostName` | Hostname shown in notification titles |
+| `stc.relics.docker.notify.watchLabel` | string | `"stc.docker/health-watch"` | Label marking containers for health monitoring |
+| `stc.relics.docker.notify.ntfy.baseUrl` | string | `"https://ntfy.sh"` | ntfy server base URL |
+| `stc.relics.docker.notify.ntfy.topicFile` | string | — | Path to file containing the ntfy topic name |
 
 ### Secrets Pattern
 
 ```nix
-stc.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
+stc.relics.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
 ```
 
 ### How Health Watching Works

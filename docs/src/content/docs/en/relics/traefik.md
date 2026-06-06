@@ -11,9 +11,9 @@ Runs Traefik as a native NixOS service (without Docker). Automatically configure
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.traefik.enable` | bool | `false` | Enable Traefik reverse proxy. |
-| `stc.traefik.email` | string | — | Email address for Let's Encrypt ACME registration. **Required.** |
-| `stc.traefik.logLevel` | string | `"INFO"` | Log level: `DEBUG`, `INFO`, `WARN`, or `ERROR`. |
+| `stc.relics.traefik.enable` | bool | `false` | Enable Traefik reverse proxy. |
+| `stc.relics.traefik.email` | string | — | Email address for Let's Encrypt ACME registration. **Required.** |
+| `stc.relics.traefik.logLevel` | string | `"INFO"` | Log level: `DEBUG`, `INFO`, `WARN`, or `ERROR`. |
 
 ## What it does
 
@@ -33,7 +33,7 @@ modules = [
 ];
 
 {
-  stc.impermanence.enable = true;
+  stc.relics.impermanence.enable = true;
   stc.traefik = {
     enable = true;
     email = "admin@example.com";

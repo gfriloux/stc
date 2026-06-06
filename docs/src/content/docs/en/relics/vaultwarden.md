@@ -11,11 +11,11 @@ Runs Vaultwarden, a Bitwarden-compatible server written in Rust, as a NixOS serv
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.vaultwarden.enable` | bool | `false` | Enable Vaultwarden server. |
-| `stc.vaultwarden.hostname` | string | — | Public domain name (used for Traefik route). **Required.** |
-| `stc.vaultwarden.backup` | bool | `false` | Enable periodic backups to `/var/backup/vaultwarden`. |
-| `stc.vaultwarden.signupsDomains` | list[string] | `[]` | Restrict signups to these email domains. Empty list = all domains accepted. |
-| `stc.vaultwarden.showPasswordHint` | bool | `false` | Show password hints on the login page. Disabled by default for security. |
+| `stc.relics.vaultwarden.enable` | bool | `false` | Enable Vaultwarden server. |
+| `stc.relics.vaultwarden.hostname` | string | — | Public domain name (used for Traefik route). **Required.** |
+| `stc.relics.vaultwarden.backup` | bool | `false` | Enable periodic backups to `/var/backup/vaultwarden`. |
+| `stc.relics.vaultwarden.signupsDomains` | list[string] | `[]` | Restrict signups to these email domains. Empty list = all domains accepted. |
+| `stc.relics.vaultwarden.showPasswordHint` | bool | `false` | Show password hints on the login page. Disabled by default for security. |
 
 ## What it does
 
@@ -38,7 +38,7 @@ modules = [
 ];
 
 {
-  stc.impermanence.enable = true;
+  stc.relics.impermanence.enable = true;
   stc.traefik = {
     enable = true;
     email = "admin@example.com";
@@ -61,7 +61,7 @@ modules = [
 ];
 
 {
-  stc.impermanence.enable = true;
+  stc.relics.impermanence.enable = true;
   stc.vaultwarden = {
     enable = true;
     hostname = "localhost";  # or local IP

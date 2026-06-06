@@ -13,7 +13,7 @@ etc.).
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.boot.enable` | bool | `false` | Enable systemd-boot + EFI bootloader configuration |
+| `stc.relics.boot.enable` | bool | `false` | Enable systemd-boot + EFI bootloader configuration |
 
 ## What It Does
 
@@ -31,7 +31,7 @@ modules = [
 ];
 
 # configuration.nix
-{ stc.boot.enable = true; }
+{ stc.relics.boot.enable = true; }
 ```
 
 ## Pair With

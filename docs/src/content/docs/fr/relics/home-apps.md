@@ -12,8 +12,8 @@ vraie configuration au-delà d'une simple installation de paquet.
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
-| `stc.gui.kitty.enable` | bool | `false` | Active l'émulateur de terminal Kitty |
-| `stc.gui.kitty.fonts.enable` | bool | `true` | Installe un ensemble de Nerd Fonts sélectionnées |
+| `stc.relics.gui.kitty.enable` | bool | `false` | Active l'émulateur de terminal Kitty |
+| `stc.relics.gui.kitty.fonts.enable` | bool | `true` | Installe un ensemble de Nerd Fonts sélectionnées |
 
 Active `programs.kitty` via Home Manager. Quand `fonts.enable = true` (valeur par défaut),
 installe les Nerd Fonts suivantes avec Kitty :
@@ -31,10 +31,10 @@ modules = [ stc.homeModules.relics-kitty ];
 
 # home.nix
 {
-  stc.gui.kitty.enable = true;
+  stc.relics.gui.kitty.enable = true;
 
   # Poser false pour ignorer l'installation des Nerd Fonts
-  stc.gui.kitty.fonts.enable = false;
+  stc.relics.gui.kitty.fonts.enable = false;
 }
 ```
 
@@ -46,7 +46,7 @@ modules = [ stc.homeModules.relics-kitty ];
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
-| `stc.gui.ghostty.enable` | bool | `false` | Active l'émulateur de terminal Ghostty |
+| `stc.relics.gui.ghostty.enable` | bool | `false` | Active l'émulateur de terminal Ghostty |
 
 Active `programs.ghostty` via Home Manager. Ghostty est un terminal accéléré GPU
 avec un rendu GTK4 natif sous Linux, un protocole terminal étendu, et une
@@ -60,7 +60,7 @@ modules = [ stc.homeModules.relics-ghostty ];
 
 # home.nix
 {
-  stc.gui.ghostty.enable = true;
+  stc.relics.gui.ghostty.enable = true;
 
   # Configurer via programs.ghostty.settings :
   programs.ghostty.settings = {
@@ -78,7 +78,7 @@ modules = [ stc.homeModules.relics-ghostty ];
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
-| `stc.gui.zen-browser.enable` | bool | `false` | Active Zen Browser |
+| `stc.relics.gui.zen-browser.enable` | bool | `false` | Active Zen Browser |
 
 Active `programs.zen-browser` via Home Manager en utilisant le module Home Manager
 du flake upstream `zen-browser`.
@@ -87,7 +87,7 @@ du flake upstream `zen-browser`.
 modules = [ stc.homeModules.relics-zen-browser ];
 
 # home.nix
-{ stc.gui.zen-browser.enable = true; }
+{ stc.relics.gui.zen-browser.enable = true; }
 ```
 
 :::tip[Profil Desktop]

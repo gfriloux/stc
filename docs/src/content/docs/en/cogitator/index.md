@@ -14,7 +14,7 @@ scenario.
 | | Relic | Cogitator Profile |
 |-|-------|-------------------|
 | Scope | One concern | Multiple relics combined |
-| Enable option | `stc.<module>.enable` | `stc.cogitator.<profile>.enable` or `stc.hardening.enable` |
+| Enable option | `stc.<module>.enable` | `stc.cogitator.<profile>.enable` or `stc.cogitator.hardening.enable` |
 | Use when | You need precise control | Defaults are good enough |
 | Overridable | Always | Yes — individual relic options still apply |
 
@@ -27,7 +27,7 @@ options. The profile just saves you from enabling each one individually.
 
 | Module name | Enable option | What it composes |
 |-------------|---------------|------------------|
-| `cogitator-hardening` | `stc.hardening.enable` | kernel + network + filesystem + SSH hardening |
+| `cogitator-hardening` | `stc.cogitator.hardening.enable` | kernel + network + filesystem + SSH hardening |
 | `cogitator-vm` | `stc.cogitator.vm.enable` | fish shell, SSH, primary user, optional Docker, Nix GC |
 | `cogitator-docker-server` | `stc.cogitator.docker-server.enable` | Traefik + CrowdSec + ntfy + Docker daemon |
 | `cogitator-plasma` | `stc.cogitator.plasma.enable` | KDE Plasma 6 Wayland desktop + Pipewire audio |

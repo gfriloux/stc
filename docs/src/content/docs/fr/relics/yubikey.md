@@ -11,7 +11,7 @@ graphique de toucher.
 
 **Module :** `stc.nixosModules.relics-yubikey-system`
 
-**Option d'activation :** `stc.yubikey.enable`
+**Option d'activation :** `stc.relics.yubikey.enable`
 
 Active le daemon PC/SC et installe les règles udev pour que la YubiKey soit
 accessible sans privilèges root.
@@ -33,7 +33,7 @@ USB YubiKey à l'utilisateur connecté, évitant les erreurs de permission.
 
 **Module :** `stc.homeModules.relics-yubikey-user`
 
-**Option d'activation :** `stc.yubikey.enable`
+**Option d'activation :** `stc.relics.yubikey.enable`
 
 Installe la suite de gestion YubiKey et exécute `yubikey-touch-detector` comme
 service systemd utilisateur. Le détecteur envoie une notification libnotify
@@ -63,11 +63,11 @@ nixosModules = [ stc.nixosModules.relics-yubikey-system ];
 homeManagerModules = [ stc.homeModules.relics-yubikey-user ];
 
 # configuration.nix
-{ stc.yubikey.enable = true; }
+{ stc.relics.yubikey.enable = true; }
 
 # home.nix
-{ stc.yubikey.enable = true; }
+{ stc.relics.yubikey.enable = true; }
 ```
 
-Les deux reliques utilisent `stc.yubikey.enable` mais dans des contextes
+Les deux reliques utilisent `stc.relics.yubikey.enable` mais dans des contextes
 d'évaluation séparés (NixOS et Home Manager), elles ne sont donc pas en conflit.

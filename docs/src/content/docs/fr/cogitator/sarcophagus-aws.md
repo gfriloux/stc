@@ -5,7 +5,7 @@ description: cogitator-sarcophagus-aws — image disque NixOS pour AMI AWS avec 
 
 **Module :** `stc.nixosModules.cogitator-sarcophagus-aws`
 
-Le Sarcophagus est la chambre de préservation d'un Dreadnought, et la variante AWS est une forge mobile — une machine de guerre scellée et prête au déploiement en campagne. Ce cogitator construit une image disque brute gravée de ZFS, impermanence et durcissement, forgée comme une AMI en attente de réveil dans le cloud. Ta configuration enfermée dans ce Sarcophagus mobile n'est pas préparée pour des épreuves locales mais pour le véritable combat sur les champs de bataille EC2 lointains.
+Le Sarcophagus est le caisson hermétique qui préserve les restes d'un Space Marine mortellement blessé — non pas le Dreadnought lui-même, qui désigne l'assemblage complet (châssis blindé + sarcophage). Ce cogitator scelle ton système dans une image disque brute gravée de ZFS, impermanence et durcissement : le sarcophage inerte, préservant l'essence de ta configuration en attente de déploiement sur les champs de bataille AWS. Une fois importé comme AMI et éveillé dans une instance EC2, ce sarcophage devient le noyau vivant du Dreadnought complet.
 
 Construit une image disque NixOS brute (raw) importable comme AMI AWS, avec ZFS,
 impermanence et durcissement complet. Inclut la relique de plateforme AWS (pilotes

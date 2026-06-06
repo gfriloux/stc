@@ -6,8 +6,8 @@ description: cogitator-docker-server — pile Docker reverse proxy complète en 
 **Module :** `stc.nixosModules.cogitator-docker-server`
 
 Pile Docker reverse-proxy complète : Traefik + WAF CrowdSec + notifications d'échec.
-Activer ceci est équivalent à activer `stc.docker.traefik`, `stc.docker.crowdsec`,
-et `stc.docker.notify` individuellement, plus la configuration du démon Docker.
+Activer ceci est équivalent à activer `stc.relics.docker.traefik`, `stc.relics.docker.crowdsec`,
+et `stc.relics.docker.notify` individuellement, plus la configuration du démon Docker.
 
 Utilise les reliques individuelles directement si tu as besoin d'un contrôle plus fin —
 par exemple, si tu veux Traefik sans CrowdSec, ou un provider de notification différent.
@@ -23,9 +23,9 @@ par exemple, si tu veux Traefik sans CrowdSec, ou un provider de notification di
 Lorsqu'il est activé, ce profil pose :
 
 ```nix
-stc.docker.traefik.enable = true;
-stc.docker.crowdsec.enable = true;
-stc.docker.notify.enable = true;
+stc.relics.docker.traefik.enable = true;
+stc.relics.docker.crowdsec.enable = true;
+stc.relics.docker.notify.enable = true;
 
 virtualisation.docker.enable = true;
 virtualisation.docker.autoPrune.enable = true;
@@ -39,9 +39,9 @@ Tu dois les poser toi-même :
 
 | Option | Pourquoi |
 |--------|----------|
-| `stc.docker.traefik.acme.email` | Enregistrement Let's Encrypt |
-| `stc.docker.crowdsec.dataDir` | Où CrowdSec stocke ses données |
-| `stc.docker.notify.ntfy.topicFile` | Le topic ntfy (chemin vers le fichier de secrets) |
+| `stc.relics.docker.traefik.acme.email` | Enregistrement Let's Encrypt |
+| `stc.relics.docker.crowdsec.dataDir` | Où CrowdSec stocke ses données |
+| `stc.relics.docker.notify.ntfy.topicFile` | Le topic ntfy (chemin vers le fichier de secrets) |
 
 ## Exemple d'utilisation minimal
 
@@ -58,12 +58,12 @@ modules = [
   stc.cogitator.docker-server.enable = true;
 
   # Requis : valeurs spécifiques à la machine
-  stc.docker.traefik.acme.email = "ops@example.com";
-  stc.docker.crowdsec.dataDir = "/srv/docker/crowdsec";
-  stc.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
+  stc.relics.docker.traefik.acme.email = "ops@example.com";
+  stc.relics.docker.crowdsec.dataDir = "/srv/docker/crowdsec";
+  stc.relics.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
 
   # Optionnel : ouvrir les ports pour Traefik (la relique traefik le fait aussi automatiquement)
-  # stc.hardening.network.allowedTCPPorts = [ 22 80 443 ];
+  # stc.relics.hardening.network.allowedTCPPorts = [ 22 80 443 ];
 }
 ```
 

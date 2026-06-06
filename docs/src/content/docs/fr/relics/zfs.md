@@ -13,11 +13,11 @@ maintenance continue (scrub, TRIM, ZED).
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
-| `stc.zfs.enable` | bool | `false` | Active le noyau ZFS, le support au démarrage et la maintenance des pools |
-| `stc.zfs.scrubInterval` | string | `"monthly"` | Expression de calendrier systemd pour le scrub automatique |
-| `stc.zfs.autoSnapshot.enable` | bool | `false` | Active les snapshots périodiques ZFS sur le dataset persist |
-| `stc.zfs.autoSnapshot.daily` | int | `7` | Nombre de snapshots journaliers à conserver |
-| `stc.zfs.autoSnapshot.poolName` | string | — | Nom du pool ZFS (requis si autoSnapshot.enable = true) |
+| `stc.relics.zfs.enable` | bool | `false` | Active le noyau ZFS, le support au démarrage et la maintenance des pools |
+| `stc.relics.zfs.scrubInterval` | string | `"monthly"` | Expression de calendrier systemd pour le scrub automatique |
+| `stc.relics.zfs.autoSnapshot.enable` | bool | `false` | Active les snapshots périodiques ZFS sur le dataset persist |
+| `stc.relics.zfs.autoSnapshot.daily` | int | `7` | Nombre de snapshots journaliers à conserver |
+| `stc.relics.zfs.autoSnapshot.poolName` | string | — | Nom du pool ZFS (requis si autoSnapshot.enable = true) |
 
 ## Ce qu'elle fait
 
@@ -54,7 +54,7 @@ modules = [
 
 # configuration.nix
 {
-  stc.boot.enable = true;
+  stc.relics.boot.enable = true;
   stc.zfs = {
     enable = true;
 

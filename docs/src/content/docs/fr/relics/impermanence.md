@@ -19,12 +19,12 @@ C'est une fonctionnalité, pas un bug.
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
-| `stc.impermanence.enable` | bool | `false` | Active l'impermanence basée sur ZFS |
-| `stc.impermanence.poolName` | string | `"rpool"` | Pool ZFS contenant le dataset racine |
-| `stc.impermanence.datasetName` | string | `"root"` | Dataset à rollbacker à chaque démarrage |
-| `stc.impermanence.persistPath` | string | `"/persist"` | Point de montage du dataset ZFS persistant |
-| `stc.impermanence.extraDirectories` | liste de strings | `[]` | Répertoires supplémentaires à bind-monter depuis `persistPath` vers `/` |
-| `stc.impermanence.extraFiles` | liste de strings | `[]` | Fichiers supplémentaires à bind-monter depuis `persistPath` vers `/` |
+| `stc.relics.impermanence.enable` | bool | `false` | Active l'impermanence basée sur ZFS |
+| `stc.relics.impermanence.poolName` | string | `"rpool"` | Pool ZFS contenant le dataset racine |
+| `stc.relics.impermanence.datasetName` | string | `"root"` | Dataset à rollbacker à chaque démarrage |
+| `stc.relics.impermanence.persistPath` | string | `"/persist"` | Point de montage du dataset ZFS persistant |
+| `stc.relics.impermanence.extraDirectories` | liste de strings | `[]` | Répertoires supplémentaires à bind-monter depuis `persistPath` vers `/` |
+| `stc.relics.impermanence.extraFiles` | liste de strings | `[]` | Fichiers supplémentaires à bind-monter depuis `persistPath` vers `/` |
 
 ## Ce qu'elle fait
 

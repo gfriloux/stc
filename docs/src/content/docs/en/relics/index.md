@@ -14,12 +14,12 @@ and does nothing else. Nothing is enabled by default.
 All relic options live under `stc.*`. Each relic has its own sub-namespace:
 
 ```nix
-stc.boot.enable = true;
-stc.zfs.enable = true;
-stc.networking.enable = true;
-stc.hardening.kernel.enable = true;
-stc.docker.traefik.enable = true;
-stc.gui.kitty.enable = true;
+stc.relics.boot.enable = true;
+stc.relics.zfs.enable = true;
+stc.relics.networking.enable = true;
+stc.relics.hardening.kernel.enable = true;
+stc.relics.docker.traefik.enable = true;
+stc.relics.gui.kitty.enable = true;
 ```
 
 This namespace is isolated from NixOS and Home Manager options. No collisions.
@@ -38,9 +38,9 @@ modules = [
 
 # configuration.nix
 {
-  stc.boot.enable = true;
-  stc.zfs.enable = true;
-  stc.zfs.scrubInterval = "weekly";
+  stc.relics.boot.enable = true;
+  stc.relics.zfs.enable = true;
+  stc.relics.zfs.scrubInterval = "weekly";
 }
 ```
 
@@ -48,34 +48,34 @@ modules = [
 
 | Module name | Enable option | Purpose |
 |-------------|---------------|---------|
-| `relics-boot` | `stc.boot.enable` | systemd-boot + EFI (bootloader only) |
-| `relics-zfs` | `stc.zfs.enable` | ZFS-compatible kernel, auto-scrub, TRIM, ZED |
-| `relics-networking` | `stc.networking.enable` | DHCP, Quad9 DNS, search domain |
-| `relics-impermanence` | `stc.impermanence.enable` | ZFS rollback at boot, persistent paths |
-| `relics-aws` | `stc.aws.enable` | EC2 drivers, AWS NTP, serial console, EBS extension |
-| `relics-amd-gpu` | `stc.amdGpu.enable` | AMD GPU: VDPAU, VAAPI, 32-bit drivers, optional early KMS |
-| `relics-pipewire` | `stc.pipewire.enable` | Pipewire: RTKit + ALSA 32-bit + PulseAudio compat |
-| `relics-plasma6` | `stc.plasma6.enable` | KDE Plasma 6 Wayland desktop (SDDM + XDG portal) |
-| `relics-yubikey-system` | `stc.yubikey.enable` | YubiKey system layer: pcscd + udev rules |
-| `relics-traefik` | `stc.traefik.enable` | Native NixOS Traefik reverse proxy + Let's Encrypt |
-| `relics-vaultwarden` | `stc.vaultwarden.enable` | Vaultwarden server (Bitwarden-compatible) |
-| `relics-hardening-kernel` | `stc.hardening.kernel.enable` | Kernel sysctl (ASLR, kptr_restrict, dmesg, etc.) |
-| `relics-hardening-network` | `stc.hardening.network.enable` | Network sysctl (anti-spoofing, SYN cookies, ICMP) |
-| `relics-hardening-filesystem` | `stc.hardening.filesystem.enable` | /tmp noexec, /proc hidepid, /dev/shm restricted |
-| `relics-hardening-ssh` | `stc.hardening.ssh.enable` | Hardened OpenSSH, key-only auth |
-| `relics-docker-traefik` | `stc.docker.traefik.enable` | Traefik v3 reverse proxy container (Docker) |
-| `relics-docker-crowdsec` | `stc.docker.crowdsec.enable` | CrowdSec WAF container |
-| `relics-docker-notify` | `stc.docker.notify.enable` | Container failure notifications via ntfy |
+| `relics-boot` | `stc.relics.boot.enable` | systemd-boot + EFI (bootloader only) |
+| `relics-zfs` | `stc.relics.zfs.enable` | ZFS-compatible kernel, auto-scrub, TRIM, ZED |
+| `relics-networking` | `stc.relics.networking.enable` | DHCP, Quad9 DNS, search domain |
+| `relics-impermanence` | `stc.relics.impermanence.enable` | ZFS rollback at boot, persistent paths |
+| `relics-aws` | `stc.relics.aws.enable` | EC2 drivers, AWS NTP, serial console, EBS extension |
+| `relics-amd-gpu` | `stc.relics.amdGpu.enable` | AMD GPU: VDPAU, VAAPI, 32-bit drivers, optional early KMS |
+| `relics-pipewire` | `stc.relics.pipewire.enable` | Pipewire: RTKit + ALSA 32-bit + PulseAudio compat |
+| `relics-plasma6` | `stc.relics.plasma6.enable` | KDE Plasma 6 Wayland desktop (SDDM + XDG portal) |
+| `relics-yubikey-system` | `stc.relics.yubikey.enable` | YubiKey system layer: pcscd + udev rules |
+| `relics-traefik` | `stc.relics.traefik.enable` | Native NixOS Traefik reverse proxy + Let's Encrypt |
+| `relics-vaultwarden` | `stc.relics.vaultwarden.enable` | Vaultwarden server (Bitwarden-compatible) |
+| `relics-hardening-kernel` | `stc.relics.hardening.kernel.enable` | Kernel sysctl (ASLR, kptr_restrict, dmesg, etc.) |
+| `relics-hardening-network` | `stc.relics.hardening.network.enable` | Network sysctl (anti-spoofing, SYN cookies, ICMP) |
+| `relics-hardening-filesystem` | `stc.relics.hardening.filesystem.enable` | /tmp noexec, /proc hidepid, /dev/shm restricted |
+| `relics-hardening-ssh` | `stc.relics.hardening.ssh.enable` | Hardened OpenSSH, key-only auth |
+| `relics-docker-traefik` | `stc.relics.docker.traefik.enable` | Traefik v3 reverse proxy container (Docker) |
+| `relics-docker-crowdsec` | `stc.relics.docker.crowdsec.enable` | CrowdSec WAF container |
+| `relics-docker-notify` | `stc.relics.docker.notify.enable` | Container failure notifications via ntfy |
 
 ## Home Manager Relics
 
 | Module name | Enable option | Purpose |
 |-------------|---------------|---------|
-| `relics-kitty` | `stc.gui.kitty.enable` | Kitty terminal + Nerd Fonts |
-| `relics-ghostty` | `stc.gui.ghostty.enable` | Ghostty terminal (GPU-accelerated, native GTK4) |
-| `relics-zen-browser` | `stc.gui.zen-browser.enable` | Zen Browser |
-| `relics-yubikey-user` | `stc.yubikey.enable` | YubiKey user tools: ykman, touch detector, OATH app |
-| `relics-plasma-manager` | `stc.plasmaManager.enable` | Declarative KDE configuration via plasma-manager |
+| `relics-kitty` | `stc.relics.gui.kitty.enable` | Kitty terminal + Nerd Fonts |
+| `relics-ghostty` | `stc.relics.gui.ghostty.enable` | Ghostty terminal (GPU-accelerated, native GTK4) |
+| `relics-zen-browser` | `stc.relics.gui.zen-browser.enable` | Zen Browser |
+| `relics-yubikey-user` | `stc.relics.yubikey.enable` | YubiKey user tools: ykman, touch detector, OATH app |
+| `relics-plasma-manager` | `stc.relics.plasmaManager.enable` | Declarative KDE configuration via plasma-manager |
 
 ## See Also
 

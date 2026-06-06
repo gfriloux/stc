@@ -66,8 +66,8 @@ back to on every boot.
 ```nix
 # configuration.nix
 {
-  stc.boot.enable = true;
-  stc.zfs.enable = true;
+  stc.relics.boot.enable = true;
+  stc.relics.zfs.enable = true;
   stc.impermanence = {
     enable = true;
     poolName = "vmpool";   # must match the layout argument

@@ -12,11 +12,11 @@ initrd, pool import settings, and ongoing maintenance (scrub, TRIM, ZED).
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.zfs.enable` | bool | `false` | Enable ZFS kernel, boot support, and pool maintenance |
-| `stc.zfs.scrubInterval` | string | `"monthly"` | systemd calendar expression for auto-scrub |
-| `stc.zfs.autoSnapshot.enable` | bool | `false` | Enable periodic ZFS snapshots on the persist dataset |
-| `stc.zfs.autoSnapshot.daily` | int | `7` | Number of daily snapshots to keep |
-| `stc.zfs.autoSnapshot.poolName` | string | — | ZFS pool name (required if autoSnapshot.enable = true) |
+| `stc.relics.zfs.enable` | bool | `false` | Enable ZFS kernel, boot support, and pool maintenance |
+| `stc.relics.zfs.scrubInterval` | string | `"monthly"` | systemd calendar expression for auto-scrub |
+| `stc.relics.zfs.autoSnapshot.enable` | bool | `false` | Enable periodic ZFS snapshots on the persist dataset |
+| `stc.relics.zfs.autoSnapshot.daily` | int | `7` | Number of daily snapshots to keep |
+| `stc.relics.zfs.autoSnapshot.poolName` | string | — | ZFS pool name (required if autoSnapshot.enable = true) |
 
 ## What It Does
 
@@ -52,7 +52,7 @@ modules = [
 
 # configuration.nix
 {
-  stc.boot.enable = true;
+  stc.relics.boot.enable = true;
   stc.zfs = {
     enable = true;
 

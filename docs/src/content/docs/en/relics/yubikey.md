@@ -11,7 +11,7 @@ notification.
 
 **Module:** `stc.nixosModules.relics-yubikey-system`
 
-**Enable option:** `stc.yubikey.enable`
+**Enable option:** `stc.relics.yubikey.enable`
 
 Enables the PC/SC daemon and installs udev rules so the YubiKey is accessible
 without root privileges.
@@ -33,7 +33,7 @@ USB device for the logged-in user, avoiding `permission denied` errors.
 
 **Module:** `stc.homeModules.relics-yubikey-user`
 
-**Enable option:** `stc.yubikey.enable`
+**Enable option:** `stc.relics.yubikey.enable`
 
 Installs the YubiKey management suite and runs `yubikey-touch-detector` as a
 user systemd service. The detector sends a libnotify notification whenever the
@@ -62,11 +62,11 @@ nixosModules = [ stc.nixosModules.relics-yubikey-system ];
 homeManagerModules = [ stc.homeModules.relics-yubikey-user ];
 
 # configuration.nix
-{ stc.yubikey.enable = true; }
+{ stc.relics.yubikey.enable = true; }
 
 # home.nix
-{ stc.yubikey.enable = true; }
+{ stc.relics.yubikey.enable = true; }
 ```
 
-Both relics use `stc.yubikey.enable` but in separate evaluation contexts
+Both relics use `stc.relics.yubikey.enable` but in separate evaluation contexts
 (NixOS and Home Manager), so they do not conflict.

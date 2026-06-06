@@ -50,9 +50,9 @@ Les modules STC sont exposés dans deux espaces de noms :
 Toutes les options STC vivent sous `stc.*` :
 
 ```nix
-stc.networking.enable = true;
-stc.gui.zen-browser.enable = true;
-stc.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
+stc.relics.networking.enable = true;
+stc.relics.gui.zen-browser.enable = true;
+stc.relics.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
 ```
 
 Pas de collision avec d'autres modules. Pas de surprises.
@@ -96,10 +96,10 @@ ton problème, pas celui de STC :
 
 ```nix
 # Exemple avec sops-nix
-stc.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
+stc.relics.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
 
 # Exemple avec agenix
-stc.docker.crowdsec.envFile = config.age.secrets.crowdsec-env.path;
+stc.relics.docker.crowdsec.envFile = config.age.secrets.crowdsec-env.path;
 ```
 
 Que tu utilises sops-nix, agenix, ou un script shell d'origine douteuse de l'Âge des

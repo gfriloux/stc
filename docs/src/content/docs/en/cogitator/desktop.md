@@ -35,7 +35,7 @@ both terminals.
 Kitty's Nerd Font installation is on by default. To skip it:
 
 ```nix
-stc.gui.kitty.fonts.enable = false;
+stc.relics.gui.kitty.fonts.enable = false;
 ```
 
 ## Usage Example

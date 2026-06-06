@@ -34,7 +34,7 @@ Les Nerd Fonts sont installées via `relics-kitty` et disponibles pour les deux 
 L'installation des Nerd Fonts de Kitty est active par défaut. Pour la désactiver :
 
 ```nix
-stc.gui.kitty.fonts.enable = false;
+stc.relics.gui.kitty.fonts.enable = false;
 ```
 
 ## Exemple d'utilisation

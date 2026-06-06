@@ -19,12 +19,12 @@ This is a feature, not a bug.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.impermanence.enable` | bool | `false` | Enable ZFS-based impermanence |
-| `stc.impermanence.poolName` | string | `"rpool"` | ZFS pool containing the root dataset |
-| `stc.impermanence.datasetName` | string | `"root"` | Dataset to roll back at each boot |
-| `stc.impermanence.persistPath` | string | `"/persist"` | Mount point of the persistent ZFS dataset |
-| `stc.impermanence.extraDirectories` | list of strings | `[]` | Additional directories to bind-mount from `persistPath` into `/` |
-| `stc.impermanence.extraFiles` | list of strings | `[]` | Additional files to bind-mount from `persistPath` into `/` |
+| `stc.relics.impermanence.enable` | bool | `false` | Enable ZFS-based impermanence |
+| `stc.relics.impermanence.poolName` | string | `"rpool"` | ZFS pool containing the root dataset |
+| `stc.relics.impermanence.datasetName` | string | `"root"` | Dataset to roll back at each boot |
+| `stc.relics.impermanence.persistPath` | string | `"/persist"` | Mount point of the persistent ZFS dataset |
+| `stc.relics.impermanence.extraDirectories` | list of strings | `[]` | Additional directories to bind-mount from `persistPath` into `/` |
+| `stc.relics.impermanence.extraFiles` | list of strings | `[]` | Additional files to bind-mount from `persistPath` into `/` |
 
 ## What It Does
 

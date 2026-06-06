@@ -29,7 +29,7 @@ une machine avec GPU AMD.
 Les options des reliques sous-jacentes restent réglables :
 
 ```nix
-stc.amdGpu.initrd = true;   # framebuffer KMS précoce au démarrage
+stc.relics.amdGpu.initrd = true;   # framebuffer KMS précoce au démarrage
 ```
 
 ## Compatibilité avec le durcissement
@@ -38,9 +38,9 @@ Si `cogitator-hardening` ou des reliques de durcissement individuelles sont
 actives, ajoute ces options — sans elles, Steam ne peut pas démarrer :
 
 ```nix
-stc.hardening.kernel.gaming = true;      # Steam nécessite les user namespaces
-stc.hardening.filesystem.gaming = true;  # Wine/Proton ont besoin de exec dans /tmp et /dev/shm
-stc.hardening.filesystem.shmSize = "4G"; # DXVK/VKD3D ont besoin de plus que 256M
+stc.relics.hardening.kernel.gaming = true;      # Steam nécessite les user namespaces
+stc.relics.hardening.filesystem.gaming = true;  # Wine/Proton ont besoin de exec dans /tmp et /dev/shm
+stc.relics.hardening.filesystem.shmSize = "4G"; # DXVK/VKD3D ont besoin de plus que 256M
 ```
 
 ## Paquets Home Manager
@@ -80,11 +80,11 @@ modules = [
   stc.cogitator.gaming.enable = true;
 
   # Si le durcissement est actif :
-  stc.hardening.kernel.enable = true;
-  stc.hardening.kernel.gaming = true;
-  stc.hardening.filesystem.enable = true;
-  stc.hardening.filesystem.gaming = true;
-  stc.hardening.filesystem.shmSize = "4G";
+  stc.relics.hardening.kernel.enable = true;
+  stc.relics.hardening.kernel.gaming = true;
+  stc.relics.hardening.filesystem.enable = true;
+  stc.relics.hardening.filesystem.gaming = true;
+  stc.relics.hardening.filesystem.shmSize = "4G";
 }
 ```
 

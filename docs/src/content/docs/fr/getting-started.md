@@ -71,10 +71,10 @@ Puis dans `configuration.nix` :
 
 ```nix
 {
-  stc.networking.enable = true;
-  stc.networking.nameservers = [ "9.9.9.9" "149.112.112.112" ];
+  stc.relics.networking.enable = true;
+  stc.relics.networking.nameservers = [ "9.9.9.9" "149.112.112.112" ];
 
-  stc.hardening.enable = true;
+  stc.cogitator.hardening.enable = true;
 }
 ```
 
@@ -100,8 +100,8 @@ Puis dans `home.nix` :
 ```nix
 {
   stc.cogitator.enginseer.enable = true;
-  stc.gui.kitty.enable = true;
-  stc.gui.kitty.fonts.enable = true;
+  stc.relics.gui.kitty.enable = true;
+  stc.relics.gui.kitty.fonts.enable = true;
 }
 ```
 

@@ -14,7 +14,7 @@ gère un scénario complet.
 | | Relique | Profil Cogitator |
 |-|---------|-----------------|
 | Portée | Une préoccupation | Plusieurs reliques combinées |
-| Option d'activation | `stc.<module>.enable` | `stc.cogitator.<profil>.enable` ou `stc.hardening.enable` |
+| Option d'activation | `stc.<module>.enable` | `stc.cogitator.<profil>.enable` ou `stc.cogitator.hardening.enable` |
 | Utiliser quand | Tu as besoin d'un contrôle précis | Les valeurs par défaut sont suffisantes |
 | Surchargeable | Toujours | Oui — les options des reliques individuelles s'appliquent toujours |
 
@@ -27,7 +27,7 @@ sous-jacentes. Le profil t'évite simplement d'activer chacune individuellement.
 
 | Nom du module | Option d'activation | Ce qu'il compose |
 |---------------|---------------------|------------------|
-| `cogitator-hardening` | `stc.hardening.enable` | Durcissement noyau + réseau + système de fichiers + SSH |
+| `cogitator-hardening` | `stc.cogitator.hardening.enable` | Durcissement noyau + réseau + système de fichiers + SSH |
 | `cogitator-vm` | `stc.cogitator.vm.enable` | Shell fish, SSH, utilisateur principal, Docker optionnel, GC Nix |
 | `cogitator-docker-server` | `stc.cogitator.docker-server.enable` | Traefik + CrowdSec + ntfy + démon Docker |
 | `cogitator-plasma` | `stc.cogitator.plasma.enable` | Bureau KDE Plasma 6 Wayland + audio Pipewire |

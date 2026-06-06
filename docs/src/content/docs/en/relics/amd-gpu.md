@@ -5,7 +5,7 @@ description: AMD GPU relic — VDPAU, VAAPI, 32-bit driver support, and optional
 
 **Module:** `stc.nixosModules.relics-amd-gpu`
 
-**Enable option:** `stc.amdGpu.enable`
+**Enable option:** `stc.relics.amdGpu.enable`
 
 Configures hardware graphics acceleration for AMD GPUs. Enables the 32-bit driver
 stack required by Steam and DXVK/Proton, and installs VDPAU and VAAPI libraries
@@ -15,8 +15,8 @@ for hardware video decoding.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.amdGpu.enable` | bool | `false` | Enable AMD GPU support |
-| `stc.amdGpu.initrd` | bool | `false` | Load amdgpu in the initrd for early KMS framebuffer |
+| `stc.relics.amdGpu.enable` | bool | `false` | Enable AMD GPU support |
+| `stc.relics.amdGpu.initrd` | bool | `false` | Load amdgpu in the initrd for early KMS framebuffer |
 
 ### `initrd`
 
@@ -46,8 +46,8 @@ modules = [
 
 # configuration.nix
 {
-  stc.amdGpu.enable = true;
-  stc.amdGpu.initrd = true;  # optional — early KMS
+  stc.relics.amdGpu.enable = true;
+  stc.relics.amdGpu.initrd = true;  # optional — early KMS
 }
 ```
 
