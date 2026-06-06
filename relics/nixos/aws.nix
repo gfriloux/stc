@@ -78,10 +78,28 @@ in {
     services.udev.packages = [pkgs.amazon-ec2-utils];
 
     # Expand the ZFS pool to fill the EBS volume when it is larger than the image.
-    # Idempotent: || true absorbs the no-op exit code when already at full size.
-    system.activationScripts.growPart = ''
-      ${pkgs.cloud-utils}/bin/growpart /dev/${cfg.ebsDisk} ${toString cfg.ebsPartition} || true
-      ${pkgs.zfs}/bin/zpool online -e ${cfg.poolName} /dev/${cfg.ebsDisk}p${toString cfg.ebsPartition} || true
-    '';
+    #
+    # A boot-time oneshot rather than an activation script: activation scripts
+    # also run on every `nixos-rebuild switch`, and the previous `|| true` masked
+    # genuine failures. growpart exits 1 when there is nothing to grow (a no-op,
+    # not an error) and ≥2 on real failure — we only tolerate the former.
+    systemd.services.stc-grow-pool = {
+      description = "Grow root partition and expand the ZFS pool to fill the disk";
+      wantedBy = ["multi-user.target"];
+      after = ["zfs-import.target"];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+      };
+      script = ''
+        rc=0
+        ${pkgs.cloud-utils}/bin/growpart /dev/${cfg.ebsDisk} ${toString cfg.ebsPartition} || rc=$?
+        if [ "$rc" -ne 0 ] && [ "$rc" -ne 1 ]; then
+          echo "growpart failed with exit code $rc" >&2
+          exit "$rc"
+        fi
+        ${pkgs.zfs}/bin/zpool online -e ${cfg.poolName} /dev/${cfg.ebsDisk}p${toString cfg.ebsPartition}
+      '';
+    };
   };
 }
