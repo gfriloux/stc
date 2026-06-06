@@ -191,7 +191,11 @@ in
           requires = [ "crowdsec.service" ];
         };
         "docker-network-web" = dockerLib.mkNetwork pkgs "web" // {
-          wantedBy = [ "traefik.service" ];
+          # Traefik joins the "web" network at startup. Without ordering, on the
+          # first boot Traefik can race ahead of network creation and fail.
+          # requiredBy + before guarantee the network exists first.
+          requiredBy = [ "traefik.service" ];
+          before = [ "traefik.service" ];
         };
       };
       tmpfiles.rules = [
