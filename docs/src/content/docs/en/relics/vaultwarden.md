@@ -25,7 +25,7 @@ Runs Vaultwarden, a Bitwarden-compatible server written in Rust, as a NixOS serv
 - **Localhost only :** Listens on `127.0.0.1:8222` (never exposed directly)
 - **Traefik integration :** Automatically creates HTTPS route if `relics-traefik` is enabled
 - **WebSocket :** Enables real-time synchronization between devices
-- **Persistence :** Saves data to `/persist` — **requires `relics-impermanence`**
+- **Persistence :** on impermanence systems, persists `/var/lib/vaultwarden` (and the backup dir) through `relics-impermanence` when it is enabled, following its `persistPath`. Evaluates fine without impermanence — the persistence block is simply omitted.
 - **Optional backups :** Periodic backups to `/var/backup/vaultwarden` if `backup = true`
 - **Signups :** Disabled by default — set `signupsAllowed = true` to allow registration
 - **Invitations :** Disabled by default — set `invitationsAllowed = true` to allow org invitations
@@ -74,7 +74,7 @@ modules = [
 
 ## Combine with
 
-- **[relics-impermanence](/stc/en/relics/impermanence)** (required) — Persists Vaultwarden data
+- **[relics-impermanence](/stc/en/relics/impermanence)** (recommended on impermanence systems) — Persists Vaultwarden data
 - **[relics-traefik](/stc/en/relics/traefik)** (recommended) — Automatically integrates for TLS and public domain
 
 ## Notes

@@ -51,6 +51,12 @@ in
       description = "Mount point of the persistent ZFS dataset.";
     };
 
+    persistDataset = lib.mkOption {
+      type = lib.types.str;
+      default = "persist";
+      description = "Name of the persistent ZFS dataset under poolName, mounted at persistPath.";
+    };
+
     extraDirectories = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ];
@@ -92,7 +98,7 @@ in
     # The persistent dataset must be available early so SSH host keys,
     # machine-id, and other state are readable during boot.
     fileSystems."${cfg.persistPath}" = {
-      device = "${cfg.poolName}/persist";
+      device = "${cfg.poolName}/${cfg.persistDataset}";
       fsType = "zfs";
       neededForBoot = true;
     };

@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, lib, options, ... }:
 
 let
   cfg = config.stc.relics.vaultwarden;
@@ -88,23 +88,29 @@ in
     };
 
     # Vaultwarden data must survive reboots.
-    # Requires relics-impermanence (or any module that defines environment.persistence).
-    environment.persistence."/persist".directories =
-      [
-        {
-          directory = "/var/lib/vaultwarden";
-          user = "vaultwarden";
-          group = "vaultwarden";
-          mode = "0700";
-        }
-      ]
-      ++ lib.optionals cfg.backup [
-        {
-          directory = "/var/backup/vaultwarden";
-          user = "vaultwarden";
-          group = "vaultwarden";
-          mode = "0700";
-        }
-      ];
+    # Only emitted when the impermanence relic is present (so Vaultwarden stays
+    # evaluable on its own — environment stays {} otherwise), and only active
+    # when it is enabled. The persist root follows its configurable persistPath.
+    environment = lib.optionalAttrs (options.stc.relics ? impermanence) {
+      persistence.${config.stc.relics.impermanence.persistPath} = lib.mkIf config.stc.relics.impermanence.enable {
+        directories =
+          [
+            {
+              directory = "/var/lib/vaultwarden";
+              user = "vaultwarden";
+              group = "vaultwarden";
+              mode = "0700";
+            }
+          ]
+          ++ lib.optionals cfg.backup [
+            {
+              directory = "/var/backup/vaultwarden";
+              user = "vaultwarden";
+              group = "vaultwarden";
+              mode = "0700";
+            }
+          ];
+      };
+    };
   };
 }

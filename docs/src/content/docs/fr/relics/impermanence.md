@@ -23,6 +23,7 @@ C'est une fonctionnalité, pas un bug.
 | `stc.relics.impermanence.poolName` | string | `"rpool"` | Pool ZFS contenant le dataset racine |
 | `stc.relics.impermanence.datasetName` | string | `"root"` | Dataset à rollbacker à chaque démarrage |
 | `stc.relics.impermanence.persistPath` | string | `"/persist"` | Point de montage du dataset ZFS persistant |
+| `stc.relics.impermanence.persistDataset` | string | `"persist"` | Nom du dataset ZFS persistant sous `poolName`, monté sur `persistPath` |
 | `stc.relics.impermanence.extraDirectories` | liste de strings | `[]` | Répertoires supplémentaires à bind-monter depuis `persistPath` vers `/` |
 | `stc.relics.impermanence.extraFiles` | liste de strings | `[]` | Fichiers supplémentaires à bind-monter depuis `persistPath` vers `/` |
 
@@ -33,8 +34,9 @@ après l'import du pool ZFS mais avant le montage du système de fichiers racine
 démarrage il crée `poolName/datasetName@blank`. À chaque démarrage suivant il revient
 à ce snapshot.
 
-**Montage persistant** — monte `poolName/persist` à `persistPath` avec
-`neededForBoot = true`, pour que les clés SSH et les secrets soient disponibles tôt.
+**Montage persistant** — monte `poolName/persistDataset` (par défaut `poolName/persist`)
+à `persistPath` avec `neededForBoot = true`, pour que les clés SSH et les secrets
+soient disponibles tôt.
 
 **Chemins toujours persistants** — les chemins suivants sont toujours persistés,
 quel que soit `extraDirectories` / `extraFiles` :
