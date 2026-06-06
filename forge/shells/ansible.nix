@@ -2,7 +2,7 @@
 #
 # Provides three ansible versions simultaneously:
 #   ansible          — latest from nixpkgs unstable
-#   ansible_2_16     — wrapped with correct PYTHONPATH (pinned from nixos-25.05)
+#   ansible_2_16     — wrapped with correct PYTHONPATH (pinned from nixos-25.11)
 #   ansible_2_17     — same
 #
 # The multi-version approach is intentional: real-world environments often run
