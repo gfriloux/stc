@@ -46,7 +46,6 @@ in
 
       # --- Core dumps ---
       # Core dumps can expose secrets and private keys. Disable entirely.
-      "kernel.core_pattern" = "|/bin/false";
       "fs.suid_dumpable" = 0;
 
       # --- Filesystem hardening ---
@@ -59,6 +58,9 @@ in
       # Steam uses user namespaces for its containerised runtime.
       "kernel.unprivileged_userns_clone" = 0;
     };
+
+    # Disable systemd core dump handler — /bin/false doesn't exist on NixOS.
+    systemd.coredump.enable = false;
 
     # Belt-and-suspenders: also disable core dumps via PAM resource limits.
     security.pam.loginLimits = [
