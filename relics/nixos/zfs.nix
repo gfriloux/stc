@@ -82,7 +82,8 @@ in {
 
       # ZFS Event Daemon — monitors pool health, logs errors.
       zed.settings = {
-        ZED_DEBUG_LOG = "/tmp/zed.debug.log";
+        # Not /tmp: world-readable tmpfs. /var/log keeps it root-owned and persistent.
+        ZED_DEBUG_LOG = "/var/log/zed.debug.log";
         ZED_NOTIFY_VERBOSE = 0;
       };
 
