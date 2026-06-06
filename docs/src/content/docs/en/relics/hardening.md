@@ -17,23 +17,13 @@ Applies sysctl parameters that reduce the kernel attack surface:
 | Category | What it does |
 |----------|-------------|
 | Memory layout | Full ASLR (`randomize_va_space = 2`), hide kernel pointers (`kptr_restrict = 2`), restrict dmesg |
-| Unprivileged capabilities | Block eBPF and perf for unprivileged users; block user namespace creation (see gaming note) |
+| Unprivileged capabilities | Block eBPF and perf for unprivileged users |
 | kexec / SysRq | Disable kexec (kernel replacement attack vector), disable SysRq |
 | Core dumps | Disable entirely — core dumps can expose secrets and private keys |
 | Filesystem | Protect hardlinks, symlinks, FIFOs, and regular files from abuse |
 
-Core dumps are also disabled via PAM resource limits (`security.pam.loginLimits`) as
-belt-and-suspenders.
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `stc.relics.hardening.kernel.gaming` | bool | `false` | Skip `kernel.unprivileged_userns_clone = 0` — Steam requires user namespaces for its containerised runtime |
-
-:::caution[Steam and user namespaces]
-`kernel.unprivileged_userns_clone = 0` prevents Steam from launching. Set
-`stc.relics.hardening.kernel.gaming = true` on gaming machines. All other kernel
-restrictions remain active.
-:::
+Core dumps are disabled via `systemd.coredump.enable = false` and PAM resource
+limits (`security.pam.loginLimits`) as belt-and-suspenders.
 
 ## Network Hardening
 
@@ -143,7 +133,6 @@ Gaming machine with hardening:
 ```nix
 {
   stc.relics.hardening.kernel.enable = true;
-  stc.relics.hardening.kernel.gaming = true;      # allow user namespaces for Steam
 
   stc.relics.hardening.filesystem.enable = true;
   stc.relics.hardening.filesystem.gaming = true;  # allow exec in /tmp and /dev/shm

@@ -17,23 +17,13 @@ Applique des paramètres sysctl qui réduisent la surface d'attaque du noyau :
 | Catégorie | Ce qu'elle fait |
 |-----------|-----------------|
 | Disposition mémoire | ASLR complet (`randomize_va_space = 2`), masquer les pointeurs noyau (`kptr_restrict = 2`), restreindre dmesg |
-| Capacités non-privilégiées | Bloquer eBPF et perf pour les utilisateurs non-privilégiés ; bloquer la création de user namespaces (voir note gaming) |
+| Capacités non-privilégiées | Bloquer eBPF et perf pour les utilisateurs non-privilégiés |
 | kexec / SysRq | Désactiver kexec (vecteur d'attaque de remplacement du noyau), désactiver SysRq |
 | Core dumps | Désactiver entièrement — les core dumps peuvent exposer des secrets et des clés privées |
 | Système de fichiers | Protéger les hardlinks, symlinks, FIFOs et fichiers réguliers contre les abus |
 
-Les core dumps sont également désactivés via les limites de ressources PAM
-(`security.pam.loginLimits`) par double précaution.
-
-| Option | Type | Défaut | Description |
-|--------|------|--------|-------------|
-| `stc.relics.hardening.kernel.gaming` | bool | `false` | Ne pas appliquer `kernel.unprivileged_userns_clone = 0` — Steam nécessite les user namespaces pour son runtime containerisé |
-
-:::caution[Steam et user namespaces]
-`kernel.unprivileged_userns_clone = 0` empêche Steam de démarrer. Définis
-`stc.relics.hardening.kernel.gaming = true` sur les machines gaming. Toutes les
-autres restrictions noyau restent actives.
-:::
+Les core dumps sont désactivés via `systemd.coredump.enable = false` et les
+limites de ressources PAM (`security.pam.loginLimits`) par double précaution.
 
 ## Durcissement réseau
 
@@ -145,7 +135,6 @@ Machine gaming avec durcissement :
 ```nix
 {
   stc.relics.hardening.kernel.enable = true;
-  stc.relics.hardening.kernel.gaming = true;      # autorise les user namespaces pour Steam
 
   stc.relics.hardening.filesystem.enable = true;
   stc.relics.hardening.filesystem.gaming = true;  # autorise exec dans /tmp et /dev/shm
