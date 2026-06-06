@@ -25,7 +25,7 @@ Lance Vaultwarden, un serveur Bitwarden-compatible écrit en Rust, comme service
 - **Localhost uniquement :** Écoute sur `127.0.0.1:8222` (jamais exposé directement)
 - **Intégration Traefik :** Crée automatiquement la route HTTPS si `relics-traefik` est activé
 - **WebSocket :** Active les synchronisations en temps réel entre appareils
-- **Persistence :** Sauvegarde les données sur `/persist` — **nécessite `relics-impermanence`**
+- **Persistence :** sur les systèmes impermanence, persiste `/var/lib/vaultwarden` (et le répertoire de backup) via `relics-impermanence` quand il est activé, en suivant son `persistPath`. S'évalue sans souci sans impermanence — le bloc de persistence est alors simplement omis.
 - **Backups optionnels :** Backups périodiques vers `/var/backup/vaultwarden` si `backup = true`
 - **Inscriptions :** Désactivées par défaut — passer `signupsAllowed = true` pour ouvrir
 - **Invitations :** Désactivées par défaut — passer `invitationsAllowed = true` pour autoriser
@@ -74,7 +74,7 @@ modules = [
 
 ## À combiner avec
 
-- **[relics-impermanence](/stc/fr/relics/impermanence)** (requis) — Persiste les données Vaultwarden
+- **[relics-impermanence](/stc/fr/relics/impermanence)** (recommandé sur les systèmes impermanence) — Persiste les données Vaultwarden
 - **[relics-traefik](/stc/fr/relics/traefik)** (recommandé) — S'intègre automatiquement pour TLS et domaine public
 
 ## Notes

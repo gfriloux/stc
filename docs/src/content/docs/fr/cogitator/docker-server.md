@@ -5,9 +5,11 @@ description: cogitator-docker-server — pile Docker reverse proxy complète en 
 
 **Module :** `stc.nixosModules.cogitator-docker-server`
 
-Pile Docker reverse-proxy complète : Traefik + WAF CrowdSec + notifications d'échec.
-Activer ceci est équivalent à activer `stc.relics.docker.traefik`, `stc.relics.docker.crowdsec`,
-et `stc.relics.docker.notify` individuellement, plus la configuration du démon Docker.
+Pile Docker reverse-proxy complète : Traefik + un socket-proxy filtrant + WAF CrowdSec
++ notifications d'échec. Activer ceci est équivalent à activer
+`stc.relics.docker.traefik`, `stc.relics.docker.socketProxy`,
+`stc.relics.docker.crowdsec`, et `stc.relics.docker.notify` individuellement, plus
+la configuration du démon Docker.
 
 Utilise les reliques individuelles directement si tu as besoin d'un contrôle plus fin —
 par exemple, si tu veux Traefik sans CrowdSec, ou un provider de notification différent.
@@ -24,6 +26,7 @@ Lorsqu'il est activé, ce profil pose :
 
 ```nix
 stc.relics.docker.traefik.enable = true;
+stc.relics.docker.socketProxy.enable = true;  # Traefik utilise le proxy, pas le socket brut
 stc.relics.docker.crowdsec.enable = true;
 stc.relics.docker.notify.enable = true;
 
@@ -75,5 +78,5 @@ savoir comment le fichier y arrive.
 
 ## Voir aussi
 
-- [Reliques Docker](/stc/fr/relics/docker/) — Traefik, CrowdSec et notify en détail
+- [Reliques Docker](/stc/fr/relics/docker/) — Traefik, socket-proxy, CrowdSec et notify en détail
 - [Schématic : aws-ami](/stc/fr/schematics/aws-ami/) — un exemple de production complet utilisant ce profil

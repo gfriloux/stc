@@ -34,6 +34,10 @@ supplied at runtime via a separate file.
 - Access logs in JSON format at `dataDir/logs/traefik.log`, rotated daily (14 days)
 - Docker provider watching the `web` network; file provider reading `traefik_dynamic.yml`
 - Creates the `web` Docker network as a systemd service
+- When `relics-docker-socket-proxy` is enabled, Traefik talks to the Docker API
+  over TCP through the proxy instead of bind-mounting the raw socket (the mount is
+  dropped, an `endpoint` is added to the docker provider, and Traefik joins the
+  proxy network and waits for it). Otherwise it bind-mounts `/run/docker.sock` read-only.
 
 ### Secrets Pattern
 
@@ -42,6 +46,55 @@ supplied at runtime via a separate file.
 ```nix
 stc.relics.docker.traefik.dynamicConfigFile = config.sops.secrets."traefik/dynamic".path;
 ```
+
+---
+
+## Docker Socket Proxy
+
+**Module:** `stc.nixosModules.relics-docker-socket-proxy`
+
+Runs [`tecnativa/docker-socket-proxy`](https://github.com/Tecnativa/docker-socket-proxy),
+a filtering proxy in front of the Docker socket. The raw `/run/docker.sock` is
+mounted read-only into the proxy container **only**; other containers (Traefik)
+reach the Docker API over TCP through the proxy at `tcp://docker-socket-proxy:2375`.
+
+:::danger[Why `:ro` on the socket is not enough]
+Bind-mounting `/run/docker.sock` with `:ro` does **not** make the Docker API
+read-only — the flag applies to the filesystem node, not the protocol. A process
+with access to the socket can still `POST` to the API (create a privileged
+container, i.e. root on the host). The proxy is the real mitigation: it disables
+`POST` and forwards only the whitelisted `GET` endpoints.
+:::
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `stc.relics.docker.socketProxy.enable` | bool | `false` | Enable the filtering socket proxy |
+| `stc.relics.docker.socketProxy.image` | string | `"tecnativa/docker-socket-proxy:0.3.0"` | Docker image |
+| `stc.relics.docker.socketProxy.network` | string | `"socket-proxy"` | Docker network shared with clients (e.g. Traefik) |
+| `stc.relics.docker.socketProxy.permissions` | attrs of bool | `{ CONTAINERS = true; NETWORKS = true; EVENTS = true; PING = true; VERSION = true; }` | Docker API sections to expose. `POST` is always forced off. |
+
+### What It Does
+
+- Runs the proxy container with the raw socket mounted read-only
+- Exposes only the whitelisted `GET` sections (defaults cover the Traefik docker provider)
+- Forces `POST = "0"` regardless of `permissions`
+- Creates the `network` Docker network as a systemd service, ordered before the proxy
+
+### Usage
+
+Enable it alongside Traefik and the wiring is automatic:
+
+```nix
+stc.relics.docker = {
+  traefik.enable = true;
+  socketProxy.enable = true;   # Traefik now uses the proxy, no raw socket
+};
+```
+
+The [`cogitator-docker-server`](/stc/en/cogitator/docker-server/) profile enables
+this by default.
 
 ---
 

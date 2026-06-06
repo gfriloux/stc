@@ -23,6 +23,7 @@ This is a feature, not a bug.
 | `stc.relics.impermanence.poolName` | string | `"rpool"` | ZFS pool containing the root dataset |
 | `stc.relics.impermanence.datasetName` | string | `"root"` | Dataset to roll back at each boot |
 | `stc.relics.impermanence.persistPath` | string | `"/persist"` | Mount point of the persistent ZFS dataset |
+| `stc.relics.impermanence.persistDataset` | string | `"persist"` | Name of the persistent ZFS dataset under `poolName`, mounted at `persistPath` |
 | `stc.relics.impermanence.extraDirectories` | list of strings | `[]` | Additional directories to bind-mount from `persistPath` into `/` |
 | `stc.relics.impermanence.extraFiles` | list of strings | `[]` | Additional files to bind-mount from `persistPath` into `/` |
 
@@ -33,8 +34,9 @@ after the ZFS pool is imported but before the root filesystem is mounted. On fir
 run it creates `poolName/datasetName@blank`. On every subsequent run it rolls back
 to that snapshot.
 
-**Persistent mount** — mounts `poolName/persist` at `persistPath` with
-`neededForBoot = true`, so SSH host keys and secrets are available early.
+**Persistent mount** — mounts `poolName/persistDataset` (default `poolName/persist`)
+at `persistPath` with `neededForBoot = true`, so SSH host keys and secrets are
+available early.
 
 **Always-persistent paths** — the following paths are always persisted, regardless
 of `extraDirectories` / `extraFiles`:

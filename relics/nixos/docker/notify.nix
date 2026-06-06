@@ -33,6 +33,20 @@ let
   watched = lib.filterAttrs (
     _: c: (c.labels or { }) ? ${cfg.watchLabel}
   ) config.virtualisation.oci-containers.containers;
+
+  # Each watched container maps to two distinct identifiers that must not be
+  # conflated:
+  #   - unit:      the systemd unit oci-containers actually generates —
+  #                serviceName when set, otherwise docker-<name>. Used to attach
+  #                OnFailure / Restart / partOf to the *real* unit.
+  #   - container: the docker container name (the attribute name). Used by
+  #                `docker inspect` / `docker kill` in the health-watch instance.
+  # Conflating them (using the attribute name as the unit) silently misfires for
+  # any third-party container that does not set serviceName.
+  watchedList = lib.mapAttrsToList (name: c: {
+    container = name;
+    unit = c.serviceName or "docker-${name}";
+  }) watched;
 in
 {
   imports = [
@@ -99,31 +113,38 @@ in
             };
           };
         }
-        // lib.mapAttrs (_: _: {
-          unitConfig = {
-            OnFailure = "stc-notify-failure@%p.service";
-            StartLimitBurst = 3;
-            StartLimitIntervalSec = "300s";
-          };
-          serviceConfig = {
-            Restart = "on-failure";
-            RestartSec = "30s";
-          };
-        }) watched;
+        // builtins.listToAttrs (
+          map (w: {
+            name = w.unit;
+            value = {
+              unitConfig = {
+                OnFailure = "stc-notify-failure@%p.service";
+                StartLimitBurst = 3;
+                StartLimitIntervalSec = "300s";
+              };
+              serviceConfig = {
+                Restart = "on-failure";
+                RestartSec = "30s";
+              };
+            };
+          }) watchedList
+        );
 
-      timers = lib.mapAttrs' (name: _: {
-        name = "stc-docker-health-watch@${name}";
-        value = {
-          description = "STC: Docker health watch timer for ${name}";
-          wantedBy = [ "timers.target" ];
-          partOf = [ "${name}.service" ];
-          timerConfig = {
-            OnBootSec = "240s";
-            OnUnitActiveSec = "30s";
-            Unit = "stc-docker-health-watch@${name}.service";
+      timers = builtins.listToAttrs (
+        map (w: {
+          name = "stc-docker-health-watch@${w.container}";
+          value = {
+            description = "STC: Docker health watch timer for ${w.container}";
+            wantedBy = [ "timers.target" ];
+            partOf = [ "${w.unit}.service" ];
+            timerConfig = {
+              OnBootSec = "240s";
+              OnUnitActiveSec = "30s";
+              Unit = "stc-docker-health-watch@${w.container}.service";
+            };
           };
-        };
-      }) watched;
+        }) watchedList
+      );
     };
   };
 }

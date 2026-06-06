@@ -9,12 +9,25 @@
 #
 # Secrets: point stc.relics.docker.traefik.dynamicConfigFile at whatever your
 # secrets provider materialises.
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, options, ... }:
 let
   cfg = config.stc.relics.docker.traefik;
   dockerLib = import ./_lib.nix;
 
-  crowdsecEnabled = config.stc.relics.docker.crowdsec.enable;
+  # Guarded on the option existing so this relic stays usable on its own:
+  # the crowdsec relic declares stc.relics.docker.crowdsec only when imported.
+  crowdsecEnabled =
+    (options.stc.relics.docker ? crowdsec) && config.stc.relics.docker.crowdsec.enable;
+
+  # When the socket-proxy relic is enabled, Traefik talks to the Docker API over
+  # TCP through the filtering proxy instead of bind-mounting the raw socket.
+  # Guarded on the option existing so this relic stays usable on its own.
+  socketProxyEnabled =
+    (options.stc.relics.docker ? socketProxy) && config.stc.relics.docker.socketProxy.enable;
+  socketProxyNetwork = config.stc.relics.docker.socketProxy.network;
+  # Inserted raw after the heredoc strips its common indent, so this carries the
+  # already-stripped (4-space) indentation to sit under the docker provider.
+  dockerProviderEndpoint = lib.optionalString socketProxyEnabled "\n    endpoint: \"tcp://docker-socket-proxy:2375\"";
 
   crowdsecPlugin = lib.optionalString crowdsecEnabled ''
 
@@ -73,7 +86,7 @@ let
     providers:
       docker:
         watch: true
-        network: web
+        network: web${dockerProviderEndpoint}
       file:
         filename: "/etc/traefik/traefik_dynamic.yml"
     ${crowdsecPlugin}
@@ -132,8 +145,9 @@ in
       serviceName = "traefik";
 
       volumes =
-        [
-          "/run/docker.sock:/var/run/docker.sock:ro"
+        # Bind-mount the raw socket only when NOT going through the socket-proxy.
+        lib.optional (!socketProxyEnabled) "/run/docker.sock:/var/run/docker.sock:ro"
+        ++ [
           "${cfg.dataDir}/acme.json:/acme.json"
           "${cfg.dataDir}/logs:/logs"
         ]
@@ -165,7 +179,7 @@ in
         "443:443/tcp"
       ];
 
-      networks = [ "web" ];
+      networks = [ "web" ] ++ lib.optional socketProxyEnabled socketProxyNetwork;
     };
 
     services.logrotate.settings.traefik = {
@@ -186,12 +200,22 @@ in
 
     systemd = {
       services = {
-        "traefik" = lib.mkIf crowdsecEnabled {
-          after = [ "crowdsec.service" ];
-          requires = [ "crowdsec.service" ];
-        };
+        "traefik" =
+          let
+            deps =
+              lib.optional crowdsecEnabled "crowdsec.service"
+              ++ lib.optional socketProxyEnabled "docker-socket-proxy.service";
+          in
+          lib.mkIf (deps != [ ]) {
+            after = deps;
+            requires = deps;
+          };
         "docker-network-web" = dockerLib.mkNetwork pkgs "web" // {
-          wantedBy = [ "traefik.service" ];
+          # Traefik joins the "web" network at startup. Without ordering, on the
+          # first boot Traefik can race ahead of network creation and fail.
+          # requiredBy + before guarantee the network exists first.
+          requiredBy = [ "traefik.service" ];
+          before = [ "traefik.service" ];
         };
       };
       tmpfiles.rules = [

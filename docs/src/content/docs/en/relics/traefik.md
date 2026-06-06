@@ -23,7 +23,7 @@ Runs Traefik as a native NixOS service (without Docker). Automatically configure
 - **JSON logs :** Traefik and access logs in JSON format in `/var/lib/traefik/`
 - **Header redaction :** the access log drops request headers by default and only keeps non-sensitive diagnostic ones (`User-Agent`, `X-Real-Ip`, `X-Forwarded-For`, `X-Forwarded-Proto`). `Authorization` and `Cookie` are never written, even though the log is persisted.
 - **Firewall :** Automatically opens ports 80 and 443
-- **Persistence :** Saves ACME certificates to `/persist` — **requires `relics-impermanence`**
+- **Persistence :** on impermanence systems, persists `/var/lib/traefik` (ACME certs) through `relics-impermanence` when it is enabled, following its `persistPath`. Evaluates fine without impermanence — the persistence block is simply omitted.
 
 ## Example usage
 
@@ -46,7 +46,7 @@ Traefik listens on `localhost:8080` for the API/dashboard. For a backend service
 
 ## Combine with
 
-- **[relics-impermanence](/stc/en/relics/impermanence)** (required) — Persists ACME certificates
+- **[relics-impermanence](/stc/en/relics/impermanence)** (recommended on impermanence systems) — Persists ACME certificates
 - **[relics-vaultwarden](/stc/en/relics/vaultwarden)** — Automatically integrates with Traefik
 - **Other NixOS services** — Traefik can route any HTTP service (Nextcloud, Gitea, etc.)
 

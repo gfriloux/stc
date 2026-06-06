@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, lib, options, ... }:
 
 let
   cfg = config.stc.relics.traefik;
@@ -83,14 +83,20 @@ in
     networking.firewall.allowedTCPPorts = [ 80 443 ];
 
     # /var/lib/traefik holds ACME certs — must survive reboots.
-    # Requires relics-impermanence (or any module that defines environment.persistence).
-    environment.persistence."/persist".directories = [
-      {
-        directory = "/var/lib/traefik";
-        user = "traefik";
-        group = "traefik";
-        mode = "0700";
-      }
-    ];
+    # Only emitted when the impermanence relic is present (so Traefik stays
+    # evaluable on its own — environment stays {} otherwise), and only active
+    # when it is enabled. The persist root follows its configurable persistPath.
+    environment = lib.optionalAttrs (options.stc.relics ? impermanence) {
+      persistence.${config.stc.relics.impermanence.persistPath} = lib.mkIf config.stc.relics.impermanence.enable {
+        directories = [
+          {
+            directory = "/var/lib/traefik";
+            user = "traefik";
+            group = "traefik";
+            mode = "0700";
+          }
+        ];
+      };
+    };
   };
 }
