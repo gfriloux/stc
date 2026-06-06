@@ -13,7 +13,5 @@ jobs:
 
       - uses: DeterminateSystems/nix-installer-action@v16
 
-      - uses: DeterminateSystems/magic-nix-cache-action@v8
-
       - name: nix flake check (x86_64-linux)
         run: nix flake check --no-write-lock-file

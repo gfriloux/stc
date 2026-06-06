@@ -56,8 +56,20 @@ in
           filePath = "/var/lib/traefik/access.log";
           format = "json";
           fields = {
+            # Request fields (method, status, duration…) are safe to keep.
             defaultMode = "keep";
-            headers.defaultMode = "keep";
+            # Headers are NOT safe to keep wholesale: Authorization and Cookie
+            # would land in the persisted access.log (this proxy fronts Vaultwarden).
+            # Drop everything and allowlist only non-sensitive diagnostic headers.
+            headers = {
+              defaultMode = "drop";
+              names = {
+                "User-Agent" = "keep";
+                "X-Real-Ip" = "keep";
+                "X-Forwarded-For" = "keep";
+                "X-Forwarded-Proto" = "keep";
+              };
+            };
           };
         };
 

@@ -57,9 +57,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # nixos-25.05 stable — used by forge/builders for tools not yet on unstable
+    # nixos-25.11 stable — used by forge/builders for tools not yet on unstable
     # (e.g. specific Terraform/Ansible versions requiring stable package sets).
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.05";
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
 
     ansible-recap = {
       url = "github:gfriloux/ansible-recap";
