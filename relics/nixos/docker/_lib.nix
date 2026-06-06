@@ -18,15 +18,19 @@
   ];
 
   # Idempotent Docker network systemd service.
+  #
+  # No ExecStop: a restart of this unit (e.g. on nixos-rebuild) would otherwise
+  # `docker network rm -f` the network out from under any attached container.
+  # The network is cheap and idempotent to (re)create, so we never tear it down.
   mkNetwork = pkgs: name: {
     path = [pkgs.docker];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.docker}/bin/docker network rm -f ${name}";
     };
     script = ''
-      docker network inspect ${name} || docker network create ${name}
+      docker network inspect ${pkgs.lib.escapeShellArg name} \
+        || docker network create ${pkgs.lib.escapeShellArg name}
     '';
   };
 }
