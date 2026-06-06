@@ -1,3 +1,13 @@
+# Relic: traefik (native)
+#
+# Traefik v3 as the native NixOS service (`services.traefik`), for hosts that run
+# services directly on the machine rather than in Docker. ACME uses the HTTP-01
+# challenge (`httpChallenge` on the `web` entryPoint, port 80).
+#
+# STC ships a second, independent Traefik as a Docker container
+# (`relics-docker-traefik`) for container workloads; it uses the TLS-ALPN-01
+# challenge instead. The two are separate deployments — pick one per host. Both
+# name their ACME resolver `letsencrypt`, so consumer dynamic configs are portable.
 {
   config,
   lib,
