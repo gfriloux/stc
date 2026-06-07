@@ -5,6 +5,16 @@
   ...
 }: let
   cfg = config.stc.relics.aws;
+
+  # Partition naming differs by device class: NVMe inserts a "p" before the
+  # partition number (nvme0n1 -> nvme0n1p3), Xen virtual disks do not
+  # (xvda -> xvda3). The rule is "p only when the device name ends in a digit",
+  # which holds for nvme*/mmcblk* (p) and xvd*/sd*/vd* (no p). growpart takes the
+  # disk and partition as separate arguments and is unaffected.
+  partSep =
+    if (builtins.match ".*[0-9]" cfg.ebsDisk) != null
+    then "p"
+    else "";
 in {
   imports = [
     (lib.mkRenamedOptionModule ["stc" "aws" "enable"] ["stc" "relics" "aws" "enable"])
@@ -98,7 +108,7 @@ in {
           echo "growpart failed with exit code $rc" >&2
           exit "$rc"
         fi
-        ${pkgs.zfs}/bin/zpool online -e ${cfg.poolName} /dev/${cfg.ebsDisk}p${toString cfg.ebsPartition}
+        ${pkgs.zfs}/bin/zpool online -e ${cfg.poolName} /dev/${cfg.ebsDisk}${partSep}${toString cfg.ebsPartition}
       '';
     };
   };
