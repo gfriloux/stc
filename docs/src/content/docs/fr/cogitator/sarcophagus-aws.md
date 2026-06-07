@@ -24,7 +24,7 @@ Les instances déployées depuis cette AMI sont destinées à être gérées ave
 | `relics-impermanence` | Rollback du root vers `@blank` à chaque démarrage |
 | `relics-aws` | Pilotes NVMe/ENA, NTP, console série, expansion pool EBS |
 | `cogitator-hardening` | Durcissement noyau + réseau + système de fichiers + SSH |
-| Schéma disko | GPT sur `/dev/vda` — 1 Gio FAT32 `/boot` + pool ZFS |
+| Schéma disque | GPT sur `/dev/vda` — BIOS/GRUB : bios_grub + ESP (`/boot`) + pool ZFS (3 partitions) |
 | Override GRUB | BIOS/GRUB requis par `make-single-disk-zfs-image.nix` |
 | `system.build.awsImage` | Constructeur d'image brute |
 
@@ -106,14 +106,23 @@ un hostId unique. Génères-en un : `head -c4 /dev/urandom | od -A none -t x4 | 
 
 ## Schéma disque
 
+L'image bootable est produite par `make-single-disk-zfs-image.nix` sous forme
+d'un schéma **BIOS/GRUB** à 3 partitions (d'où `ebsPartition = 3` par défaut) :
+
 ```
-/dev/vda (GPT)
-├── partition 1 — 1 Gio  FAT32  /boot   (label: ESP)
-└── partition 2 — 100%   Pool ZFS (vmpool par défaut)
+/dev/vda (GPT) — construit par make-single-disk-zfs-image.nix
+├── partition 1 — bios_grub (partition de boot BIOS, sans système de fichiers)
+├── partition 2 — 1 Gio  FAT32  /boot   (label: ESP, sans rôle EFI)
+└── partition 3 — 100%   Pool ZFS (vmpool par défaut)
     ├── vmpool/root    →  /        éphémère — rollback vers @blank à chaque boot
     ├── vmpool/nix     →  /nix     persistant — le store Nix
     └── vmpool/persist →  /persist persistant — état explicite uniquement
 ```
+
+Le bloc `disko.devices` du module est **descriptif** : il ne génère que les
+montages de fichiers au runtime et présente une forme simplifiée à 2 partitions.
+Ce n'est pas lui qui partitionne l'image ; exécuter `disko` directement sur un
+disque omettrait `bios_grub` et ne démarrerait pas en BIOS/GRUB.
 
 Au démarrage sur EC2, `relics-aws` exécute `growpart` + `zpool online -e` pour
 étendre le pool ZFS à la taille totale du volume EBS.
