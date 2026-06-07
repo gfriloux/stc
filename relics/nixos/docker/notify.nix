@@ -6,6 +6,14 @@
 # Containers opt in by setting the label defined in stc.relics.docker.notify.watchLabel.
 # The relic then wires systemd OnFailure + a health-watch timer for each one.
 #
+# Recovery vs. give-up: a container that stays `unhealthy` is `docker kill`ed by
+# the health-watch every 30s and restarted (Restart=on-failure). With
+# StartLimitBurst=3 / StartLimitIntervalSec=300s, three kills inside ~90s trip
+# the limit and systemd stops restarting it — the container then stays DOWN.
+# This is deliberate (better than crash-looping forever), but the only signal is
+# the ntfy notification: a persistently-broken service, including the CrowdSec
+# IDS/IPS, can end up permanently stopped with nothing else flagging it.
+#
 # Secrets: point stc.relics.docker.notify.ntfy.topicFile at the file containing
 # the ntfy topic name (one line, no newline required).
 {

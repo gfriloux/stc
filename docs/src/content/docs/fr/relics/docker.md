@@ -197,6 +197,16 @@ Pour chaque conteneur avec le label de surveillance :
 - Si malsain, le conteneur est tué (Docker le redémarre selon sa politique de redémarrage)
 - En cas d'échec du service, `stc-notify-failure@<service>.service` envoie une notification ntfy
 
+:::caution[Un conteneur durablement malsain finit arrêté]
+L'unité surveillée utilise `Restart=on-failure` avec `StartLimitBurst=3` /
+`StartLimitIntervalSec=300s`. Un conteneur qui reste `unhealthy` est tué toutes
+les 30s ; trois kills en ~90s atteignent la limite et systemd cesse de le
+redémarrer — il reste alors **arrêté**. C'est délibéré (mieux qu'un crash-loop),
+mais le seul signal est la notification ntfy. Un service durablement cassé, y
+compris l'IDS/IPS CrowdSec, peut finir définitivement arrêté sans autre alerte —
+assure-toi que quelqu'un surveille réellement le topic ntfy.
+:::
+
 ### Opt-in basé sur les labels
 
 Pose le label sur tout conteneur que tu veux surveiller :

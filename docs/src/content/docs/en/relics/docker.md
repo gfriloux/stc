@@ -194,6 +194,16 @@ For each container with the watch label:
 - If unhealthy, the container is killed (Docker restarts it per its restart policy)
 - On service failure, `stc-notify-failure@<service>.service` sends an ntfy notification
 
+:::caution[A persistently-unhealthy container ends up stopped]
+The watched unit uses `Restart=on-failure` with `StartLimitBurst=3` /
+`StartLimitIntervalSec=300s`. A container that stays `unhealthy` is killed every
+30s; three kills inside ~90s trip the limit and systemd stops restarting it — it
+then stays **down**. This is deliberate (better than crash-looping), but the
+only signal is the ntfy notification. A persistently-broken service, including
+the CrowdSec IDS/IPS, can end up permanently stopped with nothing else flagging
+it — make sure someone actually watches the ntfy topic.
+:::
+
 ### Label-Based Opt-In
 
 Set the label on any container you want monitored:
