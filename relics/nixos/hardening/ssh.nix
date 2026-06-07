@@ -40,7 +40,10 @@ in {
         LoginGraceTime = 20;
         MaxSessions = 5;
 
-        # Disconnect idle sessions after 10 minutes (2 × 300s).
+        # Drop *unreachable* clients after 10 minutes (2 × 300s): if a client
+        # stops answering keepalive probes (dropped link, crashed laptop) the
+        # session is torn down. This does NOT disconnect merely idle sessions — a
+        # reachable client answers the probes automatically and stays connected.
         ClientAliveInterval = 300;
         ClientAliveCountMax = 2;
 
