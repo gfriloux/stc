@@ -116,8 +116,15 @@ in {
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "traefik:v3.7.1";
-      description = "Docker image to use for Traefik.";
+      default = "traefik:v3.7.1@sha256:6b9cbca6fac42ab0075f5437d8dc1685cfd188626d8d515839ea94f8b6271c42";
+      description = ''
+        Docker image to use for Traefik. Pinned by digest (the tag is kept for
+        readability; the digest is authoritative). The same reasoning as the
+        socket proxy applies: when socketProxy.enable = false this container
+        mounts the raw Docker socket, so a silently-swapped image is exactly as
+        dangerous here. Multi-arch index digest — resolve a new one with
+        `skopeo inspect --format '{{.Digest}}' docker://traefik:<tag>`.
+      '';
     };
 
     dataDir = lib.mkOption {
