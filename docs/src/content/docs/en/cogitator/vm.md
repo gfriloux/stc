@@ -19,6 +19,7 @@ developer VM.
 | `stc.cogitator.vm.enable` | bool | `false` | Enable the STC base VM profile |
 | `stc.cogitator.vm.username` | string | `"admin"` | Primary user account created on the VM |
 | `stc.cogitator.vm.authorizedKeys` | list of strings | `[]` | SSH authorized keys for the primary user |
+| `stc.cogitator.vm.linger` | bool | `true` | Keep the user's systemd instance/services running without an open session. Set `false` on hardened hosts. |
 | `stc.cogitator.vm.docker.enable` | bool | `false` | Enable Docker and add the primary user to the docker group (≈ root — opt-in) |
 | `stc.cogitator.vm.nix.gc.enable` | bool | `true` | Enable automatic Nix garbage collection |
 | `stc.cogitator.vm.nix.gc.dates` | string | `"weekly"` | When to run Nix GC (systemd calendar expression) |
@@ -36,7 +37,7 @@ When enabled:
   - `isNormalUser = true`
   - `extraGroups = [ "wheel" ]` (+ `"docker"` if `docker.enable = true`)
   - `shell = pkgs.fish`
-  - `linger = true`
+  - `linger = cfg.linger` (defaults to `true`)
   - SSH authorized keys from `authorizedKeys`
 - Enables `services.openssh`
 - If `docker.enable = true`: enables `virtualisation.docker` and installs `docker-compose`
