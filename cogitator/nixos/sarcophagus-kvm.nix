@@ -95,11 +95,26 @@ in {
       };
     };
 
-    # /boot is plain FAT32 (labelled ESP by make-single-disk-zfs-image.nix,
-    # but without the EFI partition type flag).
-    fileSystems."/boot" = lib.mkForce {
-      device = "/dev/disk/by-label/ESP";
-      fsType = "vfat";
+    # Filesystem declarations matching the ZFS datasets below.
+    # Declared explicitly — mirroring sarcophagus-aws — rather than relying solely
+    # on disko's generated mounts, so both sarcophagus variants stay symmetric.
+    # neededForBoot = true on / ensures the pool is imported before sysroot.mount.
+    # /boot is plain FAT32 (labelled ESP by make-single-disk-zfs-image.nix, but
+    # without the EFI partition type flag).
+    fileSystems = {
+      "/" = {
+        device = "${cfg.poolName}/root";
+        fsType = "zfs";
+        neededForBoot = true;
+      };
+      "/nix" = {
+        device = "${cfg.poolName}/nix";
+        fsType = "zfs";
+      };
+      "/boot" = lib.mkForce {
+        device = "/dev/disk/by-label/ESP";
+        fsType = "vfat";
+      };
     };
 
     # Descriptive disko block — NOT the image partitioner.
