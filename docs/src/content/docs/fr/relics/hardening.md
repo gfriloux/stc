@@ -17,7 +17,7 @@ Applique des paramètres sysctl qui réduisent la surface d'attaque du noyau :
 | Catégorie | Ce qu'elle fait |
 |-----------|-----------------|
 | Disposition mémoire | ASLR complet (`randomize_va_space = 2`), masquer les pointeurs noyau (`kptr_restrict = 2`), restreindre dmesg |
-| Capacités non-privilégiées | Bloquer eBPF et perf pour les utilisateurs non-privilégiés |
+| Capacités non-privilégiées | Bloquer eBPF et perf pour les utilisateurs non-privilégiés ; restreindre ptrace aux enfants directs (`yama.ptrace_scope = 1`) |
 | kexec / SysRq | Désactiver kexec (vecteur d'attaque de remplacement du noyau), désactiver SysRq |
 | Core dumps | Désactiver entièrement — les core dumps peuvent exposer des secrets et des clés privées |
 | Système de fichiers | Protéger les hardlinks, symlinks, FIFOs et fichiers réguliers contre les abus |

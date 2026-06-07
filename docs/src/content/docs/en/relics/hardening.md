@@ -17,7 +17,7 @@ Applies sysctl parameters that reduce the kernel attack surface:
 | Category | What it does |
 |----------|-------------|
 | Memory layout | Full ASLR (`randomize_va_space = 2`), hide kernel pointers (`kptr_restrict = 2`), restrict dmesg |
-| Unprivileged capabilities | Block eBPF and perf for unprivileged users |
+| Unprivileged capabilities | Block eBPF and perf for unprivileged users; restrict ptrace to direct children (`yama.ptrace_scope = 1`) |
 | kexec / SysRq | Disable kexec (kernel replacement attack vector), disable SysRq |
 | Core dumps | Disable entirely — core dumps can expose secrets and private keys |
 | Filesystem | Protect hardlinks, symlinks, FIFOs, and regular files from abuse |
