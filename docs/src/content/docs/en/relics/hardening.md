@@ -43,6 +43,12 @@ Sysctl parameters applied:
 | ICMP abuse | Ignores broadcast pings and bogus error responses |
 | SYN flood | Enables SYN cookies |
 
+**Options:**
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `stc.relics.hardening.network.strictReversePathFilter` | bool | `true` | Strict (`1`) reverse-path filtering. Set `false` for loose (`2`) on asymmetric-routing / multi-homed / WireGuard hosts where strict mode drops legitimate return traffic. |
+
 :::note[Firewall is your responsibility]
 This relic hardens the kernel network stack. Firewall rules (open ports, Docker
 networking, etc.) are not touched. This keeps the relic composable with Docker

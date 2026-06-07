@@ -44,6 +44,12 @@ Paramètres sysctl appliqués :
 | Abus ICMP | Ignore les broadcasts ping et les réponses d'erreur erronées |
 | Inondations SYN | Active les SYN cookies |
 
+**Options :**
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `stc.relics.hardening.network.strictReversePathFilter` | bool | `true` | Filtrage par chemin inverse strict (`1`). Mettre à `false` pour le mode loose (`2`) sur les hôtes à routage asymétrique / multi-homed / WireGuard où le mode strict bloque le trafic de retour légitime. |
+
 :::note[Le pare-feu est ta responsabilité]
 Cette relique durcit la pile réseau du noyau. Les règles de pare-feu (ports ouverts,
 réseau Docker, etc.) ne sont pas touchées. Cela permet à la relique d'être composable

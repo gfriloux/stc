@@ -11,13 +11,30 @@ in {
 
   options.stc.relics.hardening.network = {
     enable = lib.mkEnableOption "network sysctl hardening (spoofing, redirects, SYN flood)";
+
+    strictReversePathFilter = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = ''
+        Reverse-path filtering mode (rp_filter). true = strict (1), the safe
+        default for a single-homed host: packets arriving on an interface that
+        would not be used to reach the source are dropped. Set to false = loose
+        (2) for asymmetric routing, multi-homed hosts, or WireGuard/policy-routing
+        setups where strict mode breaks legitimate return paths.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
-    boot.kernel.sysctl = {
+    boot.kernel.sysctl = let
+      rpFilter =
+        if cfg.strictReversePathFilter
+        then 1
+        else 2;
+    in {
       # --- Spoofing / redirect protection ---
-      "net.ipv4.conf.all.rp_filter" = 1;
-      "net.ipv4.conf.default.rp_filter" = 1;
+      "net.ipv4.conf.all.rp_filter" = rpFilter;
+      "net.ipv4.conf.default.rp_filter" = rpFilter;
       "net.ipv4.conf.all.accept_redirects" = 0;
       "net.ipv4.conf.default.accept_redirects" = 0;
       "net.ipv4.conf.all.secure_redirects" = 0;
