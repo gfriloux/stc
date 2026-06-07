@@ -91,7 +91,10 @@ in {
     # to the "proc" group (SupplementaryGroups) too. Warn rather than guess.
     warnings =
       lib.optional
-      (config.services.xserver.enable or config.services.desktopManager.plasma6.enable or false)
+      # `||` not `or`: `or` is attribute-selection-with-default, and since
+      # services.xserver.enable always exists it would collapse to that single
+      # value — never firing for the plasma6 relic, which sets xserver.enable = false.
+      (config.services.xserver.enable || config.services.desktopManager.plasma6.enable)
       ''
         stc.relics.hardening.filesystem enables hidepid=2 on /proc and a desktop
         is also enabled. polkit, user D-Bus agents and some exporters may misbehave
