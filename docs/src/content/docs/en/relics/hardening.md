@@ -119,6 +119,14 @@ Configures OpenSSH with:
 - Key exchange: post-quantum hybrids first (mlkem768x25519-sha256,
   sntrup761x25519-sha512), then curve25519-sha256 and DH group 16
 
+:::caution[Requires OpenSSH ≥ 9.9]
+The `mlkem768x25519-sha256` key exchange needs OpenSSH ≥ 9.9. The relic asserts
+this at build time, so a consumer pinned (via `inputs.nixpkgs.follows`) to an
+older nixpkgs gets a clear build error instead of an sshd that silently refuses
+to start — which would lock you out. Upgrade nixpkgs, or override
+`services.openssh.settings.KexAlgorithms` to drop the post-quantum kex.
+:::
+
 ## Usage Example
 
 Individual relics:

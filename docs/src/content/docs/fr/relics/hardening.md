@@ -122,6 +122,15 @@ Configure OpenSSH avec :
 - Échange de clés : hybrides post-quantiques en tête (mlkem768x25519-sha256,
   sntrup761x25519-sha512), puis curve25519-sha256 et DH groupe 16
 
+:::caution[Nécessite OpenSSH ≥ 9.9]
+L'échange de clés `mlkem768x25519-sha256` requiert OpenSSH ≥ 9.9. La relique
+l'asserte au build, donc un consommateur épinglé (via `inputs.nixpkgs.follows`)
+sur un nixpkgs plus ancien obtient une erreur de build claire au lieu d'un sshd
+qui refuse silencieusement de démarrer — ce qui te verrouillerait dehors. Mets à
+jour nixpkgs, ou surcharge `services.openssh.settings.KexAlgorithms` pour retirer
+le kex post-quantique.
+:::
+
 ## Exemple d'utilisation
 
 Reliques individuelles :

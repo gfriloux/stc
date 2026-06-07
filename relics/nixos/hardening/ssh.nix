@@ -27,6 +27,17 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    # mlkem768x25519-sha256 (post-quantum hybrid kex, first in KexAlgorithms)
+    # requires OpenSSH ≥ 9.9. With inputs.nixpkgs.follows, a consumer pinned to an
+    # older nixpkgs would otherwise get an sshd that refuses to start on an unknown
+    # algorithm — a silent SSH lockout. Fail the build early with a clear message.
+    assertions = [
+      {
+        assertion = lib.versionAtLeast config.services.openssh.package.version "9.9";
+        message = "stc.relics.hardening.ssh: KexAlgorithms includes mlkem768x25519-sha256, which requires OpenSSH ≥ 9.9 (found ${config.services.openssh.package.version}). Upgrade nixpkgs, or override services.openssh.settings.KexAlgorithms to drop the post-quantum kex.";
+      }
+    ];
+
     services.openssh = {
       enable = true;
 
