@@ -17,7 +17,7 @@ Applies sysctl parameters that reduce the kernel attack surface:
 | Category | What it does |
 |----------|-------------|
 | Memory layout | Full ASLR (`randomize_va_space = 2`), hide kernel pointers (`kptr_restrict = 2`), restrict dmesg |
-| Unprivileged capabilities | Block eBPF and perf for unprivileged users |
+| Unprivileged capabilities | Block eBPF and perf for unprivileged users; restrict ptrace to direct children (`yama.ptrace_scope = 1`) |
 | kexec / SysRq | Disable kexec (kernel replacement attack vector), disable SysRq |
 | Core dumps | Disable entirely — core dumps can expose secrets and private keys |
 | Filesystem | Protect hardlinks, symlinks, FIFOs, and regular files from abuse |
@@ -42,6 +42,12 @@ Sysctl parameters applied:
 | Redirect rejection | Ignores ICMP redirects in all directions, disables sending redirects |
 | ICMP abuse | Ignores broadcast pings and bogus error responses |
 | SYN flood | Enables SYN cookies |
+
+**Options:**
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `stc.relics.hardening.network.strictReversePathFilter` | bool | `true` | Strict (`1`) reverse-path filtering. Set `false` for loose (`2`) on asymmetric-routing / multi-homed / WireGuard hosts where strict mode drops legitimate return traffic. |
 
 :::note[Firewall is your responsibility]
 This relic hardens the kernel network stack. Firewall rules (open ports, Docker
@@ -112,6 +118,14 @@ Configures OpenSSH with:
 - ETM MACs only: HMAC-SHA2-512-etm, HMAC-SHA2-256-etm
 - Key exchange: post-quantum hybrids first (mlkem768x25519-sha256,
   sntrup761x25519-sha512), then curve25519-sha256 and DH group 16
+
+:::caution[Requires OpenSSH ≥ 9.9]
+The `mlkem768x25519-sha256` key exchange needs OpenSSH ≥ 9.9. The relic asserts
+this at build time, so a consumer pinned (via `inputs.nixpkgs.follows`) to an
+older nixpkgs gets a clear build error instead of an sshd that silently refuses
+to start — which would lock you out. Upgrade nixpkgs, or override
+`services.openssh.settings.KexAlgorithms` to drop the post-quantum kex.
+:::
 
 ## Usage Example
 

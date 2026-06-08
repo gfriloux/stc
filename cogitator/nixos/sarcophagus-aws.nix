@@ -2,7 +2,11 @@
 #
 # Builds a NixOS raw disk image for import as an AWS AMI, with ZFS + impermanence.
 # Composes: ZFS, networking, impermanence, AWS platform, and the full hardening suite.
-# Disk layout: GPT on /dev/vda — 1G EFI + ZFS pool (root/nix/persist).
+#
+# The image is built by make-single-disk-zfs-image.nix, which produces a 3-partition
+# BIOS/GRUB layout: bios_grub(1) + ESP(2, FAT32, label ESP) + ZFS(3). Boot is
+# BIOS/GRUB, not EFI — the ESP partition carries no EFI role. This is why
+# relics-aws defaults ebsPartition = 3.
 #
 # At runtime on EC2, relics-aws expands the ZFS pool to fill the EBS volume,
 # configures NVMe/ENA drivers, NTP, and serial console.
@@ -120,9 +124,15 @@ in {
       };
     };
 
-    # Disk layout: GPT on /dev/vda
-    #   Partition 1 — 1G FAT32 /boot (label: ESP)
-    #   Partition 2 — remainder ZFS pool
+    # Descriptive disko block — NOT the image partitioner.
+    #
+    # The bootable image is built by make-single-disk-zfs-image.nix (see
+    # system.build.awsImage below), which lays down a 3-partition BIOS layout:
+    # bios_grub(1) + ESP(2) + ZFS(3). This disko.devices declaration exists only
+    # to generate the runtime fileSystems/dataset mounts; nothing here mounts by
+    # partition number (ESP is by-label, datasets by pool name), so the simplified
+    # 2-partition shape below is harmless at runtime. Do NOT run `disko` against a
+    # real disk with this: it omits bios_grub and would not boot under BIOS/GRUB.
     disko.devices = {
       disk.main = {
         type = "disk";

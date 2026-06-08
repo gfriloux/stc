@@ -19,7 +19,7 @@ supplied at runtime via a separate file.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `stc.relics.docker.traefik.enable` | bool | `false` | Enable Traefik reverse proxy container |
-| `stc.relics.docker.traefik.image` | string | `"traefik:v3.7.1"` | Docker image |
+| `stc.relics.docker.traefik.image` | string | `"traefik:v3.7.1@sha256:6b9c…"` | Docker image, **pinned by digest** (mounts the raw socket when the proxy is off) |
 | `stc.relics.docker.traefik.dataDir` | string | `"/srv/docker/traefik"` | Base directory for logs, acme.json, conf |
 | `stc.relics.docker.traefik.acme.email` | string | — | Email for Let's Encrypt ACME registration |
 | `stc.relics.docker.traefik.enableDashboard` | bool | `false` | Enable the Traefik API dashboard. The `traefik` entrypoint port (`127.0.0.1:8080`) is not published, so this alone does not expose it — publish/forward the port or add a route to reach it. |
@@ -129,7 +129,7 @@ network; when CrowdSec runs without Traefik, it creates the network itself.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `stc.relics.docker.crowdsec.enable` | bool | `false` | Enable CrowdSec IDS/IPS container |
-| `stc.relics.docker.crowdsec.image` | string | `"crowdsecurity/crowdsec:v1.7.8"` | Docker image |
+| `stc.relics.docker.crowdsec.image` | string | `"crowdsecurity/crowdsec:v1.7.8@sha256:2f52…"` | Docker image, **pinned by digest** |
 | `stc.relics.docker.crowdsec.dataDir` | string | — | Base directory for CrowdSec data and config |
 | `stc.relics.docker.crowdsec.envFile` | `null \| string` | `null` | Path to environment file with secrets |
 
@@ -193,6 +193,16 @@ For each container with the watch label:
 - It checks `docker inspect` for `unhealthy` health status
 - If unhealthy, the container is killed (Docker restarts it per its restart policy)
 - On service failure, `stc-notify-failure@<service>.service` sends an ntfy notification
+
+:::caution[A persistently-unhealthy container ends up stopped]
+The watched unit uses `Restart=on-failure` with `StartLimitBurst=3` /
+`StartLimitIntervalSec=300s`. A container that stays `unhealthy` is killed every
+30s; three kills inside ~90s trip the limit and systemd stops restarting it — it
+then stays **down**. This is deliberate (better than crash-looping), but the
+only signal is the ntfy notification. A persistently-broken service, including
+the CrowdSec IDS/IPS, can end up permanently stopped with nothing else flagging
+it — make sure someone actually watches the ntfy topic.
+:::
 
 ### Label-Based Opt-In
 

@@ -19,7 +19,7 @@ configuration statique à partir des options Nix. La configuration dynamique
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
 | `stc.relics.docker.traefik.enable` | bool | `false` | Active le conteneur reverse proxy Traefik |
-| `stc.relics.docker.traefik.image` | string | `"traefik:v3.7.1"` | Image Docker |
+| `stc.relics.docker.traefik.image` | string | `"traefik:v3.7.1@sha256:6b9c…"` | Image Docker, **épinglée par digest** (monte la socket brute quand le proxy est désactivé) |
 | `stc.relics.docker.traefik.dataDir` | string | `"/srv/docker/traefik"` | Répertoire de base pour les logs, acme.json, conf |
 | `stc.relics.docker.traefik.acme.email` | string | — | Email pour l'enregistrement ACME Let's Encrypt |
 | `stc.relics.docker.traefik.enableDashboard` | bool | `false` | Active le dashboard API Traefik. Le port de l'entrypoint `traefik` (`127.0.0.1:8080`) n'est pas publié, donc l'activer seul ne l'expose pas — publie/forward le port ou ajoute une route pour y accéder. |
@@ -132,7 +132,7 @@ possède ce réseau ; quand CrowdSec tourne sans Traefik, il le crée lui-même.
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
 | `stc.relics.docker.crowdsec.enable` | bool | `false` | Active le conteneur IDS/IPS CrowdSec |
-| `stc.relics.docker.crowdsec.image` | string | `"crowdsecurity/crowdsec:v1.7.8"` | Image Docker |
+| `stc.relics.docker.crowdsec.image` | string | `"crowdsecurity/crowdsec:v1.7.8@sha256:2f52…"` | Image Docker, **épinglée par digest** |
 | `stc.relics.docker.crowdsec.dataDir` | string | — | Répertoire de base pour les données et la config CrowdSec |
 | `stc.relics.docker.crowdsec.envFile` | `null \| string` | `null` | Chemin vers le fichier d'environnement avec les secrets |
 
@@ -196,6 +196,16 @@ Pour chaque conteneur avec le label de surveillance :
 - Il vérifie `docker inspect` pour le statut de santé `unhealthy`
 - Si malsain, le conteneur est tué (Docker le redémarre selon sa politique de redémarrage)
 - En cas d'échec du service, `stc-notify-failure@<service>.service` envoie une notification ntfy
+
+:::caution[Un conteneur durablement malsain finit arrêté]
+L'unité surveillée utilise `Restart=on-failure` avec `StartLimitBurst=3` /
+`StartLimitIntervalSec=300s`. Un conteneur qui reste `unhealthy` est tué toutes
+les 30s ; trois kills en ~90s atteignent la limite et systemd cesse de le
+redémarrer — il reste alors **arrêté**. C'est délibéré (mieux qu'un crash-loop),
+mais le seul signal est la notification ntfy. Un service durablement cassé, y
+compris l'IDS/IPS CrowdSec, peut finir définitivement arrêté sans autre alerte —
+assure-toi que quelqu'un surveille réellement le topic ntfy.
+:::
 
 ### Opt-in basé sur les labels
 

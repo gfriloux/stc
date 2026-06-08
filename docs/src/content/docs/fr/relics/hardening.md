@@ -17,7 +17,7 @@ Applique des paramètres sysctl qui réduisent la surface d'attaque du noyau :
 | Catégorie | Ce qu'elle fait |
 |-----------|-----------------|
 | Disposition mémoire | ASLR complet (`randomize_va_space = 2`), masquer les pointeurs noyau (`kptr_restrict = 2`), restreindre dmesg |
-| Capacités non-privilégiées | Bloquer eBPF et perf pour les utilisateurs non-privilégiés |
+| Capacités non-privilégiées | Bloquer eBPF et perf pour les utilisateurs non-privilégiés ; restreindre ptrace aux enfants directs (`yama.ptrace_scope = 1`) |
 | kexec / SysRq | Désactiver kexec (vecteur d'attaque de remplacement du noyau), désactiver SysRq |
 | Core dumps | Désactiver entièrement — les core dumps peuvent exposer des secrets et des clés privées |
 | Système de fichiers | Protéger les hardlinks, symlinks, FIFOs et fichiers réguliers contre les abus |
@@ -43,6 +43,12 @@ Paramètres sysctl appliqués :
 | Rejet des redirections | Ignore les redirections ICMP dans toutes les directions, désactive l'envoi de redirections |
 | Abus ICMP | Ignore les broadcasts ping et les réponses d'erreur erronées |
 | Inondations SYN | Active les SYN cookies |
+
+**Options :**
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `stc.relics.hardening.network.strictReversePathFilter` | bool | `true` | Filtrage par chemin inverse strict (`1`). Mettre à `false` pour le mode loose (`2`) sur les hôtes à routage asymétrique / multi-homed / WireGuard où le mode strict bloque le trafic de retour légitime. |
 
 :::note[Le pare-feu est ta responsabilité]
 Cette relique durcit la pile réseau du noyau. Les règles de pare-feu (ports ouverts,
@@ -115,6 +121,15 @@ Configure OpenSSH avec :
 - MACs ETM uniquement : HMAC-SHA2-512-etm, HMAC-SHA2-256-etm
 - Échange de clés : hybrides post-quantiques en tête (mlkem768x25519-sha256,
   sntrup761x25519-sha512), puis curve25519-sha256 et DH groupe 16
+
+:::caution[Nécessite OpenSSH ≥ 9.9]
+L'échange de clés `mlkem768x25519-sha256` requiert OpenSSH ≥ 9.9. La relique
+l'asserte au build, donc un consommateur épinglé (via `inputs.nixpkgs.follows`)
+sur un nixpkgs plus ancien obtient une erreur de build claire au lieu d'un sshd
+qui refuse silencieusement de démarrer — ce qui te verrouillerait dehors. Mets à
+jour nixpkgs, ou surcharge `services.openssh.settings.KexAlgorithms` pour retirer
+le kex post-quantique.
+:::
 
 ## Exemple d'utilisation
 

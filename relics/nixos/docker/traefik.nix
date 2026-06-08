@@ -116,8 +116,15 @@ in {
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "traefik:v3.7.1";
-      description = "Docker image to use for Traefik.";
+      default = "traefik:v3.7.1@sha256:6b9cbca6fac42ab0075f5437d8dc1685cfd188626d8d515839ea94f8b6271c42";
+      description = ''
+        Docker image to use for Traefik. Pinned by digest (the tag is kept for
+        readability; the digest is authoritative). The same reasoning as the
+        socket proxy applies: when socketProxy.enable = false this container
+        mounts the raw Docker socket, so a silently-swapped image is exactly as
+        dangerous here. Multi-arch index digest — resolve a new one with
+        `skopeo inspect --format '{{.Digest}}' docker://traefik:<tag>`.
+      '';
     };
 
     dataDir = lib.mkOption {
@@ -139,9 +146,11 @@ in {
         surface minimal on production servers.
 
         Note: the dashboard listens on the in-container `traefik` entrypoint
-        (127.0.0.1:8080) but that port is not published, so enabling this alone
-        does not expose it. To actually reach it, publish/forward the port
-        yourself (e.g. an SSH tunnel) or add a dynamic-config route.
+        (127.0.0.1:8080). That is the container's own loopback, and the port is
+        not published, so enabling this alone does not expose it — and an SSH
+        tunnel to the host cannot reach it either, since the host loopback is not
+        the container's. To reach it, publish the port or add a dynamic-config
+        route to the dashboard service.
       '';
     };
 

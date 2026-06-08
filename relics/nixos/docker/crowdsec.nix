@@ -36,8 +36,13 @@ in {
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "crowdsecurity/crowdsec:v1.7.8";
-      description = "Docker image to use for CrowdSec.";
+      default = "crowdsecurity/crowdsec:v1.7.8@sha256:2f527c9bb8b367120eb08b82890aa912ce96bfa1ada93dda0721700e4b4e0dde";
+      description = ''
+        Docker image to use for CrowdSec. Pinned by digest (the tag is kept for
+        readability; the digest is authoritative) so the IDS/IPS image cannot be
+        silently swapped under a mutable tag. Multi-arch index digest — resolve a
+        new one with `skopeo inspect --format '{{.Digest}}' docker://crowdsecurity/crowdsec:<tag>`.
+      '';
     };
 
     dataDir = lib.mkOption {

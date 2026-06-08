@@ -8,8 +8,10 @@
 #   2. Add your SSH public key to stc.cogitator.vm.authorizedKeys.
 #   3. nix build .#nixosConfigurations.local-vm.config.system.build.qcow2
 #
-# Boot with QEMU:
-#   qemu-system-x86_64 -enable-kvm -m 4096 -drive file=result,format=qcow2
+# Boot with QEMU (see the Justfile `run` recipe for the full invocation):
+#   qemu-system-x86_64 -enable-kvm -m 4096 \
+#     -drive file=./result/nixos.root.qcow2,if=virtio,format=qcow2
+# (the build output `result` is a directory; the image is result/nixos.root.qcow2)
 {
   description = "Local VM schematic — ZFS + impermanence + hardening";
 

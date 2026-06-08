@@ -19,7 +19,7 @@ the disk layout and image builder — no external `disko` import required.
 | `relics-networking` | DHCP, Quad9 DNS |
 | `relics-impermanence` | Root rollback to `@blank` on every boot |
 | `cogitator-hardening` | Kernel + network + filesystem + SSH hardening |
-| Disko layout | GPT on `/dev/vda` — 1 GiB FAT32 `/boot` + ZFS pool |
+| Disk layout | GPT on `/dev/vda` — BIOS/GRUB: bios_grub + ESP(`/boot`) + ZFS pool (3 partitions) |
 | GRUB override | BIOS/GRUB required by `make-single-disk-zfs-image.nix` |
 | `system.build.qcow2` | qcow2 image builder |
 
@@ -91,14 +91,23 @@ unique hostId. Generate one: `head -c4 /dev/urandom | od -A none -t x4 | tr -d '
 
 ## Disk Layout
 
+The bootable image is produced by `make-single-disk-zfs-image.nix` as a
+3-partition **BIOS/GRUB** layout:
+
 ```
-/dev/vda (GPT)
-├── partition 1 — 1 GiB  FAT32  /boot   (label: ESP)
-└── partition 2 — 100%   ZFS pool (vmpool by default)
+/dev/vda (GPT) — built by make-single-disk-zfs-image.nix
+├── partition 1 — bios_grub (BIOS boot partition, no filesystem)
+├── partition 2 — 1 GiB  FAT32  /boot   (label: ESP, no EFI role)
+└── partition 3 — 100%   ZFS pool (vmpool by default)
     ├── vmpool/root    →  /        ephemeral — rolled back to @blank each boot
     ├── vmpool/nix     →  /nix     persistent — the Nix store
     └── vmpool/persist →  /persist persistent — explicit state only
 ```
+
+The module's `disko.devices` block is **descriptive** — it generates the runtime
+filesystem mounts only and shows a simplified 2-partition shape. It is not the
+image partitioner; running `disko` directly against a disk would omit `bios_grub`
+and fail to boot under BIOS/GRUB.
 
 ## See Also
 

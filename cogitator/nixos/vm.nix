@@ -28,6 +28,19 @@ in {
       description = "SSH authorized keys for the primary user.";
     };
 
+    linger = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = ''
+        Enable systemd lingering for the primary user. Lingering keeps the user's
+        systemd instance (and any enabled user services) running without an open
+        login session — useful for self-hosted user-level daemons on a headless VM.
+
+        Default true preserves historical behaviour. Set to false on a hardened
+        host where user services should only run while the user is logged in.
+      '';
+    };
+
     docker = {
       enable = lib.mkOption {
         type = lib.types.bool;
@@ -83,7 +96,7 @@ in {
       isNormalUser = true;
       extraGroups = ["wheel"] ++ lib.optional cfg.docker.enable "docker";
       shell = pkgs.fish;
-      linger = true;
+      inherit (cfg) linger;
       openssh.authorizedKeys.keys = cfg.authorizedKeys;
     };
 

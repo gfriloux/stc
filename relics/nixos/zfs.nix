@@ -126,10 +126,26 @@ in {
     };
 
     # Disable auto-snapshot on the pool root (ephemeral datasets) and enable
-    # it only on /persist. Runs at every activation but is idempotent.
-    system.activationScripts.zfsAutoSnapshot = lib.mkIf cfg.autoSnapshot.enable ''
-      ${pkgs.zfs}/bin/zfs set com.sun:auto-snapshot=false ${cfg.autoSnapshot.poolName} || true
-      ${pkgs.zfs}/bin/zfs set com.sun:auto-snapshot=true ${cfg.autoSnapshot.poolName}/persist || true
-    '';
+    # it only on /persist. Runs at every activation but is idempotent: `zfs set`
+    # to the same value is a no-op that exits 0, so re-running on later boots is
+    # harmless. We guard on dataset existence rather than masking every error with
+    # `|| true` — that would also swallow a genuinely broken pool (the pattern PR
+    # round 2 removed elsewhere). A missing dataset is skipped with a warning;
+    # any other `zfs set` failure on an existing dataset aborts activation loudly.
+    system.activationScripts.zfsAutoSnapshot = lib.mkIf cfg.autoSnapshot.enable (
+      let
+        zfs = "${pkgs.zfs}/bin/zfs";
+        setSnapshot = ds: val: ''
+          if ${zfs} list -H -o name ${ds} > /dev/null 2>&1; then
+            ${zfs} set com.sun:auto-snapshot=${val} ${ds}
+          else
+            echo "zfsAutoSnapshot: dataset ${ds} not found, skipping" >&2
+          fi
+        '';
+      in ''
+        ${setSnapshot cfg.autoSnapshot.poolName "false"}
+        ${setSnapshot "${cfg.autoSnapshot.poolName}/persist" "true"}
+      ''
+    );
   };
 }

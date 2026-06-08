@@ -28,6 +28,11 @@ in {
       # --- Unprivileged capabilities ---
       "kernel.perf_event_paranoid" = 3; # Block perf for unprivileged users
       "kernel.unprivileged_bpf_disabled" = 1; # Block eBPF for unprivileged users
+      # Restrict ptrace to direct children: a compromised process can no longer
+      # attach to and read other processes of the same user (credential theft).
+      # Pairs with perf_event_paranoid/bpf above. Note: a non-child gdb attach and
+      # some debuggers/crash handlers need `sudo` or YAMA scope 0 to work.
+      "kernel.yama.ptrace_scope" = 1;
 
       # --- kexec and SysRq ---
       # kexec allows replacing the running kernel — a significant attack vector.
