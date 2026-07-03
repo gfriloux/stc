@@ -29,7 +29,7 @@
       ];
 
       perSystem = {system, ...}: let
-        inherit (stc.inputs.nix-checks.lib.${system}) checks;
+        checks = stc.lib.puritySeals.${system};
       in {
         checks = {
           nix = checks.nix ./.;

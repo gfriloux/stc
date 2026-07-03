@@ -19,7 +19,7 @@ The library is organised into four layers:
 |-------|------|---------|
 | **Relics** | `relics/` | Atomic NixOS + Home Manager modules |
 | **Cogitators** | `cogitator/` | Curated profiles — composed from relics |
-| **Forge** | `forge/` | Disk layouts, image builders, devShell templates |
+| **Forge** | `forge/` | Disk layouts, image builders, devShell templates, CI purity seals |
 | **Rites** | `rites/` | Shared lib helpers |
 
 ---

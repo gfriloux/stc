@@ -16,6 +16,7 @@ en cours d'exécution — ce sont des outils pour construire et opérer.
 | Shells | Environnements `nix develop` | `stc.devShells.${system}.<nom>` |
 | Layouts | Définitions de partitions Disko | `stc.lib.layouts.<nom> { ... }` |
 | Templates | Starters `nix flake init` | `nix flake init -t github:gfriloux/stc#<nom>` |
+| Purity Seals | Constructeurs de checks CI | `stc.lib.puritySeals.${system}.<seal>` |
 
 ## Shells
 
@@ -57,3 +58,20 @@ Cinq templates de projets initialisent de nouveaux dépôts avec un dev shell et
 | `zensical` | `nix flake init -t github:gfriloux/stc#zensical` |
 
 Documentation complète : [Forge — Templates](/stc/fr/forge/templates/)
+
+## Purity Seals
+
+Six constructeurs de checks CI. Un seal qui passe scelle un arbre source comme
+inspecté et exempt d'hérésie — pas de Nix mort, pas d'antipatterns, pas de secrets
+fuités, formatage propre.
+
+| Seal | Ce qu'il exécute |
+|------|------------------|
+| `nix` | deadnix + statix + alejandra |
+| `gitleaks` | scan de secrets gitleaks |
+| `terraform` | terraform fmt + tflint + tfsec |
+| `ansible` | ansible-lint (profil production) |
+| `shell` | shellcheck + shfmt |
+| `markdown` | rumdl |
+
+Documentation complète : [Forge — Purity Seals](/stc/fr/forge/purity-seals/)

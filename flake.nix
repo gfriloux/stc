@@ -69,11 +69,6 @@
       url = "github:gfriloux/ansible-recap";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    nix-checks = {
-      url = "github:gfriloux/nix-checks";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs = inputs @ {flake-parts, ...}:
