@@ -98,8 +98,8 @@ nix flake init -t github:gfriloux/stc#zensical
 nix develop
 ```
 
-:::tip[CI checks via stc.inputs.nix-checks]
-The ansible and terraform templates wire up `stc.inputs.nix-checks.lib.${system}.checks`
-for their CI check definitions. You can add the same checks to any flake that uses STC
-as an input.
+:::tip[CI checks via Purity Seals]
+Every template wires up its CI checks through `stc.lib.puritySeals.${system}` — STC's
+own public API, no longer a private input. You can add the same seals to any flake that
+uses STC as an input. See [Purity Seals](/stc/en/forge/purity-seals/).
 :::

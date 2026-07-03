@@ -16,6 +16,7 @@ partition layouts, and project templates. Nothing here touches your running syst
 | Shells | `nix develop` environments | `stc.devShells.${system}.<name>` |
 | Layouts | Disko partition definitions | `stc.lib.layouts.<name> { ... }` |
 | Templates | `nix flake init` starters | `nix flake init -t github:gfriloux/stc#<name>` |
+| Purity Seals | CI check builders | `stc.lib.puritySeals.${system}.<seal>` |
 
 ## Shells
 
@@ -57,3 +58,19 @@ Five project templates bootstrap new repositories with a dev shell and CI checks
 | `zensical` | `nix flake init -t github:gfriloux/stc#zensical` |
 
 Full documentation: [Forge — Templates](/stc/en/forge/templates/)
+
+## Purity Seals
+
+Six CI check builders. A passing seal stamps a source tree as inspected and free
+of heresy — no dead Nix, no antipatterns, no leaked secrets, clean formatting.
+
+| Seal | What it runs |
+|------|--------------|
+| `nix` | deadnix + statix + alejandra |
+| `gitleaks` | gitleaks secret scan |
+| `terraform` | terraform fmt + tflint + tfsec |
+| `ansible` | ansible-lint (production profile) |
+| `shell` | shellcheck + shfmt |
+| `markdown` | rumdl |
+
+Full documentation: [Forge — Purity Seals](/stc/en/forge/purity-seals/)
