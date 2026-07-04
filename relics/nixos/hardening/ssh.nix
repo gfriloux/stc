@@ -1,6 +1,9 @@
 # Relic: SSH Hardening
 # OpenSSH with strong cryptography and minimal attack surface.
 #
+# Scope: ANSSI-BP-028 does NOT cover sshd configuration. SSH hardening belongs to
+# the separate ANSSI guide "Recommandations pour un usage sécurisé d'(Open)SSH".
+#
 # Password authentication is disabled. Keys only.
 # The Omnissiah does not accept weak authentication.
 # If you lose your key, that's between you and the Machine God.
