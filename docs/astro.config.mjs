@@ -77,6 +77,12 @@ export default defineConfig({
           collapsed: true,
           autogenerate: { directory: 'schematics' },
         },
+        {
+          label: 'Provings',
+          translations: { fr: 'Épreuves' },
+          collapsed: true,
+          autogenerate: { directory: 'provings' },
+        },
       ],
       customCss: ['./src/styles/stc.css'],
     }),

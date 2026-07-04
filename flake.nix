@@ -85,6 +85,7 @@
         ./cogitator
         ./forge
         ./rites
+        ./provings
       ];
 
       perSystem = {pkgs, ...}: {

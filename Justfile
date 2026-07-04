@@ -41,6 +41,15 @@ show:
 ci: fmt-check lint check docs-parity
 
 
+# ── Provings ──────────────────────────────────────────────────────────────────
+
+# Run the provings — internal nixosTests that boot a VM per cogitator and assert
+# it behaves as claimed. Heavy and manual: deliberately NOT part of `just ci`.
+# Exposed via legacyPackages, which `nix flake check` skips. Linux only.
+test:
+    nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-file
+
+
 # ── Documentation ─────────────────────────────────────────────────────────────
 
 # Install doc dependencies (idempotent — safe to run repeatedly)
