@@ -83,6 +83,12 @@ export default defineConfig({
           collapsed: true,
           autogenerate: { directory: 'provings' },
         },
+        {
+          label: 'Reference',
+          translations: { fr: 'Référence' },
+          collapsed: true,
+          autogenerate: { directory: 'reference' },
+        },
       ],
       customCss: ['./src/styles/stc.css'],
     }),
