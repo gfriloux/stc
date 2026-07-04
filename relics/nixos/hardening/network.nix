@@ -32,7 +32,7 @@ in {
         then 1
         else 2;
     in {
-      # --- Spoofing / redirect protection ---
+      # --- Spoofing / redirect protection (ANSSI-BP-028 R12) ---
       "net.ipv4.conf.all.rp_filter" = rpFilter;
       "net.ipv4.conf.default.rp_filter" = rpFilter;
       "net.ipv4.conf.all.accept_redirects" = 0;
@@ -44,11 +44,11 @@ in {
       "net.ipv6.conf.all.accept_redirects" = 0;
       "net.ipv6.conf.default.accept_redirects" = 0;
 
-      # --- ICMP abuse prevention ---
+      # --- ICMP abuse prevention (ANSSI-BP-028 R12; echo_ignore_broadcasts is good practice beyond R12) ---
       "net.ipv4.icmp_echo_ignore_broadcasts" = 1;
       "net.ipv4.icmp_ignore_bogus_error_responses" = 1;
 
-      # --- SYN flood mitigation ---
+      # --- SYN flood mitigation (ANSSI-BP-028 R12) ---
       "net.ipv4.tcp_syncookies" = 1;
     };
   };

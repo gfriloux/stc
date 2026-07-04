@@ -51,6 +51,7 @@ in {
       # security mount options are the only source of truth for this mount.
       # When gaming = true, noexec is omitted: Wine/Proton extract and execute
       # binaries under /tmp during game launches.
+      # ANSSI-BP-028 R28 — /tmp: nosuid,nodev,noexec
       "/tmp" = lib.mkForce {
         device = "tmpfs";
         fsType = "tmpfs";
@@ -61,6 +62,7 @@ in {
 
       # hidepid=2 hides other users' processes. gid=proc is required so that
       # systemd-logind and other system services can still inspect all PIDs.
+      # ANSSI-BP-028 R28 — /proc: hidepid=2
       "/proc" = {
         device = "proc";
         fsType = "proc";
@@ -70,6 +72,7 @@ in {
       # noexec and size cap on /dev/shm.
       # When gaming = true, noexec is omitted: DXVK and VKD3D-Proton map
       # executable code into shared memory. Also raise shmSize for heavy workloads.
+      # ANSSI-BP-028 R28 spirit — /dev/shm is not in the R28 table but shares its rationale.
       "/dev/shm" = {
         device = "tmpfs";
         fsType = "tmpfs";

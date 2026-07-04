@@ -20,30 +20,32 @@ in {
 
   config = lib.mkIf cfg.enable {
     boot.kernel.sysctl = {
-      # --- Memory layout ---
+      # --- Memory layout (ANSSI-BP-028 R9) ---
       "kernel.randomize_va_space" = 2; # Full ASLR
       "kernel.kptr_restrict" = 2; # Hide kernel pointers from all users
       "kernel.dmesg_restrict" = 1; # Restrict dmesg to root
 
-      # --- Unprivileged capabilities ---
+      # --- Unprivileged capabilities (ANSSI-BP-028 R9) ---
       "kernel.perf_event_paranoid" = 3; # Block perf for unprivileged users
       "kernel.unprivileged_bpf_disabled" = 1; # Block eBPF for unprivileged users
       # Restrict ptrace to direct children: a compromised process can no longer
       # attach to and read other processes of the same user (credential theft).
       # Pairs with perf_event_paranoid/bpf above. Note: a non-child gdb attach and
       # some debuggers/crash handlers need `sudo` or YAMA scope 0 to work.
-      "kernel.yama.ptrace_scope" = 1;
+      "kernel.yama.ptrace_scope" = 1; # ANSSI-BP-028 R11 (Yama LSM)
 
       # --- kexec and SysRq ---
       # kexec allows replacing the running kernel — a significant attack vector.
+      # ANSSI-BP-028 disables kexec at compile time (CONFIG_KEXEC unset); we take
+      # the runtime equivalent, which suits a vanilla nixpkgs kernel.
       "kernel.kexec_load_disabled" = 1;
-      "kernel.sysrq" = 0;
+      "kernel.sysrq" = 0; # ANSSI-BP-028 R9
 
-      # --- Core dumps ---
+      # --- Core dumps (ANSSI-BP-028 R14) ---
       # Core dumps can expose secrets and private keys. Disable entirely.
       "fs.suid_dumpable" = 0;
 
-      # --- Filesystem hardening ---
+      # --- Filesystem hardening (ANSSI-BP-028 R14) ---
       "fs.protected_hardlinks" = 1;
       "fs.protected_symlinks" = 1;
       "fs.protected_fifos" = 2;
