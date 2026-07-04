@@ -98,6 +98,9 @@ in {
     catppuccin = {
       flavor = "frappe";
       enable = true;
+      # Match the current implicit default explicitly: silences catppuccin/nix's
+      # deprecation warning ahead of autoEnable becoming the enrolment toggle.
+      autoEnable = true;
     };
   };
 }
