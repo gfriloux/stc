@@ -69,7 +69,7 @@
     pkgs.runCommand "check-markdown" {} ''
       cd ${path}
       echo Running check markdown
-      ${pkgs.rumdl}/bin/rumdl check ${args} --exclude ".venv" .
+      ${pkgs.rumdl}/bin/rumdl check ${args} .
       mkdir "$out"
     '';
 in {
