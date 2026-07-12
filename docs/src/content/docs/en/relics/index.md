@@ -66,7 +66,7 @@ modules = [
 | `relics-docker-traefik` | `stc.relics.docker.traefik.enable` | Traefik v3 reverse proxy container (Docker) |
 | `relics-docker-socket-proxy` | `stc.relics.docker.socketProxy.enable` | Filtering proxy in front of the Docker socket |
 | `relics-docker-crowdsec` | `stc.relics.docker.crowdsec.enable` | CrowdSec IDS/IPS container |
-| `relics-docker-notify` | `stc.relics.docker.notify.enable` | Container failure notifications via ntfy |
+| `relics-docker-notify` | `stc.relics.docker.notify.enable` | Container failure notifications (transport-agnostic) |
 
 ## Home Manager Relics
 

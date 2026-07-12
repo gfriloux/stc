@@ -1,13 +1,19 @@
 # Cogitator: docker-server
 #
-# Full Docker reverse-proxy stack: Traefik + CrowdSec WAF + failure notifications.
-# Enabling this is equivalent to enabling stc.relics.docker.{traefik,crowdsec,notify}
-# individually — use those directly if you need finer control.
+# Full Docker reverse-proxy stack: Traefik + CrowdSec WAF, with optional failure
+# notifications. Enabling this is equivalent to enabling
+# stc.relics.docker.{traefik,socketProxy,crowdsec} individually — use those
+# directly if you need finer control.
 #
 # You still need to supply the machine-specific options:
+#   stc.relics.docker.traefik.image = "traefik:v3.7.6"; # renovate
 #   stc.relics.docker.traefik.acme.email = "you@example.com";
+#   stc.relics.docker.crowdsec.image = "crowdsecurity/crowdsec:v1.7.8"; # renovate
 #   stc.relics.docker.crowdsec.dataDir = "/srv/docker/crowdsec";
-#   stc.relics.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
+#
+# Notifications are opt-in (off by default). To enable them, supply a transport:
+#   stc.cogitator.docker-server.notify.enable = true;
+#   stc.relics.docker.notify.notifyCommand = "…";  # reads STC_NOTIFY_SERVICE / _HOSTNAME
 {
   config,
   lib,
@@ -23,7 +29,17 @@ in {
   ];
 
   options.stc.cogitator.docker-server = {
-    enable = lib.mkEnableOption "STC Docker server stack (Traefik + CrowdSec + ntfy notifications)";
+    enable = lib.mkEnableOption "STC Docker server stack (Traefik + CrowdSec)";
+
+    notify.enable =
+      lib.mkEnableOption "container failure notifications for the stack"
+      // {
+        description = ''
+          Enable the docker-notify relic for this stack. Off by default so the
+          stack boots without forcing a notification transport; when enabled you
+          must set stc.relics.docker.notify.notifyCommand.
+        '';
+      };
   };
 
   config = lib.mkIf cfg.enable {
@@ -33,7 +49,7 @@ in {
       # socket-proxy instead of bind-mounting the raw socket.
       socketProxy.enable = true;
       crowdsec.enable = true;
-      notify.enable = true;
+      notify.enable = cfg.notify.enable;
     };
 
     virtualisation = {

@@ -29,7 +29,7 @@ sous-jacentes. Le profil t'évite simplement d'activer chacune individuellement.
 |---------------|---------------------|------------------|
 | `cogitator-hardening` | `stc.cogitator.hardening.enable` | Durcissement noyau + réseau + système de fichiers + SSH |
 | `cogitator-vm` | `stc.cogitator.vm.enable` | Shell fish, SSH, utilisateur principal, Docker optionnel, GC Nix |
-| `cogitator-docker-server` | `stc.cogitator.docker-server.enable` | Traefik + CrowdSec + ntfy + démon Docker |
+| `cogitator-docker-server` | `stc.cogitator.docker-server.enable` | Traefik + CrowdSec + notifications optionnelles + démon Docker |
 | `cogitator-plasma` | `stc.cogitator.plasma.enable` | Bureau KDE Plasma 6 Wayland + audio Pipewire |
 | `cogitator-gaming` | `stc.cogitator.gaming.enable` | GPU AMD + Pipewire + Steam |
 | `cogitator-sarcophagus-kvm` | `stc.cogitator.sarcophagus-kvm.enable` | Image disque QEMU/KVM : ZFS + impermanence + durcissement + constructeur qcow2 |

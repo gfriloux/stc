@@ -5,11 +5,10 @@ description: cogitator-docker-server — pile Docker reverse proxy complète en 
 
 **Module :** `stc.nixosModules.cogitator-docker-server`
 
-Pile Docker reverse-proxy complète : Traefik + un socket-proxy filtrant + CrowdSec IDS/IPS
-+ notifications d'échec. Activer ceci est équivalent à activer
-`stc.relics.docker.traefik`, `stc.relics.docker.socketProxy`,
-`stc.relics.docker.crowdsec`, et `stc.relics.docker.notify` individuellement, plus
-la configuration du démon Docker.
+Pile Docker reverse-proxy complète : Traefik + un socket-proxy filtrant + CrowdSec IDS/IPS,
+avec notifications d'échec optionnelles. Activer ceci est équivalent à activer
+`stc.relics.docker.traefik`, `stc.relics.docker.socketProxy`, et
+`stc.relics.docker.crowdsec` individuellement, plus la configuration du démon Docker.
 
 Utilise les reliques individuelles directement si tu as besoin d'un contrôle plus fin —
 par exemple, si tu veux Traefik sans CrowdSec, ou un provider de notification différent.
@@ -19,6 +18,7 @@ par exemple, si tu veux Traefik sans CrowdSec, ou un provider de notification di
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
 | `stc.cogitator.docker-server.enable` | bool | `false` | Active la pile serveur Docker STC |
+| `stc.cogitator.docker-server.notify.enable` | bool | `false` | Active les notifications d'échec pour la pile (nécessite `notifyCommand`) |
 
 ## Ce qu'il active
 
@@ -28,7 +28,7 @@ Lorsqu'il est activé, ce profil pose :
 stc.relics.docker.traefik.enable = true;
 stc.relics.docker.socketProxy.enable = true;  # Traefik utilise le proxy, pas le socket brut
 stc.relics.docker.crowdsec.enable = true;
-stc.relics.docker.notify.enable = true;
+stc.relics.docker.notify.enable = cfg.notify.enable;  # off sauf opt-in explicite
 
 virtualisation.docker.enable = true;
 virtualisation.docker.autoPrune.enable = true;
@@ -44,7 +44,7 @@ Tu dois les poser toi-même :
 |--------|----------|
 | `stc.relics.docker.traefik.acme.email` | Enregistrement Let's Encrypt |
 | `stc.relics.docker.crowdsec.dataDir` | Où CrowdSec stocke ses données |
-| `stc.relics.docker.notify.ntfy.topicFile` | Le topic ntfy (chemin vers le fichier de secrets) |
+| `stc.relics.docker.notify.notifyCommand` | Uniquement si `notify.enable = true` — le transport d'alerte |
 
 ## Exemple d'utilisation minimal
 
@@ -56,14 +56,22 @@ modules = [
 ];
 
 # configuration.nix
-{ config, ... }:
+{ config, pkgs, ... }:
 {
   stc.cogitator.docker-server.enable = true;
 
   # Requis : valeurs spécifiques à la machine
   stc.relics.docker.traefik.acme.email = "ops@example.com";
   stc.relics.docker.crowdsec.dataDir = "/srv/docker/crowdsec";
-  stc.relics.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
+
+  # Optionnel : notifications d'échec (off par défaut). Une fois activées, fournis
+  # le transport — il reçoit STC_NOTIFY_SERVICE / STC_NOTIFY_HOSTNAME.
+  # stc.cogitator.docker-server.notify.enable = true;
+  # stc.relics.docker.notify.notifyCommand = ''
+  #   ${pkgs.curl}/bin/curl -s \
+  #     -d "$STC_NOTIFY_SERVICE failed on $STC_NOTIFY_HOSTNAME" \
+  #     "https://ntfy.sh/$(cat ${config.sops.secrets."ntfy/topic".path})"
+  # '';
 
   # Optionnel : ouvrir les ports pour Traefik (la relique traefik le fait aussi automatiquement)
   # stc.relics.hardening.network.allowedTCPPorts = [ 22 80 443 ];
@@ -71,7 +79,7 @@ modules = [
 ```
 
 :::note[Secrets]
-`ntfy.topicFile` et `traefik.dynamicConfigFile` acceptent n'importe quel chemin de fichier.
+`notifyCommand` et `traefik.dynamicConfigFile` acceptent n'importe quel chemin de fichier.
 Utilise sops-nix, agenix, ou tout autre gestionnaire de secrets — STC se fiche de
 savoir comment le fichier y arrive.
 :::

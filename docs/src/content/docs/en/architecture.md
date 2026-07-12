@@ -52,7 +52,7 @@ All STC options live under `stc.*`:
 ```nix
 stc.relics.networking.enable = true;
 stc.relics.gui.zen-browser.enable = true;
-stc.relics.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
+stc.relics.docker.crowdsec.dataDir = "/srv/docker/crowdsec";
 ```
 
 No collision with other modules. No surprises.
@@ -95,7 +95,7 @@ pointing to a file path. How that file gets there is your concern, not STC's:
 
 ```nix
 # sops-nix example
-stc.relics.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
+stc.relics.docker.traefik.dynamicConfigFile = config.sops.secrets."traefik/dynamic".path;
 
 # agenix example
 stc.relics.docker.crowdsec.envFile = config.age.secrets.crowdsec-env.path;

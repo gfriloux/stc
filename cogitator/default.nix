@@ -11,7 +11,7 @@
     cogitator-hardening = ./nixos/hardening.nix;
     # Base VM profile: fish, SSH, user, Docker, Nix GC.
     cogitator-vm = ./nixos/vm.nix;
-    # Full Docker reverse-proxy stack: Traefik + CrowdSec + ntfy notifications.
+    # Full Docker reverse-proxy stack: Traefik + CrowdSec + optional failure notifications.
     cogitator-docker-server = ./nixos/docker-server.nix;
     # KDE Plasma 6 Wayland desktop: Plasma 6 + Pipewire.
     cogitator-plasma = ./nixos/plasma.nix;

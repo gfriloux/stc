@@ -156,8 +156,13 @@ No manual wiring required.
 
 **Module:** `stc.nixosModules.relics-docker-notify`
 
-Sends ntfy push notifications when a watched Docker container fails, and
-automatically restarts unhealthy containers.
+Runs a consumer-supplied notification command when a watched Docker container
+fails, and automatically restarts unhealthy containers.
+
+The relic is **transport-agnostic**: STC owns the reusable wiring (health-watch,
+`OnFailure`, restart policy, opt-in label) but not the notification transport.
+You provide `notifyCommand`; it receives everything through the environment and
+reads its own secrets, exactly like the `*File` secrets pattern.
 
 Containers opt in by setting the label `stc.docker/health-watch = "true"`. The relic
 scans `virtualisation.oci-containers.containers` for this label and wires up the
@@ -167,24 +172,42 @@ monitoring automatically.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.relics.docker.notify.enable` | bool | `false` | Enable failure notifications via ntfy |
-| `stc.relics.docker.notify.hostname` | string | `config.networking.hostName` | Hostname shown in notification titles |
+| `stc.relics.docker.notify.enable` | bool | `false` | Enable failure notifications and unhealthy-container restarts |
+| `stc.relics.docker.notify.hostname` | string | `config.networking.hostName` | Value exposed to `notifyCommand` as `STC_NOTIFY_HOSTNAME` |
 | `stc.relics.docker.notify.watchLabel` | string | `"stc.docker/health-watch"` | Label marking containers for health monitoring |
-| `stc.relics.docker.notify.ntfy.baseUrl` | string | `"https://ntfy.sh"` | ntfy server base URL |
-| `stc.relics.docker.notify.ntfy.topicFile` | string | — | Path to file containing the ntfy topic name |
+| `stc.relics.docker.notify.notifyCommand` | lines | `""` | Shell command run on failure. Required when enabled. |
 
-:::caution[Public ntfy.sh by default]
-`baseUrl` defaults to the public `https://ntfy.sh`. Failure notifications
-(hostname and failed service names) leave your network to a third party, and
-the topic is the only secret — anyone who guesses it can read your alerts. For
-anything sensitive, self-host ntfy and/or use a long random topic.
-:::
+### The notification command
 
-### Secrets Pattern
+`notifyCommand` runs when a watched service fails. It receives the context
+through the environment (no positional arguments):
+
+| Variable | Meaning |
+|----------|---------|
+| `STC_NOTIFY_SERVICE` | The systemd service that entered the failed state |
+| `STC_NOTIFY_HOSTNAME` | The `hostname` option value |
+
+STC is agnostic to the backend — ntfy, a webhook, e-mail, anything. Read any
+secret the command needs from its own file. ntfy is just one example:
 
 ```nix
-stc.relics.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
+stc.relics.docker.notify = {
+  enable = true;
+  notifyCommand = ''
+    ${pkgs.curl}/bin/curl -s \
+      -H "Title: [$STC_NOTIFY_HOSTNAME] $STC_NOTIFY_SERVICE failed" \
+      -d "$STC_NOTIFY_SERVICE entered failed state" \
+      "https://ntfy.sh/$(cat ${config.sops.secrets."ntfy/topic".path})"
+  '';
+};
 ```
+
+:::caution[Public ntfy.sh in the example]
+The snippet above posts to the public `https://ntfy.sh`: failure notifications
+(hostname and failed service names) leave your network to a third party, and the
+topic is the only secret — anyone who guesses it can read your alerts. For
+anything sensitive, self-host ntfy and/or use a long random topic.
+:::
 
 ### How Health Watching Works
 
@@ -192,16 +215,16 @@ For each container with the watch label:
 - A systemd timer fires every 30 seconds (starting 4 minutes after boot)
 - It checks `docker inspect` for `unhealthy` health status
 - If unhealthy, the container is killed (Docker restarts it per its restart policy)
-- On service failure, `stc-notify-failure@<service>.service` sends an ntfy notification
+- On service failure, `stc-notify-failure@<service>.service` runs `notifyCommand`
 
 :::caution[A persistently-unhealthy container ends up stopped]
 The watched unit uses `Restart=on-failure` with `StartLimitBurst=3` /
 `StartLimitIntervalSec=300s`. A container that stays `unhealthy` is killed every
 30s; three kills inside ~90s trip the limit and systemd stops restarting it — it
 then stays **down**. This is deliberate (better than crash-looping), but the
-only signal is the ntfy notification. A persistently-broken service, including
-the CrowdSec IDS/IPS, can end up permanently stopped with nothing else flagging
-it — make sure someone actually watches the ntfy topic.
+only signal is the `notifyCommand` alert. A persistently-broken service,
+including the CrowdSec IDS/IPS, can end up permanently stopped with nothing else
+flagging it — make sure someone actually receives those alerts.
 :::
 
 ### Label-Based Opt-In
@@ -234,7 +257,7 @@ modules = [
 ];
 
 # configuration.nix
-{ config, ... }:
+{ config, pkgs, ... }:
 {
   stc.relics.docker = {
     traefik = {
@@ -251,7 +274,11 @@ modules = [
 
     notify = {
       enable = true;
-      ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
+      notifyCommand = ''
+        ${pkgs.curl}/bin/curl -s \
+          -d "$STC_NOTIFY_SERVICE failed on $STC_NOTIFY_HOSTNAME" \
+          "https://ntfy.sh/$(cat ${config.sops.secrets."ntfy/topic".path})"
+      '';
     };
   };
 

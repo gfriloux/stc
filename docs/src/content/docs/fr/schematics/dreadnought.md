@@ -88,7 +88,7 @@ Décommente et configure des cogitators supplémentaires dans `flake.nix` :
 ```nix
 modules = [
   stc.nixosModules.cogitator-dreadnought
-  stc.nixosModules.cogitator-docker-server  # Traefik + CrowdSec + ntfy
+  stc.nixosModules.cogitator-docker-server  # Traefik + CrowdSec + optional notifications
   stc.nixosModules.cogitator-vm             # fish, SSH, utilisateur admin
   ./hardware-configuration.nix
   ({ ... }: {

@@ -1,7 +1,15 @@
 # Relic: docker-notify
 #
-# Sends ntfy push notifications when a watched Docker container fails,
-# and restarts unhealthy containers automatically.
+# Runs a consumer-supplied notification command when a watched Docker container
+# fails, and restarts unhealthy containers automatically.
+#
+# Transport-agnostic: STC owns the reusable wiring (health-watch, OnFailure,
+# restart policy, opt-in label) but NOT the notification transport. The consumer
+# provides `notifyCommand`, which receives everything through the environment:
+#   STC_NOTIFY_SERVICE   — the systemd service that entered the failed state
+#   STC_NOTIFY_HOSTNAME  — the host, for message titles
+# The command reads its own secrets (ntfy topic, webhook token, …); STC stays
+# agnostic to the backend, exactly like the *File secrets pattern.
 #
 # Containers opt in by setting the label defined in stc.relics.docker.notify.watchLabel.
 # The relic then wires systemd OnFailure + a health-watch timer for each one.
@@ -11,11 +19,8 @@
 # StartLimitBurst=3 / StartLimitIntervalSec=300s, three kills inside ~90s trip
 # the limit and systemd stops restarting it — the container then stays DOWN.
 # This is deliberate (better than crash-looping forever), but the only signal is
-# the ntfy notification: a persistently-broken service, including the CrowdSec
+# the notification: a persistently-broken service, including the CrowdSec
 # IDS/IPS, can end up permanently stopped with nothing else flagging it.
-#
-# Secrets: point stc.relics.docker.notify.ntfy.topicFile at the file containing
-# the ntfy topic name (one line, no newline required).
 {
   config,
   lib,
@@ -25,13 +30,10 @@
   cfg = config.stc.relics.docker.notify;
 
   notifyScript = pkgs.writeShellScript "stc-notify-failure" ''
-    SERVICE="$1"
-    NTFY_TOPIC=$(cat ${cfg.ntfy.topicFile})
+    export STC_NOTIFY_SERVICE="$1"
+    export STC_NOTIFY_HOSTNAME=${lib.escapeShellArg cfg.hostname}
 
-    ${pkgs.curl}/bin/curl -s \
-      -H "Title: [${cfg.hostname}] $SERVICE failed" \
-      -d "$SERVICE entered failed state" \
-      "${cfg.ntfy.baseUrl}/$NTFY_TOPIC"
+    ${cfg.notifyCommand}
   '';
 
   healthWatchScript = pkgs.writeShellScript "stc-docker-health-watch" ''
@@ -70,17 +72,38 @@ in {
     (lib.mkRenamedOptionModule ["stc" "docker" "notify" "enable"] ["stc" "relics" "docker" "notify" "enable"])
     (lib.mkRenamedOptionModule ["stc" "docker" "notify" "hostname"] ["stc" "relics" "docker" "notify" "hostname"])
     (lib.mkRenamedOptionModule ["stc" "docker" "notify" "watchLabel"] ["stc" "relics" "docker" "notify" "watchLabel"])
-    (lib.mkRenamedOptionModule ["stc" "docker" "notify" "ntfy" "baseUrl"] ["stc" "relics" "docker" "notify" "ntfy" "baseUrl"])
-    (lib.mkRenamedOptionModule ["stc" "docker" "notify" "ntfy" "topicFile"] ["stc" "relics" "docker" "notify" "ntfy" "topicFile"])
+    # ntfy is no longer STC's concern — the transport moved to `notifyCommand`.
+    # These options are removed (not renamed): point notifyCommand at your own
+    # curl/webhook invocation, reading STC_NOTIFY_SERVICE / STC_NOTIFY_HOSTNAME.
+    (lib.mkRemovedOptionModule ["stc" "docker" "notify" "ntfy" "baseUrl"] ''
+      stc.relics.docker.notify no longer speaks ntfy. Move your ntfy call into
+      stc.relics.docker.notify.notifyCommand, which receives STC_NOTIFY_SERVICE
+      and STC_NOTIFY_HOSTNAME in the environment.
+    '')
+    (lib.mkRemovedOptionModule ["stc" "docker" "notify" "ntfy" "topicFile"] ''
+      stc.relics.docker.notify no longer speaks ntfy. Read the topic file inside
+      stc.relics.docker.notify.notifyCommand instead (STC stays agnostic to the
+      notification backend, like the *File secrets pattern).
+    '')
+    (lib.mkRemovedOptionModule ["stc" "relics" "docker" "notify" "ntfy" "baseUrl"] ''
+      stc.relics.docker.notify no longer speaks ntfy. Move your ntfy call into
+      stc.relics.docker.notify.notifyCommand, which receives STC_NOTIFY_SERVICE
+      and STC_NOTIFY_HOSTNAME in the environment.
+    '')
+    (lib.mkRemovedOptionModule ["stc" "relics" "docker" "notify" "ntfy" "topicFile"] ''
+      stc.relics.docker.notify no longer speaks ntfy. Read the topic file inside
+      stc.relics.docker.notify.notifyCommand instead (STC stays agnostic to the
+      notification backend, like the *File secrets pattern).
+    '')
   ];
 
   options.stc.relics.docker.notify = {
-    enable = lib.mkEnableOption "Docker container failure notifications via ntfy";
+    enable = lib.mkEnableOption "Docker container failure notifications and unhealthy-container restarts";
 
     hostname = lib.mkOption {
       type = lib.types.str;
       default = config.networking.hostName;
-      description = "Hostname shown in notification titles.";
+      description = "Hostname exposed to notifyCommand as STC_NOTIFY_HOSTNAME.";
     };
 
     watchLabel = lib.mkOption {
@@ -93,32 +116,44 @@ in {
       '';
     };
 
-    ntfy = {
-      baseUrl = lib.mkOption {
-        type = lib.types.str;
-        default = "https://ntfy.sh";
-        description = ''
-          ntfy server base URL (without trailing slash).
+    notifyCommand = lib.mkOption {
+      type = lib.types.lines;
+      default = "";
+      example = lib.literalExpression ''
+        '''
+          ''${pkgs.curl}/bin/curl -s \
+            -H "Title: [$STC_NOTIFY_HOSTNAME] $STC_NOTIFY_SERVICE failed" \
+            -d "$STC_NOTIFY_SERVICE entered failed state" \
+            "https://ntfy.sh/$(cat ''${config.sops.secrets."ntfy/topic".path})"
+        '''
+      '';
+      description = ''
+        Shell snippet run when a watched service fails. Receives the failed
+        service and the host through the environment:
+          STC_NOTIFY_SERVICE   — the systemd service that entered failed state
+          STC_NOTIFY_HOSTNAME  — value of the `hostname` option
 
-          The default is the public ntfy.sh: failure notifications (hostname and
-          failed service names) leave your network to a third party, and the topic
-          is the only secret — anyone who guesses it can read your alerts. For
-          anything sensitive, self-host ntfy and/or use a long random topic.
-        '';
-      };
-
-      topicFile = lib.mkOption {
-        type = lib.types.str;
-        description = ''
-          Path to a file containing the ntfy topic name.
-          Point this at whatever your secrets provider materialises
-          (e.g. config.sops.secrets."ntfy/topic".path).
-        '';
-      };
+        STC is agnostic to the notification backend: put your ntfy curl, webhook
+        POST, e-mail, etc. here, and read any secret it needs from its own file
+        (the same philosophy as the *File secrets pattern). Required when the
+        relic is enabled.
+      '';
     };
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = cfg.notifyCommand != "";
+        message = ''
+          stc.relics.docker.notify.enable is true but notifyCommand is empty.
+          Set stc.relics.docker.notify.notifyCommand to the shell command that
+          delivers the alert (it receives STC_NOTIFY_SERVICE and
+          STC_NOTIFY_HOSTNAME in the environment).
+        '';
+      }
+    ];
+
     systemd = {
       services =
         {

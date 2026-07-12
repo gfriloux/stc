@@ -159,8 +159,14 @@ Aucun câblage manuel requis.
 
 **Module :** `stc.nixosModules.relics-docker-notify`
 
-Envoie des notifications push ntfy quand un conteneur surveillé échoue, et
-redémarre automatiquement les conteneurs malsains.
+Exécute une commande de notification fournie par le consommateur quand un
+conteneur surveillé échoue, et redémarre automatiquement les conteneurs malsains.
+
+La relique est **agnostique au transport** : STC possède le câblage réutilisable
+(health-watch, `OnFailure`, politique de redémarrage, label opt-in) mais pas le
+transport de notification. Tu fournis `notifyCommand` ; elle reçoit tout par
+l'environnement et lit ses propres secrets, exactement comme le modèle de secrets
+`*File`.
 
 Les conteneurs optent en posant le label `stc.docker/health-watch = "true"`. La relique
 parcourt `virtualisation.oci-containers.containers` pour ce label et câble
@@ -170,24 +176,44 @@ automatiquement la surveillance.
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
-| `stc.relics.docker.notify.enable` | bool | `false` | Active les notifications d'échec via ntfy |
-| `stc.relics.docker.notify.hostname` | string | `config.networking.hostName` | Hostname dans les titres de notification |
+| `stc.relics.docker.notify.enable` | bool | `false` | Active les notifications d'échec et le redémarrage des conteneurs malsains |
+| `stc.relics.docker.notify.hostname` | string | `config.networking.hostName` | Valeur exposée à `notifyCommand` via `STC_NOTIFY_HOSTNAME` |
 | `stc.relics.docker.notify.watchLabel` | string | `"stc.docker/health-watch"` | Label marquant les conteneurs pour la surveillance |
-| `stc.relics.docker.notify.ntfy.baseUrl` | string | `"https://ntfy.sh"` | URL de base du serveur ntfy |
-| `stc.relics.docker.notify.ntfy.topicFile` | string | — | Chemin vers le fichier contenant le nom du topic ntfy |
+| `stc.relics.docker.notify.notifyCommand` | lines | `""` | Commande shell exécutée à l'échec. Requise quand la relique est activée. |
 
-:::caution[ntfy.sh public par défaut]
-`baseUrl` vaut par défaut le service public `https://ntfy.sh`. Les notifications
-d'échec (hostname et noms de services en échec) quittent ton réseau vers un tiers,
-et le topic est l'unique secret — quiconque le devine peut lire tes alertes. Pour
-tout ce qui est sensible, auto-héberge ntfy et/ou utilise un topic long et aléatoire.
-:::
+### La commande de notification
 
-### Modèle pour les secrets
+`notifyCommand` s'exécute quand un service surveillé échoue. Elle reçoit le
+contexte par l'environnement (pas d'arguments positionnels) :
+
+| Variable | Signification |
+|----------|---------------|
+| `STC_NOTIFY_SERVICE` | Le service systemd passé en état failed |
+| `STC_NOTIFY_HOSTNAME` | La valeur de l'option `hostname` |
+
+STC est agnostique au backend — ntfy, un webhook, un e-mail, n'importe quoi. La
+commande lit tout secret nécessaire depuis son propre fichier. ntfy n'est qu'un
+exemple :
 
 ```nix
-stc.relics.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
+stc.relics.docker.notify = {
+  enable = true;
+  notifyCommand = ''
+    ${pkgs.curl}/bin/curl -s \
+      -H "Title: [$STC_NOTIFY_HOSTNAME] $STC_NOTIFY_SERVICE failed" \
+      -d "$STC_NOTIFY_SERVICE entered failed state" \
+      "https://ntfy.sh/$(cat ${config.sops.secrets."ntfy/topic".path})"
+  '';
+};
 ```
+
+:::caution[ntfy.sh public dans l'exemple]
+Le snippet ci-dessus poste vers le service public `https://ntfy.sh` : les
+notifications d'échec (hostname et noms de services en échec) quittent ton réseau
+vers un tiers, et le topic est l'unique secret — quiconque le devine peut lire tes
+alertes. Pour tout ce qui est sensible, auto-héberge ntfy et/ou utilise un topic
+long et aléatoire.
+:::
 
 ### Fonctionnement de la surveillance de santé
 
@@ -195,16 +221,16 @@ Pour chaque conteneur avec le label de surveillance :
 - Un timer systemd se déclenche toutes les 30 secondes (démarrant 4 minutes après le boot)
 - Il vérifie `docker inspect` pour le statut de santé `unhealthy`
 - Si malsain, le conteneur est tué (Docker le redémarre selon sa politique de redémarrage)
-- En cas d'échec du service, `stc-notify-failure@<service>.service` envoie une notification ntfy
+- En cas d'échec du service, `stc-notify-failure@<service>.service` exécute `notifyCommand`
 
 :::caution[Un conteneur durablement malsain finit arrêté]
 L'unité surveillée utilise `Restart=on-failure` avec `StartLimitBurst=3` /
 `StartLimitIntervalSec=300s`. Un conteneur qui reste `unhealthy` est tué toutes
 les 30s ; trois kills en ~90s atteignent la limite et systemd cesse de le
 redémarrer — il reste alors **arrêté**. C'est délibéré (mieux qu'un crash-loop),
-mais le seul signal est la notification ntfy. Un service durablement cassé, y
+mais le seul signal est l'alerte `notifyCommand`. Un service durablement cassé, y
 compris l'IDS/IPS CrowdSec, peut finir définitivement arrêté sans autre alerte —
-assure-toi que quelqu'un surveille réellement le topic ntfy.
+assure-toi que quelqu'un reçoit réellement ces alertes.
 :::
 
 ### Opt-in basé sur les labels
@@ -237,7 +263,7 @@ modules = [
 ];
 
 # configuration.nix
-{ config, ... }:
+{ config, pkgs, ... }:
 {
   stc.relics.docker = {
     traefik = {
@@ -254,7 +280,11 @@ modules = [
 
     notify = {
       enable = true;
-      ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
+      notifyCommand = ''
+        ${pkgs.curl}/bin/curl -s \
+          -d "$STC_NOTIFY_SERVICE failed on $STC_NOTIFY_HOSTNAME" \
+          "https://ntfy.sh/$(cat ${config.sops.secrets."ntfy/topic".path})"
+      '';
     };
   };
 

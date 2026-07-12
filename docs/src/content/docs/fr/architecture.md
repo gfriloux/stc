@@ -52,7 +52,7 @@ Toutes les options STC vivent sous `stc.*` :
 ```nix
 stc.relics.networking.enable = true;
 stc.relics.gui.zen-browser.enable = true;
-stc.relics.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
+stc.relics.docker.crowdsec.dataDir = "/srv/docker/crowdsec";
 ```
 
 Pas de collision avec d'autres modules. Pas de surprises.
@@ -96,7 +96,7 @@ ton problème, pas celui de STC :
 
 ```nix
 # Exemple avec sops-nix
-stc.relics.docker.notify.ntfy.topicFile = config.sops.secrets."ntfy/topic".path;
+stc.relics.docker.traefik.dynamicConfigFile = config.sops.secrets."traefik/dynamic".path;
 
 # Exemple avec agenix
 stc.relics.docker.crowdsec.envFile = config.age.secrets.crowdsec-env.path;
