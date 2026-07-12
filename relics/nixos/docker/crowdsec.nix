@@ -35,13 +35,15 @@ in {
     enable = lib.mkEnableOption "CrowdSec IDS/IPS container";
 
     image = lib.mkOption {
-      type = lib.types.str;
-      default = "crowdsecurity/crowdsec:v1.7.8@sha256:2f527c9bb8b367120eb08b82890aa912ce96bfa1ada93dda0721700e4b4e0dde";
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "crowdsecurity/crowdsec:v1.7.8"; # renovate
       description = ''
-        Docker image to use for CrowdSec. Pinned by digest (the tag is kept for
-        readability; the digest is authoritative) so the IDS/IPS image cannot be
-        silently swapped under a mutable tag. Multi-arch index digest — resolve a
-        new one with `skopeo inspect --format '{{.Digest}}' docker://crowdsecurity/crowdsec:<tag>`.
+        Docker image to use for CrowdSec. Required — STC ships no default so image
+        versions live with the consumer, where your own renovate scans the right
+        host. Set it in your host config, pinned by tag (and optionally digest):
+
+          stc.relics.docker.crowdsec.image = "crowdsecurity/crowdsec:v1.7.8"; # renovate
       '';
     };
 
@@ -62,6 +64,17 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = cfg.image != null;
+        message = ''
+          stc.relics.docker.crowdsec.enable is true but no image is set.
+          STC ships no default image — set it in your host config, e.g.:
+            stc.relics.docker.crowdsec.image = "crowdsecurity/crowdsec:v1.7.8"; # renovate
+        '';
+      }
+    ];
+
     virtualisation.oci-containers.containers."crowdsec" = {
       inherit (cfg) image;
       serviceName = "crowdsec";

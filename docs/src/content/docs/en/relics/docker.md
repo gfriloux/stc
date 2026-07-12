@@ -19,7 +19,7 @@ supplied at runtime via a separate file.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `stc.relics.docker.traefik.enable` | bool | `false` | Enable Traefik reverse proxy container |
-| `stc.relics.docker.traefik.image` | string | `"traefik:v3.7.1@sha256:6b9c…"` | Docker image, **pinned by digest** (mounts the raw socket when the proxy is off) |
+| `stc.relics.docker.traefik.image` | string | — | **Required** — STC ships no default. Pin it in your host, e.g. `"traefik:v3.7.6"; # renovate` (mounts the raw socket when the proxy is off) |
 | `stc.relics.docker.traefik.dataDir` | string | `"/srv/docker/traefik"` | Base directory for logs, acme.json, conf |
 | `stc.relics.docker.traefik.acme.email` | string | — | Email for Let's Encrypt ACME registration |
 | `stc.relics.docker.traefik.enableDashboard` | bool | `false` | Enable the Traefik API dashboard. The `traefik` entrypoint port (`127.0.0.1:8080`) is not published, so this alone does not expose it — publish/forward the port or add a route to reach it. |
@@ -83,7 +83,7 @@ container, i.e. root on the host). The proxy is the real mitigation: it disables
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `stc.relics.docker.socketProxy.enable` | bool | `false` | Enable the filtering socket proxy |
-| `stc.relics.docker.socketProxy.image` | string | `"tecnativa/docker-socket-proxy:0.3.0@sha256:9e4b…"` | Docker image, **pinned by digest** (this container holds the Docker socket) |
+| `stc.relics.docker.socketProxy.image` | string | — | **Required** — STC ships no default. Pin it in your host, e.g. `"tecnativa/docker-socket-proxy:0.3.0"; # renovate` (this container holds the Docker socket) |
 | `stc.relics.docker.socketProxy.network` | string | `"socket-proxy"` | Docker network shared with clients (e.g. Traefik) |
 | `stc.relics.docker.socketProxy.permissions` | attrs of bool | `{ CONTAINERS = true; NETWORKS = true; EVENTS = true; PING = true; VERSION = true; }` | Docker API sections to expose. `POST` is always forced off. |
 
@@ -129,7 +129,7 @@ network; when CrowdSec runs without Traefik, it creates the network itself.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `stc.relics.docker.crowdsec.enable` | bool | `false` | Enable CrowdSec IDS/IPS container |
-| `stc.relics.docker.crowdsec.image` | string | `"crowdsecurity/crowdsec:v1.7.8@sha256:2f52…"` | Docker image, **pinned by digest** |
+| `stc.relics.docker.crowdsec.image` | string | — | **Required** — STC ships no default. Pin it in your host, e.g. `"crowdsecurity/crowdsec:v1.7.8"; # renovate` |
 | `stc.relics.docker.crowdsec.dataDir` | string | — | Base directory for CrowdSec data and config |
 | `stc.relics.docker.crowdsec.envFile` | `null \| string` | `null` | Path to environment file with secrets |
 
@@ -262,12 +262,14 @@ modules = [
   stc.relics.docker = {
     traefik = {
       enable = true;
+      image = "traefik:v3.7.6"; # renovate
       acme.email = "ops@example.com";
       dynamicConfigFile = config.sops.secrets."traefik/dynamic".path;
     };
 
     crowdsec = {
       enable = true;
+      image = "crowdsecurity/crowdsec:v1.7.8"; # renovate
       dataDir = "/srv/docker/crowdsec";
       envFile = config.sops.secrets."crowdsec/env".path;
     };

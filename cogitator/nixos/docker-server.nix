@@ -5,9 +5,11 @@
 # stc.relics.docker.{traefik,socketProxy,crowdsec} individually — use those
 # directly if you need finer control.
 #
-# You still need to supply the machine-specific options:
+# You still need to supply the machine-specific options (images are required —
+# STC ships no defaults; pin them in your host so renovate scans the right repo):
 #   stc.relics.docker.traefik.image = "traefik:v3.7.6"; # renovate
 #   stc.relics.docker.traefik.acme.email = "you@example.com";
+#   stc.relics.docker.socketProxy.image = "tecnativa/docker-socket-proxy:0.3.0"; # renovate
 #   stc.relics.docker.crowdsec.image = "crowdsecurity/crowdsec:v1.7.8"; # renovate
 #   stc.relics.docker.crowdsec.dataDir = "/srv/docker/crowdsec";
 #

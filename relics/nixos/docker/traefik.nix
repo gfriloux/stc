@@ -115,15 +115,18 @@ in {
     enable = lib.mkEnableOption "Traefik reverse proxy container";
 
     image = lib.mkOption {
-      type = lib.types.str;
-      default = "traefik:v3.7.1@sha256:6b9cbca6fac42ab0075f5437d8dc1685cfd188626d8d515839ea94f8b6271c42";
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "traefik:v3.7.6"; # renovate
       description = ''
-        Docker image to use for Traefik. Pinned by digest (the tag is kept for
-        readability; the digest is authoritative). The same reasoning as the
-        socket proxy applies: when socketProxy.enable = false this container
-        mounts the raw Docker socket, so a silently-swapped image is exactly as
-        dangerous here. Multi-arch index digest — resolve a new one with
-        `skopeo inspect --format '{{.Digest}}' docker://traefik:<tag>`.
+        Docker image to use for Traefik. Required — STC ships no default so image
+        versions live with the consumer, where your own renovate scans the right
+        host. Set it in your host config, pinned by tag (and optionally digest):
+
+          stc.relics.docker.traefik.image = "traefik:v3.7.6"; # renovate
+
+        When socketProxy.enable = false this container mounts the raw Docker
+        socket, so a silently-swapped image is dangerous — pin it.
       '';
     };
 
@@ -166,6 +169,17 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = cfg.image != null;
+        message = ''
+          stc.relics.docker.traefik.enable is true but no image is set.
+          STC ships no default image — set it in your host config, e.g.:
+            stc.relics.docker.traefik.image = "traefik:v3.7.6"; # renovate
+        '';
+      }
+    ];
+
     virtualisation.oci-containers.containers."traefik" = {
       inherit (cfg) image;
       serviceName = "traefik";

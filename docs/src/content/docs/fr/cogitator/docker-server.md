@@ -42,6 +42,9 @@ Tu dois les poser toi-même :
 
 | Option | Pourquoi |
 |--------|----------|
+| `stc.relics.docker.traefik.image` | Requise — STC ne fournit aucun défaut (épingle-la, `# renovate`) |
+| `stc.relics.docker.socketProxy.image` | Requise — STC ne fournit aucun défaut (épingle-la, `# renovate`) |
+| `stc.relics.docker.crowdsec.image` | Requise — STC ne fournit aucun défaut (épingle-la, `# renovate`) |
 | `stc.relics.docker.traefik.acme.email` | Enregistrement Let's Encrypt |
 | `stc.relics.docker.crowdsec.dataDir` | Où CrowdSec stocke ses données |
 | `stc.relics.docker.notify.notifyCommand` | Uniquement si `notify.enable = true` — le transport d'alerte |
@@ -59,6 +62,11 @@ modules = [
 { config, pkgs, ... }:
 {
   stc.cogitator.docker-server.enable = true;
+
+  # Requis : images (STC ne fournit aucun défaut — épingle-les, renovate scanne ton dépôt)
+  stc.relics.docker.traefik.image = "traefik:v3.7.6"; # renovate
+  stc.relics.docker.socketProxy.image = "tecnativa/docker-socket-proxy:0.3.0"; # renovate
+  stc.relics.docker.crowdsec.image = "crowdsecurity/crowdsec:v1.7.8"; # renovate
 
   # Requis : valeurs spécifiques à la machine
   stc.relics.docker.traefik.acme.email = "ops@example.com";

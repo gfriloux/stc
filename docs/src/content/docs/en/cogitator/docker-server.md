@@ -42,6 +42,9 @@ You must set these yourself:
 
 | Option | Why |
 |--------|-----|
+| `stc.relics.docker.traefik.image` | Required — STC ships no default (pin it, `# renovate`) |
+| `stc.relics.docker.socketProxy.image` | Required — STC ships no default (pin it, `# renovate`) |
+| `stc.relics.docker.crowdsec.image` | Required — STC ships no default (pin it, `# renovate`) |
 | `stc.relics.docker.traefik.acme.email` | Let's Encrypt registration |
 | `stc.relics.docker.crowdsec.dataDir` | Where CrowdSec stores its data |
 | `stc.relics.docker.notify.notifyCommand` | Only when `notify.enable = true` — the alert transport |
@@ -59,6 +62,11 @@ modules = [
 { config, pkgs, ... }:
 {
   stc.cogitator.docker-server.enable = true;
+
+  # Required: images (STC ships no defaults — pin them, renovate scans your repo)
+  stc.relics.docker.traefik.image = "traefik:v3.7.6"; # renovate
+  stc.relics.docker.socketProxy.image = "tecnativa/docker-socket-proxy:0.3.0"; # renovate
+  stc.relics.docker.crowdsec.image = "crowdsecurity/crowdsec:v1.7.8"; # renovate
 
   # Required: machine-specific values
   stc.relics.docker.traefik.acme.email = "ops@example.com";

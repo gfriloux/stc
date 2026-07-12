@@ -29,13 +29,16 @@ in {
     enable = lib.mkEnableOption "filtering proxy in front of the Docker socket";
 
     image = lib.mkOption {
-      type = lib.types.str;
-      default = "tecnativa/docker-socket-proxy:0.3.0@sha256:9e4b9e7517a6b660f2cc903a19b257b1852d5b3344794e3ea334ff00ae677ac2";
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "tecnativa/docker-socket-proxy:0.3.0"; # renovate
       description = ''
-        Docker image to use for the socket proxy. Pinned by digest because this
-        container holds the Docker socket — a mutable tag is the one image you
-        least want silently swapped. The tag is kept for readability; the digest
-        is authoritative.
+        Docker image to use for the socket proxy. Required — STC ships no default
+        so image versions live with the consumer, where your own renovate scans
+        the right host. This container holds the Docker socket, so pin it (tag and
+        optionally digest):
+
+          stc.relics.docker.socketProxy.image = "tecnativa/docker-socket-proxy:0.3.0"; # renovate
       '';
     };
 
@@ -68,6 +71,17 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = cfg.image != null;
+        message = ''
+          stc.relics.docker.socketProxy.enable is true but no image is set.
+          STC ships no default image — set it in your host config, e.g.:
+            stc.relics.docker.socketProxy.image = "tecnativa/docker-socket-proxy:0.3.0"; # renovate
+        '';
+      }
+    ];
+
     virtualisation.oci-containers.containers."docker-socket-proxy" = {
       inherit (cfg) image;
       serviceName = "docker-socket-proxy";
