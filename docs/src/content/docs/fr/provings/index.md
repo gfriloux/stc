@@ -42,6 +42,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | Épreuve | Cogitator testé | Ce qu'elle vérifie |
 |---------|-----------------|--------------------|
 | `hardening` | `cogitator-hardening` | Durcissement sysctl kernel et réseau effectif ; SSH par clés uniquement, login root refusé |
+| `docker-server` | `cogitator-docker-server` | Les unités des conteneurs portent leur image épinglée et les flags de healthcheck ; les réseaux docker, le hook notify `OnFailure` et les timers de health-watch sont câblés ; la config statique Traefik est rendue avec le plugin bouncer CrowdSec et l'endpoint socket-proxy |
 
 ## Ajouter une épreuve
 
@@ -59,3 +60,13 @@ via `fileSystems`, mais le module qemu-vm de nixosTest remplace tout l'attrset
 (priorité 50) du relic. Ces montages n'existent jamais dans la VM de test : une
 vérification à l'exécution échouerait pour des raisons de framework, pas réelles.
 Le durcissement à base de sysctl n'est pas affecté et est bien vérifié.
+
+## Limite de périmètre — docker-server vérifie le câblage, pas les conteneurs
+
+L'épreuve `docker-server` vérifie le **câblage** généré par les reliques, pas des
+conteneurs démarrés. Une VM nixosTest est isolée du réseau, donc `docker pull` ne
+peut pas aboutir et les services de conteneurs ne montent jamais. C'est
+volontaire : STC possède le câblage réutilisable, pas le cycle de vie des images.
+L'épreuve fournit des images factices (jamais tirées) et inspecte les fichiers
+d'unités générés avec `systemctl cat`, qui les lit depuis le disque quel que soit
+l'état d'exécution ; le démarrage des conteneurs n'est pas attendu.

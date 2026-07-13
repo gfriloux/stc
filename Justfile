@@ -48,6 +48,7 @@ ci: fmt-check lint check docs-parity
 # Exposed via legacyPackages, which `nix flake check` skips. Linux only.
 test:
     nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-file
+    nix build .#legacyPackages.x86_64-linux.provings.docker-server -L --no-write-lock-file
 
 
 # ── Documentation ─────────────────────────────────────────────────────────────

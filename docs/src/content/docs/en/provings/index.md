@@ -40,6 +40,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | Proving | Cogitator under test | What it asserts |
 |---------|----------------------|-----------------|
 | `hardening` | `cogitator-hardening` | Kernel and network sysctl hardening are live; SSH is key-only with root login refused |
+| `docker-server` | `cogitator-docker-server` | Container units carry their pinned image and healthcheck flags; docker networks, the notify `OnFailure` hook and health-watch timers are wired; the Traefik static config renders with the CrowdSec bouncer plugin and socket-proxy endpoint |
 
 ## Adding a proving
 
@@ -57,3 +58,13 @@ through `fileSystems`, but the nixosTest qemu-vm module replaces the whole
 `mkForce` (priority 50). Those mounts never exist inside the test VM, so a runtime
 check would fail for framework reasons, not real ones. sysctl-based hardening is
 unaffected and is asserted.
+
+## Scope limit — docker-server asserts wiring, not running containers
+
+The `docker-server` proving asserts the **wiring** the relics generate, not live
+containers. A nixosTest VM is network-isolated, so `docker pull` cannot succeed
+and the container services never come up. That is by design: STC owns the
+reusable wiring, not the image lifecycle. The proving feeds placeholder images
+(never pulled) and inspects the generated unit files with `systemctl cat`, which
+reads them from disk regardless of runtime state; container start-up is not
+awaited.
