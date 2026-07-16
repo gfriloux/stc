@@ -3,13 +3,13 @@
 # Each relic is an atomic, reusable building block.
 # Handle with reverence. Import with intention.
 #
-# NAMESPACE MIGRATION (v2.0)
+# NAMESPACE MIGRATION (since v0.2.0)
 # Relics expose options under both namespaces for backward compatibility:
 #   Legacy (deprecated): stc.boot, stc.zfs, stc.hardening.kernel, stc.docker.traefik, ...
 #   Canonical (new):     stc.relics.boot, stc.relics.zfs, stc.relics.hardening.kernel, ...
 #
 # Using the legacy namespace emits a NixOS deprecation warning at eval time.
-# The legacy namespace will be removed in STC v3.0 (January 2027).
+# The legacy namespace will be removed in the next major release (v1.0.0).
 {inputs, ...}: {
   flake.nixosModules = {
     # --- System ---
