@@ -47,7 +47,7 @@ et la sécurité physique/boot, qui relèvent du flake et du matériel du consom
 | `fs.protected_regular=2` | R14 | ✅ | |
 | `kernel.kexec_load_disabled=1` | (kexec) | 🟡 | ANSSI désactive kexec en compile-time (`CONFIG_KEXEC` non défini) ; STC utilise le sysctl runtime |
 | `pid_max`, `perf_cpu_time_max_percent`, `perf_event_max_sample_rate`, `panic_on_oops` | R9 | ⚪ | Réglages R9 non repris par STC |
-| `kernel.modules_disabled=1` | R10 | ⚪ | Non implémenté — casse le chargement à la demande ; à évaluer au cas par cas |
+| `kernel.modules_disabled=1` | R10 | ⚪ | Verrouillage total non implémenté — casse le chargement à la demande. Voir `relics.hardening.modules` pour la forme souple (blacklist ciblée) |
 
 ## `relics.hardening.network`
 
@@ -59,9 +59,20 @@ et la sécurité physique/boot, qui relèvent du flake et du matériel du consom
 | `net.ipv4.conf.*.send_redirects=0` | R12 | ✅ | |
 | `net.ipv4.icmp_ignore_bogus_error_responses=1` | R12 | ✅ | |
 | `net.ipv4.tcp_syncookies=1` | R12 | ✅ | |
+| `net.ipv4.conf.*.accept_source_route=0` (+ IPv6) | R12 | ✅ | |
+| `net.ipv4.tcp_rfc1337=1` | R12 | ✅ | Protection anti-assassinat TIME_WAIT |
+| `net.core.bpf_jit_harden=2` | R12 | ✅ | Durcissement du JIT eBPF |
+| `net.ipv4.conf.*.arp_ignore=1`, `arp_announce=2` | R12 | 🟡 | Opt-in via `strictArp` (désactivé par défaut ; casse multi-homed / Docker) |
 | `net.ipv4.icmp_echo_ignore_broadcasts=1` | R12 | 🟡 | Bonne pratique, hors liste R12 stricte |
-| `ip_forward`, `accept_source_route`, `arp_*`, `route_localnet`, `tcp_rfc1337`, `bpf_jit_harden`, `accept_local`, `shared_media` | R12 | ⚪ | Réglages R12 non repris par STC |
+| `ip_forward`, `route_localnet`, `accept_local`, `shared_media` | R12 | ⚪ | Réglages R12 non repris par STC |
 | Désactivation IPv6 | R13 | ⚪ | STC garde IPv6 (bibliothèque générique) |
+
+## `relics.hardening.modules`
+
+| Réglage STC | Règle | Statut | Note |
+|-------------|-------|--------|------|
+| Blacklist `firewire-core/ohci/sbp2` (DMA) | R10 | 🟡 | Forme souple de R10 — blacklist ciblée, pas le verrouillage total `modules_disabled` |
+| Blacklist `dccp`, `sctp`, `rds`, `tipc` (protocoles rares) | R10 | 🟡 | Même logique |
 
 ## `relics.hardening.filesystem`
 

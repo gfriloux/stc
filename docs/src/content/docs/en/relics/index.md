@@ -63,6 +63,7 @@ modules = [
 | `relics-hardening-network` | `stc.relics.hardening.network.enable` | Network sysctl (anti-spoofing, SYN cookies, ICMP) |
 | `relics-hardening-filesystem` | `stc.relics.hardening.filesystem.enable` | /tmp noexec, /proc hidepid, /dev/shm restricted |
 | `relics-hardening-ssh` | `stc.relics.hardening.ssh.enable` | Hardened OpenSSH, key-only auth |
+| `relics-hardening-modules` | `stc.relics.hardening.modules.enable` | Blacklist high-risk / unused kernel modules (FireWire DMA, rare net protocols) |
 | `relics-docker-traefik` | `stc.relics.docker.traefik.enable` | Traefik v3 reverse proxy container (Docker) |
 | `relics-docker-socket-proxy` | `stc.relics.docker.socketProxy.enable` | Filtering proxy in front of the Docker socket |
 | `relics-docker-crowdsec` | `stc.relics.docker.crowdsec.enable` | CrowdSec IDS/IPS container |
@@ -81,7 +82,7 @@ modules = [
 ## See Also
 
 - [Cogitator profiles](/stc/en/cogitator/) — composed relics for common use cases
-- [Hardening relics](/stc/en/relics/hardening/) — all four hardening modules in detail
+- [Hardening relics](/stc/en/relics/hardening/) — all five hardening modules in detail
 - [AMD GPU](/stc/en/relics/amd-gpu/) — GPU relic with gaming compatibility
 - [Pipewire](/stc/en/relics/pipewire/) — audio relic
 - [Plasma 6](/stc/en/relics/plasma6/) — KDE Plasma 6 desktop relic

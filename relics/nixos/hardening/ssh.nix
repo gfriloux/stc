@@ -27,6 +27,17 @@ in {
       default = false;
       description = "Allow TCP forwarding. Disabled by default on server VMs.";
     };
+
+    perSourcePenalties = lib.mkOption {
+      type = lib.types.str;
+      default = "crash:3600s authfail:3600s max:86400s";
+      description = ''
+        sshd PerSourcePenalties: rate-limits misbehaving source addresses
+        (auth failures, crashes) with escalating temporary blocks. OpenSSH ≥ 9.8
+        enables this by default; STC sets explicit, tuned values. Set to
+        "no" to disable.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -53,6 +64,9 @@ in {
         MaxAuthTries = 3;
         LoginGraceTime = 20;
         MaxSessions = 5;
+
+        # Rate-limit misbehaving source addresses (auth failures, crashes).
+        PerSourcePenalties = cfg.perSourcePenalties;
 
         # Drop *unreachable* clients after 10 minutes (2 × 300s): if a client
         # stops answering keepalive probes (dropped link, crashed laptop) the
