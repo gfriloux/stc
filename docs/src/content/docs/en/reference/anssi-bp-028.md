@@ -47,7 +47,7 @@ belong to the consumer's own flake and hardware.
 | `fs.protected_regular=2` | R14 | ✅ | |
 | `kernel.kexec_load_disabled=1` | (kexec) | 🟡 | ANSSI disables kexec at compile time (`CONFIG_KEXEC` unset); STC uses the runtime sysctl |
 | `pid_max`, `perf_cpu_time_max_percent`, `perf_event_max_sample_rate`, `panic_on_oops` | R9 | ⚪ | R9 settings STC does not set |
-| `kernel.modules_disabled=1` | R10 | ⚪ | Not implemented — breaks on-demand module loading; needs case-by-case evaluation |
+| `kernel.modules_disabled=1` | R10 | ⚪ | Full lockdown not implemented — breaks on-demand module loading. See `relics.hardening.modules` for the soft form (targeted blacklist) |
 
 ## `relics.hardening.network`
 
@@ -59,9 +59,20 @@ belong to the consumer's own flake and hardware.
 | `net.ipv4.conf.*.send_redirects=0` | R12 | ✅ | |
 | `net.ipv4.icmp_ignore_bogus_error_responses=1` | R12 | ✅ | |
 | `net.ipv4.tcp_syncookies=1` | R12 | ✅ | |
+| `net.ipv4.conf.*.accept_source_route=0` (+ IPv6) | R12 | ✅ | |
+| `net.ipv4.tcp_rfc1337=1` | R12 | ✅ | TIME_WAIT assassination protection |
+| `net.core.bpf_jit_harden=2` | R12 | ✅ | eBPF JIT hardening |
+| `net.ipv4.conf.*.arp_ignore=1`, `arp_announce=2` | R12 | 🟡 | Opt-in via `strictArp` (off by default; breaks multi-homed / Docker) |
 | `net.ipv4.icmp_echo_ignore_broadcasts=1` | R12 | 🟡 | Good practice, beyond the strict R12 list |
-| `ip_forward`, `accept_source_route`, `arp_*`, `route_localnet`, `tcp_rfc1337`, `bpf_jit_harden`, `accept_local`, `shared_media` | R12 | ⚪ | R12 settings STC does not set |
+| `ip_forward`, `route_localnet`, `accept_local`, `shared_media` | R12 | ⚪ | R12 settings STC does not set |
 | Disable IPv6 | R13 | ⚪ | STC keeps IPv6 (generic library) |
+
+## `relics.hardening.modules`
+
+| STC setting | Rule | Status | Note |
+|-------------|------|--------|------|
+| Blacklist `firewire-core/ohci/sbp2` (DMA) | R10 | 🟡 | Soft form of R10 — targeted blacklist, not the full `modules_disabled` lockdown |
+| Blacklist `dccp`, `sctp`, `rds`, `tipc` (rare protocols) | R10 | 🟡 | Same rationale |
 
 ## `relics.hardening.filesystem`
 

@@ -1,29 +1,31 @@
 ---
 title: Profil de durcissement
-description: cogitator-hardening — active les quatre reliques de durcissement avec une seule option.
+description: cogitator-hardening — active les cinq reliques de durcissement avec une seule option.
 ---
 
 **Module :** `stc.nixosModules.cogitator-hardening`
 
 Une option pour tous les durcir. Active le durcissement noyau, réseau, système de
-fichiers et SSH en un seul interrupteur. Pour un contrôle chirurgical, utilise les
-reliques individuelles à la place et active-les indépendamment.
+fichiers, SSH et la blacklist de modules en un seul interrupteur. Pour un contrôle
+chirurgical, utilise les reliques individuelles à la place et active-les
+indépendamment.
 
 ## Options
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
-| `stc.cogitator.hardening.enable` | bool | `false` | Active la suite de durcissement complète (noyau + réseau + système de fichiers + SSH) |
+| `stc.cogitator.hardening.enable` | bool | `false` | Active la suite de durcissement complète (noyau + réseau + système de fichiers + SSH + blacklist de modules) |
 
 ## Ce qu'il compose
 
-Activer `stc.cogitator.hardening.enable = true` est équivalent à poser les quatre options suivantes :
+Activer `stc.cogitator.hardening.enable = true` est équivalent à poser les cinq options suivantes :
 
 ```nix
 stc.relics.hardening.kernel.enable = true;
 stc.relics.hardening.network.enable = true;
 stc.relics.hardening.filesystem.enable = true;
 stc.relics.hardening.ssh.enable = true;
+stc.relics.hardening.modules.enable = true;
 ```
 
 Les options des reliques individuelles — `allowedTCPPorts`, `tmpSize`, `allowedTCPForwarding` — restent

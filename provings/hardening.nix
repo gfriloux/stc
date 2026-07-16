@@ -31,11 +31,24 @@
         assert machine.succeed("sysctl -n net.ipv4.tcp_syncookies").strip() == "1"
         assert machine.succeed("sysctl -n net.ipv4.conf.all.rp_filter").strip() == "1"
         assert machine.succeed("sysctl -n net.ipv4.conf.all.accept_redirects").strip() == "0"
+        assert machine.succeed("sysctl -n net.ipv4.conf.all.accept_source_route").strip() == "0"
+        assert machine.succeed("sysctl -n net.ipv4.tcp_rfc1337").strip() == "1"
+        assert machine.succeed("sysctl -n net.core.bpf_jit_harden").strip() == "2"
+
+    with subtest("kernel module blacklist"):
+        # modprobe canonicalises module names (hyphens become underscores), so
+        # normalise both sides before comparing.
+        modprobe_config = machine.succeed("modprobe --showconfig").replace("-", "_")
+        for module in ["firewire-core", "firewire-ohci", "firewire-sbp2",
+                       "dccp", "sctp", "rds", "tipc"]:
+            needle = "blacklist " + module.replace("-", "_")
+            assert needle in modprobe_config, f"{module} not blacklisted"
 
     with subtest("ssh hardening"):
         machine.wait_for_unit("sshd.service")
         sshd_config = machine.succeed("sshd -T")
         assert "passwordauthentication no" in sshd_config
         assert "permitrootlogin no" in sshd_config
+        assert "persourcepenalties" in sshd_config
   '';
 }

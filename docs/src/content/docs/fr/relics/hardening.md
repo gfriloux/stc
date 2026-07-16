@@ -1,9 +1,9 @@
 ---
 title: Durcissement
-description: Quatre reliques de durcissement — noyau, réseau, système de fichiers et SSH — plus le raccourci cogitator-hardening.
+description: Cinq reliques de durcissement — noyau, réseau, système de fichiers, SSH et blacklist de modules — plus le raccourci cogitator-hardening.
 ---
 
-STC fournit quatre reliques de durcissement indépendantes. Chacune adresse une
+STC fournit cinq reliques de durcissement indépendantes. Chacune adresse une
 surface d'attaque distincte et peut être activée individuellement.
 
 ## Durcissement du noyau
@@ -41,14 +41,17 @@ Paramètres sysctl appliqués :
 |-----------|-----------------|
 | Anti-spoofing | Filtrage par chemin inverse sur toutes les interfaces |
 | Rejet des redirections | Ignore les redirections ICMP dans toutes les directions, désactive l'envoi de redirections |
+| Routage à la source | Rejette les paquets source-routés (IPv4 + IPv6) |
 | Abus ICMP | Ignore les broadcasts ping et les réponses d'erreur erronées |
-| Inondations SYN | Active les SYN cookies |
+| Inondations SYN | Active les SYN cookies ; protection anti-assassinat TIME_WAIT (`tcp_rfc1337`) |
+| JIT eBPF | Durcit le JIT contre les attaques par spraying (`bpf_jit_harden = 2`) |
 
 **Options :**
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
 | `stc.relics.hardening.network.strictReversePathFilter` | bool | `true` | Filtrage par chemin inverse strict (`1`). Mettre à `false` pour le mode loose (`2`) sur les hôtes à routage asymétrique / multi-homed / WireGuard où le mode strict bloque le trafic de retour légitime. |
+| `stc.relics.hardening.network.strictArp` | bool | `false` | Durcissement ARP (`arp_ignore=1`, `arp_announce=2`). Désactivé par défaut : peut casser les hôtes multi-homed, les bridges Linux et le réseau Docker. À activer uniquement sur les hôtes single-homed. |
 
 :::note[Le pare-feu est ta responsabilité]
 Cette relique durcit la pile réseau du noyau. Les règles de pare-feu (ports ouverts,
@@ -110,11 +113,13 @@ n'est pas affecté.
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
 | `stc.relics.hardening.ssh.allowedTCPForwarding` | bool | `false` | Autoriser le TCP forwarding |
+| `stc.relics.hardening.ssh.perSourcePenalties` | string | `"crash:3600s authfail:3600s max:86400s"` | `PerSourcePenalties` de sshd — limite le débit des adresses sources fautives avec des blocages progressifs. Mettre à `"no"` pour désactiver. |
 
 Configure OpenSSH avec :
 - Authentification par mot de passe désactivée (clés uniquement)
 - Connexion root désactivée
 - MaxAuthTries : 3, LoginGraceTime : 20s
+- Pénalités par source : limite les échecs d'auth / crashs par adresse source
 - Délai d'expiration des sessions inactives : 10 minutes (2 × 300s)
 - X11, agent forwarding, tunneling, gateway ports : tous désactivés
 - Chiffrements forts : ChaCha20-Poly1305, AES-256-GCM, AES-128-GCM
@@ -131,6 +136,36 @@ jour nixpkgs, ou surcharge `services.openssh.settings.KexAlgorithms` pour retire
 le kex post-quantique.
 :::
 
+## Blacklist de modules
+
+**Module :** `stc.nixosModules.relics-hardening-modules`
+
+**Option d'activation :** `stc.relics.hardening.modules.enable`
+
+Blackliste des modules noyau à haut risque ou inutilisés pour réduire la surface
+d'attaque :
+
+| Famille | Modules | Pourquoi |
+|---------|---------|----------|
+| FireWire (DMA) | `firewire-core`, `firewire-ohci`, `firewire-sbp2` | Un périphérique hostile peut lire/écrire la mémoire physique via le bus |
+| Protocoles réseau rares | `dccp`, `sctp`, `rds`, `tipc` | Quasi jamais utilisés sur un hôte normal, mais source récurrente de CVE noyau |
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `stc.relics.hardening.modules.extraBlacklist` | liste de string | `[]` | Modules supplémentaires à blacklister, fusionnés avec les défauts (ex. `[ "bluetooth" "uvcvideo" ]`) |
+
+C'est la forme *souple* de l'ANSSI-BP-028 R10 (désactiver les modules inutilisés) :
+une blacklist ciblée plutôt que le verrouillage total `kernel.modules_disabled=1`,
+qui casserait le chargement de modules à la demande et nécessite une évaluation au
+cas par cas.
+
+:::caution[FireWire et protocoles rares]
+Si un hôte a réellement besoin de FireWire (ex. une interface audio) ou d'un des
+protocoles rares (SCTP pour certaines piles téléphonie/SIP), active les autres
+reliques à la carte plutôt que celle-ci, ou surcharge
+`boot.blacklistedKernelModules`.
+:::
+
 ## Exemple d'utilisation
 
 Reliques individuelles :
@@ -141,6 +176,7 @@ modules = [
   stc.nixosModules.relics-hardening-network
   stc.nixosModules.relics-hardening-filesystem
   stc.nixosModules.relics-hardening-ssh
+  stc.nixosModules.relics-hardening-modules
   ./configuration.nix
 ];
 
@@ -151,6 +187,7 @@ modules = [
   stc.relics.hardening.filesystem.enable = true;
   stc.relics.hardening.filesystem.tmpSize = "4G";
   stc.relics.hardening.ssh.enable = true;
+  stc.relics.hardening.modules.enable = true;
 
   # Le pare-feu est géré séparément — ouvre les ports ici selon tes besoins :
   networking.firewall.allowedTCPPorts = [ 22 80 443 ];
@@ -174,8 +211,8 @@ Machine gaming avec durcissement :
 
 ## Le raccourci cogitator-hardening
 
-Pour le cas courant d'activation des quatre reliques avec les valeurs par défaut,
-utilise [`cogitator-hardening`](/stc/fr/cogitator/hardening/). Une option au lieu de quatre :
+Pour le cas courant d'activation des cinq reliques avec les valeurs par défaut,
+utilise [`cogitator-hardening`](/stc/fr/cogitator/hardening/). Une option au lieu de cinq :
 
 ```nix
 modules = [ stc.nixosModules.cogitator-hardening ];
