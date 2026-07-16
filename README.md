@@ -148,12 +148,23 @@ just ci
 
 ---
 
-## Migrating from v1.x
+## Releases
 
-If your configuration uses `stc.boot`, `stc.zfs`, `stc.traefik`, etc., the old
-namespace still works but emits a deprecation warning. Migrate to the canonical
-`stc.relics.*` / `stc.cogitator.*` namespaces. The legacy aliases will be removed
-in v3.0 (January 2027).
+STC follows [Semantic Versioning](https://semver.org/) and is pre-1.0 (`0.x`).
+See [`CHANGELOG.md`](./CHANGELOG.md) for the release history and
+[`.claude/plans/README.md`](./.claude/plans/README.md) for the map of tags to the
+work that produced them. The changelog is generated from Conventional Commits with
+`just changelog` (git-cliff).
+
+---
+
+## Migrating to `stc.relics.*`
+
+If your configuration uses the flat `stc.boot`, `stc.zfs`, `stc.traefik`, etc.
+(the layout before `v0.2.0`), the old namespace still works but emits a
+deprecation warning. Migrate to the canonical `stc.relics.*` / `stc.cogitator.*`
+namespaces — see [`MIGRATION.md`](./MIGRATION.md). The legacy aliases will be
+removed at the next major release (`v1.0.0`).
 
 ---
 
