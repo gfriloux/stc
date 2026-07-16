@@ -40,6 +40,11 @@ show:
 # Full CI gate: formatting + linting + flake check + doc parity
 ci: fmt-check lint check docs-parity
 
+# Regenerate CHANGELOG.md from Conventional Commits + tags (git-cliff).
+# Review the diff before committing.
+changelog:
+    git-cliff --output CHANGELOG.md
+
 
 # ── Provings ──────────────────────────────────────────────────────────────────
 

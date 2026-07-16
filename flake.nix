@@ -97,6 +97,7 @@
             alejandra
             deadnix
             git
+            git-cliff
             just
             nix-tree
             statix

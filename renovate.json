@@ -1,0 +1,32 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "labels": ["dependencies"],
+  "commitMessagePrefix": "chore(deps):",
+  "packageRules": [
+    {
+      "description": "Group Nix flake input updates into a single PR",
+      "matchManagers": ["nix"],
+      "groupName": "Nix flake inputs",
+      "groupSlug": "nix"
+    },
+    {
+      "description": "Group GitHub Actions updates into a single PR",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions",
+      "groupSlug": "github-actions"
+    }
+  ],
+  "nix": {
+    "enabled": true
+  },
+  "lockFileMaintenance": {
+    "enabled": true
+  },
+  "github-actions": {
+    "enabled": true
+  },
+  "schedule": ["every weekend"]
+}

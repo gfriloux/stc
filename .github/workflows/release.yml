@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+# Needs write access to create the GitHub release.
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0 # full history for git-cliff
+
+      - uses: DeterminateSystems/nix-installer-action@e50d5f73bfe71c2dd0aa4218de8f4afa59f8f81d # v16
+
+      # Release notes = the current tag's section, rendered by git-cliff from the
+      # dev shell so local `just changelog` and CI use the same tool version.
+      - name: Generate release notes
+        run: nix develop --command git-cliff --latest --strip header --output RELEASE_NOTES.md
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          body_path: RELEASE_NOTES.md
