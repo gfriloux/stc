@@ -27,11 +27,12 @@ sous-jacentes. Le profil t'évite simplement d'activer chacune individuellement.
 
 | Nom du module | Option d'activation | Ce qu'il compose |
 |---------------|---------------------|------------------|
-| `cogitator-hardening` | `stc.cogitator.hardening.enable` | Durcissement noyau + réseau + système de fichiers + SSH |
+| `cogitator-hardening` | `stc.cogitator.hardening.enable` | Durcissement noyau + réseau + système de fichiers + SSH + blacklist de modules |
 | `cogitator-vm` | `stc.cogitator.vm.enable` | Shell fish, SSH, utilisateur principal, Docker optionnel, GC Nix |
 | `cogitator-docker-server` | `stc.cogitator.docker-server.enable` | Traefik + CrowdSec + notifications optionnelles + démon Docker |
 | `cogitator-plasma` | `stc.cogitator.plasma.enable` | Bureau KDE Plasma 6 Wayland + audio Pipewire |
 | `cogitator-gaming` | `stc.cogitator.gaming.enable` | GPU AMD + Pipewire + Steam |
+| `cogitator-workstation` | `stc.cogitator.workstation.enable` | Poste durci : bureau (Plasma) + durcissement noyau/réseau/modules + YubiKey |
 | `cogitator-sarcophagus-kvm` | `stc.cogitator.sarcophagus-kvm.enable` | Image disque QEMU/KVM : ZFS + impermanence + durcissement + constructeur qcow2 |
 | `cogitator-sarcophagus-aws` | `stc.cogitator.sarcophagus-aws.enable` | Image disque AMI AWS : ZFS + impermanence + durcissement + plateforme AWS + constructeur raw |
 | `cogitator-dreadnought` | `stc.cogitator.dreadnought.enable` | Profil système EC2 : ZFS + impermanence + durcissement + plateforme AWS |
@@ -62,6 +63,7 @@ Utilise des reliques individuelles quand :
 - [Profil serveur Docker](/stc/fr/cogitator/docker-server/)
 - [Profil bureau Plasma](/stc/fr/cogitator/plasma/)
 - [Profil gaming](/stc/fr/cogitator/gaming/)
+- [Profil poste de travail](/stc/fr/cogitator/workstation/)
 - [Profil Enginseer](/stc/fr/cogitator/enginseer/)
 - [Profil Desktop](/stc/fr/cogitator/desktop/)
 - [Profil Sarcophagus KVM](/stc/fr/cogitator/sarcophagus-kvm/)
