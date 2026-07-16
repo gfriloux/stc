@@ -2,14 +2,13 @@
 
 > This document defines the standard process for planning and executing maintenance on the STC flake.
 > Every change is decomposed into atomic, testable steps. Each step is independently committable and verifiable.
->
-> **For French version, see below.**
 
 ---
 
 ## Table of Contents
 
 - [Quick Start](#quick-start)
+- [Plans & Releases](#plans--releases)
 - [Maintenance Process Overview](#maintenance-process-overview)
 - [Change Types & Procedures](#change-types--procedures)
   - [Adding a New Relic](#adding-a-new-relic)
@@ -35,6 +34,41 @@ Every modification to STC follows this cycle:
 
 **Key principle:** Always prefer small, testable commits over large monolithic ones.
 If you can't test a change independently, it's not atomic yet.
+
+---
+
+## Plans & Releases
+
+**Where plans live.** Every plan is a file under `.claude/plans/`, never at the
+repo root:
+
+- `.claude/plans/vX.Y.Z/plan.md` — the plan that produces release `vX.Y.Z`.
+  A release built from several chantiers keeps one file per chantier.
+- `.claude/plans/release/` — plans about tooling/infrastructure (tags, changelog,
+  CI, working methods) rather than a single product feature.
+
+An obsolete plan is **deleted**, never duplicated as `_v2` / `_v3`. See
+[`.claude/plans/README.md`](.claude/plans/README.md) for the layout and the
+retroactive version map.
+
+**Git workflow (hybrid).**
+
+- Claude works on a **dedicated branch** (`feat/…`, `fix/…`, `refactor/…`,
+  `docs/…`, `chore/…`, `ci/…`) — **never directly on `main`**.
+- Claude commits **atomically** (Conventional Commits) and **never** merges,
+  pushes, or tags. The **user** merges the branch to `main`, tags, and pushes.
+- A plan concludes when the user merges to `main`; the next plan starts from the
+  updated `main`.
+
+**Versioning & releases.**
+
+- STC follows [Semantic Versioning](https://semver.org/); it is pre-1.0 (`0.x`),
+  so breaking changes bump the minor. The deprecated `stc.*` aliases are removed
+  at the first major, `v1.0.0`.
+- `CHANGELOG.md` is generated from Conventional Commits by `git-cliff`
+  (`just changelog`) — review the diff before committing.
+- Pushing a tag `v*` triggers `.github/workflows/release.yml`, which renders that
+  tag's notes and creates the GitHub release.
 
 ---
 

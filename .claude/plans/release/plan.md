@@ -35,38 +35,37 @@ process documented for both humans and Claude. Remove the fictional `v3.0
 - [x] Add `.claude/plans/README.md` (layout + retro version map).
 - [x] Author this plan.
 
-### Phase 2 — Remove the v3.0 fiction
+### Phase 2 — Remove the v3.0 fiction  ✅ done
 
-- [ ] `README.md` — rewrite the "Migrating from v1.x" section: aliases removed at
-      `v1.0.0`, no calendar date.
-- [ ] `MIGRATION_v2.0.md` → `MIGRATION.md` — rewrite the timeline table to the real
-      `0.x` story; drop `v2.5 (Aug 2026)` / `v3.0 (Jan 2027)`.
-- [ ] `relics/default.nix` — fix the `NAMESPACE MIGRATION (v2.0)` comment and the
-      "removed in STC v3.0 (January 2027)" line.
-- [ ] `PROCEDURE_PLANS.md` — fix the v3.0 references (lines ~470, ~477, ~898).
-- [ ] Verify: `nix flake check` still passes (comment-only in Nix).
+- [x] `README.md` — aliases removed at `v1.0.0`, no calendar date.
+- [x] `MIGRATION_v2.0.md` → `MIGRATION.md` — real `0.x` timeline; dropped
+      `v2.5 (Aug 2026)` / `v3.0 (Jan 2027)`, incl. the FAQ.
+- [x] `relics/default.nix` — comment fixed (`since v0.2.0` / removed at `v1.0.0`).
+- [x] `PROCEDURE_PLANS.md` — v3.0 references fixed.
+- [x] Also brought the untracked core docs (DESIGN/CLAUDE/PROCEDURE_PLANS/
+      SECURITY/MIGRATION) under version control.
 
-### Phase 3 — Retroactive tags
+### Phase 3 — Retroactive tags  ✅ done (local)
 
-- [ ] Create 8 annotated tags at the mapped commits with a one-line summary each.
-- [ ] Verify: `git tag` lists `v0.1.0 … v0.6.0`; `git describe` resolves.
-- [ ] The user pushes: `git push origin --tags`.
+- [x] Created 8 annotated tags `v0.1.0 … v0.6.0` at the mapped commits.
+- [x] `git describe` resolves (`v0.6.0-N-g…`).
+- [ ] **User action:** `git push origin --tags` after merging this branch.
 
-### Phase 4 — Release tooling (astropath parity)
+### Phase 4 — Release tooling (astropath parity)  ✅ done
 
-- [ ] `cliff.toml` — git-cliff config (Conventional Commits, groups, `v*` tag pattern).
-- [ ] `.github/workflows/release.yml` — on tag `v*`, generate notes + GitHub release.
-- [ ] `renovate.json` — weekly grouped updates (flake.lock + Actions).
-- [ ] `Justfile` — add a `changelog` recipe (git-cliff).
-- [ ] Generate `CHANGELOG.md` from the retro tags.
+- [x] `cliff.toml` — git-cliff config (Conventional Commits, groups, `v*` pattern).
+- [x] `.github/workflows/release.yml` — on tag `v*` (actions SHA-pinned).
+- [x] `renovate.json` — weekly grouped updates (flake inputs + Actions).
+- [x] `Justfile` — `changelog` recipe; `git-cliff` added to the dev shell.
+- [x] Generated `CHANGELOG.md` from the retro tags.
 
-### Phase 5 — Document the working methods + doc sync
+### Phase 5 — Document the working methods + doc sync  ✅ done
 
-- [ ] `PROCEDURE_PLANS.md` — document `.claude/plans/` location, hybrid git
-      (Claude branches/commits; user merges/tags/pushes), semver, changelog flow.
-- [ ] `CLAUDE.md` — point to `.claude/plans/`, release tooling, tagging policy.
-- [ ] `README.md` — add a short Releases/Changelog section.
-- [ ] Bilingual sync (EN + FR) for any doc-site page touched.
+- [x] `PROCEDURE_PLANS.md` — new "Plans & Releases" section (plans location,
+      hybrid git, semver, changelog flow).
+- [x] `CLAUDE.md` — new "Working methods" section.
+- [x] `README.md` — added a "Releases" section.
+- [x] No doc-site (`docs/`) page touched → no bilingual sync needed.
 
 ## Quality gates
 

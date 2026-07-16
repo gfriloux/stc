@@ -148,6 +148,16 @@ just ci
 
 ---
 
+## Releases
+
+STC follows [Semantic Versioning](https://semver.org/) and is pre-1.0 (`0.x`).
+See [`CHANGELOG.md`](./CHANGELOG.md) for the release history and
+[`.claude/plans/README.md`](./.claude/plans/README.md) for the map of tags to the
+work that produced them. The changelog is generated from Conventional Commits with
+`just changelog` (git-cliff).
+
+---
+
 ## Migrating to `stc.relics.*`
 
 If your configuration uses the flat `stc.boot`, `stc.zfs`, `stc.traefik`, etc.
