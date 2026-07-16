@@ -23,6 +23,7 @@
       legacyPackages.provings = {
         hardening = pkgs.testers.runNixOSTest (import ./hardening.nix {inherit self;});
         docker-server = pkgs.testers.runNixOSTest (import ./docker-server.nix {inherit self;});
+        workstation = pkgs.testers.runNixOSTest (import ./workstation.nix {inherit self;});
       };
     };
 }

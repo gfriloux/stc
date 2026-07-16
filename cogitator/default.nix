@@ -17,6 +17,8 @@
     cogitator-plasma = ./nixos/plasma.nix;
     # Gaming setup: AMD GPU + Pipewire + Steam.
     cogitator-gaming = ./nixos/gaming.nix;
+    # Hardened workstation baseline: DE (Plasma) + hardening + YubiKey.
+    cogitator-workstation = ./nixos/workstation.nix;
 
     # QEMU/KVM disk image: ZFS + impermanence + hardening + qcow2 builder.
     cogitator-sarcophagus-kvm = {...}: {

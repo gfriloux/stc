@@ -27,11 +27,12 @@ options. The profile just saves you from enabling each one individually.
 
 | Module name | Enable option | What it composes |
 |-------------|---------------|------------------|
-| `cogitator-hardening` | `stc.cogitator.hardening.enable` | kernel + network + filesystem + SSH hardening |
+| `cogitator-hardening` | `stc.cogitator.hardening.enable` | kernel + network + filesystem + SSH + module-blacklist hardening |
 | `cogitator-vm` | `stc.cogitator.vm.enable` | fish shell, SSH, primary user, optional Docker, Nix GC |
 | `cogitator-docker-server` | `stc.cogitator.docker-server.enable` | Traefik + CrowdSec + optional notifications + Docker daemon |
 | `cogitator-plasma` | `stc.cogitator.plasma.enable` | KDE Plasma 6 Wayland desktop + Pipewire audio |
 | `cogitator-gaming` | `stc.cogitator.gaming.enable` | AMD GPU + Pipewire + Steam |
+| `cogitator-workstation` | `stc.cogitator.workstation.enable` | Hardened workstation: desktop (Plasma) + kernel/network/module hardening + YubiKey |
 | `cogitator-sarcophagus-kvm` | `stc.cogitator.sarcophagus-kvm.enable` | QEMU/KVM disk image: ZFS + impermanence + hardening + qcow2 builder |
 | `cogitator-sarcophagus-aws` | `stc.cogitator.sarcophagus-aws.enable` | AWS AMI disk image: ZFS + impermanence + hardening + AWS platform + raw builder |
 | `cogitator-dreadnought` | `stc.cogitator.dreadnought.enable` | EC2 running-system profile: ZFS + impermanence + hardening + AWS platform |
@@ -62,6 +63,7 @@ Use individual relics when:
 - [Docker server profile](/stc/en/cogitator/docker-server/)
 - [Plasma desktop profile](/stc/en/cogitator/plasma/)
 - [Gaming profile](/stc/en/cogitator/gaming/)
+- [Workstation profile](/stc/en/cogitator/workstation/)
 - [Enginseer profile](/stc/en/cogitator/enginseer/)
 - [Desktop profile](/stc/en/cogitator/desktop/)
 - [Sarcophagus KVM profile](/stc/en/cogitator/sarcophagus-kvm/)
