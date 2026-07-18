@@ -90,6 +90,16 @@ in {
       zoxide.enable = true;
     };
 
+    services.gpg-agent = {
+      enable = true;
+      # SSH auth is delegated to a dedicated ssh-agent by the consumer, not gpg.
+      enableSshSupport = false;
+      enableFishIntegration = true;
+      # Headless-safe default so the Enginseer works on servers/TTY. GUI profiles
+      # (cogitator-desktop) override this with a graphical pinentry.
+      pinentry.package = lib.mkDefault pkgs.pinentry-curses;
+    };
+
     home.packages = with pkgs; [
       age
       alejandra

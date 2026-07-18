@@ -53,6 +53,15 @@ L'éditeur `micro` est livré avec des réglages opinionnés (tabulations douces
 serveur `nixd` est fourni plus bas). Surcharge n'importe lequel depuis ta propre
 configuration home.
 
+### Agent GPG
+
+`services.gpg-agent` est activé avec l'intégration fish. L'authentification SSH
+n'est **pas** déléguée à gpg (`enableSshSupport = false`) — le consommateur câble
+son propre `ssh-agent`. Le pinentry par défaut est `pinentry-curses`, un choix
+compatible headless pour que l'Enginseer fonctionne en TTY et sur serveur. Il est
+posé avec `lib.mkDefault`, si bien que `cogitator-desktop` le surcharge avec un
+pinentry graphique (`pinentry-qt`).
+
 ### Paquets
 
 | Paquet | Utilité |

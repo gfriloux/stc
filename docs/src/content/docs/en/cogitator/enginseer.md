@@ -52,6 +52,14 @@ The `micro` editor ships with opinionated defaults (2-space soft tabs, ruler,
 saved cursor, mouse) and an `nix:nixd` LSP binding (the `nixd` server is provided
 below). Override any of them from your own home configuration.
 
+### GPG agent
+
+`services.gpg-agent` is enabled with fish integration. SSH authentication is **not**
+delegated to gpg (`enableSshSupport = false`) — the consumer wires its own
+`ssh-agent`. The pinentry defaults to `pinentry-curses`, a headless-safe choice so
+the Enginseer works over TTY and on servers. It is set with `lib.mkDefault`, so
+`cogitator-desktop` overrides it with a graphical pinentry (`pinentry-qt`).
+
 ### Packages
 
 | Package | Purpose |
