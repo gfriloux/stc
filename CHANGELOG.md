@@ -3,7 +3,7 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.7.0] — 2026-07-18
 
 ### Bug Fixes
 
@@ -12,6 +12,16 @@ Releases follow [Semantic Versioning](https://semver.org/).
 ### Documentation
 
 - track core project docs (DESIGN, CLAUDE, PROCEDURE_PLANS, SECURITY, MIGRATION) ([`98ddf69`](https://github.com/gfriloux/stc/commit/98ddf692e9cdb253904a0a825651290085c59d2a))
+- **changelog**: generate CHANGELOG.md from the retroactive tags ([`80c2ff4`](https://github.com/gfriloux/stc/commit/80c2ff404288b32756f0afc1d878147946904a0c))
+- document the working methods (plans, hybrid git, releases) ([`f24e96f`](https://github.com/gfriloux/stc/commit/f24e96ff917bc70d8d7db5f81d1f48d3529db423))
+- **plans**: add v0.7.0 home baseline plan ([`45c370e`](https://github.com/gfriloux/stc/commit/45c370e8f46a6113e12ae91f8edc84d92491d5d3))
+
+### Features
+
+- **cogitator-enginseer**: add gpg, gh, nix-search-tv, micro settings and CLI packages ([`a6e4d21`](https://github.com/gfriloux/stc/commit/a6e4d21933dd91f13e1750544bfe66bccf785802))
+- **cogitator-enginseer**: add gpg-agent with headless-safe pinentry default ([`5a65516`](https://github.com/gfriloux/stc/commit/5a655168009cef2cc4c3ef6a6a3a102a85093945))
+- **cogitator-enginseer**: add ssh connection multiplexing ([`5aa5f5c`](https://github.com/gfriloux/stc/commit/5aa5f5cc5d15fcbc7a5b373132181e428b287654))
+- **cogitator-desktop**: override gpg-agent pinentry to Qt and add libnotify ([`b3cf83b`](https://github.com/gfriloux/stc/commit/b3cf83b886632c3fb6d330546ecc44eb02755144))
 ## [0.6.0] — 2026-07-16
 
 ### Features
