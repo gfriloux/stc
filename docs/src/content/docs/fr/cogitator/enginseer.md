@@ -62,6 +62,19 @@ compatible headless pour que l'Enginseer fonctionne en TTY et sur serveur. Il es
 posé avec `lib.mkDefault`, si bien que `cogitator-desktop` le surcharge avec un
 pinentry graphique (`pinentry-qt`).
 
+### Multiplexing des connexions SSH
+
+`programs.ssh` est activé avec un unique bloc universel `Host *` qui active le
+multiplexing des connexions (`ControlMaster auto`, un control path
+`~/.ssh/sockets/`, `ControlPersist 60m`) et pose `SetEnv TERM=xterm-256color`. Le
+répertoire des sockets est créé via un fichier `.keep`. `enableDefaultConfig` est
+mis à `false`, si bien que le profil s'appuie sur les défauts sûrs propres à
+OpenSSH plutôt que sur le bloc de défauts historique de Home Manager.
+
+Seule la partie **universelle** vit ici. Les blocs spécifiques à un hôte —
+noms d'hôtes, utilisateurs, `IdentityFile`/secrets — restent dans la configuration
+du consommateur et fusionnent avec ce bloc `Host *` au moment du build.
+
 ### Paquets
 
 | Paquet | Utilité |

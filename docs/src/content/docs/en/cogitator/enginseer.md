@@ -60,6 +60,19 @@ delegated to gpg (`enableSshSupport = false`) — the consumer wires its own
 the Enginseer works over TTY and on servers. It is set with `lib.mkDefault`, so
 `cogitator-desktop` overrides it with a graphical pinentry (`pinentry-qt`).
 
+### SSH connection multiplexing
+
+`programs.ssh` is enabled with a single universal `Host *` block that turns on
+connection multiplexing (`ControlMaster auto`, a `~/.ssh/sockets/` control path,
+`ControlPersist 60m`) and sets `SetEnv TERM=xterm-256color`. The socket directory
+is created via a `.keep` file. `enableDefaultConfig` is set to `false`, so the
+profile relies on OpenSSH's own safe defaults instead of Home Manager's legacy
+default block.
+
+Only the **universal** part lives here. Host-specific blocks — hostnames,
+users, `IdentityFile`/secrets — belong in the consumer's own configuration and
+merge with this `Host *` block at build time.
+
 ### Packages
 
 | Package | Purpose |

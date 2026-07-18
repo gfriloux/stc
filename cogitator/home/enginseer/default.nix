@@ -84,6 +84,23 @@ in {
       };
 
       rbw.enable = true;
+
+      # Connection multiplexing only — the universal part. Host-specific
+      # blocks (identityFiles, secrets) stay in the consumer's config.
+      # enableDefaultConfig = false drops Home Manager's legacy default block
+      # (falling back to OpenSSH's own safe defaults) and silences its
+      # deprecation warning, matching the consumer's setup.
+      ssh = {
+        enable = true;
+        enableDefaultConfig = lib.mkDefault false;
+        settings."*" = {
+          ControlMaster = "auto";
+          ControlPath = "~/.ssh/sockets/%r@%h:%p";
+          ControlPersist = "60m";
+          SetEnv.TERM = "xterm-256color";
+        };
+      };
+
       television.enable = true;
       television-ssh.enable = true;
       zellij.enable = true;
@@ -133,6 +150,9 @@ in {
       viu
       xcp
     ];
+
+    # ControlPath directory for SSH connection multiplexing (see programs.ssh).
+    home.file.".ssh/sockets/.keep".text = "";
 
     xdg.configFile."oh-my-posh/dracula.omp.json".source =
       ./oh-my-posh/dracula.omp.json;
