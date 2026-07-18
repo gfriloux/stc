@@ -51,20 +51,76 @@ in {
       fzf.enable = true;
       git.enable = true;
       gitflow-toolkit.enable = true;
+
+      gh = {
+        enable = true;
+        settings = {
+          git_protocol = "ssh";
+          prompt = "enabled";
+        };
+      };
+
+      gpg.enable = true;
       helix.enable = true;
       jq.enable = true;
       lsd.enable = true;
-      micro.enable = true;
+
+      micro = {
+        enable = true;
+        settings = {
+          tabsize = 2;
+          tabstospaces = true;
+          autoindent = true;
+          ruler = true;
+          savecursor = true;
+          mouse = true;
+          "lsp.server" = "nix:nixd";
+        };
+      };
+
+      nix-search-tv = {
+        enable = true;
+        enableTelevisionIntegration = true;
+      };
+
       rbw.enable = true;
+
+      # Connection multiplexing only — the universal part. Host-specific
+      # blocks (identityFiles, secrets) stay in the consumer's config.
+      # enableDefaultConfig = false drops Home Manager's legacy default block
+      # (falling back to OpenSSH's own safe defaults) and silences its
+      # deprecation warning, matching the consumer's setup.
+      ssh = {
+        enable = true;
+        enableDefaultConfig = lib.mkDefault false;
+        settings."*" = {
+          ControlMaster = "auto";
+          ControlPath = "~/.ssh/sockets/%r@%h:%p";
+          ControlPersist = "60m";
+          SetEnv.TERM = "xterm-256color";
+        };
+      };
+
       television.enable = true;
       television-ssh.enable = true;
       zellij.enable = true;
       zoxide.enable = true;
     };
 
+    services.gpg-agent = {
+      enable = true;
+      # SSH auth is delegated to a dedicated ssh-agent by the consumer, not gpg.
+      enableSshSupport = false;
+      enableFishIntegration = true;
+      # Headless-safe default so the Enginseer works on servers/TTY. GUI profiles
+      # (cogitator-desktop) override this with a graphical pinentry.
+      pinentry.package = lib.mkDefault pkgs.pinentry-curses;
+    };
+
     home.packages = with pkgs; [
       age
       alejandra
+      aria2
       croc
       dive
       doggo
@@ -74,6 +130,7 @@ in {
       git-workspace
       glow
       gum
+      htop
       just
       ncdu
       nh
@@ -82,15 +139,20 @@ in {
       nixd
       nvd
       oh-my-posh
+      ouch
       p7zip
       prettyping
       pv
       pwgen
       rsync
       sops
+      unzip
       viu
       xcp
     ];
+
+    # ControlPath directory for SSH connection multiplexing (see programs.ssh).
+    home.file.".ssh/sockets/.keep".text = "";
 
     xdg.configFile."oh-my-posh/dracula.omp.json".source =
       ./oh-my-posh/dracula.omp.json;

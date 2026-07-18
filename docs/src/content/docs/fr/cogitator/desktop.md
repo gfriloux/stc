@@ -22,11 +22,22 @@ lecteur multimédia.
 | `programs.kitty` | `relics-kitty` | Terminal accéléré GPU + Nerd Fonts sélectionnées |
 | `programs.ghostty` | `relics-ghostty` | Terminal accéléré GPU, GTK4 natif, protocole étendu |
 | `programs.zen-browser` | `relics-zen-browser` | Fork Firefox axé vie privée |
+| `services.gpg-agent.pinentry` | config directe | Pinentry graphique (`pinentry-qt`) |
 | `pkgs.gimp` | paquet direct | Éditeur d'images |
+| `pkgs.libnotify` | paquet direct | Envoi de notifications bureau (`notify-send`) |
 | `pkgs.vlc` | paquet direct | Lecteur multimédia |
 
-GIMP et VLC sont installés comme paquets simples — il n'existe pas de module programme
-Home Manager pour eux, donc il n'y a rien à configurer au-delà de l'installation.
+GIMP, `libnotify` et VLC sont installés comme paquets simples — il n'existe pas de
+module programme Home Manager pour eux, donc il n'y a rien à configurer au-delà de
+l'installation.
+
+### Pinentry graphique
+
+Couplé à `cogitator-enginseer`, le profil Desktop surcharge le pinentry de
+gpg-agent avec `pinentry-qt` (via `lib.mkForce`), remplaçant le défaut
+`pinentry-curses` compatible headless afin que les demandes de passphrase
+apparaissent dans une fenêtre graphique. La surcharge est inerte si gpg-agent
+n'est pas activé.
 
 Kitty et Ghostty coexistent sans conflit — chacun a son propre namespace `programs.*`.
 Les Nerd Fonts sont installées via `relics-kitty` et disponibles pour les deux terminaux.

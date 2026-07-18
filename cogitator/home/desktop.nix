@@ -21,8 +21,13 @@ in {
     stc.relics.gui.ghostty.enable = true;
     stc.relics.gui.zen-browser.enable = true;
 
+    # Graphical pinentry for gpg-agent. Overrides the headless-safe default set
+    # by cogitator-enginseer; inert if gpg-agent is not enabled.
+    services.gpg-agent.pinentry.package = lib.mkForce pkgs.pinentry-qt;
+
     home.packages = with pkgs; [
       gimp
+      libnotify
       vlc
     ];
   };
