@@ -22,11 +22,21 @@ media player.
 | `programs.kitty` | `relics-kitty` | GPU-accelerated terminal + curated Nerd Fonts |
 | `programs.ghostty` | `relics-ghostty` | GPU-accelerated terminal, native GTK4, extended protocol |
 | `programs.zen-browser` | `relics-zen-browser` | Privacy-focused Firefox fork |
+| `services.gpg-agent.pinentry` | direct config | Graphical pinentry (`pinentry-qt`) |
 | `pkgs.gimp` | direct package | Image editor |
+| `pkgs.libnotify` | direct package | Desktop notification sender (`notify-send`) |
 | `pkgs.vlc` | direct package | Media player |
 
-GIMP and VLC are installed as plain packages — no Home Manager program module
-exists for them, so there is nothing to configure beyond the install.
+GIMP, `libnotify`, and VLC are installed as plain packages — no Home Manager
+program module exists for them, so there is nothing to configure beyond the
+install.
+
+### Graphical pinentry
+
+When paired with `cogitator-enginseer`, the Desktop profile overrides the
+gpg-agent pinentry with `pinentry-qt` (via `lib.mkForce`), replacing the
+headless-safe `pinentry-curses` default so passphrase prompts appear in a
+graphical dialog. The override is inert if gpg-agent is not enabled.
 
 Kitty and Ghostty coexist without conflict — each has its own `programs.*`
 namespace. Nerd Fonts are installed via `relics-kitty` and are available to
