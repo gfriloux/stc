@@ -35,15 +35,23 @@ shell, outillage de développement, rites git, et augmentations esthétiques.
 | `fzf` | Recherche floue |
 | `git` | Contrôle de version |
 | `gitflow-toolkit` | Helpers de workflow git |
+| `gh` | CLI GitHub (`git_protocol = ssh`) |
+| `gpg` | GnuPG — gestion de clés et signature |
 | `helix` | Éditeur de texte modal |
 | `jq` | Processeur JSON |
 | `lsd` | Remplacement de `ls` avec icônes |
-| `micro` | Éditeur de terminal simple |
+| `micro` | Éditeur de terminal simple (réglages opinionnés, LSP `nixd`) |
+| `nix-search-tv` | Recherche nixpkgs avec intégration `television` |
 | `rbw` | CLI Bitwarden |
 | `television` | Recherche et aperçu de fichiers |
 | `television-ssh` | Recherche floue d'hôtes SSH |
 | `zellij` | Multiplexeur de terminal |
 | `zoxide` | Remplacement intelligent de `cd` |
+
+L'éditeur `micro` est livré avec des réglages opinionnés (tabulations douces de
+2 espaces, règle, curseur mémorisé, souris) et un binding LSP `nix:nixd` (le
+serveur `nixd` est fourni plus bas). Surcharge n'importe lequel depuis ta propre
+configuration home.
 
 ### Paquets
 
@@ -51,6 +59,7 @@ shell, outillage de développement, rites git, et augmentations esthétiques.
 |--------|---------|
 | `age` | Chiffrement de fichiers |
 | `alejandra` | Formateur Nix |
+| `aria2` | Utilitaire de téléchargement multi-sources |
 | `croc` | Transfert de fichiers |
 | `dive` | Inspecteur de couches d'images Docker |
 | `doggo` | Outil de lookup DNS |
@@ -60,6 +69,7 @@ shell, outillage de développement, rites git, et augmentations esthétiques.
 | `git-workspace` | Gestionnaire de workspace multi-dépôts |
 | `glow` | Rendu Markdown |
 | `gum` | Composants UI pour scripts |
+| `htop` | Visualiseur de processus interactif |
 | `just` | Exécuteur de tâches |
 | `ncdu` | Analyseur d'utilisation disque |
 | `nh` | Wrapper de `nixos-rebuild` / `home-manager` avec meilleure UX |
@@ -68,12 +78,14 @@ shell, outillage de développement, rites git, et augmentations esthétiques.
 | `nixd` | Serveur de langage Nix (LSP) pour l'intégration éditeur |
 | `nvd` | Diff de générations NixOS — visualise les changements entre builds |
 | `oh-my-posh` | Moteur de prompt shell |
+| `ouch` | Compression / décompression sans douleur |
 | `p7zip` | Outil d'archive |
 | `prettyping` | `ping` avec graphes |
 | `pv` | Visualiseur de progression de pipe |
 | `pwgen` | Générateur de mots de passe |
 | `rsync` | Synchronisation de fichiers |
 | `sops` | Gestion des secrets |
+| `unzip` | Extraction d'archives ZIP |
 | `viu` | Visionneuse d'images dans le terminal |
 | `xcp` | `cp` avec progression |
 

@@ -51,10 +51,38 @@ in {
       fzf.enable = true;
       git.enable = true;
       gitflow-toolkit.enable = true;
+
+      gh = {
+        enable = true;
+        settings = {
+          git_protocol = "ssh";
+          prompt = "enabled";
+        };
+      };
+
+      gpg.enable = true;
       helix.enable = true;
       jq.enable = true;
       lsd.enable = true;
-      micro.enable = true;
+
+      micro = {
+        enable = true;
+        settings = {
+          tabsize = 2;
+          tabstospaces = true;
+          autoindent = true;
+          ruler = true;
+          savecursor = true;
+          mouse = true;
+          "lsp.server" = "nix:nixd";
+        };
+      };
+
+      nix-search-tv = {
+        enable = true;
+        enableTelevisionIntegration = true;
+      };
+
       rbw.enable = true;
       television.enable = true;
       television-ssh.enable = true;
@@ -65,6 +93,7 @@ in {
     home.packages = with pkgs; [
       age
       alejandra
+      aria2
       croc
       dive
       doggo
@@ -74,6 +103,7 @@ in {
       git-workspace
       glow
       gum
+      htop
       just
       ncdu
       nh
@@ -82,12 +112,14 @@ in {
       nixd
       nvd
       oh-my-posh
+      ouch
       p7zip
       prettyping
       pv
       pwgen
       rsync
       sops
+      unzip
       viu
       xcp
     ];
