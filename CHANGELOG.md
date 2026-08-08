@@ -3,11 +3,32 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.7.3] — 2026-08-08
+
+### Dependencies
+
+- **deps**: Lock file maintenance ([`23a9a80`](https://github.com/gfriloux/stc/commit/23a9a80d79e4bfbf221bafe07563bef8bfdc74c0))
+- **deps**: Update GitHub Actions ([`3f8aef8`](https://github.com/gfriloux/stc/commit/3f8aef87b4828ffcd1da7773fcec3efab50399d0))
+- **deps**: upgrade astro to v7 and starlight to 0.41 ([`b8dd64d`](https://github.com/gfriloux/stc/commit/b8dd64d02593cd50790a5dbccf26d4e17927e853))
+
+### Documentation
+
+- **plans**: add plan for the Astro 7 / Starlight 0.41 upgrade ([`b888d04`](https://github.com/gfriloux/stc/commit/b888d048dba6472986077b0103f5ec4cf569b2d5))
+- **plans**: record the outcome of the Astro 7 upgrade ([`7385320`](https://github.com/gfriloux/stc/commit/73853206950623bbd7e44e3316170f98dcf097d6))
+- **plans**: fix the changelog rationale in the Astro 7 plan ([`d671f8e`](https://github.com/gfriloux/stc/commit/d671f8e30f4d71a64a3419c3905832455e2d5f3b))
+
+### Refactoring
+
+- **docs**: migrate content collections to the Content Layer API ([`f853c02`](https://github.com/gfriloux/stc/commit/f853c02728a796498bb8511ecf8373e2432f3a6e))
 ## [0.7.2] — 2026-08-08
 
 ### Bug Fixes
 
 - **cogitator-enginseer**: let Atuin own Ctrl-R instead of fzf ([`edb901a`](https://github.com/gfriloux/stc/commit/edb901a1e41b3cc46112c5a7641cc942051283d3))
+
+### Documentation
+
+- **changelog**: generate CHANGELOG.md for v0.7.2 ([`b22513e`](https://github.com/gfriloux/stc/commit/b22513e907a3efc7870bffeefbca0625a56ca460))
 ## [0.7.1] — 2026-08-08
 
 ### Bug Fixes
