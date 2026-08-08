@@ -179,6 +179,47 @@ they should be unaffected — which is itself worth confirming once.
 - [ ] No stale namespace references introduced in docs (Gate 4 grep)
 - [ ] Every commit is atomic and independently buildable
 
+## Outcome
+
+Executed in two commits; **Step 3 was not needed** — nothing broke.
+
+- `f853c02` — Content Layer migration, verified on Astro 5 first: 86 pages,
+  84 indexed, 6236 words, identical to baseline.
+- `b8dd64d` — Astro 7.2.0 / Starlight 0.41.7. `npm install` first failed with
+  `ERESOLVE` against the stale lock, reproducing the exact `renovate/artifacts`
+  failure; the lockfile had to be regenerated from scratch.
+
+Every risk listed above was resolved rather than merely surviving the build:
+
+- **#4 cascade layer** — Starlight's CSS lands in `@layer starlight.{reset,base,
+  core,components,content,utils}`; `stc.css` stays unlayered and therefore wins
+  unconditionally. All 13 Starlight class hooks it targets still exist in the
+  0.41 markup, so nothing detached silently. Confirmed visually on the built
+  artefact (`docs-preview`, not `docs-dev` — the dev server's unbundled CSS
+  ordering would not have tested the real cascade).
+- **#5 Rust compiler** — both `index.mdx` splash pages parse; the custom Hero
+  renders with `Astro.locals.starlightRoute` and its extra `eyebrow` frontmatter.
+- **#6 `compressHTML`** — an automated diff of rendered text against source
+  across 41 EN pages found 7 candidate glued words, all false positives
+  (`filesystem`, `nixosModules`, `pulseaudio`… — real identifiers inside code).
+- **#7 Sätteri** — npm resolves `@astrojs/markdown-remark@7.2.2` under Starlight;
+  nothing to port.
+- **#8 heading IDs** — the documentation contains **zero** in-page anchors, so the
+  trailing-hyphen change cannot bite.
+
+The Nix gates confirm the flake was untouched: all three schematic `drvPath`
+values are byte-identical to those produced on `#17`.
+
+Two gaps found while executing, both pre-existing and deliberately left out of
+this branch:
+
+- `npm run astro check` — the Gate 4 command in `PROCEDURE_PLANS.md` — has never
+  been runnable here. `docs/package.json` declares no `astro` script, and
+  `@astrojs/check` / `typescript` are not dependencies. `npm run build` is the
+  gate that actually holds.
+- The `docs-*` Justfile recipes silently assume the `.#docs` shell and fail with
+  `npm: command not found` from the default shell.
+
 ## Follow-up
 
 Once merged, `#14` and `#15` are closed as superseded. Worth considering
