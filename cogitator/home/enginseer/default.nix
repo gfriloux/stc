@@ -9,11 +9,22 @@
 # shell enhancements, dev tooling, git rites, and aesthetic augmentations.
 {
   config,
+  options,
   lib,
   pkgs,
   ...
 }: let
   cfg = config.stc.cogitator.enginseer;
+
+  # Atuin and fzf both bind Ctrl-R. Atuin's shell integration is sourced after
+  # fzf's, so Atuin already wins in practice; clearing fzf's history widget makes
+  # that explicit and silences Home Manager's conflict warning. Ctrl-T and Alt-C
+  # stay with fzf. The option only exists in Home Manager releases newer than the
+  # one STC pins, so it is applied conditionally — older consumers keep the
+  # (identical) sourcing-order behaviour without an eval error.
+  fzfHistoryWidget =
+    lib.optionalAttrs (options.programs.fzf ? historyWidget)
+    {historyWidget.command = "";};
 in {
   options.stc.cogitator.enginseer = {
     enable = lib.mkEnableOption "Enginseer CLI profile — full field-deployment toolkit";
@@ -48,7 +59,12 @@ in {
         silent = true;
       };
 
-      fzf.enable = true;
+      fzf =
+        {
+          enable = true;
+        }
+        // fzfHistoryWidget;
+
       git.enable = true;
       gitflow-toolkit.enable = true;
 

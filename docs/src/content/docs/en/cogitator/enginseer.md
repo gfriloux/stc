@@ -32,7 +32,7 @@ rites, and aesthetic augmentations.
 | `btop` | Resource monitor |
 | `delta` | Git diff pager (git integration enabled) |
 | `direnv` + `nix-direnv` | Per-directory env activation, silent mode |
-| `fzf` | Fuzzy finder |
+| `fzf` | Fuzzy finder (`Ctrl-T`, `Alt-C` — not `Ctrl-R`) |
 | `git` | Version control |
 | `gitflow-toolkit` | Git workflow helpers |
 | `gh` | GitHub CLI (`git_protocol = ssh`) |
@@ -51,6 +51,26 @@ rites, and aesthetic augmentations.
 The `micro` editor ships with opinionated defaults (2-space soft tabs, ruler,
 saved cursor, mouse) and an `nix:nixd` LSP binding (the `nixd` server is provided
 below). Override any of them from your own home configuration.
+
+### Ctrl-R belongs to Atuin
+
+`atuin` and `fzf` both bind `Ctrl-R` by default. Atuin's shell integration is
+sourced after fzf's, so Atuin wins either way — the Enginseer makes that explicit
+by setting `programs.fzf.historyWidget.command = ""`, which also silences Home
+Manager's conflict warning. `Ctrl-T` (files) and `Alt-C` (directories) stay with
+fzf.
+
+That option only exists in Home Manager releases newer than the one STC pins, so
+it is applied conditionally: on older Home Manager the profile evaluates
+unchanged and the behaviour is the same, it just comes from sourcing order alone.
+
+To hand `Ctrl-R` back to fzf, restore the widget and disable Atuin's binding from
+your own home configuration:
+
+```nix
+programs.fzf.historyWidget.command = lib.mkForce null;
+programs.atuin.flags = ["--disable-ctrl-r"];
+```
 
 ### GPG agent
 
