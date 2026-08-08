@@ -34,9 +34,11 @@ schematic is touched — the flake is untouched by this plan.
 - **One upgrade, not two.** The peer constraint makes astro and starlight a
   single atomic unit. `#14` and `#15` are superseded by this branch and are
   closed rather than rebased.
-- **Plan filed under `release/`**, not `vX.Y.Z/`: this is tooling
-  infrastructure, and `cliff.toml` skips `^chore` and `^docs`, so the upgrade
-  produces no `CHANGELOG.md` entry and does not drive a release on its own.
+- **Plan filed under `release/`**, not `vX.Y.Z/`: this is documentation tooling
+  infrastructure, not a product feature. Note that the commits *do* reach the
+  changelog — `cliff.toml` orders `^chore\(deps\)` (group *Dependencies*) before
+  the `^chore` skip rule, and `^docs` has its own *Documentation* group — so they
+  will appear under whichever tag ships next.
 - **Content Layer migration is split out first.** It is valid on the *current*
   Astro 5 as well as on 7, so it can be committed and verified independently,
   shrinking the surface of the version-bump commit.
