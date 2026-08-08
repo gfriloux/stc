@@ -3,6 +3,11 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.7.1] — 2026-08-08
+
+### Bug Fixes
+
+- **kitty**: drop gtk_engines from fonts package set ([`9a4b7b5`](https://github.com/gfriloux/stc/commit/9a4b7b55d9afea36656f130fa96416c6f17ee088))
 ## [0.7.0] — 2026-07-18
 
 ### Bug Fixes
@@ -15,6 +20,7 @@ Releases follow [Semantic Versioning](https://semver.org/).
 - **changelog**: generate CHANGELOG.md from the retroactive tags ([`80c2ff4`](https://github.com/gfriloux/stc/commit/80c2ff404288b32756f0afc1d878147946904a0c))
 - document the working methods (plans, hybrid git, releases) ([`f24e96f`](https://github.com/gfriloux/stc/commit/f24e96ff917bc70d8d7db5f81d1f48d3529db423))
 - **plans**: add v0.7.0 home baseline plan ([`45c370e`](https://github.com/gfriloux/stc/commit/45c370e8f46a6113e12ae91f8edc84d92491d5d3))
+- **changelog**: generate CHANGELOG.md for v0.7.0 ([`54cd2b7`](https://github.com/gfriloux/stc/commit/54cd2b7f8f69b8f98349215586992ec18f771b90))
 
 ### Features
 
