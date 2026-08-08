@@ -29,7 +29,6 @@ in {
     programs.kitty.enable = true;
 
     home.packages = lib.mkIf cfg.fonts.enable (with pkgs; [
-      gtk_engines
       nerd-fonts.jetbrains-mono
       nerd-fonts.profont
       nerd-fonts.inconsolata
