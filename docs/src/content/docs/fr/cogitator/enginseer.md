@@ -32,7 +32,7 @@ shell, outillage de développement, rites git, et augmentations esthétiques.
 | `btop` | Moniteur de ressources |
 | `delta` | Pager de diff git (intégration git activée) |
 | `direnv` + `nix-direnv` | Activation d'env par répertoire, mode silencieux |
-| `fzf` | Recherche floue |
+| `fzf` | Recherche floue (`Ctrl-T`, `Alt-C` — pas `Ctrl-R`) |
 | `git` | Contrôle de version |
 | `gitflow-toolkit` | Helpers de workflow git |
 | `gh` | CLI GitHub (`git_protocol = ssh`) |
@@ -52,6 +52,27 @@ L'éditeur `micro` est livré avec des réglages opinionnés (tabulations douces
 2 espaces, règle, curseur mémorisé, souris) et un binding LSP `nix:nixd` (le
 serveur `nixd` est fourni plus bas). Surcharge n'importe lequel depuis ta propre
 configuration home.
+
+### Ctrl-R appartient à Atuin
+
+`atuin` et `fzf` bindent tous les deux `Ctrl-R` par défaut. L'intégration shell
+d'Atuin est sourcée après celle de fzf, donc Atuin gagne de toute façon —
+l'Enginseer le rend explicite en posant `programs.fzf.historyWidget.command = ""`,
+ce qui fait aussi taire l'avertissement de conflit de Home Manager. `Ctrl-T`
+(fichiers) et `Alt-C` (répertoires) restent à fzf.
+
+Cette option n'existe que dans les versions de Home Manager plus récentes que
+celle épinglée par STC : elle est donc appliquée conditionnellement. Sur un Home
+Manager plus ancien, le profil s'évalue sans changement et le comportement est
+identique, il vient simplement de l'ordre de sourcing.
+
+Pour redonner `Ctrl-R` à fzf, restaure le widget et désactive le binding d'Atuin
+depuis ta propre configuration home :
+
+```nix
+programs.fzf.historyWidget.command = lib.mkForce null;
+programs.atuin.flags = ["--disable-ctrl-r"];
+```
 
 ### Agent GPG
 
