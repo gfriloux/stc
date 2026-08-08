@@ -3,11 +3,20 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.7.2] — 2026-08-08
+
+### Bug Fixes
+
+- **cogitator-enginseer**: let Atuin own Ctrl-R instead of fzf ([`edb901a`](https://github.com/gfriloux/stc/commit/edb901a1e41b3cc46112c5a7641cc942051283d3))
 ## [0.7.1] — 2026-08-08
 
 ### Bug Fixes
 
 - **kitty**: drop gtk_engines from fonts package set ([`9a4b7b5`](https://github.com/gfriloux/stc/commit/9a4b7b55d9afea36656f130fa96416c6f17ee088))
+
+### Documentation
+
+- **changelog**: generate CHANGELOG.md for v0.7.1 ([`73d78d9`](https://github.com/gfriloux/stc/commit/73d78d949855dae3dc75ecdbe665d7e273e5ff30))
 ## [0.7.0] — 2026-07-18
 
 ### Bug Fixes
