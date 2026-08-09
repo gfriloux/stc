@@ -364,11 +364,9 @@ starlight-toc a[aria-current="true"] {
   animation: stc-spin-rev calc(80s / var(--stc-anim,1)) linear infinite; }
 .stc-hero-inner { position: relative; z-index: 2; max-width: 42rem; }
 .stc-hero-emblem {
-  width: 88px; height: 88px; color: var(--stc-brass); margin-bottom: 1.4rem;
+  width: 104px; height: 104px; margin-bottom: 1.4rem; display: block;
   filter: drop-shadow(0 0 18px color-mix(in oklab,var(--stc-red) 45%, transparent));
 }
-.stc-hero-emblem .stc-emblem-cog { animation: stc-spin calc(60s / var(--stc-anim,1)) linear infinite;
-  transform-origin: 50% 50%; transform-box: fill-box; }
 .stc-eyebrow {
   font-family: var(--stc-font-mono); font-size: .7rem; letter-spacing: .32em;
   text-transform: uppercase; color: var(--stc-brass);
@@ -423,7 +421,7 @@ starlight-toc a[aria-current="true"] {
 .stc-reveal.is-in { animation: stc-rise .7s cubic-bezier(.2,.7,.2,1) both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .stc-grain, .stc-hero-cog, .stc-hero-emblem .stc-emblem-cog,
+  .stc-grain, .stc-hero-cog,
   .expressive-code .frame::after { animation: none; }
   .stc-reveal, .stc-reveal.is-in { animation: none; opacity: 1; }
 }

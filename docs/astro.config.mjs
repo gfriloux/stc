@@ -12,8 +12,9 @@ export default defineConfig({
         'The sacred repository of the Adeptus Technicus — a Nix module library for the discerning Techpriest.',
       logo: {
         alt: 'STC · Adeptus Mechanicus Cog',
-        src: './src/assets/stc-emblem.svg',
+        src: './src/assets/stc-logo.png',
       },
+      favicon: '/favicon.png',
       head: [
         { tag: 'link', attrs: { rel: 'preconnect', href: 'https://fonts.googleapis.com' } },
         { tag: 'link', attrs: { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: true } },

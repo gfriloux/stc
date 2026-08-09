@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "docs/**"
+      # The site logo is a symlink into assets/ — changes there must redeploy.
+      - "assets/**"
   workflow_dispatch:
 
 permissions:
