@@ -1,4 +1,8 @@
-# STC — Standard Template Construct
+<p align="center">
+  <img src="./assets/stc-logo.png" alt="STC — Standard Template Construct" width="220">
+</p>
+
+<h1 align="center">STC — Standard Template Construct</h1>
 
 A Nix flake library of reusable NixOS and Home Manager modules.  
 Themed after the Adeptus Mechanicus. Functional in all universes.
