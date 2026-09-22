@@ -48,6 +48,9 @@ in
       pkgs.shellcheck
       pkgs.shfmt
       pkgs.ansible-recap
+      pkgs.molecule
+      pkgs.python3Packages.molecule-plugins
+      pkgs.python3Packages.docker
     ];
 
     shellHook = ''
