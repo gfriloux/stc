@@ -3,6 +3,28 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] — 2026-09-26
+
+### Bug Fixes
+
+- **docs**: drop the tagline option removed in Starlight 0.42 ([`510b2d8`](https://github.com/gfriloux/stc/commit/510b2d8ee6a47eb37abbde57f6421a2402a4fd2c))
+
+### Dependencies
+
+- **deps**: Lock file maintenance ([`65567cb`](https://github.com/gfriloux/stc/commit/65567cb9d55e1d4036b3a975acf2cde42a9222f0))
+- **deps**: Update DeterminateSystems/nix-installer-action action to v23 ([`007e183`](https://github.com/gfriloux/stc/commit/007e183f841467cacf24329583d389c73c560582))
+- **deps**: Update GitHub Actions ([`b691a4c`](https://github.com/gfriloux/stc/commit/b691a4c2afb4f5dcfce09fd44b6b012ccca9d248))
+- **deps**: Update dependency @astrojs/starlight to ^0.42.0 ([`7cfc332`](https://github.com/gfriloux/stc/commit/7cfc3320414f98c42b7e5e96f0307bdb6f3fac85))
+- **deps**: Lock file maintenance ([`dad4608`](https://github.com/gfriloux/stc/commit/dad4608dbafe8745e43fc27f3116efa2cb0c4879))
+
+### Documentation
+
+- **readme**: add the STC emblem logo at the top of the README ([`3dba8e1`](https://github.com/gfriloux/stc/commit/3dba8e101cef58cb5d351919159b0e4977ed71b7))
+- **site**: unify the site branding on the new STC logo ([`d594369`](https://github.com/gfriloux/stc/commit/d5943696ca79b383c179d9ad1d6ccc4a67b20c92))
+
+### Features
+
+- **forge**: add molecule inside ansible devshell ([`aabf2f4`](https://github.com/gfriloux/stc/commit/aabf2f45a272c2e5ee0a244e786f0c740eea1519))
 ## [0.7.3] — 2026-08-08
 
 ### Dependencies
@@ -16,6 +38,7 @@ Releases follow [Semantic Versioning](https://semver.org/).
 - **plans**: add plan for the Astro 7 / Starlight 0.41 upgrade ([`b888d04`](https://github.com/gfriloux/stc/commit/b888d048dba6472986077b0103f5ec4cf569b2d5))
 - **plans**: record the outcome of the Astro 7 upgrade ([`7385320`](https://github.com/gfriloux/stc/commit/73853206950623bbd7e44e3316170f98dcf097d6))
 - **plans**: fix the changelog rationale in the Astro 7 plan ([`d671f8e`](https://github.com/gfriloux/stc/commit/d671f8e30f4d71a64a3419c3905832455e2d5f3b))
+- **changelog**: generate CHANGELOG.md for v0.7.3 ([`dcd0d5e`](https://github.com/gfriloux/stc/commit/dcd0d5ec11a4c4f0f28ac0b8fe31964390fa388c))
 
 ### Refactoring
 
