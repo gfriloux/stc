@@ -41,9 +41,12 @@ show:
 ci: fmt-check lint check docs-parity
 
 # Regenerate CHANGELOG.md from Conventional Commits + tags (git-cliff).
+# Pass the tag being released — `just changelog v0.8.0` — so its commits land
+# under that version instead of an "unreleased" heading. Without an argument
+# the already-tagged history is regenerated as-is.
 # Review the diff before committing.
-changelog:
-    git-cliff --output CHANGELOG.md
+changelog tag="":
+    git-cliff {{ if tag == "" { "" } else { "--tag " + tag } }} --output CHANGELOG.md
 
 
 # ── Provings ──────────────────────────────────────────────────────────────────
