@@ -7,7 +7,6 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'STC',
-      tagline: 'Standard Template Construct',
       description:
         'The sacred repository of the Adeptus Technicus — a Nix module library for the discerning Techpriest.',
       logo: {

@@ -7,6 +7,12 @@ on:
       - "docs/**"
       # The site logo is a symlink into assets/ — changes there must redeploy.
       - "assets/**"
+  # Pull requests build but never deploy: a dependency bump that breaks the
+  # site must go red here, not on main once it is already merged.
+  pull_request:
+    paths:
+      - "docs/**"
+      - "assets/**"
   workflow_dispatch:
 
 permissions:
@@ -14,8 +20,11 @@ permissions:
   pages: write
   id-token: write
 
+# Ref-scoped so pull-request builds never queue behind a live deployment.
+# Pushes to main and workflow_dispatch both resolve to refs/heads/main, which
+# keeps deployments serialized as before.
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -44,6 +53,7 @@ jobs:
 
   deploy:
     needs: build
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
