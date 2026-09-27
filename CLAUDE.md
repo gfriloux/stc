@@ -6,7 +6,7 @@ Read DESIGN.md first. It defines what belongs where and why. All decisions flow 
 
 ## Working methods
 
-- **Size the change, then plan.** Classify it out loud first — trivial, probe,
+- **Size the change, then plan.** Classify it out loud first — trivial, spike,
   bounded, or architectural (`PROCEDURE_PLANS.md` → *Sizing a Change*). Only an
   architectural change (new relic, new cogitator, new schematic, namespace rename,
   moved responsibilities) gets a plan file; a bounded one gets a short design in
@@ -44,7 +44,7 @@ Full table with rationale: `PROCEDURE_PLANS.md` → *Skill Arbitration*.
 |---------|--------|
 | **Adopted** — follow as written | `systematic-debugging`, `verification-before-completion`, `receiving-code-review`, `finishing-a-development-branch`, `writing-skills` |
 | **Adapted** — this repo's version binds | `writing-plans`, `executing-plans` (our locations, our gates, ledger beside its plan), `requesting-code-review` (**one** review at branch close, not one per step) |
-| **Reduced** — only the named part applies | `brainstorming` — keep the trivial/probe/bounded/architectural triage; no separate spec file, no staged spec-then-plan gates, no visual companion |
+| **Reduced** — only the named part applies | `brainstorming` — keep the trivial/spike/bounded/architectural triage (the skill's own names, plus Trivial); no separate spec file, no staged spec-then-plan gates, no visual companion |
 | **Replaced** | `test-driven-development` — the Nix gates are the law; every new cogitator ships a proving |
 | **Rejected by default** — ask first | `subagent-driven-development` |
 | **Rejected** | `using-git-worktrees` — a dedicated branch is the isolation |
