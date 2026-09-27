@@ -35,7 +35,7 @@ recorded as flat "Rejected" against the user's actual decision of "rejected by
 default"). Two findings were the author's own factual errors and are corrected
 rather than defended.
 
-Fixed in one pass (`ea0c2fa`):
+Fixed in one pass (`2b9a492`):
 
 - **Critical** — Both cogitator recipes (`PROCEDURE_PLANS.md` Step 1–4,
   `CLAUDE.md` 1–5) presented themselves as complete and omitted the proving the
