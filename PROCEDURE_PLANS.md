@@ -9,6 +9,7 @@
 
 - [Quick Start](#quick-start)
 - [Plans & Releases](#plans--releases)
+- [Sizing a Change](#sizing-a-change)
 - [Maintenance Process Overview](#maintenance-process-overview)
 - [Change Types & Procedures](#change-types--procedures)
   - [Adding a New Relic](#adding-a-new-relic)
@@ -120,6 +121,30 @@ git push origin main && git push origin vX.Y.Z
 State what the tag will cover beyond the branch (commits already on `main` that
 are not tagged yet), and pick the SemVer number yourself with a one-line
 justification rather than asking.
+
+---
+
+## Sizing a Change
+
+Not every change earns a plan file. Classify first, **say the classification out
+loud** so the user can override it, then follow that path.
+
+| Path | What it is | Artefact |
+|------|-----------|----------|
+| **Probe** | A feasibility question — "does nixpkgs expose X?", "can disko do Y?". The output is an answer, not code we keep. | None. State the question and how you'll check it in two sentences, then report a recommendation. Anything built is labelled throwaway. |
+| **Bounded** | A well-scoped change to code that already exists here: one option added to a relic, a fix in a cogitator, a doc correction. | No plan file. Present a short design in conversation, get an explicit yes, then implement. |
+| **Architectural** | A new relic, a new cogitator, a new schematic, a namespace rename, a refactor that moves responsibilities between layers, anything touching `DESIGN.md`'s boundaries. | A plan file under `.claude/plans/` (see [Plan Template](#plan-template)), reviewed by the user before implementation. |
+
+**Bounded measures the repo, not your familiarity.** If the flow being changed is
+not already here to read, the change is not bounded.
+
+**The ratchet is one-way.** In doubt between two paths, take the heavier one.
+Complexity discovered mid-task upgrades the path — stop, say so, and step up.
+Nothing downgrades mid-task, and a label is never chosen in order to skip work.
+
+There is no separate spec document: for an architectural change the plan file
+*is* the spec, which is why it carries Goal, Architecture, Global Constraints and
+Review Focus.
 
 ---
 
