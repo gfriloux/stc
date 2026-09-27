@@ -54,9 +54,12 @@ changelog tag="":
 # Run the provings — internal nixosTests that boot a VM per cogitator and assert
 # it behaves as claimed. Heavy and manual: deliberately NOT part of `just ci`.
 # Exposed via legacyPackages, which `nix flake check` skips. Linux only.
+# Every proving registered in provings/default.nix must be listed here — one the
+# recipe does not build never runs, and a green `just test` would be a false green.
 test:
     nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-file
     nix build .#legacyPackages.x86_64-linux.provings.docker-server -L --no-write-lock-file
+    nix build .#legacyPackages.x86_64-linux.provings.workstation -L --no-write-lock-file
 
 
 # ── Documentation ─────────────────────────────────────────────────────────────
