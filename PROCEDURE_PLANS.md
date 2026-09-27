@@ -18,6 +18,12 @@
   - [Adding a New Schematic](#adding-a-new-schematic)
   - [Refactoring Internal Code](#refactoring-internal-code)
   - [Documentation-Only Updates](#documentation-only-updates)
+- [Execution Discipline](#execution-discipline)
+  - [Debugging — root cause before fixes](#debugging--root-cause-before-fixes)
+  - [Verification — evidence before claims](#verification--evidence-before-claims)
+  - [Tests — what replaces TDD](#tests--what-replaces-tdd)
+  - [Closing review — one fresh context](#closing-review--one-fresh-context)
+  - [The ledger](#the-ledger)
 - [Plan Template](#plan-template)
 - [Reference Commands](#reference-commands)
 - [Quality Gates](#quality-gates)
@@ -747,6 +753,157 @@ Examples:
 - `docs: fix typo in zfs documentation`
 - `docs: add example for cogitator-vm SSH key setup`
 - `docs: improve relics index organization`
+
+---
+
+## Execution Discipline
+
+Four rules govern how a step is worked, whatever the change type. They are
+adapted from `superpowers`; where the wording differs from the plugin's, this
+document wins (see [Skill Arbitration](#skill-arbitration)).
+
+### Debugging — root cause before fixes
+
+**No fix before the cause is understood.** A fix that makes the symptom go away
+without an explanation is a failure, even when the error disappears.
+
+1. **Read the error completely.** Nix errors bury the useful line in the middle
+   of a trace. Re-run with `--show-trace`. An `infinite recursion` or an
+   `attribute missing` names the option path — read that path.
+2. **Reproduce narrowly.** Go from `nix flake check` down to the smallest command
+   that still fails: `nix eval <schematic>#…config.<the exact option>`. A failure
+   you can trigger in one `nix eval` is a failure you can reason about.
+3. **Check what changed.** `git diff`, the last commits, a bumped input in
+   `flake.lock`. A break that appeared after `just update` is an upstream change,
+   not a bug in the module.
+4. **Compare against something that works.** Another relic doing the same thing,
+   the upstream NixOS module. List every difference; "that cannot matter" is how
+   the cause gets skipped.
+5. **One hypothesis, one minimal change.** State it — "I think the alias is
+   missing because internal code still reads the old path" — then test only that.
+   A new hypothesis replaces the old one; fixes are never stacked.
+
+The `/debug-nix` skill is the Nix-specific toolbox for steps 1–2; this rule is
+the discipline that decides when to use it.
+
+**Three failed fixes means the design is wrong.** If each fix uncovers a new
+problem somewhere else, or every fix requires "just a bit of restructuring":
+stop, do not attempt a fourth, and raise the architecture question with the user.
+That is not a failed hypothesis, it is a wrong boundary — and `DESIGN.md` is the
+place it gets settled.
+
+### Verification — evidence before claims
+
+**If the command has not been run in this message, its result cannot be
+claimed.** Before any statement that something passes, works, or is done:
+
+1. Which command proves this?
+2. Run it, in full — not a narrowed variant.
+3. Read the whole output and the exit code.
+4. Does the output actually support the claim? If not, state the real status,
+   with the output.
+
+| Claim | Proof required |
+|-------|----------------|
+| "the flake is fine" | `nix flake check --no-write-lock-file` → exit 0 |
+| "the schematics still evaluate" | one `nix eval …drvPath` **per** schematic |
+| "no stale namespace left" | the filtered `grep` from [Quality Gates](#quality-gates), zero matches |
+| "the docs are consistent" | `just docs-parity` → OK |
+| "the VM behaves as claimed" | `just test`, read the proving's output |
+| "the bug is fixed" | the original symptom re-tested, not the code re-read |
+
+"Should be fine", "the change is trivial", "the linter passed" prove nothing —
+`statix` is not an evaluator and `nix flake check` is not a boot. Fatigue, time
+pressure and a long green streak are the three moments this rule exists for.
+
+### Tests — what replaces TDD
+
+`superpowers`' TDD Iron Law ("no production code without a failing test first")
+does not transfer: STC's tests are `nixosTest`s that boot a VM, they live in
+`provings/`, they take minutes, and they are deliberately outside `just ci`.
+Writing one before each 5-minute step is not possible, and a test written to
+satisfy the ritual tests nothing.
+
+What binds instead:
+
+- **The gates are the law.** No step is committed before its verification
+  command passes — `nix flake check` for a module change, `nix eval …drvPath` for
+  anything a schematic consumes. That is the fast loop.
+- **Every new cogitator ships a proving.** A cogitator claims a complete,
+  bootable use case; the proving in `provings/<name>.nix` is what makes the claim
+  checkable. It is part of the same plan, not a follow-up. Register it in
+  `provings/default.nix` and add it to the `test` recipe in the `Justfile`.
+- **A relic needs no proving of its own** when a cogitator's proving already
+  composes it. A relic nothing composes yet, and whose behaviour cannot be read
+  from an `nix eval`, is the exception — say so in the plan and justify it.
+- **A bug fix starts with a reproduction that fails.** Not necessarily a
+  `nixosTest`: an `nix eval` that errors, or an assertion in an existing proving,
+  is enough. What matters is having watched it fail before the fix and pass
+  after. A fix whose failure was never observed is a hope.
+- **Provings stay out of `just ci`.** They are heavy and Linux-only. `just test`
+  is run when a cogitator changes, and before closing a branch that touched one.
+
+### Closing review — one fresh context
+
+Before presenting the integration options, the branch gets **one review from a
+context that did not write it**. Same author, same blind spots: re-reading your
+own diff is not this review.
+
+Give the reviewer the diff range (`git merge-base main HEAD`..`HEAD`), the plan,
+its Review Focus section verbatim, and the ledger's rulings — never the session
+history. Then:
+
+- **Re-grade every finding by its effect**, not by whether the plan mentioned the
+  input that triggers it. A plan is a vision document; its silence about an input
+  is not permission for that input to break a consumer's build. A finding graded
+  Minor because the plan said nothing has graded the plan, not the effect.
+- **Critical and Important** get one fix pass, each fix verified by its own
+  reproduction, then the gates re-run.
+- **Minor** goes to the ledger and to the closing message as a deferred item.
+  It does not enter the fix pass — the user decides.
+- A finding deliberately left unfixed is a ruling, and it reaches the user.
+
+Incoming review feedback — from the user or from a reviewer — is evaluated, not
+performed. Restate the technical point, check it against this codebase, push back
+with reasoning when it is wrong. "You're absolutely right" is not a response.
+
+### The ledger
+
+A chantier that spans sessions loses its context to compaction. The plan records
+the intent; the **ledger** records what actually happened, and it is the only
+thing that survives.
+
+One ledger per plan, beside it and committed:
+`.claude/plans/vX.Y.Z/progress.md` (or `.claude/plans/release/<name>-progress.md`
+for a tooling plan). First line names the plan it follows:
+
+```markdown
+# Ledger — plan: .claude/plans/v0.9.0/plan.md
+
+Pre-flight: step 3 consumes the option renamed in step 1 — checked, names match.
+Step 1: complete (c485656, nix flake check → OK)
+Step 2: Ruling: the alias covers `stc.old.sub.*` as a whole rather than one
+  module per leaf — mkRenamedOptionModule needs one entry per leaf option —
+  cost if wrong: one commit to split it.
+Step 2: complete (a1b2c3d..d4e5f6a, nix eval ×3 → OK)
+Final: minor (deferred): the FR page for relics-foo lacks a usage example
+```
+
+Rules:
+
+- **Rule, don't stall.** A conflict in the plan, an ambiguity, a plan defect:
+  decide it, write `Ruling: <what was decided> — <why> — <cost if wrong>`, and
+  keep going. A deviation from the plan with no ruling in the ledger is a
+  decision taken in secret. Four things stop the work instead of being ruled on:
+  a destructive or irreversible operation, anything security-sensitive, an
+  interactive git command (see the batch rule above), and a plan so broken that
+  every way forward is a guess.
+- **Write the line in the same call as the commit**, not later. Compaction does
+  not wait for a convenient moment.
+- **After a compaction, trust the ledger and `git log`, not your recollection.**
+  A step with a `complete` line is done; resume at the first one without.
+- Every `Ruling:` and every deferred minor is repeated in the closing message.
+  That message is the only place these decisions reach the user.
 
 ---
 

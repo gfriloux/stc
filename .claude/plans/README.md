@@ -8,6 +8,11 @@ the sibling projects `astropath` and `auspex`.
 - `vX.Y.Z/` — the plan that produced release `vX.Y.Z`. Each directory holds at
   least `plan.md` (context, scope, atomic steps, decisions). A release built from
   more than one chantier keeps one file per chantier.
+- `vX.Y.Z/progress.md` — the **ledger** of that plan's execution: one line per
+  completed step, every ruling taken along the way, every deferred minor. It is
+  committed, because it is what survives a compaction or a change of machine. A
+  tooling plan keeps its ledger as `release/<name>-progress.md`. Format and rules:
+  [`PROCEDURE_PLANS.md`](../../PROCEDURE_PLANS.md#the-ledger).
 - `release/` — plans about tooling and project infrastructure (tagging, changelog,
   CI, working methods) rather than a single product feature.
 
