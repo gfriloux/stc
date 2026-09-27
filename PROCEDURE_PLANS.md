@@ -916,15 +916,36 @@ Use this template when planning a change to STC. Fill it out before you start co
 
 **Type:** [Adding a relic | Adding a cogitator | Renaming option | etc.]
 
-**Objective:** [What are we trying to achieve?]
+**Goal:** [One sentence — what this builds]
 
 **Why:** [Motivation — why is this change needed?]
+
+**Architecture:** [2-3 sentences on the approach, and which DESIGN.md boundary
+it sits on]
+
+### Global Constraints
+
+Project-wide requirements that every step below implicitly inherits — one line
+each, exact values, no "see above":
+
+- [Canonical namespace the new options live under]
+- [Which schematics must keep evaluating]
+- [Whether a proving is required — mandatory for a new cogitator]
+- [Secrets: any option taking a secret uses the `*File` suffix]
+
+### Review Focus
+
+The failure modes this change could introduce that no step's verification
+command exercises — one line each, most likely first, written with the whole
+plan in view. An external consumer's build breaking is the usual one. An empty
+section means the check was run and found nothing, not that it was skipped.
 
 ### Affected Files
 
 List all files that will be modified:
 - [ ] `relics/nixos/...`
 - [ ] `relics/default.nix`
+- [ ] `provings/...`
 - [ ] `docs/src/content/docs/en/...`
 - [ ] `docs/src/content/docs/fr/...`
 
@@ -938,6 +959,10 @@ Each step must be independently testable and committable.
 
 **Files changed:**
 - `path/to/file`
+
+**Interfaces:**
+- Consumes: [what this step relies on from an earlier step — exact option paths]
+- Produces: [what later steps will read — exact option paths, types, defaults]
 
 **Verification command(s):**
 ```bash
@@ -964,8 +989,35 @@ Before final delivery, verify:
 - [ ] No stale internal references:
   - [ ] `grep -rn "stc\." cogitator/ schematics/ --include="*.nix"` (filtered)
 - [ ] Documentation builds: `nix develop .#docs && npm run astro check`
+- [ ] Doc parity: `just docs-parity`
+- [ ] If a cogitator changed: `just test`
 - [ ] All commits are atomic and independently verifiable
 ```
+
+### No placeholders
+
+Every step must carry what is actually needed to execute it. These are plan
+defects, not shortcuts to fill in later:
+
+- "TBD", "to be detailed", "handle the edge cases", "add the appropriate options"
+- A step that says *what* without showing *how* — an option gets its type, its
+  default and its description in the plan, not just its name
+- "Same as step N" — repeat it; steps get read out of order
+- A reference to an option path no step declares
+
+### Pre-flight scan
+
+Before executing step 1, read the Interfaces blocks against each other: for every
+step that consumes what an earlier one produces, check that the two spell the
+option path the same way. One ledger line per pair, with what was found. Steps
+sharing nothing get the single line `Pre-flight: no shared interfaces`.
+
+This is the guard the [namespace rename procedure](#renaming-an-option-breaking-change)
+depends on. Its steps 2 and 3 exist precisely because a rename that lands the
+alias without updating `cogitator/` and `schematics/` fails at eval time with no
+useful message. Declaring the produced path in step 1 and the consumed path in
+steps 2 and 3 turns "remember to do it" into a dependency that can be checked
+before anything is committed.
 
 ---
 
