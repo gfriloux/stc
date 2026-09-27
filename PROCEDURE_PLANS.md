@@ -51,14 +51,46 @@ An obsolete plan is **deleted**, never duplicated as `_v2` / `_v3`. See
 [`.claude/plans/README.md`](.claude/plans/README.md) for the layout and the
 retroactive version map.
 
-**Git workflow (hybrid).**
+**Git workflow.**
 
 - Claude works on a **dedicated branch** (`feat/…`, `fix/…`, `refactor/…`,
   `docs/…`, `chore/…`, `ci/…`) — **never directly on `main`**.
-- Claude commits **atomically** (Conventional Commits) and **never** merges,
-  pushes, or tags. The **user** merges the branch to `main`, tags, and pushes.
-- A plan concludes when the user merges to `main`; the next plan starts from the
-  updated `main`.
+- Claude commits **atomically** (Conventional Commits) and runs the full flow
+  itself: merge, changelog, tag, push.
+- A plan concludes once the branch is integrated into `main`; the next plan
+  starts from the updated `main`.
+
+**Closing a branch.** When the work is complete and every quality gate below has
+passed, present the integration choice rather than deciding alone:
+
+1. Merge back to `main` locally
+2. Push and open a Pull Request
+3. Keep the branch as-is
+
+Then carry out the chosen option. A release adds the changelog/tag/push sequence
+(see **Versioning & releases** just below).
+
+**Interactive git — stop before the batch.**
+
+Commits and tags are OpenPGP-signed (`commit.gpgsign` and `tag.gpgsign` are both
+`true`) and `origin` is reached over SSH with a YubiKey. Every one of these
+prompts for a passphrase, or for a PIN and a touch:
+
+| Command | Prompt |
+|---------|--------|
+| `git commit` | OpenPGP passphrase |
+| `git tag -a` | OpenPGP passphrase |
+| `git merge --no-ff` | OpenPGP passphrase (it writes a merge commit) |
+| `git fetch` / `git pull` / `git push` | YubiKey PIN + touch |
+
+**Announce the batch and wait for the user's go-ahead before the first one** —
+"5 atomic commits coming up, then the push — are you at the keyboard?" — then
+chain the commands, relying on the `gpg-agent` passphrase cache. One stop per
+batch, not per command.
+
+If a prompt hangs or a signature fails: report it and wait. Never retry with
+`--no-gpg-sign`, never disable signing, never push over HTTPS to dodge the
+YubiKey.
 
 **Versioning & releases.**
 
@@ -69,6 +101,25 @@ retroactive version map.
   (`just changelog`) — review the diff before committing.
 - Pushing a tag `v*` triggers `.github/workflows/release.yml`, which renders that
   tag's notes and creates the GitHub release.
+
+Release sequence — one interactive batch, announced before the first command
+(`git-cliff` must run the `--tag` of the release being cut, and the changelog is
+committed **before** the tag so the tag covers it):
+
+```bash
+git checkout main && git pull --ff-only
+git merge --no-ff <branch>
+gh pr close <n> --comment "…"                    # superseded PRs, if any
+nix develop --command git-cliff --tag vX.Y.Z --output CHANGELOG.md
+git diff CHANGELOG.md                             # read it before committing
+git add CHANGELOG.md && git commit -m "docs(changelog): generate CHANGELOG.md for vX.Y.Z"
+git tag -a vX.Y.Z -m "vX.Y.Z"
+git push origin main && git push origin vX.Y.Z
+```
+
+State what the tag will cover beyond the branch (commits already on `main` that
+are not tagged yet), and pick the SemVer number yourself with a one-line
+justification rather than asking.
 
 ---
 
@@ -928,5 +979,5 @@ The internal file (`name.nix`) never references `inputs`. The wrapper is the onl
 
 ---
 
-**Last Updated:** 2026-07-16  
+**Last Updated:** 2026-09-27  
 **Status:** Active for STC v0.2.0 and onwards
