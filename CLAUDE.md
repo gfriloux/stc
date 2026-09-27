@@ -26,6 +26,28 @@ Read DESIGN.md first. It defines what belongs where and why. All decisions flow 
   (`just changelog`); pushing a `v*` tag triggers the release workflow. The
   deprecated `stc.*` aliases are removed at `v1.0.0`.
 
+## Superpowers — arbitration
+
+The `superpowers` plugin re-injects its `using-superpowers` skill at every
+startup, `/clear` and compaction, and claims any skill with a 1% chance of
+applying. The plugin itself defers to user instructions; this is that deferral.
+**Where a skill and `PROCEDURE_PLANS.md` disagree, `PROCEDURE_PLANS.md` wins.**
+Full table with rationale: `PROCEDURE_PLANS.md` → *Skill Arbitration*.
+
+| Verdict | Skills |
+|---------|--------|
+| **Adopted** | `systematic-debugging`, `verification-before-completion`, `requesting-code-review`, `receiving-code-review`, `finishing-a-development-branch`, `writing-skills` |
+| **Adapted** | `writing-plans`, `executing-plans` — our locations (`.claude/plans/`), our gates, the ledger committed beside its plan |
+| **Reduced** | `brainstorming` — keep the probe/bounded/architectural triage, no separate spec file, no visual companion |
+| **Replaced** | `test-driven-development` — the Nix gates are the law; every new cogitator ships a proving |
+| **Rejected** | `subagent-driven-development`, `using-git-worktrees` |
+| **Overridden** | `using-superpowers` — its "1% chance" rule does not beat this table |
+
+Three rules carry most of the weight day to day: **no fix before the root cause**
+(and three failed fixes means the design is wrong, not a fourth attempt), **no
+claim without the command run in this message**, and **rule rather than stall** —
+decide, write the ruling in the ledger, keep going.
+
 ## Namespace rules
 
 Options live under two canonical roots:

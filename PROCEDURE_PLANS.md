@@ -27,6 +27,7 @@
 - [Plan Template](#plan-template)
 - [Reference Commands](#reference-commands)
 - [Quality Gates](#quality-gates)
+- [Skill Arbitration](#skill-arbitration)
 
 ---
 
@@ -1172,6 +1173,36 @@ Should return **zero matches** for unqualified or deprecated namespaces.
   - `scope`: `relics`, `cogitator`, `schematics`, etc.
   - `message`: Clear, describes what changed and why
 - Every commit can be verified independently (all gates pass for that commit alone)
+
+---
+
+## Skill Arbitration
+
+The `superpowers` plugin injects its `using-superpowers` skill into every session
+— at startup, after `/clear`, and after every compaction — wrapped in
+`<EXTREMELY_IMPORTANT>`, with the rule "if there is even a 1% chance a skill
+applies, you MUST invoke it". The plugin also states that user instructions take
+precedence over its skills. The table below is that precedence, made explicit.
+**Where a skill and this document disagree, this document wins.** Arbitrated
+against `superpowers` 6.4.1.
+
+| Skill | Verdict | Why |
+|-------|---------|-----|
+| `systematic-debugging` | **Adopted** | See [Debugging](#debugging--root-cause-before-fixes). `/debug-nix` is the toolbox, this is the discipline. |
+| `verification-before-completion` | **Adopted** | See [Verification](#verification--evidence-before-claims). Our gates said what to check, never when. |
+| `requesting-code-review` | **Adopted** | One fresh-context review before closing a branch. See [Closing review](#closing-review--one-fresh-context). |
+| `receiving-code-review` | **Adopted** | Evaluate feedback, push back with reasoning, no performative agreement. |
+| `finishing-a-development-branch` | **Adopted** | Its three integration options are how a branch is closed. Claude runs the git flow, under the interactive batch rule in [Plans & Releases](#plans--releases). |
+| `writing-skills` | **Adopted** | For STC's own skills (`/nix-refactor`, `/nixos-module`, `/debug-nix`), which were written without a method. |
+| `writing-plans` | **Adapted** | Header, Global Constraints, Review Focus, Interfaces blocks and the no-placeholders rule are in. Its locations (`docs/superpowers/plans/`) are not: plans live in `.claude/plans/`, and `docs/` is the bilingual Astro tree. Its per-step red-green granularity is replaced by the gates. |
+| `executing-plans` | **Adapted** | Ledger, rulings-not-stalls, and the final fresh-context review are in. The `.superpowers/sdd/` workspace and its scripts are not — the ledger sits beside its plan and is committed. |
+| `brainstorming` | **Reduced** | Its probe/bounded/architectural triage became [Sizing a Change](#sizing-a-change). No separate spec document: the plan file is the spec. The browser visual companion is not used. |
+| `test-driven-development` | **Replaced** | Its Iron Law cannot transfer to modules whose tests boot a VM. See [Tests](#tests--what-replaces-tdd). |
+| `subagent-driven-development` | **Rejected** | An implementer plus a reviewer per step, each re-reading the flake from zero, is not worth it at STC's change size. The fresh-context review at the end is kept. |
+| `using-git-worktrees` | **Rejected** | A dedicated branch is the isolation. A fresh worktree loses `.direnv` and refetches every flake input, and its auto-setup step assumes `npm install` / `cargo build` — here, tooling comes from `nix develop`. |
+| `using-superpowers` | **Overridden** | Its "1% chance → you must invoke it" does not override a verdict in this table. It is the reason this table exists. |
+| `dispatching-parallel-agents` | **Marginal** | Genuinely independent parallel work is rare in a flake this size. Not forbidden, never the default. |
+| `diagnosing-superpowers` | **Marginal** | Only to build a bug report for the plugin's maintainers. Nothing to do with STC. |
 
 ---
 
