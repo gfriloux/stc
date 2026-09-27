@@ -51,14 +51,24 @@ An obsolete plan is **deleted**, never duplicated as `_v2` / `_v3`. See
 [`.claude/plans/README.md`](.claude/plans/README.md) for the layout and the
 retroactive version map.
 
-**Git workflow (hybrid).**
+**Git workflow.**
 
 - Claude works on a **dedicated branch** (`feat/…`, `fix/…`, `refactor/…`,
   `docs/…`, `chore/…`, `ci/…`) — **never directly on `main`**.
-- Claude commits **atomically** (Conventional Commits) and **never** merges,
-  pushes, or tags. The **user** merges the branch to `main`, tags, and pushes.
-- A plan concludes when the user merges to `main`; the next plan starts from the
-  updated `main`.
+- Claude commits **atomically** (Conventional Commits) and runs the full flow
+  itself: merge, changelog, tag, push.
+- A plan concludes once the branch is integrated into `main`; the next plan
+  starts from the updated `main`.
+
+**Closing a branch.** When the work is complete and every quality gate below has
+passed, present the integration choice rather than deciding alone:
+
+1. Merge back to `main` locally
+2. Push and open a Pull Request
+3. Keep the branch as-is
+
+Then carry out the chosen option. A release adds the changelog/tag/push sequence
+(see **Versioning & releases** just below).
 
 **Versioning & releases.**
 
