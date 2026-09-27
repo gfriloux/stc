@@ -108,6 +108,9 @@ file is in.
 Final: minor (deferred): the triage is called **probe**/bounded/architectural here
 while the plugin's `brainstorming` calls it **spike**; anyone grepping the plugin
 for "probe" finds nothing. Naming choice, left to the user.
+→ **Resolved** after the merge, at the user's request: renamed to **Spike** in
+`PROCEDURE_PLANS.md` and `CLAUDE.md`. The four paths are now Trivial / Spike /
+Bounded / Architectural — the skill's three names plus the Trivial path it lacks.
 
 Final: minor (deferred): `writing-skills` is Adopted "for STC's own skills", which
 live in `~/.claude/skills/` — outside this repo, so no gate here can check it. It
