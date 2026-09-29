@@ -74,5 +74,5 @@
     '';
 in {
   inherit nix terraform ansible shell markdown;
-  gitleaks = mkCheck "check-gitleaks" "${pkgs.gitleaks}/bin/gitleaks dir --no-banner --verbose --redact";
+  gitleaks = mkCheck "check-gitleaks" "${pkgs.gitleaks}/bin/gitleaks detect --source=. --no-git --no-banner --verbose --redact";
 }
