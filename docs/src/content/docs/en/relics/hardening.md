@@ -111,10 +111,14 @@ The `/proc` hardening is unaffected.
 |--------|------|---------|-------------|
 | `stc.relics.hardening.ssh.allowedTCPForwarding` | bool | `false` | Allow TCP forwarding |
 | `stc.relics.hardening.ssh.perSourcePenalties` | string | `"crash:3600s authfail:3600s max:86400s"` | sshd `PerSourcePenalties` — rate-limits misbehaving source addresses with escalating blocks. Set to `"no"` to disable. |
+| `stc.relics.hardening.ssh.banner` | null or lines | `null` | Pre-authentication warning banner text. The relic writes it to the store and points sshd `Banner` at that file. `null` writes no `Banner` directive at all. |
 
 Configures OpenSSH with:
 - Password authentication disabled (keys only)
 - Root login disabled
+- `LogLevel VERBOSE` — logs the fingerprint of the public key each accepted
+  connection used. With keys-only authentication, that fingerprint is the only
+  thing tying a session to a key, and therefore to a person.
 - MaxAuthTries: 3, LoginGraceTime: 20s
 - Per-source penalties: rate-limit auth failures / crashes by source address
 - Idle session timeout: 10 minutes (2 × 300s)
@@ -123,6 +127,19 @@ Configures OpenSSH with:
 - ETM MACs only: HMAC-SHA2-512-etm, HMAC-SHA2-256-etm
 - Key exchange: post-quantum hybrids first (mlkem768x25519-sha256,
   sntrup761x25519-sha512), then curve25519-sha256 and DH group 16
+
+:::note[The banner is opt-in]
+Banner wording is legal, site-specific content — STC cannot write it for you, so
+the default is `null` and no `Banner` directive is emitted until you set one:
+
+```nix
+stc.relics.hardening.ssh.banner = ''
+  Authorized access only. All activity is logged.
+'';
+```
+
+Already keeping the text in a file? `banner = builtins.readFile ./banner.txt;`.
+:::
 
 :::caution[Requires OpenSSH ≥ 9.9]
 The `mlkem768x25519-sha256` key exchange needs OpenSSH ≥ 9.9. The relic asserts

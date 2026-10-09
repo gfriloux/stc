@@ -114,10 +114,15 @@ n'est pas affecté.
 |--------|------|--------|-------------|
 | `stc.relics.hardening.ssh.allowedTCPForwarding` | bool | `false` | Autoriser le TCP forwarding |
 | `stc.relics.hardening.ssh.perSourcePenalties` | string | `"crash:3600s authfail:3600s max:86400s"` | `PerSourcePenalties` de sshd — limite le débit des adresses sources fautives avec des blocages progressifs. Mettre à `"no"` pour désactiver. |
+| `stc.relics.hardening.ssh.banner` | null ou lines | `null` | Texte du bandeau d'avertissement affiché avant authentification. La relique l'écrit dans le store et pointe le `Banner` de sshd dessus. `null` n'émet aucune directive `Banner`. |
 
 Configure OpenSSH avec :
 - Authentification par mot de passe désactivée (clés uniquement)
 - Connexion root désactivée
+- `LogLevel VERBOSE` — journalise l'empreinte de la clé publique utilisée par
+  chaque connexion acceptée. Avec une authentification par clés uniquement,
+  cette empreinte est la seule chose qui relie une session à une clé, donc à
+  une personne.
 - MaxAuthTries : 3, LoginGraceTime : 20s
 - Pénalités par source : limite les échecs d'auth / crashs par adresse source
 - Délai d'expiration des sessions inactives : 10 minutes (2 × 300s)
@@ -126,6 +131,20 @@ Configure OpenSSH avec :
 - MACs ETM uniquement : HMAC-SHA2-512-etm, HMAC-SHA2-256-etm
 - Échange de clés : hybrides post-quantiques en tête (mlkem768x25519-sha256,
   sntrup761x25519-sha512), puis curve25519-sha256 et DH groupe 16
+
+:::note[Le bandeau est opt-in]
+Le texte d'un bandeau est du contenu juridique propre au site — STC ne peut pas
+l'écrire à ta place, donc le défaut est `null` et aucune directive `Banner` n'est
+émise tant que tu n'en définis pas un :
+
+```nix
+stc.relics.hardening.ssh.banner = ''
+  Accès réservé aux personnes autorisées. Toute activité est journalisée.
+'';
+```
+
+Le texte est déjà dans un fichier ? `banner = builtins.readFile ./banner.txt;`.
+:::
 
 :::caution[Nécessite OpenSSH ≥ 9.9]
 L'échange de clés `mlkem768x25519-sha256` requiert OpenSSH ≥ 9.9. La relique
