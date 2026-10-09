@@ -4,6 +4,37 @@
 
 Open a private GitHub Security Advisory on this repository. Do not use public issues for vulnerability reports.
 
+## Threat model and non-goals
+
+### Password quality and account lockout
+
+STC configures **no password policy and no account-lockout policy**. There is no
+`pam_pwquality`, no `pam_faillock`, and no password expiration in any relic. This
+is a decision, not an oversight.
+
+**What removes the remote attack surface.** `relics.hardening.ssh` sets
+`PasswordAuthentication = false` and `KbdInteractiveAuthentication = false`:
+sshd accepts public keys only, so there is no remote password to guess. The
+remaining remote budget is capped by `MaxAuthTries 3`, `LoginGraceTime 20` and
+`PerSourcePenalties`.
+
+**Why the PAM controls are a non-goal.** The schematics declare
+`users.mutableUsers = false`. Passwords are therefore fixed at build time by the
+consumer (`hashedPassword` / `hashedPasswordFile`) and `passwd` cannot change
+them at runtime. `pam_pwquality` gates interactive password changes — on such a
+system it has nothing to arbitrate. Likewise, expiring a password the user cannot
+rotate without a rebuild turns an account policy into a deployment outage.
+Password strength belongs to whoever generates the hash, and password rotation is
+an operational rite, not a library option.
+
+**Residual risk, stated plainly.** Local authentication paths — a TTY login, a
+display-manager greeter, `sudo` — accept an unlimited number of attempts, and a
+weak password set by the consumer is caught by nothing in STC. The threat model
+for those paths is physical or console access, answered by disk encryption and
+boot integrity (the consumer's disko layout and hardware), not by PAM. A consumer
+who needs lockout on local login can set `security.pam` options in their own
+flake; a dedicated relic would be a separate change.
+
 ## Dependency posture
 
 STC depends on a mix of nix-community projects and personal flakes. This document is explicit about the trust level of each.
