@@ -17,6 +17,20 @@ belong to the consumer's own flake and hardware.
 
 **Status legend:** ✅ covered · 🟡 partial · ⚪ out of scope / not implemented.
 
+## Why not CIS?
+
+CIS publishes its Benchmarks per distribution — Ubuntu, RHEL, Debian, Amazon
+Linux — and there is no CIS Benchmark for NixOS. STC therefore makes **no claim
+of CIS compliance**, and the overlap in controls should not suggest otherwise:
+the kernel and network sysctl, SSH, the module blacklist and the filesystem
+mount options do cover much of what CIS Level 1/2 asks for, but that mapping is
+informative, never normative. ANSSI-BP-028 is the baseline; CIS is a point of
+comparison.
+
+Gaps surfaced by comparing STC against CIS Level 1/2 are tracked on GitHub under
+the [`compliance-cis`](https://github.com/gfriloux/stc/labels/compliance-cis)
+label.
+
 ## Relevant ANSSI-BP-028 rules
 
 | Rule | Topic |

@@ -17,6 +17,20 @@ et la sécurité physique/boot, qui relèvent du flake et du matériel du consom
 
 **Légende des statuts :** ✅ couvert · 🟡 partiel · ⚪ hors périmètre / non implémenté.
 
+## Pourquoi pas CIS ?
+
+Le CIS publie ses Benchmarks par distribution — Ubuntu, RHEL, Debian, Amazon
+Linux — et il n'existe aucun Benchmark CIS pour NixOS. STC ne revendique donc
+**aucune conformité CIS**, et le recouvrement des contrôles ne doit pas le
+laisser croire : les sysctl noyau et réseau, SSH, la blacklist de modules et les
+options de montage couvrent une bonne part de ce que demande CIS Level 1/2, mais
+cette correspondance est informative, jamais normative. ANSSI-BP-028 est le
+référentiel ; CIS n'est qu'un point de comparaison.
+
+Les écarts relevés en comparant STC à CIS Level 1/2 sont suivis sur GitHub sous
+l'étiquette
+[`compliance-cis`](https://github.com/gfriloux/stc/labels/compliance-cis).
+
 ## Règles ANSSI-BP-028 concernées
 
 | Règle | Sujet |

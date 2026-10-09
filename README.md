@@ -177,3 +177,23 @@ removed at the next major release (`v1.0.0`).
 Options that accept secrets use a `*File` suffix and read the file at runtime —
 STC never stores secret values inline, and is agnostic to the secrets backend
 (sops-nix, agenix, plain files).
+
+### Hardening baseline
+
+The hardening relics target **ANSSI-BP-028 v2.0** (*Recommandations de
+configuration d'un système GNU/Linux*), plus the separate ANSSI guide
+*Recommandations pour un usage sécurisé d'(Open)SSH* for `sshd` — which
+ANSSI-BP-028 does not cover. Every setting carries an inline
+`# ANSSI-BP-028 Rxx` reference in the source; the readable matrix is the
+[ANSSI-BP-028 compliance page](https://gfriloux.github.io/stc/en/reference/anssi-bp-028/).
+
+**No CIS Benchmark compliance is claimed or implied.** CIS publishes per-distro
+benchmarks (Ubuntu, RHEL, Debian, Amazon Linux) and none exists for NixOS, so
+calling STC "CIS-compliant" would be a misrepresentation. Comparisons against
+CIS Level 1/2 are informative only; the gaps such a comparison surfaces are
+tracked under the
+[`compliance-cis`](https://github.com/gfriloux/stc/labels/compliance-cis) label
+for anyone who wants to push STC toward CIS-equivalent coverage.
+
+See [`SECURITY_POLICY.md`](./SECURITY_POLICY.md) for the dependency trust tiers
+and the supply-chain posture.
