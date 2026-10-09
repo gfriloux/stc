@@ -46,9 +46,16 @@
 
     with subtest("ssh hardening"):
         machine.wait_for_unit("sshd.service")
-        sshd_config = machine.succeed("sshd -T")
+        # OpenSSH ≥ 10 dumps CamelCase keywords ("PasswordAuthentication no");
+        # earlier versions lowercased them. Normalise before matching, so the
+        # assertions survive either casing.
+        sshd_config = machine.succeed("sshd -T").lower()
         assert "passwordauthentication no" in sshd_config
         assert "permitrootlogin no" in sshd_config
-        assert "persourcepenalties" in sshd_config
+        # Assert the relic's tuned values, not merely that the keyword exists:
+        # sshd dumps PerSourcePenalties whether or not we set anything.
+        assert "crash:3600" in sshd_config
+        assert "authfail:3600" in sshd_config
+        assert "max:86400" in sshd_config
   '';
 }
