@@ -31,6 +31,17 @@ Les écarts relevés en comparant STC à CIS Level 1/2 sont suivis sur GitHub so
 l'étiquette
 [`compliance-cis`](https://github.com/gfriloux/stc/labels/compliance-cis).
 
+## Hors périmètre assumé
+
+Aucune relique ne configure de politique de qualité de mot de passe ni de
+verrouillage de compte (`pam_pwquality`, `pam_faillock`, expiration). SSH
+n'accepte que les clés publiques, il n'y a donc aucun mot de passe à deviner à
+distance, et les schematics posent `users.mutableUsers = false`, ce qui ne laisse
+rien à arbitrer à ces contrôles PAM. Le risque résiduel sur la connexion console
+locale est documenté — avec le raisonnement et la porte de sortie — dans
+[`SECURITY_POLICY.md`](https://github.com/gfriloux/stc/blob/main/SECURITY_POLICY.md),
+section *Threat model and non-goals*.
+
 ## Règles ANSSI-BP-028 concernées
 
 | Règle | Sujet |

@@ -31,6 +31,16 @@ Gaps surfaced by comparing STC against CIS Level 1/2 are tracked on GitHub under
 the [`compliance-cis`](https://github.com/gfriloux/stc/labels/compliance-cis)
 label.
 
+## Non-goals
+
+No relic configures a password-quality or account-lockout policy (`pam_pwquality`,
+`pam_faillock`, password expiration). SSH is keys-only, so there is no remote
+password to guess, and the schematics run `users.mutableUsers = false`, which
+leaves those PAM controls nothing to arbitrate. The residual risk on local console
+login is documented — with the reasoning and the escape hatch — in
+[`SECURITY_POLICY.md`](https://github.com/gfriloux/stc/blob/main/SECURITY_POLICY.md)
+under *Threat model and non-goals*.
+
 ## Relevant ANSSI-BP-028 rules
 
 | Rule | Topic |
