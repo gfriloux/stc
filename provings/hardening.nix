@@ -15,6 +15,10 @@
   nodes.machine = {
     imports = [self.nixosModules.cogitator-hardening];
     stc.cogitator.hardening.enable = true;
+
+    # The banner is opt-in and defaults to null, so the test node has to set it
+    # for the subtest below to have anything to assert.
+    stc.relics.hardening.ssh.banner = "Authorized access only. All activity is logged.\n";
   };
 
   testScript = ''
@@ -52,10 +56,21 @@
         sshd_config = machine.succeed("sshd -T").lower()
         assert "passwordauthentication no" in sshd_config
         assert "permitrootlogin no" in sshd_config
+        assert "loglevel verbose" in sshd_config
         # Assert the relic's tuned values, not merely that the keyword exists:
         # sshd dumps PerSourcePenalties whether or not we set anything.
         assert "crash:3600" in sshd_config
         assert "authfail:3600" in sshd_config
         assert "max:86400" in sshd_config
+
+    with subtest("ssh banner"):
+        banner_lines = [
+            line for line in machine.succeed("sshd -T").splitlines()
+            if line.lower().startswith("banner ")
+        ]
+        assert len(banner_lines) == 1, f"expected one Banner line, got {banner_lines}"
+        banner_path = banner_lines[0].split()[1]
+        assert banner_path.startswith("/nix/store/"), f"unexpected banner path: {banner_path}"
+        assert "Authorized access only" in machine.succeed(f"cat {banner_path}")
   '';
 }

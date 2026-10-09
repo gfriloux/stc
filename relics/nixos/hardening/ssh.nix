@@ -10,6 +10,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }: let
   cfg = config.stc.relics.hardening.ssh;
@@ -38,6 +39,22 @@ in {
         "no" to disable.
       '';
     };
+
+    banner = lib.mkOption {
+      type = lib.types.nullOr lib.types.lines;
+      default = null;
+      example = "Authorized access only. All activity is logged.";
+      description = ''
+        Text sent to the client before authentication (sshd Banner). The relic
+        writes it to the store and points Banner at that file.
+
+        Default null: no Banner directive at all. Banner wording is legal,
+        site-specific content — STC cannot write it for you, and an unset
+        banner changes nothing.
+
+        For an existing file, use builtins.readFile ./banner.txt.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -60,6 +77,21 @@ in {
         PasswordAuthentication = false;
         KbdInteractiveAuthentication = false;
         PubkeyAuthentication = true;
+
+        # VERBOSE instead of the OpenSSH default INFO: it logs the fingerprint
+        # of the public key each accepted connection used. With keys-only
+        # authentication that fingerprint is the only thing tying a session to
+        # a key — and therefore to a person.
+        LogLevel = "VERBOSE";
+
+        # Pre-authentication warning banner. Opt-in: null writes no Banner
+        # directive at all (see the banner option). Interpolated to a store path
+        # string, not left as a derivation: the sshd_config generator only
+        # serialises strings, ints, bools and lists.
+        Banner =
+          if cfg.banner == null
+          then null
+          else "${pkgs.writeText "sshd-banner" cfg.banner}";
 
         MaxAuthTries = 3;
         LoginGraceTime = 20;
