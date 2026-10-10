@@ -19,11 +19,24 @@ Applique des paramètres sysctl qui réduisent la surface d'attaque du noyau :
 | Disposition mémoire | ASLR complet (`randomize_va_space = 2`), masquer les pointeurs noyau (`kptr_restrict = 2`), restreindre dmesg |
 | Capacités non-privilégiées | Bloquer eBPF et perf pour les utilisateurs non-privilégiés ; restreindre ptrace aux enfants directs (`yama.ptrace_scope = 1`) |
 | kexec / SysRq | Désactiver kexec (vecteur d'attaque de remplacement du noyau), désactiver SysRq |
+| Fautes noyau | Paniquer sur un oops (`panic_on_oops = 1`) et redémarrer 30 s plus tard (`panic = 30`) au lieu de poursuivre dans un état dont le noyau ne peut plus répondre |
 | Core dumps | Désactiver entièrement — les core dumps peuvent exposer des secrets et des clés privées |
 | Système de fichiers | Protéger les hardlinks, symlinks, FIFOs et fichiers réguliers contre les abus |
 
 Les core dumps sont désactivés via `systemd.coredump.enable = false` et les
 limites de ressources PAM (`security.pam.loginLimits`) par double précaution.
+
+:::caution[Paniquer sur un oops est un vrai compromis de disponibilité]
+Un oops noyau que la machine aurait auparavant survécu la met désormais à terre
+et la redémarre. Cela ne couvre que les fautes réelles (`Oops:` / `BUG:` dans
+`dmesg`), jamais les traces `WARNING: ... at <fichier>:<ligne>` qu'émet un défaut
+bénin de pilote. Vérifie `cat /proc/sys/kernel/tainted` sur l'hôte : si le bit 7
+(`128`) ne s'allume jamais sous ta charge de travail, aucun oops n'a eu lieu et
+le réglage ne te coûte rien. Pour garder une machine figée en vue d'un
+post-mortem plutôt que de redémarrer :
+`boot.kernel.sysctl."kernel.panic" = lib.mkForce 0;`. Raisonnement complet dans
+[Fidélité ANSSI-BP-028](/stc/fr/reference/anssi-bp-028/).
+:::
 
 ## Durcissement réseau
 

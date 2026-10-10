@@ -19,11 +19,23 @@ Applies sysctl parameters that reduce the kernel attack surface:
 | Memory layout | Full ASLR (`randomize_va_space = 2`), hide kernel pointers (`kptr_restrict = 2`), restrict dmesg |
 | Unprivileged capabilities | Block eBPF and perf for unprivileged users; restrict ptrace to direct children (`yama.ptrace_scope = 1`) |
 | kexec / SysRq | Disable kexec (kernel replacement attack vector), disable SysRq |
+| Kernel faults | Panic on an oops (`panic_on_oops = 1`) and reboot 30 s later (`panic = 30`) instead of carrying on in a state the kernel cannot vouch for |
 | Core dumps | Disable entirely — core dumps can expose secrets and private keys |
 | Filesystem | Protect hardlinks, symlinks, FIFOs, and regular files from abuse |
 
 Core dumps are disabled via `systemd.coredump.enable = false` and PAM resource
 limits (`security.pam.loginLimits`) as belt-and-suspenders.
+
+:::caution[Panicking on an oops is a real availability trade]
+A kernel oops that the machine would previously have survived now takes it down
+and reboots it. This only covers genuine faults (`Oops:` / `BUG:` in `dmesg`),
+never the `WARNING: ... at <file>:<line>` traces that a benign driver quirk
+emits. Check `cat /proc/sys/kernel/tainted` on the host: if bit 7 (`128`) never
+lights up under your workload, no oops has occurred and the setting costs you
+nothing. Keep a frozen machine for post-mortem instead of rebooting with
+`boot.kernel.sysctl."kernel.panic" = lib.mkForce 0;`. Full reasoning in
+[ANSSI-BP-028 fidelity](/stc/en/reference/anssi-bp-028/).
+:::
 
 ## Network Hardening
 
