@@ -168,6 +168,7 @@ d'attaque :
 |---------|---------|----------|
 | FireWire (DMA) | `firewire-core`, `firewire-ohci`, `firewire-sbp2` | Un périphérique hostile peut lire/écrire la mémoire physique via le bus |
 | Protocoles réseau rares | `dccp`, `sctp`, `rds`, `tipc` | Quasi jamais utilisés sur un hôte normal, mais source récurrente de CVE noyau |
+| Systèmes de fichiers legacy | `cramfs`, `freevxfs`, `jffs2`, `hfs`, `hfsplus` | Pilotes que rien ne monte sur un hôte normal, et autant de parseurs atteignables depuis un média amovible |
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
@@ -178,9 +179,23 @@ une blacklist ciblée plutôt que le verrouillage total `kernel.modules_disabled
 qui casserait le chargement de modules à la demande et nécessite une évaluation au
 cas par cas.
 
-:::caution[FireWire et protocoles rares]
-Si un hôte a réellement besoin de FireWire (ex. une interface audio) ou d'un des
-protocoles rares (SCTP pour certaines piles téléphonie/SIP), active les autres
+### Hors blacklist par défaut : `udf` et `usb-storage`
+
+Les référentiels habituels citent aussi `udf` (média optique) et `usb-storage`.
+Les deux restent hors des défauts ici, parce qu'ils ont encore des usages
+légitimes — monter un DVD/Blu-ray, installer depuis une clé USB — et parce que
+`boot.blacklistedKernelModules` est une liste : `extraBlacklist` y ajoute, rien
+n'en retire. Un défaut qui s'avérerait mauvais ne laisserait aucune surcharge
+propre. Sur un hôte où aucun des deux ne sert, mets-les dans `extraBlacklist` :
+
+```nix
+stc.relics.hardening.modules.extraBlacklist = [ "udf" "usb-storage" ];
+```
+
+:::caution[FireWire, protocoles rares, systèmes de fichiers legacy]
+Si un hôte a réellement besoin de FireWire (ex. une interface audio), d'un des
+protocoles rares (SCTP pour certaines piles téléphonie/SIP) ou d'un des systèmes
+de fichiers legacy (`hfsplus` sur un Mac en dual-boot), active les autres
 reliques à la carte plutôt que celle-ci, ou surcharge
 `boot.blacklistedKernelModules`.
 :::
