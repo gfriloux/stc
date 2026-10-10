@@ -70,8 +70,60 @@ under *Threat model and non-goals*.
 | `fs.protected_fifos=2` | R14 | ✅ | |
 | `fs.protected_regular=2` | R14 | ✅ | |
 | `kernel.kexec_load_disabled=1` | (kexec) | 🟡 | ANSSI disables kexec at compile time (`CONFIG_KEXEC` unset); STC uses the runtime sysctl |
-| `pid_max`, `perf_cpu_time_max_percent`, `perf_event_max_sample_rate`, `panic_on_oops` | R9 | ⚪ | R9 settings STC does not set |
+| `kernel.panic_on_oops=1` | R9 | ✅ | Paired with `kernel.panic=30` — see below |
+| `kernel.pid_max` | R9 | ✅ | Satisfied without STC setting anything: systemd's `sysctl.d/50-pid-max.conf` gives `4194304`, far above R9's `65536`. Asserted as a floor in `provings/hardening.nix` |
+| `kernel.perf_cpu_time_max_percent`, `kernel.perf_event_max_sample_rate` | R9 | ⚪ | Evaluated, not adopted — see below |
 | `kernel.modules_disabled=1` | R10 | ⚪ | Full lockdown not implemented — breaks on-demand module loading. See `relics.hardening.modules` for the soft form (targeted blacklist) |
+
+### On `panic_on_oops` and the reboot delay
+
+An oops — `Oops:` or `BUG:` in `dmesg` — is a genuine kernel fault. By default
+the kernel kills the faulting task and carries on in a state it cannot vouch
+for. Several exploitation techniques tolerate, or deliberately provoke, a stream
+of oopses (KASLR brute-force, heap spraying), which makes every survived oops a
+free retry for the attacker. `panic_on_oops=1` ends the retry loop.
+
+R9 stops there, but `panic_on_oops=1` on its own *freezes* the machine, because
+`kernel.panic` defaults to `0` — wait forever. On a headless node that means no
+return without console access. STC therefore also sets `kernel.panic=30`: the
+machine still fails closed, then reboots. The delay is STC's addition, not an
+R9 requirement. To keep a frozen machine for post-mortem analysis, override it:
+
+```nix
+boot.kernel.sysctl."kernel.panic" = lib.mkForce 0;
+```
+
+Do not confuse this with `kernel.panic_on_warn`, which reacts to `WARN_ON()` —
+the `WARNING: ... at <file>:<line>` traces, a developer assertion rather than a
+fault. A benign driver quirk emits those, so panicking on them would trade real
+availability for nothing. ANSSI does not ask for it; STC does not set it.
+
+To gauge the risk on a given host before enabling the relic, read the kernel's
+own taint flags:
+
+```console
+$ cat /proc/sys/kernel/tainted
+```
+
+Bit 7 (value `128`, `TAINT_DIE`) is set once an oops or `die()` has occurred
+since boot. If it stays clear on your workload, `panic_on_oops=1` costs nothing
+in practice. Bit 9 (`512`) only records a `WARNING`, which this setting ignores.
+
+### On the two perf rate limits
+
+R9 asks for `perf_cpu_time_max_percent=1` and `perf_event_max_sample_rate=1`.
+STC sets neither, for two reasons. `perf_event_paranoid=3` above already denies
+perf to unprivileged users, so these two only throttle root's own profiling —
+and root is trusted in STC's threat model, so this buys no confidentiality.
+Second, the kernel already self-regulates: when the sampling NMI handler gets
+expensive it lowers the rate on its own, visibly so in `dmesg`:
+
+```
+perf: interrupt took too long (4993 > 4967), lowering kernel.perf_event_max_sample_rate to 40000
+```
+
+A hard-coded `1` would replace that adaptive control with a value 40000× lower
+and make profiling useless on a machine STC may well be asked to debug.
 
 ## `relics.hardening.network`
 

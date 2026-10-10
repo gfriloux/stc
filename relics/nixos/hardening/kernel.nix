@@ -41,6 +41,38 @@ in {
       "kernel.kexec_load_disabled" = 1;
       "kernel.sysrq" = 0; # ANSSI-BP-028 R9
 
+      # --- Fail closed on a kernel fault (ANSSI-BP-028 R9) ---
+      # An oops ("Oops:" / "BUG:" in dmesg) is a real fault: by default the
+      # kernel kills the faulting task and limps on in a doubtful state. Several
+      # exploitation techniques tolerate — or deliberately provoke — a stream of
+      # oopses (KASLR brute-force, heap spraying), so every survived oops is a
+      # free retry for the attacker. Panic instead.
+      # Not to be confused with kernel.panic_on_warn, which fires on WARN_ON()
+      # ("WARNING: ... at <file>:<line>") — a developer assertion, not a fault.
+      # ANSSI does not ask for it and STC does not set it: a benign driver quirk
+      # (a DRM framebuffer teardown, say) would take the machine down.
+      "kernel.panic_on_oops" = 1;
+      # panic_on_oops=1 on its own *freezes* the machine, because kernel.panic
+      # defaults to 0 (wait forever). A headless node would then need console
+      # access to come back, so bound the stop and reboot. This is not part of
+      # R9 — it is the availability half of the trade, and the reason
+      # panic_on_oops is safe to turn on by default here. Prefer a frozen
+      # machine for post-mortem? `boot.kernel.sysctl."kernel.panic" = mkForce 0`.
+      "kernel.panic" = 30;
+
+      # --- R9 settings deliberately left at their defaults ---
+      # kernel.pid_max: R9 asks for 65536, which *raises* the historical kernel
+      # default of 32768 — a wider PID space recycles PIDs more slowly. systemd
+      # ships sysctl.d/50-pid-max.conf with 4194304, so a NixOS host already
+      # exceeds R9 by a factor of 64 and writing 65536 would be a regression.
+      # provings/hardening.nix asserts it as a floor.
+      # kernel.perf_cpu_time_max_percent / kernel.perf_event_max_sample_rate:
+      # R9 asks for 1 on both. perf_event_paranoid=3 above already denies perf
+      # to unprivileged users, so these only throttle root's own profiling —
+      # and the kernel self-tunes the sample rate when the NMI handler gets
+      # expensive ("perf: interrupt took too long ... lowering ... to 40000").
+      # Evaluated, not adopted — see docs reference/anssi-bp-028.md.
+
       # --- Core dumps (ANSSI-BP-028 R14) ---
       # Core dumps can expose secrets and private keys. Disable entirely.
       "fs.suid_dumpable" = 0;

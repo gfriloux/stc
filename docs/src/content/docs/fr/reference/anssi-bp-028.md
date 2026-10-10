@@ -71,8 +71,65 @@ section *Threat model and non-goals*.
 | `fs.protected_fifos=2` | R14 | ✅ | |
 | `fs.protected_regular=2` | R14 | ✅ | |
 | `kernel.kexec_load_disabled=1` | (kexec) | 🟡 | ANSSI désactive kexec en compile-time (`CONFIG_KEXEC` non défini) ; STC utilise le sysctl runtime |
-| `pid_max`, `perf_cpu_time_max_percent`, `perf_event_max_sample_rate`, `panic_on_oops` | R9 | ⚪ | Réglages R9 non repris par STC |
+| `kernel.panic_on_oops=1` | R9 | ✅ | Couplé à `kernel.panic=30` — voir plus bas |
+| `kernel.pid_max` | R9 | ✅ | Satisfait sans que STC écrive quoi que ce soit : le `sysctl.d/50-pid-max.conf` de systemd donne `4194304`, très au-dessus des `65536` de R9. Vérifié comme plancher dans `provings/hardening.nix` |
+| `kernel.perf_cpu_time_max_percent`, `kernel.perf_event_max_sample_rate` | R9 | ⚪ | Évalués, non retenus — voir plus bas |
 | `kernel.modules_disabled=1` | R10 | ⚪ | Verrouillage total non implémenté — casse le chargement à la demande. Voir `relics.hardening.modules` pour la forme souple (blacklist ciblée) |
+
+### À propos de `panic_on_oops` et du délai de redémarrage
+
+Un oops — `Oops:` ou `BUG:` dans `dmesg` — est une véritable faute noyau. Par
+défaut, le noyau tue la tâche fautive et poursuit dans un état dont il ne peut
+plus répondre. Plusieurs techniques d'exploitation tolèrent, voire provoquent
+délibérément, une série d'oops (brute-force de KASLR, pulvérisation de tas) : ce
+qui fait de chaque oops survécu un essai gratuit pour l'attaquant.
+`panic_on_oops=1` met fin à cette boucle d'essais.
+
+R9 s'arrête là, mais `panic_on_oops=1` seul *fige* la machine, car `kernel.panic`
+vaut `0` par défaut — attendre indéfiniment. Sur un nœud headless, cela veut dire
+aucun retour sans accès console. STC pose donc aussi `kernel.panic=30` : la
+machine échoue toujours en fermeture, puis redémarre. Le délai est un ajout de
+STC, pas une exigence de R9. Pour conserver une machine figée en vue d'une
+analyse post-mortem, surcharge-le :
+
+```nix
+boot.kernel.sysctl."kernel.panic" = lib.mkForce 0;
+```
+
+À ne pas confondre avec `kernel.panic_on_warn`, qui réagit aux `WARN_ON()` — les
+traces `WARNING: ... at <fichier>:<ligne>`, une assertion de développeur et non
+une faute. Un défaut bénin de pilote en émet, donc paniquer dessus échangerait de
+la disponibilité réelle contre rien. ANSSI ne le demande pas ; STC ne le pose pas.
+
+Pour jauger le risque sur un hôte donné avant d'activer la relique, lis les
+drapeaux de contamination du noyau :
+
+```console
+$ cat /proc/sys/kernel/tainted
+```
+
+Le bit 7 (valeur `128`, `TAINT_DIE`) est posé dès qu'un oops ou un `die()` s'est
+produit depuis le démarrage. S'il reste éteint sous ta charge de travail,
+`panic_on_oops=1` ne coûte rien en pratique. Le bit 9 (`512`) ne consigne qu'un
+`WARNING`, que ce réglage ignore.
+
+### À propos des deux limites de débit perf
+
+R9 demande `perf_cpu_time_max_percent=1` et `perf_event_max_sample_rate=1`. STC
+ne pose ni l'un ni l'autre, pour deux raisons. `perf_event_paranoid=3` ci-dessus
+interdit déjà perf aux utilisateurs non privilégiés, donc ces deux réglages ne
+bornent plus que le profilage de root — et root est de confiance dans le modèle
+de menace de STC, donc cela n'achète aucune confidentialité. Ensuite, le noyau
+s'autorégule déjà : quand le handler NMI d'échantillonnage devient trop coûteux,
+il baisse le débit de lui-même, et le dit dans `dmesg` :
+
+```
+perf: interrupt took too long (4993 > 4967), lowering kernel.perf_event_max_sample_rate to 40000
+```
+
+Un `1` écrit en dur remplacerait ce contrôle adaptatif par une valeur 40000 fois
+plus basse et rendrait le profilage inutilisable sur une machine que STC pourrait
+tout à fait avoir à déboguer.
 
 ## `relics.hardening.network`
 
