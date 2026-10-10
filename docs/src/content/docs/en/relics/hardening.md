@@ -41,6 +41,7 @@ Sysctl parameters applied:
 | Anti-spoofing | Reverse path filtering on all interfaces |
 | Redirect rejection | Ignores ICMP redirects in all directions, disables sending redirects |
 | Source routing | Rejects source-routed packets (IPv4 + IPv6) |
+| Martian logging | Logs packets with an impossible source address (`log_martians`) |
 | ICMP abuse | Ignores broadcast pings and bogus error responses |
 | SYN flood | Enables SYN cookies; TIME_WAIT assassination protection (`tcp_rfc1337`) |
 | eBPF JIT | Hardens the JIT against spraying attacks (`bpf_jit_harden = 2`) |
@@ -51,6 +52,7 @@ Sysctl parameters applied:
 |--------|------|---------|-------------|
 | `stc.relics.hardening.network.strictReversePathFilter` | bool | `true` | Strict (`1`) reverse-path filtering. Set `false` for loose (`2`) on asymmetric-routing / multi-homed / WireGuard hosts where strict mode drops legitimate return traffic. |
 | `stc.relics.hardening.network.strictArp` | bool | `false` | ARP hardening (`arp_ignore=1`, `arp_announce=2`). Off by default: can break multi-homed hosts, Linux bridges, and Docker networking. Enable only on single-homed hosts. |
+| `stc.relics.hardening.network.strictIpv6RouterAdvertisements` | bool | `false` | Refuse IPv6 Router Advertisements (`accept_ra=0`). Off by default: strands any SLAAC-addressed host. Enable where IPv6 is static or unused, so a neighbour on an untrusted segment cannot inject a prefix and a default route. |
 
 :::note[Firewall is your responsibility]
 This relic hardens the kernel network stack. Firewall rules (open ports, Docker

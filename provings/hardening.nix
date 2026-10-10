@@ -19,6 +19,11 @@
     # The banner is opt-in and defaults to null, so the test node has to set it
     # for the subtest below to have anything to assert.
     stc.relics.hardening.ssh.banner = "Authorized access only. All activity is logged.\n";
+
+    # Same reason: RA rejection is opt-in, so the node turns it on to make the
+    # sysctl assertion below meaningful. Safe here — the test VM's networking is
+    # statically configured by the test driver, it never relies on SLAAC.
+    stc.relics.hardening.network.strictIpv6RouterAdvertisements = true;
   };
 
   testScript = ''
@@ -38,6 +43,11 @@
         assert machine.succeed("sysctl -n net.ipv4.conf.all.accept_source_route").strip() == "0"
         assert machine.succeed("sysctl -n net.ipv4.tcp_rfc1337").strip() == "1"
         assert machine.succeed("sysctl -n net.core.bpf_jit_harden").strip() == "2"
+        assert machine.succeed("sysctl -n net.ipv4.conf.all.log_martians").strip() == "1"
+        assert machine.succeed("sysctl -n net.ipv4.conf.default.log_martians").strip() == "1"
+        # Opt-in, enabled on this node — see strictIpv6RouterAdvertisements above.
+        assert machine.succeed("sysctl -n net.ipv6.conf.all.accept_ra").strip() == "0"
+        assert machine.succeed("sysctl -n net.ipv6.conf.default.accept_ra").strip() == "0"
 
     with subtest("kernel module blacklist"):
         # modprobe canonicalises module names (hyphens become underscores), so

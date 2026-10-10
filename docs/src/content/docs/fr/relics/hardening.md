@@ -42,6 +42,7 @@ Paramètres sysctl appliqués :
 | Anti-spoofing | Filtrage par chemin inverse sur toutes les interfaces |
 | Rejet des redirections | Ignore les redirections ICMP dans toutes les directions, désactive l'envoi de redirections |
 | Routage à la source | Rejette les paquets source-routés (IPv4 + IPv6) |
+| Journalisation des martiens | Journalise les paquets à adresse source impossible (`log_martians`) |
 | Abus ICMP | Ignore les broadcasts ping et les réponses d'erreur erronées |
 | Inondations SYN | Active les SYN cookies ; protection anti-assassinat TIME_WAIT (`tcp_rfc1337`) |
 | JIT eBPF | Durcit le JIT contre les attaques par spraying (`bpf_jit_harden = 2`) |
@@ -52,6 +53,7 @@ Paramètres sysctl appliqués :
 |--------|------|--------|-------------|
 | `stc.relics.hardening.network.strictReversePathFilter` | bool | `true` | Filtrage par chemin inverse strict (`1`). Mettre à `false` pour le mode loose (`2`) sur les hôtes à routage asymétrique / multi-homed / WireGuard où le mode strict bloque le trafic de retour légitime. |
 | `stc.relics.hardening.network.strictArp` | bool | `false` | Durcissement ARP (`arp_ignore=1`, `arp_announce=2`). Désactivé par défaut : peut casser les hôtes multi-homed, les bridges Linux et le réseau Docker. À activer uniquement sur les hôtes single-homed. |
+| `stc.relics.hardening.network.strictIpv6RouterAdvertisements` | bool | `false` | Refuse les Router Advertisements IPv6 (`accept_ra=0`). Désactivé par défaut : isole tout hôte adressé par SLAAC. À activer là où l'IPv6 est statique ou inutilisée, pour qu'un voisin sur un segment non fiable ne puisse pas injecter un préfixe et une route par défaut. |
 
 :::note[Le pare-feu est ta responsabilité]
 Cette relique durcit la pile réseau du noyau. Les règles de pare-feu (ports ouverts,
