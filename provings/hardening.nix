@@ -24,6 +24,20 @@
     # sysctl assertion below meaningful. Safe here — the test VM's networking is
     # statically configured by the test driver, it never relies on SLAAC.
     stc.relics.hardening.network.strictIpv6RouterAdvertisements = true;
+
+    # relics.hardening.scheduler is inert unless a scheduler actually runs — its
+    # whole config is guarded by mkIf services.<x>.enable. STC enables neither
+    # (it schedules with systemd timers), so the node has to turn both on for the
+    # allowlist assertions to prove anything.
+    services.cron.enable = true;
+    services.atd.enable = true;
+
+    # An unprivileged user to prove the restriction from the outside: root is on
+    # the allowlist, so only a normal user can show that the gate closes.
+    users.users.schedtest = {
+      isNormalUser = true;
+      description = "unprivileged user for the scheduler allowlist subtest";
+    };
   };
 
   testScript = ''
@@ -67,6 +81,35 @@
                        "cramfs", "freevxfs", "jffs2", "hfs", "hfsplus"]:
             needle = "blacklist " + module.replace("-", "_")
             assert needle in modprobe_config, f"{module} not blacklisted"
+
+    with subtest("scheduler access allowlist"):
+        machine.wait_for_unit("cron.service")
+        # Covers the /etc/at friction: environment.etc populates /etc/at/at.allow
+        # while atd's own preStart runs `install -dm755 -o atd -g atd /etc/at`
+        # over the same directory. If those fought, atd would not come up.
+        machine.wait_for_unit("atd.service")
+
+        # NixOS paths, not the ones the usual baselines cite: vixie cron reads
+        # /var/cron/cron.allow and the atd module sets etcdir=/etc/at.
+        assert machine.succeed("cat /var/cron/cron.allow").strip() == "root"
+        assert machine.succeed("cat /etc/at/at.allow").strip() == "root"
+
+        # The security property: an unprivileged user is refused by both, even
+        # though the upstream preStart left a permissive empty *.deny in place.
+        # `crontab -l` also exits non-zero for an *allowed* user with no crontab,
+        # so match the refusal message rather than the exit status alone.
+        cron_denied = machine.fail("su -l schedtest -c 'crontab -l' 2>&1")
+        assert "not allowed" in cron_denied, f"unexpected crontab output: {cron_denied}"
+        at_denied = machine.fail("su -l schedtest -c 'echo true | at now + 1 hour' 2>&1")
+        assert "permission" in at_denied.lower(), f"unexpected at output: {at_denied}"
+
+        # Root keeps a full round-trip through both — an allowlist that locks out
+        # root too would satisfy every assertion above and be useless.
+        machine.succeed("echo '* * * * * true' | crontab -")
+        assert "* * * * * true" in machine.succeed("crontab -l")
+        machine.succeed("crontab -r")
+        machine.succeed("echo true | at now + 1 hour")
+        assert machine.succeed("atq").strip() != "", "root's at job was not queued"
 
     with subtest("ssh hardening"):
         machine.wait_for_unit("sshd.service")

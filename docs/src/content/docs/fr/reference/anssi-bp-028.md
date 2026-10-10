@@ -168,6 +168,28 @@ tout à fait avoir à déboguer.
 | `/dev/shm` `nosuid,nodev,noexec` | R28 | 🟡 | Même logique ; hors table R28 |
 | Partitions séparées `/boot /var /home /usr /opt /srv /var/log /var/tmp` | R28 | ⚪ | STC ne partitionne pas — c'est le layout disko du schematic, pas une relique |
 
+## `relics.hardening.scheduler`
+
+Restreindre `cron` et `at` à une liste d'autorisation est **hors périmètre
+ANSSI-BP-028** — aucune règle du guide ne couvre l'accès aux ordonnanceurs. La
+relique existe à son propre mérite, et cette section le consigne pour qu'aucun
+lecteur ne cherche la règle correspondante.
+
+L'item vient de la famille CIS ~2.4.1.x, que STC traite comme purement
+informative (voir *Pourquoi pas CIS ?* plus bas). Ce qui justifie du code plutôt
+qu'un conseil est un piège propre à NixOS : `services.cron.enable` vaut
+`mkDefault (allFiles != [])`, donc un module tiers qui pose
+`services.cron.systemCronJobs` démarre le démon sans que le consommateur l'ait
+demandé — et le `preStart` du module NixOS l'ouvre à tous les utilisateurs locaux
+en posant un `/var/cron/cron.deny` vide. Vixie cron est fermé par défaut en
+amont ; le module NixOS inverse ce défaut. `atd` fait de même avec
+`/etc/at/at.deny`.
+
+La relique écrit `/var/cron/cron.allow` et `/etc/at/at.allow` — les chemins que
+NixOS lit réellement, pas les `/etc/cron.allow` et `/etc/at.allow` que citent les
+référentiels dérivés de RHEL. Elle n'active aucun ordonnanceur et reste inerte là
+où aucun ne tourne.
+
 ## `relics.hardening.ssh`
 
 Le durcissement SSH (`PermitRootLogin no`, `PasswordAuthentication no`,

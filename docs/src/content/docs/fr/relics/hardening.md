@@ -1,9 +1,9 @@
 ---
 title: Durcissement
-description: Cinq reliques de durcissement — noyau, réseau, système de fichiers, SSH et blacklist de modules — plus le raccourci cogitator-hardening.
+description: Six reliques de durcissement — noyau, réseau, système de fichiers, SSH, blacklist de modules et accès aux ordonnanceurs — plus le raccourci cogitator-hardening.
 ---
 
-STC fournit cinq reliques de durcissement indépendantes. Chacune adresse une
+STC fournit six reliques de durcissement indépendantes. Chacune adresse une
 surface d'attaque distincte et peut être activée individuellement.
 
 ## Durcissement du noyau
@@ -215,6 +215,62 @@ reliques à la carte plutôt que celle-ci, ou surcharge
 `boot.blacklistedKernelModules`.
 :::
 
+## Accès aux ordonnanceurs
+
+**Module :** `stc.nixosModules.relics-hardening-scheduler`
+
+**Option d'activation :** `stc.relics.hardening.scheduler.enable`
+
+Restreint les ordonnanceurs classiques — `cron` et `at` — à une liste
+d'utilisateurs explicite, `["root"]` par défaut.
+
+Cette relique **n'active jamais d'ordonnanceur**. Tout son bloc de configuration
+est gardé par `mkIf config.services.cron.enable` et
+`mkIf config.services.atd.enable`, elle est donc inerte sur un hôte qui
+ordonnance par timers systemd — c'est-à-dire toutes les machines STC. Elle
+existe pour l'hôte qui en fait tourner un, car nixpkgs ouvre délibérément les
+deux à tous les utilisateurs locaux :
+
+| Comportement amont | Conséquence |
+|---|---|
+| Vixie cron n'autorise que root quand ni `cron.allow` ni `cron.deny` n'existe | Le `preStart` du module NixOS pose un `/var/cron/cron.deny` vide — « *By default, allow all users to create a crontab* » — ce qui inverse ce défaut |
+| Le `preStart` d'`atd` pose un `/etc/at/at.deny` vide | Même effet : personne n'est refusé, donc tout le monde est autorisé |
+
+Et cron peut s'activer tout seul : `services.cron.enable` vaut
+`mkDefault (allFiles != [])`, donc tout module tiers qui pose un
+`services.cron.systemCronJobs` démarre le démon — ouvert à tous — sans que le
+consommateur l'ait demandé. C'est ce cas qui justifie du code plutôt qu'un
+paragraphe de conseil.
+
+**Options :**
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `stc.relics.hardening.scheduler.allowedUsers` | liste de str | `[ "root" ]` | Utilisateurs autorisés à ordonnancer des travaux via `crontab` et `at`. Écrits dans `/var/cron/cron.allow` et `/etc/at/at.allow`, qui l'emportent tous deux sur le `*.deny` permissif créé par les modules amont. |
+
+Attention aux chemins : NixOS utilise `/var/cron/cron.allow` et
+`/etc/at/at.allow`, pas les `/etc/cron.allow` et `/etc/at.allow` que citent les
+référentiels dérivés de RHEL. Un hôte qui écrit ces derniers n'a rien restreint.
+
+Une crontab système déclarée via `services.cron.systemCronJobs` n'est pas
+concernée : elle tourne depuis `/etc/crontab` en tant que root et ne passe jamais
+par la commande `crontab` par utilisateur que cette liste contrôle.
+
+:::caution[Ceci peut retirer crontab à des utilisateurs existants]
+Si un hôte fait déjà tourner cron — y compris via l'auto-activation ci-dessus —
+et que des utilisateurs non-root s'appuient sur `crontab`, activer cette relique
+les refuse. Liste-les dans `allowedUsers` :
+
+```nix
+stc.relics.hardening.scheduler.allowedUsers = [ "root" "deploy" ];
+```
+
+Les deux fichiers d'autorisation sont réécrits depuis le store Nix à chaque
+activation, donc un `/var/cron/cron.allow` édité à la main ne survivra pas à un
+rebuild. C'est tout l'intérêt de déclarer la liste ici, mais cela remplacera
+silencieusement une liste entretenue à la main.
+:::
+
 ## Exemple d'utilisation
 
 Reliques individuelles :
@@ -226,6 +282,7 @@ modules = [
   stc.nixosModules.relics-hardening-filesystem
   stc.nixosModules.relics-hardening-ssh
   stc.nixosModules.relics-hardening-modules
+  stc.nixosModules.relics-hardening-scheduler
   ./configuration.nix
 ];
 
@@ -237,6 +294,7 @@ modules = [
   stc.relics.hardening.filesystem.tmpSize = "4G";
   stc.relics.hardening.ssh.enable = true;
   stc.relics.hardening.modules.enable = true;
+  stc.relics.hardening.scheduler.enable = true;
 
   # Le pare-feu est géré séparément — ouvre les ports ici selon tes besoins :
   networking.firewall.allowedTCPPorts = [ 22 80 443 ];
@@ -260,8 +318,8 @@ Machine gaming avec durcissement :
 
 ## Le raccourci cogitator-hardening
 
-Pour le cas courant d'activation des cinq reliques avec les valeurs par défaut,
-utilise [`cogitator-hardening`](/stc/fr/cogitator/hardening/). Une option au lieu de cinq :
+Pour le cas courant d'activation des six reliques avec les valeurs par défaut,
+utilise [`cogitator-hardening`](/stc/fr/cogitator/hardening/). Une option au lieu de six :
 
 ```nix
 modules = [ stc.nixosModules.cogitator-hardening ];

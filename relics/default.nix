@@ -32,6 +32,7 @@
     relics-hardening-filesystem = ./nixos/hardening/filesystem.nix;
     relics-hardening-ssh = ./nixos/hardening/ssh.nix;
     relics-hardening-modules = ./nixos/hardening/modules.nix;
+    relics-hardening-scheduler = ./nixos/hardening/scheduler.nix;
 
     # --- Hardware ---
     relics-amd-gpu = ./nixos/amd-gpu.nix;

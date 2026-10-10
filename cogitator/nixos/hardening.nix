@@ -1,9 +1,9 @@
 # Cogitator: Hardening Suite
 # One option to harden them all.
 #
-# Activates kernel, network, filesystem, SSH, and module-blacklist hardening in a
-# single toggle. For surgical control, import the individual relics instead and
-# enable them à la carte: stc.relics.hardening.kernel.enable,
+# Activates kernel, network, filesystem, SSH, module-blacklist and scheduler
+# hardening in a single toggle. For surgical control, import the individual relics
+# instead and enable them à la carte: stc.relics.hardening.kernel.enable,
 # stc.relics.hardening.ssh.enable, etc.
 {
   config,
@@ -18,11 +18,12 @@ in {
     ../../relics/nixos/hardening/filesystem.nix
     ../../relics/nixos/hardening/ssh.nix
     ../../relics/nixos/hardening/modules.nix
+    ../../relics/nixos/hardening/scheduler.nix
     (lib.mkRenamedOptionModule ["stc" "hardening" "enable"] ["stc" "cogitator" "hardening" "enable"])
   ];
 
   options.stc.cogitator.hardening = {
-    enable = lib.mkEnableOption "full hardening suite (kernel + network + filesystem + SSH + module blacklist)";
+    enable = lib.mkEnableOption "full hardening suite (kernel + network + filesystem + SSH + module blacklist + scheduler access)";
   };
 
   config = lib.mkIf cfg.enable {
@@ -31,5 +32,8 @@ in {
     stc.relics.hardening.filesystem.enable = true;
     stc.relics.hardening.ssh.enable = true;
     stc.relics.hardening.modules.enable = true;
+    # Inert unless the host actually runs cron or atd — STC schedules with
+    # systemd timers, so this only bites a consumer who enables one of them.
+    stc.relics.hardening.scheduler.enable = true;
   };
 }
