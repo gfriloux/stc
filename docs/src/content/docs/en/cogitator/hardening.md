@@ -1,23 +1,23 @@
 ---
 title: Hardening Profile
-description: cogitator-hardening — enable all five hardening relics with a single option.
+description: cogitator-hardening — enable all six hardening relics with a single option.
 ---
 
 **Module:** `stc.nixosModules.cogitator-hardening`
 
-One option to harden them all. Activates kernel, network, filesystem, SSH, and
-module-blacklist hardening in a single toggle. For surgical control, use the
+One option to harden them all. Activates kernel, network, filesystem, SSH,
+module-blacklist and scheduler-access hardening in a single toggle. For surgical control, use the
 individual relics instead and enable them independently.
 
 ## Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.cogitator.hardening.enable` | bool | `false` | Enable the full hardening suite (kernel + network + filesystem + SSH + module blacklist) |
+| `stc.cogitator.hardening.enable` | bool | `false` | Enable the full hardening suite (kernel + network + filesystem + SSH + module blacklist + scheduler access) |
 
 ## What It Composes
 
-Enabling `stc.cogitator.hardening.enable = true` is equivalent to setting all five of these:
+Enabling `stc.cogitator.hardening.enable = true` is equivalent to setting all six of these:
 
 ```nix
 stc.relics.hardening.kernel.enable = true;
@@ -25,6 +25,7 @@ stc.relics.hardening.network.enable = true;
 stc.relics.hardening.filesystem.enable = true;
 stc.relics.hardening.ssh.enable = true;
 stc.relics.hardening.modules.enable = true;
+stc.relics.hardening.scheduler.enable = true;
 ```
 
 The individual relic options — `allowedTCPPorts`, `tmpSize`, `allowedTCPForwarding` — remain

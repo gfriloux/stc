@@ -1,9 +1,9 @@
 ---
 title: Hardening
-description: Five hardening relics — kernel, network, filesystem, SSH, and module blacklist — plus the cogitator-hardening shortcut.
+description: Six hardening relics — kernel, network, filesystem, SSH, module blacklist, and scheduler access — plus the cogitator-hardening shortcut.
 ---
 
-STC provides five independent hardening relics. Each addresses a distinct attack
+STC provides six independent hardening relics. Each addresses a distinct attack
 surface and can be enabled individually.
 
 ## Kernel Hardening
@@ -205,6 +205,61 @@ protocols (SCTP for some telephony/SIP stacks), or one of the legacy filesystems
 one, or override `boot.blacklistedKernelModules`.
 :::
 
+## Scheduler Access
+
+**Module:** `stc.nixosModules.relics-hardening-scheduler`
+
+**Enable option:** `stc.relics.hardening.scheduler.enable`
+
+Restricts the classic job schedulers — `cron` and `at` — to an explicit
+allowlist, `["root"]` by default.
+
+This relic **never enables a scheduler**. Its whole configuration is guarded by
+`mkIf config.services.cron.enable` and `mkIf config.services.atd.enable`, so it
+is inert on a host that schedules with systemd timers — which is every STC
+machine. It exists for the host that does run one of them, because nixpkgs
+deliberately opens both to every local user:
+
+| Upstream behaviour | Consequence |
+|---|---|
+| Vixie cron allows only root when neither `cron.allow` nor `cron.deny` exists | The NixOS module's `preStart` touches an empty `/var/cron/cron.deny` — "By default, allow all users to create a crontab" — which reverses that |
+| `atd`'s `preStart` touches an empty `/etc/at/at.deny` | Same effect: nobody is denied, so everybody is allowed |
+
+And cron can switch itself on: `services.cron.enable` defaults to
+`mkDefault (allFiles != [])`, so any third-party module that sets
+`services.cron.systemCronJobs` starts the daemon — open to everyone — without
+the consumer ever asking for it. That case is the reason this relic is code
+rather than a paragraph of advice.
+
+**Options:**
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `stc.relics.hardening.scheduler.allowedUsers` | list of str | `[ "root" ]` | Users allowed to schedule jobs with `crontab` and `at`. Written to `/var/cron/cron.allow` and `/etc/at/at.allow`, both of which take precedence over the permissive `*.deny` the upstream modules create. |
+
+Note the paths: NixOS uses `/var/cron/cron.allow` and `/etc/at/at.allow`, not
+the `/etc/cron.allow` and `/etc/at.allow` that RHEL-derived baselines cite. A
+host that writes the latter has restricted nothing.
+
+A system crontab declared through `services.cron.systemCronJobs` is unaffected:
+it runs from `/etc/crontab` as root and never goes through the per-user
+`crontab` command this list gates.
+
+:::caution[This can take crontab away from existing users]
+If a host already runs cron — including through the auto-enable above — and
+non-root users rely on `crontab`, enabling this relic refuses them. List them in
+`allowedUsers`:
+
+```nix
+stc.relics.hardening.scheduler.allowedUsers = [ "root" "deploy" ];
+```
+
+Both allow files are rewritten from the Nix store on every activation, so a
+hand-edited `/var/cron/cron.allow` will not survive a rebuild. That is the point
+of declaring the allowlist here, but it will silently replace an allowlist
+maintained by hand.
+:::
+
 ## Usage Example
 
 Individual relics:
@@ -216,6 +271,7 @@ modules = [
   stc.nixosModules.relics-hardening-filesystem
   stc.nixosModules.relics-hardening-ssh
   stc.nixosModules.relics-hardening-modules
+  stc.nixosModules.relics-hardening-scheduler
   ./configuration.nix
 ];
 
@@ -227,6 +283,7 @@ modules = [
   stc.relics.hardening.filesystem.tmpSize = "4G";
   stc.relics.hardening.ssh.enable = true;
   stc.relics.hardening.modules.enable = true;
+  stc.relics.hardening.scheduler.enable = true;
 
   # Firewall is managed separately — open ports here as needed:
   networking.firewall.allowedTCPPorts = [ 22 80 443 ];
@@ -250,8 +307,8 @@ Gaming machine with hardening:
 
 ## The cogitator-hardening Shortcut
 
-For the common case of enabling all five relics with defaults, use
-[`cogitator-hardening`](/stc/en/cogitator/hardening/). One option instead of five:
+For the common case of enabling all six relics with defaults, use
+[`cogitator-hardening`](/stc/en/cogitator/hardening/). One option instead of six:
 
 ```nix
 modules = [ stc.nixosModules.cogitator-hardening ];

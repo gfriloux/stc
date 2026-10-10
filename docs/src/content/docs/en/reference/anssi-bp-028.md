@@ -162,6 +162,25 @@ and make profiling useless on a machine STC may well be asked to debug.
 | `/dev/shm` `nosuid,nodev,noexec` | R28 | 🟡 | Same rationale; not in the R28 table |
 | Separate `/boot /var /home /usr /opt /srv /var/log /var/tmp` partitions | R28 | ⚪ | STC does not partition — that is the schematic's disko layout, not a relic |
 
+## `relics.hardening.scheduler`
+
+Restricting `cron` and `at` to an allowlist is **out of ANSSI-BP-028 scope** —
+no rule in the guide covers scheduler access. The relic exists on its own merit,
+and this section records that so no reader goes looking for the matching rule.
+
+The item comes from the CIS ~2.4.1.x family, which STC treats as informative
+only (see *Why not CIS?* below). What makes it worth code rather than advice is
+a NixOS-specific trap: `services.cron.enable` defaults to
+`mkDefault (allFiles != [])`, so a third-party module setting
+`services.cron.systemCronJobs` starts the daemon without the consumer asking —
+and the NixOS module's own `preStart` opens it to every local user by touching
+an empty `/var/cron/cron.deny`. Upstream vixie cron is closed by default; the
+NixOS module reverses that. `atd` does the same with `/etc/at/at.deny`.
+
+The relic writes `/var/cron/cron.allow` and `/etc/at/at.allow` — the paths NixOS
+actually reads, not the `/etc/cron.allow` and `/etc/at.allow` that RHEL-derived
+baselines cite. It enables no scheduler and is inert where none runs.
+
 ## `relics.hardening.ssh`
 
 SSH hardening (`PermitRootLogin no`, `PasswordAuthentication no`, modern
