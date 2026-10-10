@@ -35,6 +35,15 @@
         assert machine.succeed("sysctl -n kernel.unprivileged_bpf_disabled").strip() == "1"
         assert machine.succeed("sysctl -n kernel.yama.ptrace_scope").strip() == "1"
         assert machine.succeed("sysctl -n fs.suid_dumpable").strip() == "0"
+        assert machine.succeed("sysctl -n kernel.panic_on_oops").strip() == "1"
+        # The test framework puts panic=1 on the kernel command line
+        # (nixos/modules/testing/test-instrumentation.nix), so this also proves
+        # the relic's sysctl is applied late enough to win over the cmdline.
+        assert machine.succeed("sysctl -n kernel.panic").strip() == "30"
+        # R9 asks for pid_max >= 65536 and systemd's 50-pid-max.conf already
+        # gives 4194304 — assert the floor, not an exact value, so the claim
+        # stays true if systemd changes its default.
+        assert int(machine.succeed("sysctl -n kernel.pid_max").strip()) >= 65536
 
     with subtest("network sysctl hardening"):
         assert machine.succeed("sysctl -n net.ipv4.tcp_syncookies").strip() == "1"
