@@ -44,7 +44,8 @@
         # normalise both sides before comparing.
         modprobe_config = machine.succeed("modprobe --showconfig").replace("-", "_")
         for module in ["firewire-core", "firewire-ohci", "firewire-sbp2",
-                       "dccp", "sctp", "rds", "tipc"]:
+                       "dccp", "sctp", "rds", "tipc",
+                       "cramfs", "freevxfs", "jffs2", "hfs", "hfsplus"]:
             needle = "blacklist " + module.replace("-", "_")
             assert needle in modprobe_config, f"{module} not blacklisted"
 

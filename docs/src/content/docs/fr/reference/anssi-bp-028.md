@@ -98,6 +98,7 @@ section *Threat model and non-goals*.
 |-------------|-------|--------|------|
 | Blacklist `firewire-core/ohci/sbp2` (DMA) | R10 | 🟡 | Forme souple de R10 — blacklist ciblée, pas le verrouillage total `modules_disabled` |
 | Blacklist `dccp`, `sctp`, `rds`, `tipc` (protocoles rares) | R10 | 🟡 | Même logique |
+| Blacklist `cramfs`, `freevxfs`, `jffs2`, `hfs`, `hfsplus` (systèmes de fichiers legacy) | R10 | 🟡 | Même logique. `udf` et `usb-storage` laissés à `extraBlacklist` — les deux ont encore des usages légitimes |
 
 ## `relics.hardening.filesystem`
 

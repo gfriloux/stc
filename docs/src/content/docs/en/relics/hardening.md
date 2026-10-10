@@ -161,6 +161,7 @@ Blacklists high-risk and unused kernel modules to shrink the attack surface:
 |--------|---------|-----|
 | FireWire (DMA) | `firewire-core`, `firewire-ohci`, `firewire-sbp2` | A hostile device can read/write physical memory over the bus |
 | Rare network protocols | `dccp`, `sctp`, `rds`, `tipc` | Almost never used on a normal host, yet a recurring source of kernel CVEs |
+| Legacy filesystems | `cramfs`, `freevxfs`, `jffs2`, `hfs`, `hfsplus` | Drivers nothing on a normal host mounts, each one a parser reachable from removable media |
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -170,10 +171,24 @@ This is the *soft* form of ANSSI-BP-028 R10 (disable unused modules): a targeted
 blacklist rather than the full `kernel.modules_disabled=1` lockdown, which would
 break on-demand module loading and needs case-by-case evaluation.
 
-:::caution[FireWire and rare protocols]
-If a host genuinely needs FireWire (e.g. an audio interface) or one of the rare
-protocols (SCTP for some telephony/SIP stacks), enable the other relics à la carte
-instead of this one, or override `boot.blacklistedKernelModules`.
+### Not blacklisted by default: `udf` and `usb-storage`
+
+The usual baselines also list `udf` (optical media) and `usb-storage`. Both stay
+out of the defaults here, because both still have legitimate uses — mounting a
+DVD/Blu-ray, installing from a USB stick — and because
+`boot.blacklistedKernelModules` is a list: `extraBlacklist` adds to it, nothing
+subtracts from it. A default that turns out wrong would leave no clean override.
+On a host where neither is needed, put them in `extraBlacklist`:
+
+```nix
+stc.relics.hardening.modules.extraBlacklist = [ "udf" "usb-storage" ];
+```
+
+:::caution[FireWire, rare protocols, legacy filesystems]
+If a host genuinely needs FireWire (e.g. an audio interface), one of the rare
+protocols (SCTP for some telephony/SIP stacks), or one of the legacy filesystems
+(`hfsplus` on a dual-boot Mac), enable the other relics à la carte instead of this
+one, or override `boot.blacklistedKernelModules`.
 :::
 
 ## Usage Example
