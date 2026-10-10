@@ -3,6 +3,32 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.9.0] — 2026-10-10
+
+### Bug Fixes
+
+- **purity-seals**: try to work around dirty git bug with gitleaks ([`7149a65`](https://github.com/gfriloux/stc/commit/7149a658ed40b661ef0f87b864d9ed7aa34ef6ca))
+- **provings**: match sshd -T keyword casing in the hardening proving ([`1873214`](https://github.com/gfriloux/stc/commit/187321480ff71926efd004c93bfd01d3f3a7af5c))
+
+### Documentation
+
+- **procedure**: let Claude run the full git flow ([`fd06b87`](https://github.com/gfriloux/stc/commit/fd06b8753e681eb84ce38de2da9b0060d1329d5e))
+- **procedure**: document the interactive git batch rule ([`0089d50`](https://github.com/gfriloux/stc/commit/0089d507c21536ff1f9259e243e9a3ce9d13dc96))
+- **procedure**: size a change before planning it ([`c485656`](https://github.com/gfriloux/stc/commit/c485656ebaba8562fcccd39c97a1ec0ccbe19319))
+- **procedure**: add execution discipline (debug, verify, test, review, ledger) ([`811033d`](https://github.com/gfriloux/stc/commit/811033d3cd403bca2158cedd14b8c24820871011))
+- **procedure**: extend the plan template with constraints and interfaces ([`80295ed`](https://github.com/gfriloux/stc/commit/80295edba27ce97d8581bcac8ae5ee11c567ea21))
+- **procedure**: arbitrate the superpowers skills ([`1aa382d`](https://github.com/gfriloux/stc/commit/1aa382d9fa1b29578cb393a60c03c47b3290ece5))
+- **procedure**: fix the findings from the fresh-context review ([`2b9a492`](https://github.com/gfriloux/stc/commit/2b9a4923031fa71d4bddcb1c96a864827c6b334d))
+- **procedure**: point the ledger at the actual fix-pass commit ([`0318f92`](https://github.com/gfriloux/stc/commit/0318f922c5fc365d458fe04148a7b0baae3d6b96))
+- **procedure**: rename the Probe path to Spike ([`12d77ac`](https://github.com/gfriloux/stc/commit/12d77ac63381de8e9365f337df619fe51e0eecec))
+- **security**: state the ANSSI-BP-028 baseline and the no-CIS-claim ([`d9d2693`](https://github.com/gfriloux/stc/commit/d9d26934b641b754329bd702fd5bf67d0aac3ad7))
+- **security**: rule password/lockout policy out of scope ([`6c09ba0`](https://github.com/gfriloux/stc/commit/6c09ba09a80aaa31327573648fd4cd4fdac080b7))
+
+### Features
+
+- **hardening-ssh**: add banner option and set LogLevel VERBOSE ([`725821b`](https://github.com/gfriloux/stc/commit/725821bc935ea8d73a25487f5657b8c0523f04f0))
+- **hardening-modules**: blacklist legacy filesystem modules ([`5fa14e4`](https://github.com/gfriloux/stc/commit/5fa14e4b9064b8b1e1f0fcf693a6ff38f455ea38))
+- **hardening-network**: log martians and add opt-in IPv6 RA rejection ([`109b4f0`](https://github.com/gfriloux/stc/commit/109b4f062bdf3b8c2668b8b7bbaf3d2e984f1330))
 ## [0.8.0] — 2026-09-26
 
 ### Bug Fixes
@@ -21,6 +47,7 @@ Releases follow [Semantic Versioning](https://semver.org/).
 
 - **readme**: add the STC emblem logo at the top of the README ([`3dba8e1`](https://github.com/gfriloux/stc/commit/3dba8e101cef58cb5d351919159b0e4977ed71b7))
 - **site**: unify the site branding on the new STC logo ([`d594369`](https://github.com/gfriloux/stc/commit/d5943696ca79b383c179d9ad1d6ccc4a67b20c92))
+- **changelog**: generate CHANGELOG.md for v0.8.0 ([`167d1b6`](https://github.com/gfriloux/stc/commit/167d1b65dd280c52854257f19920a4ef8a35bad0))
 
 ### Features
 
