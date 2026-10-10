@@ -39,6 +39,19 @@ in {
         verified it does not disturb the network stack.
       '';
     };
+
+    strictIpv6RouterAdvertisements = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Refuse IPv6 Router Advertisements (accept_ra=0). Off by default: an RA
+        is how SLAAC hosts learn their prefix and default route, so disabling
+        acceptance strands any host that is not statically addressed. Enable on
+        hosts with static IPv6 (or no IPv6 at all), where accepting an RA from
+        an untrusted L2 segment would let a neighbour inject a prefix and a
+        default route.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -64,6 +77,14 @@ in {
         "net.ipv6.conf.all.accept_source_route" = 0;
         "net.ipv6.conf.default.accept_source_route" = 0;
 
+        # --- Martian packet logging (ANSSI-BP-028 R12) ---
+        # Log packets whose source address is impossible on the interface that
+        # received them. Purely a forensic signal: rp_filter above already drops
+        # them, this only makes the drop visible in the kernel log (readable by
+        # root alone, `kernel.dmesg_restrict=1` in ../kernel.nix).
+        "net.ipv4.conf.all.log_martians" = 1;
+        "net.ipv4.conf.default.log_martians" = 1;
+
         # --- ICMP abuse prevention (ANSSI-BP-028 R12; echo_ignore_broadcasts is good practice beyond R12) ---
         "net.ipv4.icmp_echo_ignore_broadcasts" = 1;
         "net.ipv4.icmp_ignore_bogus_error_responses" = 1;
@@ -83,6 +104,15 @@ in {
         "net.ipv4.conf.default.arp_ignore" = 1;
         "net.ipv4.conf.all.arp_announce" = 2;
         "net.ipv4.conf.default.arp_announce" = 2;
+      }
+      // lib.optionalAttrs cfg.strictIpv6RouterAdvertisements {
+        # IPv6 RA rejection — opt-in, see strictIpv6RouterAdvertisements option.
+        # Goes in the direction of ANSSI-BP-028 R13 (disable IPv6 when unused)
+        # without dropping IPv6 outright. accept_ra=0 makes the companion knobs
+        # (accept_ra_defrtr, accept_ra_pinfo, router_solicitations) moot, so
+        # they are deliberately left alone.
+        "net.ipv6.conf.all.accept_ra" = 0;
+        "net.ipv6.conf.default.accept_ra" = 0;
       };
   };
 }

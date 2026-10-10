@@ -86,9 +86,11 @@ under *Threat model and non-goals*.
 | `net.ipv4.conf.*.accept_source_route=0` (+ IPv6) | R12 | ✅ | |
 | `net.ipv4.tcp_rfc1337=1` | R12 | ✅ | TIME_WAIT assassination protection |
 | `net.core.bpf_jit_harden=2` | R12 | ✅ | eBPF JIT hardening |
+| `net.ipv4.conf.*.log_martians=1` | R12 | ✅ | Forensic signal only — `rp_filter` already drops the packets |
 | `net.ipv4.conf.*.arp_ignore=1`, `arp_announce=2` | R12 | 🟡 | Opt-in via `strictArp` (off by default; breaks multi-homed / Docker) |
 | `net.ipv4.icmp_echo_ignore_broadcasts=1` | R12 | 🟡 | Good practice, beyond the strict R12 list |
 | `ip_forward`, `route_localnet`, `accept_local`, `shared_media` | R12 | ⚪ | R12 settings STC does not set |
+| `net.ipv6.conf.*.accept_ra=0` | R13 | 🟡 | Opt-in via `strictIpv6RouterAdvertisements` (off by default; strands SLAAC hosts). A partial step in R13's direction, not IPv6 removal |
 | Disable IPv6 | R13 | ⚪ | STC keeps IPv6 (generic library) |
 
 ## `relics.hardening.modules`
