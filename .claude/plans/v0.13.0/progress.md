@@ -82,11 +82,33 @@ capture à 45 s montre `local-vm login:`, celle à 180 s aussi.
   `relics-zfs`, rien n'a été reconstruit. À lire comme « pas de régression »,
   pas comme « ZFS est couvert » (cf. ruling ci-dessus).
 
-## Hors périmètre, constaté au passage
+## Fausse piste, instruite et close
 
-Le port 22 redirigé n'a jamais répondu, sur deux boots (300 s puis 180 s), alors
-que la VM atteint bien son invite de login, que `networking.firewall.allowedTCPPorts`
-contient `22`, que `services.openssh.enable` vaut `true` et que
-`networking.useDHCP` vaut `true`. Le flux documenté du schematic (`just run`
-puis `just ssh`) est donc possiblement cassé — **non instruit**, c'est une autre
-issue que #70 et le plan n'y touche pas. Candidat à ouvrir.
+Ce ledger a d'abord consigné que le port 22 redirigé « n'a jamais répondu » sur
+deux boots et que le flux `just run` + `just ssh` était « possiblement cassé ».
+**C'est faux, et la cause est la sonde, pas le schematic.**
+
+La sonde faisait `timeout 3 bash -c 'exec 3<>/dev/tcp/127.0.0.1/2222 && head -c 60 <&3'`.
+Une bannière SSH fait 22 octets : `head -c 60` attendait les 38 manquants, le
+`timeout` le tuait avant tout affichage, et la capture repartait vide. Faux
+négatif à chaque tir.
+
+Mesuré, deux formes de sonde sur la même VM au même instant :
+
+```
+A : timeout 3 … head -c 60  → []                       (la sonde d'origine)
+B : timeout 3 … head -n 1   → [SSH-2.0-OpenSSH_10.5]
+```
+
+Et le guest, interrogé par sa console série (image reconstruite avec
+`console=ttyS0,115200` en surcharge temporaire, puis retirée) : `systemctl
+is-system-running` → `running`, aucune unité en échec, `sshd` actif et
+`LISTEN 0.0.0.0:22` + `[::]:22`, `ens3 UP 10.0.2.15/24` avec un bail DHCP
+obtenu en 6 s. Une sonde Python correcte depuis l'hôte reçoit
+`SSH-2.0-OpenSSH_10.5`.
+
+**Aucune issue à ouvrir**, et aucun des commits récents du chemin de durcissement
+n'est en cause. Leçon consignée parce qu'elle se reproduira : avant de déclarer
+un système cassé, prouver que l'instrument fonctionne — ici il suffisait d'une
+seconde forme de sonde, trente secondes de travail contre une fausse piste
+durable dans un document mergé.
