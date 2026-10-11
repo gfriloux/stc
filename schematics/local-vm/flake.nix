@@ -81,8 +81,9 @@
               lib.optional (config.networking.hostId == "deadc0de") ''
                 local-vm: networking.hostId is still the placeholder "deadc0de".
                 Generate a unique one (head -c4 /dev/urandom | od -A none -t x4 |
-                tr -d ' \n') before deploying — duplicate hostIds collide on ZFS
-                import (and zfs.nix forces import, which would hide the collision).
+                tr -d ' \n') before deploying — two hosts sharing a hostId can
+                both import the same pool, which is exactly the collision ZFS
+                refuses when the hostIds differ.
               ''
               ++ lib.optional (config.users.users.admin.initialPassword == "changeme") ''
                 local-vm: admin/root initialPassword is still "changeme", and
