@@ -3,6 +3,16 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.10.0] — 2026-10-11
+
+### Bug Fixes
+
+- **docker-server**: stop enabling autoPrune, it deletes container networks at boot ([`c9d3eb7`](https://github.com/gfriloux/stc/commit/c9d3eb774ace31262ac734eeff1fefc11e85ee10))
+
+### Features
+
+- **hardening-kernel**: panic on a kernel oops and bound the stop ([`dbd1f1c`](https://github.com/gfriloux/stc/commit/dbd1f1cd09a30a675759c885a1fdaca7d06b3505))
+- **hardening-scheduler**: restrict cron and at to an explicit allowlist ([`61c7ac6`](https://github.com/gfriloux/stc/commit/61c7ac6acad392d3a5722b5fd803b74dc21f7c8d))
 ## [0.9.0] — 2026-10-10
 
 ### Bug Fixes
@@ -23,6 +33,7 @@ Releases follow [Semantic Versioning](https://semver.org/).
 - **procedure**: rename the Probe path to Spike ([`12d77ac`](https://github.com/gfriloux/stc/commit/12d77ac63381de8e9365f337df619fe51e0eecec))
 - **security**: state the ANSSI-BP-028 baseline and the no-CIS-claim ([`d9d2693`](https://github.com/gfriloux/stc/commit/d9d26934b641b754329bd702fd5bf67d0aac3ad7))
 - **security**: rule password/lockout policy out of scope ([`6c09ba0`](https://github.com/gfriloux/stc/commit/6c09ba09a80aaa31327573648fd4cd4fdac080b7))
+- **changelog**: generate CHANGELOG.md for v0.9.0 ([`c199027`](https://github.com/gfriloux/stc/commit/c1990272f2fea3b787473cb4fdf90b84f7bc7726))
 
 ### Features
 
