@@ -249,6 +249,37 @@ virtualisation.oci-containers.containers.myapp = {
 };
 ```
 
+Le healthcheck n'est pas une décoration optionnelle. Sans lui, `docker inspect`
+renvoie un `State.Health.Status` vide, donc le test `unhealthy` ne matche
+jamais : le timer se déclenche toutes les 30 s indéfiniment sans jamais agir,
+tout en apparaissant actif dans `systemctl list-timers`. Ça se lit comme une
+surveillance qui n'existe pas.
+
+STC émet donc un **avertissement** à l'évaluation pour chaque conteneur
+surveillé dont il ne voit pas le healthcheck, en nommant le conteneur et les
+deux remèdes.
+
+### Quand le healthcheck vit dans l'image
+
+Un `HEALTHCHECK` intégré à l'image fonctionne à l'exécution mais reste invisible
+à l'évaluation, donc il déclenche l'avertissement. Déclare-le plutôt que de
+faire taire la relique :
+
+```nix
+virtualisation.oci-containers.containers.mysqldump = {
+  image = "example/mysqldump:1.2.3";
+  labels = {
+    "stc.docker/health-watch" = "true";
+    # L'image déclare son propre HEALTHCHECK — l'évaluation ne peut pas le voir.
+    "stc.docker/health-cmd-in-image" = "true";
+  };
+};
+```
+
+Ce label est fixe, non configurable, et n'affecte **que** l'avertissement : le
+conteneur reste intégralement surveillé. À utiliser quand l'image déclare
+réellement un healthcheck — c'est un constat, pas un bouton « muet ».
+
 ---
 
 ## Exemple de pile complète

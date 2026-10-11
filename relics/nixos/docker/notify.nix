@@ -14,6 +14,15 @@
 # Containers opt in by setting the label defined in stc.relics.docker.notify.watchLabel.
 # The relic then wires systemd OnFailure + a health-watch timer for each one.
 #
+# The health-watch only means something if the container HAS a healthcheck. Without
+# one, `docker inspect` reports an empty State.Health.Status, the "unhealthy" test
+# never matches, and the timer fires every 30s forever without ever acting — while
+# an active stc-docker-health-watch@<name>.timer in `systemctl list-timers` reads
+# as proof that the container is monitored. So the relic warns about every watched
+# container whose healthcheck it cannot see. A HEALTHCHECK baked into the image is
+# invisible at evaluation time and is a legitimate case: those containers say so
+# with stc.docker/health-cmd-in-image = "true".
+#
 # Recovery vs. give-up: a container that stays `unhealthy` is `docker kill`ed by
 # the health-watch every 30s and restarted (Restart=on-failure). With
 # StartLimitBurst=3 / StartLimitIntervalSec=300s, three kills inside ~90s trip
@@ -44,6 +53,16 @@
     fi
   '';
 
+  # Fixed rather than an option: watchLabel is configurable by historical
+  # inheritance, and a second configurable label would add surface with no demand
+  # behind it.
+  healthCmdInImageLabel = "stc.docker/health-cmd-in-image";
+
+  # A healthcheck passed through extraOptions is the only one visible at
+  # evaluation time. mkHealthCheck emits "--health-cmd=<cmd>", hence a prefix
+  # match and not an exact element test.
+  hasHealthCmd = c: lib.any (lib.hasPrefix "--health-cmd") (c.extraOptions or []);
+
   watched =
     lib.filterAttrs (
       # Opt-in is the label set to "true", not merely present: a container
@@ -65,6 +84,10 @@
     lib.mapAttrsToList (name: c: {
       container = name;
       unit = c.serviceName or "docker-${name}";
+      # An image-declared HEALTHCHECK cannot be seen from here, so the opt-out
+      # label is the consumer's way of saying "there is one, I checked".
+      healthCheckVisible =
+        hasHealthCmd c || (c.labels.${healthCmdInImageLabel} or "false") == "true";
     })
     watched;
 in {
@@ -153,6 +176,31 @@ in {
         '';
       }
     ];
+
+    # Warning and not an assertion, deliberately: a watched container without a
+    # visible healthcheck is a real defect, but promoting it to an assertion now
+    # would break the build of every consumer already in this situation the day
+    # they bump their stc input. Promotion is tracked separately, once consumers
+    # have had a release to annotate or fix their containers.
+    warnings =
+      map (
+        w: ''
+          Container "${w.container}" carries ${cfg.watchLabel} = "true" but STC can
+          see no healthcheck on it, so the health-watch monitors nothing: `docker
+          inspect` reports an empty State.Health.Status, the "unhealthy" test never
+          matches, and stc-docker-health-watch@${w.container}.timer fires every 30s
+          forever without ever acting — all while showing up as active in
+          `systemctl list-timers`, which reads as monitoring that does not exist.
+
+          Two ways to fix it, pick the one that is true:
+            - declare the healthcheck here:
+                extraOptions = stc.lib.docker.mkHealthCheck { cmd = "..."; };
+            - or, if the image already declares a HEALTHCHECK (which evaluation
+              cannot see), record that:
+                labels."${healthCmdInImageLabel}" = "true";
+        ''
+      )
+      (lib.filter (w: !w.healthCheckVisible) watchedList);
 
     systemd = {
       services =
