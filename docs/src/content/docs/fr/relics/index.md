@@ -54,6 +54,7 @@ modules = [
 | `relics-networking` | `stc.relics.networking.enable` | DHCP, DNS Quad9, domaine de recherche |
 | `relics-impermanence` | `stc.relics.impermanence.enable` | Rollback ZFS au démarrage, chemins persistants |
 | `relics-aws` | `stc.relics.aws.enable` | Drivers EC2, NTP AWS, console série, extension EBS |
+| `relics-vm-variant` | `stc.relics.vmVariant.enable` | Démarrer ce host en VM locale, secrets/images/pools neutralisés (build VM uniquement) |
 | `relics-amd-gpu` | `stc.relics.amdGpu.enable` | GPU AMD : VDPAU, VAAPI, pilotes 32 bits, KMS précoce optionnel |
 | `relics-pipewire` | `stc.relics.pipewire.enable` | Pipewire : RTKit + ALSA 32 bits + compat PulseAudio |
 | `relics-plasma6` | `stc.relics.plasma6.enable` | Bureau KDE Plasma 6 Wayland (SDDM + portail XDG) |
@@ -94,3 +95,4 @@ modules = [
 - [AWS](/stc/fr/relics/aws/) — drivers EC2 et configuration AWS
 - [Traefik](/stc/fr/relics/traefik/) — reverse proxy natif NixOS
 - [Vaultwarden](/stc/fr/relics/vaultwarden/) — serveur Bitwarden-compatible
+- [Variante VM](/stc/fr/relics/vm-variant/) — démarrer votre propre host en VM locale avant de déployer
