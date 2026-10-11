@@ -14,6 +14,16 @@
   ...
 }: let
   cfg = config.stc.relics.hardening.ssh;
+
+  # Services that write their own authorized_keys file and would lose every way
+  # in under systemAuthorizedKeysOnly. Reading config.services.<name>.enable is
+  # safe: all five are nixpkgs modules, so the options exist in any NixOS
+  # evaluation. That is NOT true of a module a consumer brings through their
+  # flake (a secrets backend, say), where the option may simply not exist and
+  # lib.mkIf false would not protect the reference.
+  keyManagingServices =
+    lib.filter (name: config.services.${name}.enable or false)
+    ["gitea" "forgejo" "gitlab" "gitolite" "gerrit"];
 in {
   imports = [
     (lib.mkRenamedOptionModule ["stc" "hardening" "ssh" "enable"] ["stc" "relics" "hardening" "ssh" "enable"])
@@ -97,6 +107,21 @@ in {
       {
         assertion = lib.versionAtLeast config.services.openssh.package.version "9.9";
         message = "stc.relics.hardening.ssh: KexAlgorithms includes mlkem768x25519-sha256, which requires OpenSSH ≥ 9.9 (found ${config.services.openssh.package.version}). Upgrade nixpkgs, or override services.openssh.settings.KexAlgorithms to drop the post-quantum kex.";
+      }
+      # Fail the build rather than let a Git forge lose its SSH access at
+      # runtime, remotely, with nothing red anywhere. srvos excludes these
+      # services automatically; that silently weakens the hardening on a host
+      # nobody decided to weaken. A build error costs one line of configuration
+      # and is impossible to miss — the lockout is not.
+      {
+        assertion = cfg.systemAuthorizedKeysOnly -> keyManagingServices == [];
+        message = let
+          names = lib.concatMapStringsSep " and " (name: "services.${name}") keyManagingServices;
+          clause =
+            if lib.length keyManagingServices > 1
+            then "manage their own authorized_keys files and would"
+            else "manages its own authorized_keys file and would";
+        in "stc.relics.hardening.ssh: systemAuthorizedKeysOnly removes ~/.ssh/authorized_keys from sshd's search path, but ${names} ${clause} lose all SSH access. Either set stc.relics.hardening.ssh.systemAuthorizedKeysOnly = false on this host, or append the path the service needs to services.openssh.authorizedKeysFiles (it is a list — definitions merge, so the system path is kept).";
       }
     ];
 
