@@ -55,6 +55,7 @@ modules = [
 | `relics-impermanence` | `stc.relics.impermanence.enable` | Rollback ZFS au démarrage, chemins persistants |
 | `relics-aws` | `stc.relics.aws.enable` | Drivers EC2, NTP AWS, console série, extension EBS |
 | `relics-vm-variant` | `stc.relics.vmVariant.enable` | Démarrer ce host en VM locale, secrets/images/pools neutralisés (build VM uniquement) |
+| `relics-pre-switch-checks` | `stc.relics.preSwitchChecks.enable` | Avorte un switch qui activerait le closure d'un autre host ; affiche le diff en déploiement distant |
 | `relics-amd-gpu` | `stc.relics.amdGpu.enable` | GPU AMD : VDPAU, VAAPI, pilotes 32 bits, KMS précoce optionnel |
 | `relics-pipewire` | `stc.relics.pipewire.enable` | Pipewire : RTKit + ALSA 32 bits + compat PulseAudio |
 | `relics-plasma6` | `stc.relics.plasma6.enable` | Bureau KDE Plasma 6 Wayland (SDDM + portail XDG) |
@@ -96,3 +97,4 @@ modules = [
 - [Traefik](/stc/fr/relics/traefik/) — reverse proxy natif NixOS
 - [Vaultwarden](/stc/fr/relics/vaultwarden/) — serveur Bitwarden-compatible
 - [Variante VM](/stc/fr/relics/vm-variant/) — démarrer votre propre host en VM locale avant de déployer
+- [Contrôles pré-switch](/stc/fr/relics/pre-switch-checks/) — refuser d'activer le closure du mauvais host

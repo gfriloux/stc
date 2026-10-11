@@ -29,11 +29,34 @@ stc.relics.docker.traefik.enable = true;
 stc.relics.docker.socketProxy.enable = true;  # Traefik uses the proxy, not the raw socket
 stc.relics.docker.crowdsec.enable = true;
 stc.relics.docker.notify.enable = cfg.notify.enable;  # off unless you opt in
+stc.relics.preSwitchChecks.enable = true;             # see below
 
 virtualisation.docker.enable = true;
 virtualisation.docker.autoPrune.enable = lib.mkDefault false;  # see below
 virtualisation.oci-containers.backend = "docker";
 ```
+
+### Why the pre-switch checks are part of the profile
+
+A Docker server is the shape those checks guard: a remote host, deployed with a
+command that differs from its neighbour's by one flake attribute. Activate the
+wrong closure here and you get wrong containers, wrong Traefik routers, wrong
+users, wrong secrets — and `nixos-rebuild --target-host` prints no diff to warn
+you.
+
+So this profile turns on
+[`stc.relics.preSwitchChecks`](/stc/en/relics/pre-switch-checks/): the switch
+aborts, with the old system still running, unless the incoming closure belongs to
+the machine activating it.
+
+:::caution[It can abort a deploy that used to work]
+If the hostname your machine actually runs differs from its
+`networking.hostName` — overwritten by DHCP or `cloud-init`, or simply never
+corrected — the next `nixos-rebuild` on that host aborts. The build still
+succeeds; only activation stops. Fix the mismatch, set
+`stc.relics.preSwitchChecks.hostnameGuard = false;`, or pass `NIXOS_NO_CHECK=1`
+for one deploy. The relic page covers all three.
+:::
 
 ### Why `autoPrune` is off
 
@@ -132,4 +155,5 @@ file gets there.
 ## See Also
 
 - [Docker relics](/stc/en/relics/docker/) — Traefik, socket-proxy, CrowdSec, and notify in detail
+- [Pre-Switch Checks](/stc/en/relics/pre-switch-checks/) — the deploy guard this profile enables
 - [Schematic: aws-ami](/stc/en/schematics/aws-ami/) — a complete production example using this profile
