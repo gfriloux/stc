@@ -3,6 +3,12 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.12.0] — 2026-10-11
+
+### Features
+
+- **vm-variant**: boot an STC host as a local VM without secrets or images ([`4346aa6`](https://github.com/gfriloux/stc/commit/4346aa635f3b45a1d9fba0a784b1c02931667f4f))
+- **pre-switch-checks**: guard against deploying the wrong closure ([`e4dceda`](https://github.com/gfriloux/stc/commit/e4dcedaf699b4e1ad0a09c31a062d46393241fd6))
 ## [0.11.0] — 2026-10-11
 
 ### Bug Fixes
