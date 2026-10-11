@@ -31,6 +31,62 @@ même raison que la note de périmètre en tête de `provings/hardening.nix`. Le
 qu'il *retire* précisément l'import forcé qu'on veut observer. La preuve de ce
 chantier est le boot du qcow2 `local-vm` (Step 1), à refaire après le commit.
 
+Ruling (trouvé en préparant la mesure du Step 1) : le `true` de la relique était
+posé à **priorité normale**, donc un consommateur ne pouvait pas le ramener à
+`false` avec une définition nue — il lui fallait `lib.mkForce` (constaté en
+tentant la surcharge : « Definition values: … zfs.nix: true / flake.nix: false …
+Use `lib.mkForce` or `lib.mkDefault` »). Le défaut n'était donc pas seulement
+dangereux, il était non surchargeable proprement. Le `mkDefault false` corrige
+les deux d'un coup ; c'est écrit dans le commentaire du module et dans la doc.
+
+Ruling: l'observable du Step 1 a été changé en cours de route. Le plan disait
+« SSH répond ». L'image n'a **pas** de console série (`boot.kernelParams` =
+`nohibernate root=fstab loglevel=4 lsm=…`, aucun `console=ttyS0`), donc
+`-serial file:` écrit un fichier vide et un échec serait indiscernable d'un
+boot lent. Méthode retenue, réutilisable : QEMU `-display none` + moniteur sur
+socket Unix court (le chemin du scratchpad dépasse la limite de 108 octets des
+sockets Unix) + `screendump` à intervalles, PPM converti en PNG et lu. La
+capture à 45 s montre `local-vm login:`, celle à 180 s aussi.
+
 ## Steps
 
-<!-- une ligne par étape terminée : Step N — <commit> — <ce qui a été mesuré> -->
+- **Step 1** — mesure, aucun commit — **le pool importe sans `-f`.** Image
+  construite avec `boot.zfs.forceImportRoot = lib.mkForce false` (surcharge
+  temporaire, retirée depuis), bootée en QEMU `snapshot=on` : invite
+  `local-vm login:` atteinte. Confirmé côté éval sur l'image qui a booté :
+  `boot.initrd.systemd.services."zfs-import-vmpool".environment` = `{ ZFS_FORCE = ""; }`,
+  et le script fait `zpool import -d /dev -N  vmpool`. **Branche 1 de la
+  décision 4** : `mkDefault false` dans la relique, aucune exception pour les
+  cogitators `sarcophagus-*`.
+- **Step 2** — `2db9685` — `forceImportRoot = lib.mkDefault false` + commentaire
+  portant les quatre décisions. Mesuré après : `false` sur les trois schematics,
+  et zéro ligne `forceImportRoot` dans `config.warnings` de `local-vm`.
+- **Step 3** — `7a23266` — warning `hostId` de `schematics/local-vm` reformulé ;
+  il affirmait « zfs.nix forces import, which would hide the collision », ce qui
+  devenait l'inverse de la vérité.
+- **Step 4** — `91da2f4` — doc EN + FR : ce que protège l'import non forcé, le
+  refus du `hostId` partagé, les deux échappatoires (`zfs_force=1` ponctuel,
+  `forceImportRoot = true` permanent sans `mkForce`), le conflit
+  `mkDefault`/`mkDefault` mesuré, le cas `nixos-anywhere`, et la bascule amont à
+  26.11.
+
+## Gates
+
+- `just ci` → `all checks passed` + `docs parity OK`.
+- Les trois schematics évaluent (`qcow2`, `awsImage`, `toplevel`).
+- **Le boot n'a pas eu à être refait après le commit** : le `drvPath` du qcow2
+  après Step 4 est `qcqapln9bb8519niqb2prcphmlan2wy9-nixos-disk-image.drv`,
+  exactement la dérivation construite et bootée au Step 1. L'artefact mesuré
+  *est* celui que produit le code commité.
+- `just test` → exit 0, mais **par cache** : aucun proving ne dépend de
+  `relics-zfs`, rien n'a été reconstruit. À lire comme « pas de régression »,
+  pas comme « ZFS est couvert » (cf. ruling ci-dessus).
+
+## Hors périmètre, constaté au passage
+
+Le port 22 redirigé n'a jamais répondu, sur deux boots (300 s puis 180 s), alors
+que la VM atteint bien son invite de login, que `networking.firewall.allowedTCPPorts`
+contient `22`, que `services.openssh.enable` vaut `true` et que
+`networking.useDHCP` vaut `true`. Le flux documenté du schematic (`just run`
+puis `just ssh`) est donc possiblement cassé — **non instruit**, c'est une autre
+issue que #70 et le plan n'y touche pas. Candidat à ouvrir.
