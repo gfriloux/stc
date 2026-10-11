@@ -22,6 +22,12 @@
   # No ExecStop: a restart of this unit (e.g. on nixos-rebuild) would otherwise
   # `docker network rm -f` the network out from under any attached container.
   # The network is cheap and idempotent to (re)create, so we never tear it down.
+  #
+  # The flip side of that choice: nothing here re-creates a network that was
+  # removed behind our back, since RemainAfterExit keeps the unit "active". That
+  # is why cogitator/nixos/docker-server.nix leaves `virtualisation.docker
+  # .autoPrune` off — `docker system prune -f` deletes unused networks, and a
+  # network whose containers have not attached yet counts as unused.
   mkNetwork = pkgs: name: {
     path = [pkgs.docker];
     serviceConfig = {
