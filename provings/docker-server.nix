@@ -30,6 +30,19 @@
     stc.relics.docker.traefik.acme.email = "ops@example.test";
     stc.relics.docker.crowdsec.dataDir = "/srv/docker/crowdsec";
     stc.relics.docker.notify.notifyCommand = "true";
+
+    # A watched container whose HEALTHCHECK lives in its image. The opt-out label
+    # suppresses the eval-time warning; it must NOT suppress the wiring, which is
+    # what this node asserts below. It also exercises the serviceName fallback
+    # (unit = docker-<name>) that traefik/crowdsec never reach, since both set
+    # serviceName explicitly.
+    virtualisation.oci-containers.containers."stc-proving-img-health" = {
+      image = "stc-proving/img-health:placeholder";
+      labels = {
+        "stc.docker/health-watch" = "true";
+        "stc.docker/health-cmd-in-image" = "true";
+      };
+    };
   };
 
   testScript = ''
@@ -81,6 +94,16 @@
         machine.succeed("systemctl cat stc-docker-health-watch@traefik.timer")
         machine.succeed("systemctl cat stc-docker-health-watch@crowdsec.timer")
         machine.fail("systemctl cat stc-docker-health-watch@docker-socket-proxy.timer")
+
+    with subtest("the health-cmd-in-image opt-out silences the warning, not the watch"):
+        # The label only tells evaluation "the healthcheck is in the image, I
+        # checked". A container carrying it stays fully watched — if this ever
+        # stops holding, consumers would silently lose monitoring by documenting
+        # their intent, which is the opposite of the point.
+        machine.succeed("systemctl cat stc-docker-health-watch@stc-proving-img-health.timer")
+        assert "OnFailure=stc-notify-failure@" in machine.succeed(
+            "systemctl cat docker-stc-proving-img-health.service"
+        )
 
     with subtest("traefik static config is rendered, with the crowdsec bouncer plugin"):
         machine.wait_for_file("/srv/docker/traefik/conf/traefik.yml")
