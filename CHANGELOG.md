@@ -3,6 +3,32 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.13.0] — 2026-10-11
+
+### Bug Fixes
+
+- **zfs**: stop forcing the root pool import by default ([`2db9685`](https://github.com/gfriloux/stc/commit/2db9685383eb0f0f91f6e06a79f21c28547b6105))
+
+### Documentation
+
+- **plans**: plan v0.13.0 chantier A — root pool import ([`fc0ea79`](https://github.com/gfriloux/stc/commit/fc0ea796c4281aeaefa71d0d677611470c664951))
+- **local-vm**: the hostId warning no longer claims the import is forced ([`7a23266`](https://github.com/gfriloux/stc/commit/7a23266377c7515296e9b8ecb8326ec41188baee))
+- **zfs**: document what the root-pool import guard protects ([`91da2f4`](https://github.com/gfriloux/stc/commit/91da2f4f84c33b4d9e9085e23a2c6032f5e17262))
+- **plans**: ledger du chantier A — l'import non forcé est mesuré, pas supposé ([`0a13c45`](https://github.com/gfriloux/stc/commit/0a13c4539e8616b87f08f22dfd5b024e5757a0f0))
+- **plans**: corriger la fausse piste SSH du ledger v0.13.0 ([`88d2cc3`](https://github.com/gfriloux/stc/commit/88d2cc3809fceeeed93e1654ac494f03f97bb8c8))
+- **plans**: plan v0.13.0 chantier B — clés SSH système uniquement ([`ed8c6de`](https://github.com/gfriloux/stc/commit/ed8c6de3ebcc42daecece9987ad25f22cb689304))
+- **hardening**: document the system-only authorized keys lockdown ([`734c428`](https://github.com/gfriloux/stc/commit/734c428d1f3f5c1f865dcdd760376d25422f936a))
+- **plans**: ledger du chantier B — le verrou est prouvé par une authentification ([`5709283`](https://github.com/gfriloux/stc/commit/57092838b8d75006a6dec0cfb78744f9b3335ba5))
+
+### Features
+
+- **hardening/ssh**: read authorized keys only from the system path ([`eab7ca0`](https://github.com/gfriloux/stc/commit/eab7ca04b48ab7d7f8673094101e810501c099b3))
+- **hardening/ssh**: fail the build when a Git forge would lose its keys ([`0dcfed4`](https://github.com/gfriloux/stc/commit/0dcfed4411f8bab01dc37f6a58c19797bc61601c))
+- **hardening/ssh**: unlink stale forwarded sockets when forwarding is allowed ([`ecdf514`](https://github.com/gfriloux/stc/commit/ecdf514786946a0868bddcd85bebe99ed5ec2cc9))
+
+### Testing
+
+- **provings**: prove the system-only authorized keys path ([`09e309b`](https://github.com/gfriloux/stc/commit/09e309b51bf042f6d31a726d7adfc82d6f17d5e7))
 ## [0.12.0] — 2026-10-11
 
 ### Features
