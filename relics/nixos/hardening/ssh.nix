@@ -176,6 +176,14 @@ in {
         PermitTunnel = false;
         GatewayPorts = "no";
 
+        # Remove a leftover Unix socket before binding a forwarded one, instead
+        # of failing the forward. Tied to allowedTCPForwarding rather than set
+        # to true outright: remote Unix-socket forwarding needs TCP forwarding
+        # to be allowed in the first place, so with the default (false) there is
+        # never a stale socket to unlink and an unconditional "yes" would be
+        # decoration. Do not "simplify" it to true.
+        StreamLocalBindUnlink = cfg.allowedTCPForwarding;
+
         # Forward secrecy only, declared through typed settings so the NixOS
         # module validates them (extraConfig would bypass that). Post-quantum
         # hybrid key exchanges come first: hardening must not drop the PQ
