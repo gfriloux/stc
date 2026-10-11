@@ -61,6 +61,17 @@
         machine.succeed("systemctl cat docker-network-web.service")
         machine.succeed("systemctl cat docker-network-socket-proxy.service")
 
+    with subtest("no autoPrune timer — it would delete those networks at boot"):
+        # virtualisation.docker.autoPrune is off in this profile, so nixpkgs
+        # instantiates no docker-prune.timer at all (the .service exists but is
+        # never triggered, having no startAt). A timer here would mean a missed
+        # weekly window fires `docker system prune -f` while the containers are
+        # still starting, removing their networks for good.
+        machine.fail("systemctl cat docker-prune.timer")
+        assert "docker-prune.timer" not in machine.succeed(
+            "systemctl list-timers --all --no-legend --no-pager"
+        )
+
     with subtest("notify hook is wired on the watched units"):
         # Only labelled containers (traefik, crowdsec) opt into the health-watch;
         # the socket-proxy carries no watch label and must stay unwired.

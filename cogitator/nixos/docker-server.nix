@@ -57,7 +57,24 @@ in {
     virtualisation = {
       docker = {
         enable = true;
-        autoPrune.enable = true;
+
+        # autoPrune is left OFF deliberately — it can take the whole stack down
+        # at boot. `autoPrune.persistent` defaults to true and
+        # `randomizedDelaySec` to "0", so a timer whose weekly window was missed
+        # (unplanned reboot, machine off for a while) fires immediately once
+        # docker.service is up — while the containers are still starting. At that
+        # instant the networks this profile creates have nothing attached, so
+        # `docker system prune -f` removes them as unused; the containers then
+        # fail on `network not found` until StartLimitBurst and stay down.
+        # Recovery is not automatic: mkNetwork (relics/nixos/docker/_lib.nix) is
+        # a RemainAfterExit oneshot with no ExecStop, so nothing re-creates them.
+        # The same hazard exists, more rarely, for a container that is stopped or
+        # crashlooping when the weekly prune fires — which is why `persistent =
+        # false` alone is not enough and the default is off outright.
+        # Unused images grow the disk gradually and visibly; losing the network
+        # of every container is an outage. A host that wants the cleanup sets:
+        #   virtualisation.docker.autoPrune = { enable = true; persistent = false; };
+        autoPrune.enable = lib.mkDefault false;
       };
       oci-containers.backend = "docker";
     };

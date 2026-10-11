@@ -31,9 +31,48 @@ stc.relics.docker.crowdsec.enable = true;
 stc.relics.docker.notify.enable = cfg.notify.enable;  # off sauf opt-in explicite
 
 virtualisation.docker.enable = true;
-virtualisation.docker.autoPrune.enable = true;
+virtualisation.docker.autoPrune.enable = lib.mkDefault false;  # voir plus bas
 virtualisation.oci-containers.backend = "docker";
 ```
+
+### Pourquoi `autoPrune` est désactivé
+
+`virtualisation.docker.autoPrune` peut coucher toute la pile au boot, donc ce
+profil le laisse éteint.
+
+En amont, `autoPrune.persistent` vaut `true` par défaut et `randomizedDelaySec`
+`"0"`. Un timer dont la fenêtre hebdomadaire a été manquée — un redémarrage
+imprévu, ou une machine restée éteinte un moment — tire donc **immédiatement** au
+boot suivant, dès que `docker.service` est up, pendant que les conteneurs
+démarrent encore. À cet instant, les réseaux créés par ce profil n'ont rien
+d'attaché : `docker system prune -f` les supprime comme inutilisés. Chaque
+conteneur qui en référence un échoue alors sur `network not found`, atteint
+`StartLimitBurst`, et reste par terre.
+
+La récupération n'est pas automatique : les unités réseau sont des oneshots
+`RemainAfterExit` sans `ExecStop` (délibérément — voir
+[les reliques docker](/stc/fr/relics/docker/)), donc rien ne recrée un réseau
+supprimé derrière leur dos. Le même danger existe, plus rarement, pour un
+conteneur arrêté ou en crashloop au moment du prune hebdomadaire — c'est pourquoi
+`persistent = false` seul ne suffit pas.
+
+Les images inutilisées font grossir le disque progressivement et visiblement ;
+perdre le réseau de tous les conteneurs est une panne. L'option reste la tienne :
+
+```nix
+# Nettoyage hebdomadaire, sans le rattrapage au boot qui crée la course.
+virtualisation.docker.autoPrune = {
+  enable = true;
+  persistent = false;
+  randomizedDelaySec = "45min";
+};
+```
+
+:::caution
+Même sous cette forme, un conteneur arrêté au moment du prune peut perdre son
+réseau définitivement. Si tu l'active, assure-toi de savoir relancer les unités
+`docker-network-*.service`.
+:::
 
 ## Options requises
 

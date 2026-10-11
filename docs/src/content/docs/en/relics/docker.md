@@ -287,7 +287,9 @@ modules = [
   virtualisation = {
     docker = {
       enable = true;
-      autoPrune.enable = true;
+      # autoPrune stays off: `docker system prune -f` deletes unused networks,
+      # and a network whose containers have not attached yet counts as unused.
+      # See cogitator-docker-server for the full reasoning.
     };
     oci-containers.backend = "docker";
   };

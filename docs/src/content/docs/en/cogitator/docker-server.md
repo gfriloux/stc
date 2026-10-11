@@ -31,9 +31,46 @@ stc.relics.docker.crowdsec.enable = true;
 stc.relics.docker.notify.enable = cfg.notify.enable;  # off unless you opt in
 
 virtualisation.docker.enable = true;
-virtualisation.docker.autoPrune.enable = true;
+virtualisation.docker.autoPrune.enable = lib.mkDefault false;  # see below
 virtualisation.oci-containers.backend = "docker";
 ```
+
+### Why `autoPrune` is off
+
+`virtualisation.docker.autoPrune` can take the whole stack down at boot, so this
+profile leaves it off.
+
+Upstream, `autoPrune.persistent` defaults to `true` and `randomizedDelaySec` to
+`"0"`. A timer whose weekly window was missed — an unplanned reboot, or a machine
+that was off for a while — therefore fires **immediately** on the next boot, as
+soon as `docker.service` is up, while the containers are still starting. At that
+instant the networks this profile creates have nothing attached to them, so
+`docker system prune -f` removes them as unused. Every container that references
+one then fails on `network not found`, hits `StartLimitBurst`, and stays down.
+
+Recovery is not automatic: the network units are `RemainAfterExit` oneshots with
+no `ExecStop` (deliberately — see [the docker relics](/stc/en/relics/docker/)), so
+nothing re-creates a network that was deleted behind their back. The same hazard
+exists, more rarely, for a container that is stopped or crashlooping when the
+weekly prune fires — which is why `persistent = false` alone is not enough.
+
+Unused images grow the disk gradually and visibly; losing the network of every
+container is an outage. The option stays yours to set:
+
+```nix
+# Weekly cleanup without the boot-time catch-up that creates the race.
+virtualisation.docker.autoPrune = {
+  enable = true;
+  persistent = false;
+  randomizedDelaySec = "45min";
+};
+```
+
+:::caution
+Even in that form, a container that is down when the prune fires can lose its
+network permanently. If you enable it, make sure you know how to restart the
+`docker-network-*.service` units.
+:::
 
 ## Required Options
 
