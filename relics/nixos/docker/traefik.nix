@@ -14,6 +14,10 @@
 #
 # Secrets: point stc.relics.docker.traefik.dynamicConfigFile at whatever your
 # secrets provider materialises.
+#
+# Container labels referencing a certresolver or a middleware are validated at
+# evaluation time — see the "reference validation" block below for why that is
+# this relic's job and where its knowledge stops.
 {
   config,
   lib,
@@ -101,6 +105,123 @@
         filename: "/etc/traefik/traefik_dynamic.yml"
     ${crowdsecPlugin}
   '';
+
+  # ── Reference validation ───────────────────────────────────────────────────
+  #
+  # Traefik's dynamic configuration is assembled from container labels, and a
+  # label referencing something non-existent is an error NOWHERE in the chain:
+  # it evaluates, it builds, it deploys, and the router comes up with the
+  # referenced feature simply missing. An unknown certresolver yields Traefik's
+  # default self-signed certificate; an unknown middleware yields a route
+  # *without* that protection — and when the missing one is the CrowdSec
+  # bouncer, the result is an unprotected public route that reads as protected
+  # in the configuration.
+  #
+  # STC owns the producing side, so it knows the valid names and the consumer
+  # only knows what it typed. Checking here costs one evaluation pass and turns
+  # a silent exposure into a build failure.
+  containers = config.virtualisation.oci-containers.containers;
+
+  # The static config above declares its resolvers in full, with no consumer
+  # escape hatch, so this singleton is the valid set — known for certain, which
+  # is what makes a hard assertion fair here.
+  validCertResolvers = ["letsencrypt"];
+
+  # Middlewares declared by labels belong to the docker provider, and STC sees
+  # every one of them: traefik.http.middlewares.<name>.<type>.<field>.
+  dockerMiddlewares = lib.unique (
+    lib.concatMap (
+      c:
+        lib.concatMap (
+          label: let
+            parts = lib.splitString "." label;
+          in
+            lib.optional
+            (lib.length parts >= 4 && lib.take 3 parts == ["traefik" "http" "middlewares"])
+            (lib.elemAt parts 3)
+        )
+        (lib.attrNames (c.labels or {}))
+    )
+    (lib.attrValues containers)
+  );
+
+  # The @file suffix is optional in fileMiddlewares: "crowdsec" and
+  # "crowdsec@file" must name the same thing, since a consumer will paste
+  # whichever form its labels already use.
+  bareName = value: lib.head (lib.splitString "@" value);
+  fileMiddlewareNames = map bareName cfg.fileMiddlewares;
+
+  # Traefik's own resolution rule: an unqualified reference resolves within the
+  # provider that defined the referencing object, which for a router defined by
+  # labels is docker. So a bare name is a docker reference, not a wildcard.
+  providerOf = value:
+    if lib.hasInfix "@" value
+    then lib.last (lib.splitString "@" value)
+    else "docker";
+
+  # One record per reference, carrying what an actionable message needs: which
+  # container, which router, which value — and which kind, so the two classes
+  # keep their own valid set and their own wording.
+  references = lib.concatMap (
+    container: let
+      labels = containers.${container}.labels or {};
+
+      parse = label: let
+        parts = lib.splitString "." label;
+        router = lib.elemAt parts 3;
+        rest = lib.drop 4 parts;
+        value = labels.${label};
+      in
+        if lib.length parts < 5 || lib.take 3 parts != ["traefik" "http" "routers"]
+        then []
+        else if rest == ["tls" "certresolver"]
+        then [
+          {
+            inherit container router value;
+            kind = "certresolver";
+          }
+        ]
+        else if rest == ["middlewares"]
+        then
+          # A single label holds a comma-separated chain, and each element is an
+          # independent reference that can be wrong on its own.
+          map (m: {
+            inherit container router;
+            kind = "middleware";
+            value = m;
+          })
+          (lib.filter (m: m != "") (map lib.trim (lib.splitString "," value)))
+        else [];
+    in
+      lib.concatMap parse (lib.attrNames labels)
+  ) (lib.attrNames containers);
+
+  badCertResolvers =
+    lib.filter
+    (r: r.kind == "certresolver" && !(lib.elem r.value validCertResolvers))
+    references;
+
+  middlewareRefs = lib.filter (r: r.kind == "middleware") references;
+
+  badDockerMiddlewares =
+    lib.filter
+    (r: providerOf r.value == "docker" && !(lib.elem (bareName r.value) dockerMiddlewares))
+    middlewareRefs;
+
+  # The file provider's middlewares live in dynamicConfigFile, which STC never
+  # reads — it is a consumer secret. So STC cannot know the valid set, and an
+  # empty fileMiddlewares is indistinguishable from "not declared yet":
+  # asserting against it would fail every consumer using a file middleware,
+  # which is most of them. Declaring the list IS the opt-in to this check.
+  badFileMiddlewares =
+    lib.optionals (cfg.fileMiddlewares != [])
+    (
+      lib.filter
+      (r: providerOf r.value == "file" && !(lib.elem (bareName r.value) fileMiddlewareNames))
+      middlewareRefs
+    );
+  # Any other provider suffix (@kubernetescrd, @consulcatalog, …) is left alone:
+  # STC can say nothing about those, and flagging them would be noise.
 in {
   imports = [
     (lib.mkRenamedOptionModule ["stc" "docker" "traefik" "enable"] ["stc" "relics" "docker" "traefik" "enable"])
@@ -166,19 +287,100 @@ in {
         If null, an empty placeholder is used — add the file manually.
       '';
     };
+
+    fileMiddlewares = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [];
+      example = ["crowdsec@file" "rate-limit@file" "security-headers@file"];
+      description = ''
+        The middlewares your Traefik file provider defines — i.e. what lives in
+        `dynamicConfigFile`, which STC never reads (it is your secret).
+
+        This is not bureaucracy: it is the declaration that makes validation
+        possible. Declaring it turns on eval-time checking of every `@file`
+        middleware referenced by a container label, so a typo fails the build
+        instead of quietly serving a route *without* that protection. Leave the
+        list empty and `@file` references go unchecked — an empty list cannot be
+        told apart from "not declared yet", and failing on it would break every
+        consumer that uses a file middleware.
+
+        The `@file` suffix is optional here: `"crowdsec"` and `"crowdsec@file"`
+        are the same entry.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
-    assertions = [
-      {
-        assertion = cfg.image != null;
+    assertions =
+      [
+        {
+          assertion = cfg.image != null;
+          message = ''
+            stc.relics.docker.traefik.enable is true but no image is set.
+            STC ships no default image — set it in your host config, e.g.:
+              stc.relics.docker.traefik.image = "traefik:v3.7.6"; # renovate
+          '';
+        }
+      ]
+      # One assertion per offending reference rather than one per class: a message
+      # naming the single container, router and value is actionable, a list of
+      # everything wrong at once is not.
+      ++ map (r: {
+        assertion = false;
         message = ''
-          stc.relics.docker.traefik.enable is true but no image is set.
-          STC ships no default image — set it in your host config, e.g.:
-            stc.relics.docker.traefik.image = "traefik:v3.7.6"; # renovate
+          Container "${r.container}": router "${r.router}" references certresolver
+          "${r.value}", which stc.relics.docker.traefik does not declare.
+
+          Traefik treats an unresolvable certresolver as no resolver at all: the
+          router comes up serving Traefik's default self-signed certificate,
+          nothing in the logs reads as a configuration error, and the deploy is
+          reported as successful.
+
+          Valid: ${lib.concatStringsSep ", " validCertResolvers}
         '';
-      }
-    ];
+      })
+      badCertResolvers
+      ++ map (r: {
+        assertion = false;
+        message = ''
+          Container "${r.container}": router "${r.router}" references middleware
+          "${r.value}", which resolves in the *docker* provider, where no container
+          label declares it.
+
+          Traefik drops a middleware it cannot resolve and serves the route
+          anyway — so the route runs without that protection. If this one is a
+          bouncer, a rate limiter or an auth layer, the route is publicly exposed
+          while the configuration says it is not.
+
+          Declared by container labels: ${
+            if dockerMiddlewares == []
+            then "(none)"
+            else lib.concatStringsSep ", " dockerMiddlewares
+          }
+
+          An unqualified name resolves in the provider that defined the router,
+          which for a label-defined router is docker. If this middleware comes
+          from your file provider, write it as "${bareName r.value}@file" and list
+          it in stc.relics.docker.traefik.fileMiddlewares.
+        '';
+      })
+      badDockerMiddlewares
+      ++ map (r: {
+        assertion = false;
+        message = ''
+          Container "${r.container}": router "${r.router}" references middleware
+          "${r.value}", which is not in stc.relics.docker.traefik.fileMiddlewares.
+
+          STC cannot read your file provider's configuration, so that option is
+          the only description it has of what your file provider defines. Either
+          the name is a typo, or your file provider does define it and the option
+          needs updating — the second case is the one that bites, because the
+          option is what keeps this check honest for every other route.
+
+          Declared: ${lib.concatStringsSep ", " cfg.fileMiddlewares}
+        '';
+      })
+      badFileMiddlewares;
 
     virtualisation.oci-containers.containers."traefik" = {
       inherit (cfg) image;

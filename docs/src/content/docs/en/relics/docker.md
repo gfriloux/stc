@@ -24,6 +24,7 @@ supplied at runtime via a separate file.
 | `stc.relics.docker.traefik.acme.email` | string | — | Email for Let's Encrypt ACME registration |
 | `stc.relics.docker.traefik.enableDashboard` | bool | `false` | Enable the Traefik API dashboard. The `traefik` entrypoint port (`127.0.0.1:8080`) is not published, so this alone does not expose it — publish/forward the port or add a route to reach it. |
 | `stc.relics.docker.traefik.dynamicConfigFile` | `null \| string` | `null` | Path to `traefik_dynamic.yml` |
+| `stc.relics.docker.traefik.fileMiddlewares` | list of string | `[]` | What your file provider defines. Declaring it turns on validation of `@file` middleware references; empty leaves them unchecked. |
 
 ### What It Does
 
@@ -57,6 +58,59 @@ tls:
 ```
 
 If you were using `lets-encrypt`, update your dynamic config.
+
+Container **labels** referencing the old name are now caught at build time (see
+below). Your dynamic config file is not — STC never reads it.
+:::
+
+### Reference validation
+
+Traefik assembles its dynamic configuration from container labels, and a label
+referencing something that does not exist is an error **nowhere** in the chain.
+It evaluates, it builds, it deploys, and the router comes up with the referenced
+feature simply missing:
+
+- a wrong `certresolver` serves Traefik's default **self-signed certificate** —
+  browsers complain, no log line reads as a configuration error, and the deploy
+  reports success;
+- a wrong `middlewares` entry serves the route **without that protection**. When
+  the missing one is the CrowdSec bouncer, the result is an unprotected public
+  route that looks protected in the configuration.
+
+STC owns the producing side, so it knows the valid names. It therefore **fails
+the build** — not warns — on an unresolvable reference, since a missing security
+middleware is a live exposure rather than a cosmetic defect. Each message names
+the container, the router, the offending value and the valid set.
+
+What is checked, and what STC can know:
+
+| Reference | Validated against | Needs configuration? |
+|---|---|---|
+| `…tls.certresolver` | the resolvers this relic declares (`letsencrypt`) | no — the static config is generated in full by STC |
+| middleware `@docker`, or unqualified | middlewares declared by `traefik.http.middlewares.*` labels on any container | no — STC sees every label |
+| middleware `@file` | `fileMiddlewares` | **yes** — the check is off while the list is empty |
+| any other provider suffix | nothing | not checked |
+
+An unqualified name is a **docker** reference, not a wildcard: Traefik resolves
+it within the provider that defined the router, which for a label-defined router
+is docker. So `middlewares = "crowdsec"` and `middlewares = "crowdsec@file"` are
+different references, and only the second one reaches your file provider.
+
+```nix
+stc.relics.docker.traefik.fileMiddlewares = [
+  "crowdsec@file"
+  "rate-limit@file"
+  "security-headers@file"
+];
+```
+
+:::note[Why `@file` needs a declaration]
+`dynamicConfigFile` is a consumer secret and STC never reads it, so STC cannot
+know which middlewares your file provider defines. `fileMiddlewares` is that
+missing knowledge — and it doubles as the list of what your file provider is
+expected to define. An empty list cannot be told apart from "not declared yet",
+so it leaves `@file` references unchecked instead of failing every consumer that
+uses one.
 :::
 
 ---
@@ -148,7 +202,12 @@ When `stc.relics.docker.crowdsec.enable = true` and `stc.relics.docker.traefik.e
 2. Traefik is ordered after CrowdSec, but only via `Wants` (soft) — see above
 3. CrowdSec mounts the Traefik log directory read-only to parse access logs
 
-No manual wiring required.
+No manual wiring required **for the plugin**. The bouncer *middleware* itself is
+a different matter: it is declared in your `dynamicConfigFile`, which STC never
+reads. STC loads the plugin; you define `crowdsec@file` and reference it from
+your routes — and list it in
+[`fileMiddlewares`](#reference-validation) so a typo in that reference fails the
+build instead of silently serving an unprotected route.
 
 ---
 
@@ -294,6 +353,10 @@ modules = [
       image = "traefik:v3.7.6"; # renovate
       acme.email = "ops@example.com";
       dynamicConfigFile = config.sops.secrets."traefik/dynamic".path;
+      # What your dynamic config defines, so a typo in a route's
+      # middleware reference fails the build instead of serving an
+      # unprotected route.
+      fileMiddlewares = ["crowdsec@file" "rate-limit@file" "security-headers@file"];
     };
 
     crowdsec = {

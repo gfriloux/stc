@@ -28,6 +28,9 @@
 
     # Machine-specific values the stack needs to evaluate.
     stc.relics.docker.traefik.acme.email = "ops@example.test";
+    # Declaring this turns ON validation of @file middleware references, so the
+    # node below exercises the opt-in path and not just the default-off one.
+    stc.relics.docker.traefik.fileMiddlewares = ["crowdsec@file"];
     stc.relics.docker.crowdsec.dataDir = "/srv/docker/crowdsec";
     stc.relics.docker.notify.notifyCommand = "true";
 
@@ -41,6 +44,23 @@
       labels = {
         "stc.docker/health-watch" = "true";
         "stc.docker/health-cmd-in-image" = "true";
+      };
+    };
+
+    # A routed container on the *valid* side of the Traefik reference
+    # validation, covering all three paths at once: the certresolver the relic
+    # declares, a middleware declared by labels and referenced unqualified
+    # (docker provider), and a middleware referenced as @file and declared in
+    # fileMiddlewares. Without it the assertions would be "green" purely
+    # because nothing exercises them.
+    virtualisation.oci-containers.containers."stc-proving-app" = {
+      image = "stc-proving/app:placeholder";
+      labels = {
+        "traefik.enable" = "true";
+        "traefik.http.routers.proving-app.rule" = "Host(`app.example.test`)";
+        "traefik.http.routers.proving-app.tls.certresolver" = "letsencrypt";
+        "traefik.http.routers.proving-app.middlewares" = "proving-headers,crowdsec@file";
+        "traefik.http.middlewares.proving-headers.headers.frameDeny" = "true";
       };
     };
   };
@@ -104,6 +124,19 @@
         assert "OnFailure=stc-notify-failure@" in machine.succeed(
             "systemctl cat docker-stc-proving-img-health.service"
         )
+
+    with subtest("traefik reference validation is exercised on the valid side"):
+        # The assertions are eval-time, so this VM existing at all is the proof
+        # that they passed. What this subtest guards is the *coverage*: assert
+        # the labels really reach the container, so a later edit to this node
+        # cannot quietly stop exercising the check and leave a false green.
+        script = start_script("docker-stc-proving-app")
+        for label in [
+            "traefik.http.routers.proving-app.tls.certresolver=letsencrypt",
+            "traefik.http.routers.proving-app.middlewares=proving-headers,crowdsec@file",
+            "traefik.http.middlewares.proving-headers.headers.frameDeny=true",
+        ]:
+            assert label in script, f"label {label} is missing from the start script"
 
     with subtest("traefik static config is rendered, with the crowdsec bouncer plugin"):
         machine.wait_for_file("/srv/docker/traefik/conf/traefik.yml")

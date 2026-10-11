@@ -24,6 +24,7 @@ configuration statique à partir des options Nix. La configuration dynamique
 | `stc.relics.docker.traefik.acme.email` | string | — | Email pour l'enregistrement ACME Let's Encrypt |
 | `stc.relics.docker.traefik.enableDashboard` | bool | `false` | Active le dashboard API Traefik. Le port de l'entrypoint `traefik` (`127.0.0.1:8080`) n'est pas publié, donc l'activer seul ne l'expose pas — publie/forward le port ou ajoute une route pour y accéder. |
 | `stc.relics.docker.traefik.dynamicConfigFile` | `null \| string` | `null` | Chemin vers `traefik_dynamic.yml` |
+| `stc.relics.docker.traefik.fileMiddlewares` | liste de string | `[]` | Ce que ton provider fichier définit. La déclarer active la validation des références de middlewares `@file` ; vide, elles ne sont pas vérifiées. |
 
 ### Ce qu'elle fait
 
@@ -58,6 +59,63 @@ tls:
 ```
 
 Si tu utilisais `lets-encrypt`, mets à jour ta config dynamique.
+
+Les **labels** de conteneur qui référencent l'ancien nom sont désormais
+attrapés à la construction (voir ci-dessous). Ton fichier de config dynamique,
+non — STC ne le lit jamais.
+:::
+
+### Validation des références
+
+Traefik assemble sa configuration dynamique depuis les labels des conteneurs, et
+un label qui référence quelque chose d'inexistant n'est une erreur **nulle part**
+dans la chaîne. Ça évalue, ça construit, ça déploie, et le routeur démarre avec
+la fonctionnalité référencée simplement absente :
+
+- un mauvais `certresolver` sert le **certificat auto-signé** par défaut de
+  Traefik — les navigateurs protestent, aucune ligne de log ne se lit comme une
+  erreur de configuration, et le déploiement est rapporté comme réussi ;
+- un mauvais `middlewares` sert la route **sans cette protection**. Quand le
+  manquant est le bouncer CrowdSec, le résultat est une route publique non
+  protégée qui a l'air protégée dans la configuration.
+
+STC possède le côté producteur, donc il connaît les noms valides. Il **fait
+échouer la construction** — et n'avertit pas — sur une référence non résolvable,
+car un middleware de sécurité manquant est une exposition réelle, pas un défaut
+cosmétique. Chaque message nomme le conteneur, le routeur, la valeur fautive et
+l'ensemble valide.
+
+Ce qui est vérifié, et ce que STC peut savoir :
+
+| Référence | Validée contre | Configuration nécessaire ? |
+|---|---|---|
+| `…tls.certresolver` | les resolvers que cette relique déclare (`letsencrypt`) | non — la config statique est intégralement générée par STC |
+| middleware `@docker`, ou sans suffixe | les middlewares déclarés par les labels `traefik.http.middlewares.*` de n'importe quel conteneur | non — STC voit tous les labels |
+| middleware `@file` | `fileMiddlewares` | **oui** — le contrôle est éteint tant que la liste est vide |
+| tout autre suffixe de provider | rien | non vérifié |
+
+Un nom sans suffixe est une référence **docker**, pas un joker : Traefik le
+résout dans le provider qui a défini le routeur, donc docker pour un routeur
+défini par labels. Ainsi `middlewares = "crowdsec"` et
+`middlewares = "crowdsec@file"` sont deux références différentes, et seule la
+seconde atteint ton provider fichier.
+
+```nix
+stc.relics.docker.traefik.fileMiddlewares = [
+  "crowdsec@file"
+  "rate-limit@file"
+  "security-headers@file"
+];
+```
+
+:::note[Pourquoi `@file` demande une déclaration]
+`dynamicConfigFile` est un secret du consommateur et STC ne le lit jamais, donc
+STC ne peut pas savoir quels middlewares ton provider fichier définit.
+`fileMiddlewares` est cette connaissance manquante — et elle sert aussi de liste
+de ce que ton provider fichier est censé définir. Une liste vide est
+indiscernable de « pas encore déclarée », donc elle laisse les références
+`@file` non vérifiées plutôt que de casser tous les consommateurs qui en
+utilisent une.
 :::
 
 ---
@@ -151,7 +209,13 @@ Quand `stc.relics.docker.crowdsec.enable = true` et `stc.relics.docker.traefik.e
 2. Traefik est ordonné après CrowdSec, mais seulement via `Wants` (souple) — voir ci-dessus
 3. CrowdSec monte le répertoire de logs Traefik en lecture seule pour parser les logs d'accès
 
-Aucun câblage manuel requis.
+Aucun câblage manuel requis **pour le plugin**. Le *middleware* du bouncer, lui,
+est une autre affaire : il est déclaré dans ton `dynamicConfigFile`, que STC ne
+lit jamais. STC charge le plugin ; c'est toi qui définis `crowdsec@file` et le
+référence depuis tes routes — et qui le listes dans
+[`fileMiddlewares`](#validation-des-références) pour qu'une faute de frappe dans
+cette référence fasse échouer la construction au lieu de servir silencieusement
+une route non protégée.
 
 ---
 
@@ -302,6 +366,10 @@ modules = [
       image = "traefik:v3.7.6"; # renovate
       acme.email = "ops@example.com";
       dynamicConfigFile = config.sops.secrets."traefik/dynamic".path;
+      # Ce que ta config dynamique définit, pour qu'une faute de frappe
+      # dans la référence d'une route fasse échouer la construction au lieu
+      # de servir une route non protégée.
+      fileMiddlewares = ["crowdsec@file" "rate-limit@file" "security-headers@file"];
     };
 
     crowdsec = {
