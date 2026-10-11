@@ -36,6 +36,12 @@ commit_parsers = [
   { message = "^refactor", group = "Refactoring" },
   { message = "^perf", group = "Performance" },
   { message = "^test", group = "Testing" },
+  # The release's own bookkeeping, not a change to STC: the procedure commits
+  # CHANGELOG.md before the tag, so docs(changelog) lands inside its own release
+  # range and release.yml (git-cliff --latest, run after the tag) would cite it
+  # in its own notes. Must stay ABOVE the generic ^docs rule — commit_parsers
+  # are evaluated in order and the first match wins.
+  { message = "^docs\\(changelog\\)", skip = true },
   { message = "^docs", group = "Documentation" },
   { message = "^chore\\(deps\\)", group = "Dependencies" },
   { message = "^chore", skip = true },
