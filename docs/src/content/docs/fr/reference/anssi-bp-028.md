@@ -193,7 +193,9 @@ où aucun ne tourne.
 ## `relics.hardening.ssh`
 
 Le durcissement SSH (`PermitRootLogin no`, `PasswordAuthentication no`,
-KexAlgorithms/Ciphers/Macs modernes) est **hors périmètre ANSSI-BP-028**. La
-configuration de sshd est couverte par un guide ANSSI distinct,
-*Recommandations pour un usage sécurisé d'(Open)SSH*. Elle figure ici uniquement
-pour expliciter la frontière.
+KexAlgorithms/Ciphers/Macs modernes, et `systemAuthorizedKeysOnly` qui restreint
+le chemin de recherche des clés autorisées à `/etc/ssh/authorized_keys.d/%u`) est
+**hors périmètre ANSSI-BP-028**. La configuration de sshd est couverte par un
+guide ANSSI distinct, *Recommandations pour un usage sécurisé d'(Open)SSH*. Elle
+figure ici uniquement pour expliciter la frontière — aucune référence `Rxx` n'est
+inventée pour elle.

@@ -127,7 +127,8 @@ n'est pas affecté.
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
-| `stc.relics.hardening.ssh.allowedTCPForwarding` | bool | `false` | Autoriser le TCP forwarding |
+| `stc.relics.hardening.ssh.allowedTCPForwarding` | bool | `false` | Autoriser le TCP forwarding. Pilote aussi `StreamLocalBindUnlink`, qui n'a d'objet que si le forwarding est autorisé. |
+| `stc.relics.hardening.ssh.systemAuthorizedKeysOnly` | bool | `true` | Ne lire les clés autorisées que dans `/etc/ssh/authorized_keys.d/%u` — ce que déclare le flake — jamais dans `~/.ssh/authorized_keys`. **Peut vous verrouiller dehors** ; voir plus bas. |
 | `stc.relics.hardening.ssh.perSourcePenalties` | string | `"crash:3600s authfail:3600s max:86400s"` | `PerSourcePenalties` de sshd — limite le débit des adresses sources fautives avec des blocages progressifs. Mettre à `"no"` pour désactiver. |
 | `stc.relics.hardening.ssh.banner` | null ou lines | `null` | Texte du bandeau d'avertissement affiché avant authentification. La relique l'écrit dans le store et pointe le `Banner` de sshd dessus. `null` n'émet aucune directive `Banner`. |
 
@@ -142,10 +143,74 @@ Configure OpenSSH avec :
 - Pénalités par source : limite les échecs d'auth / crashs par adresse source
 - Délai d'expiration des sessions inactives : 10 minutes (2 × 300s)
 - X11, agent forwarding, tunneling, gateway ports : tous désactivés
+- Clés autorisées lues uniquement dans `/etc/ssh/authorized_keys.d/%u`
+- `UseDns no` — aucun aller-retour DNS inverse par connexion. Celui-ci est le
+  défaut amont, pas un réglage de la relique ; il figure ici parce que la
+  question revient.
 - Chiffrements forts : ChaCha20-Poly1305, AES-256-GCM, AES-128-GCM
 - MACs ETM uniquement : HMAC-SHA2-512-etm, HMAC-SHA2-256-etm
 - Échange de clés : hybrides post-quantiques en tête (mlkem768x25519-sha256,
   sntrup761x25519-sha512), puis curve25519-sha256 et DH groupe 16
+
+:::danger[À lire avant d'activer sur une machine que vous ne pouvez pas atteindre physiquement]
+`systemAuthorizedKeysOnly` est actif par défaut. Il retire
+`~/.ssh/authorized_keys` du chemin de recherche de sshd, donc **une clé qui
+n'est pas déclarée dans votre configuration cesse de fonctionner au prochain
+switch.**
+
+Sur un hôte entièrement déclaratif, rien ne change en pratique : le module
+écrit déjà chaque clé déclarée dans `/etc/ssh/authorized_keys.d/<user>`, qui
+reste le seul fichier lu. Ce qui change, c'est que le flake devient toute la
+vérité — et c'est précisément l'objectif. Un service compromis sous le compte
+d'un utilisateur, un bind-mount de conteneur mal cadré ou un outil de
+synchronisation ne peuvent plus s'accorder un accès SSH persistant de manière
+invisible.
+
+Vérifiez avant de déployer, pas après :
+
+```bash
+# sur la machine cible — toutes les clés qui vont cesser de fonctionner
+sudo find /home /root -maxdepth 3 -name authorized_keys -exec ls -l {} +
+```
+
+Gardez une seconde voie d'accès (console, hors bande, une session déjà
+ouverte) pendant le premier switch.
+:::
+
+:::caution[Les logiciels qui gèrent leurs propres clés]
+Toute une classe de logiciels écrit son propre `authorized_keys` et perd tout
+accès sous cette option. Les **forges Git** en sont le cas évident, et la
+relique refuse de construire dès qu'elle en voit une :
+
+```
+stc.relics.hardening.ssh: systemAuthorizedKeysOnly removes ~/.ssh/authorized_keys
+from sshd's search path, but services.gitea manages its own authorized_keys file
+and would lose all SSH access. Either set
+stc.relics.hardening.ssh.systemAuthorizedKeysOnly = false on this host, or append
+the path the service needs to services.openssh.authorizedKeysFiles (it is a list
+— definitions merge, so the system path is kept).
+```
+
+L'assertion couvre `services.gitea`, `services.forgejo`, `services.gitlab`,
+`services.gitolite` et `services.gerrit`. **À lire comme un échantillon de la
+classe, pas comme une liste exhaustive** — tout ce qui attend une gestion de
+clés par utilisateur est concerné et n'obtient aucune erreur de build : comptes
+SFTP-only, cibles de sauvegarde qui laissent le pair ajouter sa clé,
+provisionnement maison qui dépose une clé dans `~/.ssh`.
+
+srvos désactive le verrou automatiquement pour ces services. STC s'y refuse :
+une exclusion automatique affaiblit le durcissement sur une machine où personne
+ne l'a décidé. Vous obtenez un build en échec et deux sorties — couper l'option
+pour cet hôte, ou ajouter le seul chemin nécessaire :
+
+```nix
+# conserve le verrou, ajoute un emplacement supplémentaire
+services.openssh.authorizedKeysFiles = ["/etc/ssh/forge_keys/%u"];
+```
+
+`authorizedKeysFiles` est une liste et les définitions fusionnent : le chemin
+système reste en place.
+:::
 
 :::note[Le bandeau est opt-in]
 Le texte d'un bandeau est du contenu juridique propre au site — STC ne peut pas

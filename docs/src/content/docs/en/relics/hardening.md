@@ -123,7 +123,8 @@ The `/proc` hardening is unaffected.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.relics.hardening.ssh.allowedTCPForwarding` | bool | `false` | Allow TCP forwarding |
+| `stc.relics.hardening.ssh.allowedTCPForwarding` | bool | `false` | Allow TCP forwarding. Also drives `StreamLocalBindUnlink`, which only has an object when forwarding is allowed. |
+| `stc.relics.hardening.ssh.systemAuthorizedKeysOnly` | bool | `true` | Read authorized keys only from `/etc/ssh/authorized_keys.d/%u` — what the flake declares — never from `~/.ssh/authorized_keys`. **Can lock you out**; see below. |
 | `stc.relics.hardening.ssh.perSourcePenalties` | string | `"crash:3600s authfail:3600s max:86400s"` | sshd `PerSourcePenalties` — rate-limits misbehaving source addresses with escalating blocks. Set to `"no"` to disable. |
 | `stc.relics.hardening.ssh.banner` | null or lines | `null` | Pre-authentication warning banner text. The relic writes it to the store and points sshd `Banner` at that file. `null` writes no `Banner` directive at all. |
 
@@ -137,10 +138,72 @@ Configures OpenSSH with:
 - Per-source penalties: rate-limit auth failures / crashes by source address
 - Idle session timeout: 10 minutes (2 × 300s)
 - X11, agent forwarding, tunneling, gateway ports: all disabled
+- Authorized keys read only from `/etc/ssh/authorized_keys.d/%u`
+- `UseDns no` — no reverse-DNS round trip per connection. This one is the
+  upstream default, not something the relic sets; it is listed because the
+  question comes up.
 - Strong ciphers: ChaCha20-Poly1305, AES-256-GCM, AES-128-GCM
 - ETM MACs only: HMAC-SHA2-512-etm, HMAC-SHA2-256-etm
 - Key exchange: post-quantum hybrids first (mlkem768x25519-sha256,
   sntrup761x25519-sha512), then curve25519-sha256 and DH group 16
+
+:::danger[Read this before enabling on a host you cannot reach physically]
+`systemAuthorizedKeysOnly` is on by default. It removes `~/.ssh/authorized_keys`
+from sshd's search path, so **a key that is not declared in your configuration
+stops working at the next switch.**
+
+On a fully declarative host this changes nothing operationally: the module
+already writes every declared key to `/etc/ssh/authorized_keys.d/<user>`, which
+remains the one file sshd reads. What changes is that the flake becomes the
+whole truth — which is the point. A service compromised under a user's account,
+a careless container bind-mount or a sync tool can no longer grant itself
+persistent SSH access invisibly.
+
+Check before you deploy, not after:
+
+```bash
+# on the target host — every key that is about to stop working
+sudo find /home /root -maxdepth 3 -name authorized_keys -exec ls -l {} +
+```
+
+Keep a second way in (console, out-of-band, a second session already open)
+while you switch the first time.
+:::
+
+:::caution[Software that manages its own keys]
+A whole class of software writes its own `authorized_keys` and loses every way
+in under this option. **Git forges** are the obvious case, and the relic
+refuses to build when it sees one:
+
+```
+stc.relics.hardening.ssh: systemAuthorizedKeysOnly removes ~/.ssh/authorized_keys
+from sshd's search path, but services.gitea manages its own authorized_keys file
+and would lose all SSH access. Either set
+stc.relics.hardening.ssh.systemAuthorizedKeysOnly = false on this host, or append
+the path the service needs to services.openssh.authorizedKeysFiles (it is a list
+— definitions merge, so the system path is kept).
+```
+
+The assertion covers `services.gitea`, `services.forgejo`, `services.gitlab`,
+`services.gitolite` and `services.gerrit`. **Treat that as a sample of the
+class, not as the complete list** — anything expecting per-user key management
+is affected and gets no build error: SFTP-only accounts, backup targets that
+let the peer append its own key, home-grown provisioning that drops a key into
+`~/.ssh`.
+
+srvos disables the lockdown automatically for those services. STC does not: an
+automatic exclusion weakens the hardening on a host where nobody decided to
+weaken it. You get a failed build and two ways out instead — turn the option
+off for the host, or append the one path you need:
+
+```nix
+# keeps the lockdown, adds a single extra location
+services.openssh.authorizedKeysFiles = ["/etc/ssh/forge_keys/%u"];
+```
+
+`authorizedKeysFiles` is a list and definitions merge, so the system path stays
+in place.
+:::
 
 :::note[The banner is opt-in]
 Banner wording is legal, site-specific content — STC cannot write it for you, so

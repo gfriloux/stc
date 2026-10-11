@@ -184,6 +184,8 @@ baselines cite. It enables no scheduler and is inert where none runs.
 ## `relics.hardening.ssh`
 
 SSH hardening (`PermitRootLogin no`, `PasswordAuthentication no`, modern
-KexAlgorithms/Ciphers/Macs) is **out of ANSSI-BP-028 scope**. sshd configuration
-is covered by a separate ANSSI guide, *Recommandations pour un usage sécurisé
-d'(Open)SSH*. It is listed here only to be explicit about the boundary.
+KexAlgorithms/Ciphers/Macs, and `systemAuthorizedKeysOnly` restricting the
+authorized-keys search path to `/etc/ssh/authorized_keys.d/%u`) is **out of
+ANSSI-BP-028 scope**. sshd configuration is covered by a separate ANSSI guide,
+*Recommandations pour un usage sécurisé d'(Open)SSH*. It is listed here only to
+be explicit about the boundary — no `Rxx` reference is invented for it.
