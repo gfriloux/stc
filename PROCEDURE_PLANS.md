@@ -109,6 +109,11 @@ YubiKey.
   (`just changelog`) — review the diff before committing.
 - Pushing a tag `v*` triggers `.github/workflows/release.yml`, which renders that
   tag's notes and creates the GitHub release.
+- The `docs(changelog)` commit below is **deliberately invisible to git-cliff**
+  (`cliff.toml` skips it, above the generic `^docs` rule). It is committed before
+  the tag, so it lands inside its own release range; without the skip,
+  `release.yml` — which runs `git-cliff --latest` *after* the tag — cites it in
+  its own notes. Do not re-add it as a `^docs` entry.
 
 Release sequence — one interactive batch, announced before the first command
 (`git-cliff` must run the `--tag` of the release being cut, and the changelog is

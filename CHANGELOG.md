@@ -33,7 +33,6 @@ Releases follow [Semantic Versioning](https://semver.org/).
 - **procedure**: rename the Probe path to Spike ([`12d77ac`](https://github.com/gfriloux/stc/commit/12d77ac63381de8e9365f337df619fe51e0eecec))
 - **security**: state the ANSSI-BP-028 baseline and the no-CIS-claim ([`d9d2693`](https://github.com/gfriloux/stc/commit/d9d26934b641b754329bd702fd5bf67d0aac3ad7))
 - **security**: rule password/lockout policy out of scope ([`6c09ba0`](https://github.com/gfriloux/stc/commit/6c09ba09a80aaa31327573648fd4cd4fdac080b7))
-- **changelog**: generate CHANGELOG.md for v0.9.0 ([`c199027`](https://github.com/gfriloux/stc/commit/c1990272f2fea3b787473cb4fdf90b84f7bc7726))
 
 ### Features
 
@@ -58,7 +57,6 @@ Releases follow [Semantic Versioning](https://semver.org/).
 
 - **readme**: add the STC emblem logo at the top of the README ([`3dba8e1`](https://github.com/gfriloux/stc/commit/3dba8e101cef58cb5d351919159b0e4977ed71b7))
 - **site**: unify the site branding on the new STC logo ([`d594369`](https://github.com/gfriloux/stc/commit/d5943696ca79b383c179d9ad1d6ccc4a67b20c92))
-- **changelog**: generate CHANGELOG.md for v0.8.0 ([`167d1b6`](https://github.com/gfriloux/stc/commit/167d1b65dd280c52854257f19920a4ef8a35bad0))
 
 ### Features
 
@@ -76,7 +74,6 @@ Releases follow [Semantic Versioning](https://semver.org/).
 - **plans**: add plan for the Astro 7 / Starlight 0.41 upgrade ([`b888d04`](https://github.com/gfriloux/stc/commit/b888d048dba6472986077b0103f5ec4cf569b2d5))
 - **plans**: record the outcome of the Astro 7 upgrade ([`7385320`](https://github.com/gfriloux/stc/commit/73853206950623bbd7e44e3316170f98dcf097d6))
 - **plans**: fix the changelog rationale in the Astro 7 plan ([`d671f8e`](https://github.com/gfriloux/stc/commit/d671f8e30f4d71a64a3419c3905832455e2d5f3b))
-- **changelog**: generate CHANGELOG.md for v0.7.3 ([`dcd0d5e`](https://github.com/gfriloux/stc/commit/dcd0d5ec11a4c4f0f28ac0b8fe31964390fa388c))
 
 ### Refactoring
 
@@ -86,19 +83,11 @@ Releases follow [Semantic Versioning](https://semver.org/).
 ### Bug Fixes
 
 - **cogitator-enginseer**: let Atuin own Ctrl-R instead of fzf ([`edb901a`](https://github.com/gfriloux/stc/commit/edb901a1e41b3cc46112c5a7641cc942051283d3))
-
-### Documentation
-
-- **changelog**: generate CHANGELOG.md for v0.7.2 ([`b22513e`](https://github.com/gfriloux/stc/commit/b22513e907a3efc7870bffeefbca0625a56ca460))
 ## [0.7.1] — 2026-08-08
 
 ### Bug Fixes
 
 - **kitty**: drop gtk_engines from fonts package set ([`9a4b7b5`](https://github.com/gfriloux/stc/commit/9a4b7b55d9afea36656f130fa96416c6f17ee088))
-
-### Documentation
-
-- **changelog**: generate CHANGELOG.md for v0.7.1 ([`73d78d9`](https://github.com/gfriloux/stc/commit/73d78d949855dae3dc75ecdbe665d7e273e5ff30))
 ## [0.7.0] — 2026-07-18
 
 ### Bug Fixes
@@ -108,10 +97,8 @@ Releases follow [Semantic Versioning](https://semver.org/).
 ### Documentation
 
 - track core project docs (DESIGN, CLAUDE, PROCEDURE_PLANS, SECURITY, MIGRATION) ([`98ddf69`](https://github.com/gfriloux/stc/commit/98ddf692e9cdb253904a0a825651290085c59d2a))
-- **changelog**: generate CHANGELOG.md from the retroactive tags ([`80c2ff4`](https://github.com/gfriloux/stc/commit/80c2ff404288b32756f0afc1d878147946904a0c))
 - document the working methods (plans, hybrid git, releases) ([`f24e96f`](https://github.com/gfriloux/stc/commit/f24e96ff917bc70d8d7db5f81d1f48d3529db423))
 - **plans**: add v0.7.0 home baseline plan ([`45c370e`](https://github.com/gfriloux/stc/commit/45c370e8f46a6113e12ae91f8edc84d92491d5d3))
-- **changelog**: generate CHANGELOG.md for v0.7.0 ([`54cd2b7`](https://github.com/gfriloux/stc/commit/54cd2b7f8f69b8f98349215586992ec18f771b90))
 
 ### Features
 
