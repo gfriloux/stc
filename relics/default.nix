@@ -17,6 +17,7 @@
     relics-zfs = ./nixos/zfs.nix;
     relics-networking = ./nixos/networking.nix;
     relics-aws = ./nixos/aws.nix;
+    relics-vm-variant = ./nixos/vm-variant.nix;
 
     # Impermanence needs the upstream module injected via inputs closure.
     relics-impermanence = {...}: {
