@@ -40,6 +40,37 @@ in {
       '';
     };
 
+    systemAuthorizedKeysOnly = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = ''
+        Read authorized keys only from `/etc/ssh/authorized_keys.d/%u`, the file
+        the NixOS module generates from
+        `users.users.<name>.openssh.authorizedKeys.keys` — never from
+        `~/.ssh/authorized_keys`.
+
+        Default true: with the home directory in sshd's search path, anything
+        able to write a file there grants persistent SSH access invisibly to the
+        flake — a service compromised under that user, a careless container
+        bind-mount, a sync tool. This pairs with `users.mutableUsers = false`,
+        which STC's server-facing profiles already assume: the accounts come
+        from the flake, so the keys should too.
+
+        **This can lock you out.** A key that lives only in a user's
+        `~/.ssh/authorized_keys` and is not declared in your configuration stops
+        working at the next switch. Check before you deploy, not after.
+
+        Software that manages its own `authorized_keys` — Git forges above all —
+        loses access entirely. The relic refuses to build rather than let that
+        happen silently; see the assertion below. Setting this to false restores
+        the upstream behaviour for the whole host.
+
+        Narrower escape: the underlying `services.openssh.authorizedKeysFiles` is
+        a list and definitions merge, so a consumer can add one specific path
+        back without giving up the lockdown.
+      '';
+    };
+
     banner = lib.mkOption {
       type = lib.types.nullOr lib.types.lines;
       default = null;
@@ -71,6 +102,13 @@ in {
 
     services.openssh = {
       enable = true;
+
+      # The flake is the only source of SSH access. Expressed through the
+      # upstream switch rather than a mkForce on authorizedKeysFiles: the option
+      # is a list whose definitions merge, so a consumer keeps the ability to add
+      # one path back (an SFTP-only account, a backup target) without turning the
+      # whole lockdown off.
+      authorizedKeysInHomedir = !cfg.systemAuthorizedKeysOnly;
 
       settings = {
         PermitRootLogin = "no";
