@@ -3,6 +3,15 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.11.0] — 2026-10-11
+
+### Bug Fixes
+
+- **docker-notify**: warn when a watched container has no visible healthcheck ([`90f8e33`](https://github.com/gfriloux/stc/commit/90f8e33f6861a9fb23d70b676d13717b225686c4))
+
+### Features
+
+- **docker-traefik**: validate certresolver and middleware references at eval time ([`94f204e`](https://github.com/gfriloux/stc/commit/94f204e627e0830fac95527c81216e13e8227ba3))
 ## [0.10.0] — 2026-10-11
 
 ### Bug Fixes
