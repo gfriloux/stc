@@ -18,6 +18,7 @@
     relics-networking = ./nixos/networking.nix;
     relics-aws = ./nixos/aws.nix;
     relics-vm-variant = ./nixos/vm-variant.nix;
+    relics-pre-switch-checks = ./nixos/pre-switch-checks.nix;
 
     # Impermanence needs the upstream module injected via inputs closure.
     relics-impermanence = {...}: {

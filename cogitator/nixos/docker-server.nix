@@ -28,10 +28,19 @@ in {
     ../../relics/nixos/docker/socket-proxy.nix
     ../../relics/nixos/docker/crowdsec.nix
     ../../relics/nixos/docker/notify.nix
+    ../../relics/nixos/pre-switch-checks.nix
   ];
 
   options.stc.cogitator.docker-server = {
-    enable = lib.mkEnableOption "STC Docker server stack (Traefik + CrowdSec)";
+    enable =
+      lib.mkEnableOption "STC Docker server stack (Traefik + CrowdSec)"
+      // {
+        description = ''
+          Enable the STC Docker server stack: Traefik, socket-proxy and CrowdSec,
+          plus the pre-switch checks relic — on a remotely deployed host, refusing
+          to activate another host's closure is part of the profile, not an extra.
+        '';
+      };
 
     notify.enable =
       lib.mkEnableOption "container failure notifications for the stack"
@@ -53,6 +62,13 @@ in {
       crowdsec.enable = true;
       notify.enable = cfg.notify.enable;
     };
+
+    # A Docker server is the shape this guards: a remote host, deployed with a
+    # command that differs from its neighbour's by one flake attribute. Activate
+    # the wrong closure here and you get wrong containers, wrong Traefik routers,
+    # wrong users, wrong secrets — and no diff printed to warn you, because
+    # `nixos-rebuild --target-host` shows none.
+    stc.relics.preSwitchChecks.enable = true;
 
     virtualisation = {
       docker = {

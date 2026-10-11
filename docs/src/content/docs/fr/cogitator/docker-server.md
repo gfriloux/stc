@@ -29,11 +29,35 @@ stc.relics.docker.traefik.enable = true;
 stc.relics.docker.socketProxy.enable = true;  # Traefik utilise le proxy, pas le socket brut
 stc.relics.docker.crowdsec.enable = true;
 stc.relics.docker.notify.enable = cfg.notify.enable;  # off sauf opt-in explicite
+stc.relics.preSwitchChecks.enable = true;             # voir plus bas
 
 virtualisation.docker.enable = true;
 virtualisation.docker.autoPrune.enable = lib.mkDefault false;  # voir plus bas
 virtualisation.oci-containers.backend = "docker";
 ```
+
+### Pourquoi les contrôles pré-switch font partie du profil
+
+Un serveur Docker est exactement la forme que ces contrôles protègent : un host
+distant, déployé par une commande qui ne diffère de celle de son voisin que par un
+attribut de flake. Activez le mauvais closure ici et vous obtenez de mauvais
+conteneurs, de mauvais routeurs Traefik, de mauvais utilisateurs, de mauvais
+secrets — et `nixos-rebuild --target-host` n'affiche aucun diff pour vous
+prévenir.
+
+Ce profil active donc
+[`stc.relics.preSwitchChecks`](/stc/fr/relics/pre-switch-checks/) : le switch
+avorte, l'ancien système restant debout, sauf si le closure entrant appartient
+bien à la machine qui l'active.
+
+:::caution[Ça peut avorter un déploiement qui marchait]
+Si le nom d'hôte réellement porté par votre machine diffère de son
+`networking.hostName` — écrasé par DHCP ou `cloud-init`, ou simplement jamais
+corrigé — le prochain `nixos-rebuild` sur ce host avorte. Le build réussit
+toujours ; seule l'activation s'arrête. Corrigez l'écart, posez
+`stc.relics.preSwitchChecks.hostnameGuard = false;`, ou passez `NIXOS_NO_CHECK=1`
+pour un déploiement. La page de la relique couvre les trois.
+:::
 
 ### Pourquoi `autoPrune` est désactivé
 
@@ -134,4 +158,5 @@ savoir comment le fichier y arrive.
 ## Voir aussi
 
 - [Reliques Docker](/stc/fr/relics/docker/) — Traefik, socket-proxy, CrowdSec et notify en détail
+- [Contrôles pré-switch](/stc/fr/relics/pre-switch-checks/) — le garde-fou de déploiement activé par ce profil
 - [Schématic : aws-ami](/stc/fr/schematics/aws-ami/) — un exemple de production complet utilisant ce profil

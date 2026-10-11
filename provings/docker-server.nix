@@ -21,6 +21,12 @@
       notify.enable = true;
     };
 
+    # nixos-test-base.nix defaults system.switch.enable to false (a Hydra
+    # optimisation: don't pull switch-to-configuration into every test). The
+    # pre-switch checks are *invoked* by that binary, so without this the
+    # subtests below would have nothing to run and the guard would be unproven.
+    system.switch.enable = true;
+
     # Placeholder images — required by the relics, never pulled in the isolated VM.
     stc.relics.docker.traefik.image = "stc-proving/traefik:placeholder";
     stc.relics.docker.socketProxy.image = "stc-proving/socket-proxy:placeholder";
@@ -65,7 +71,8 @@
     };
   };
 
-  testScript = ''
+  # A function, so the script below can reach the generated pre-switch checks.
+  testScript = {nodes, ...}: ''
     machine.wait_for_unit("multi-user.target")
 
     # oci-containers renders `docker run …` into a generated start script that
@@ -146,5 +153,51 @@
         assert "crowdsec-bouncer-traefik-plugin" in static
         # socket-proxy is enabled, so Traefik talks to the API over TCP.
         assert "tcp://docker-socket-proxy:2375" in static
+
+    with subtest("pre-switch checks are live, and the guard is not a tautology"):
+        # Validity first: the guard sorts itself out of the way when
+        # /run/booted-system is absent, which is how it stays compatible with
+        # the nixos-anywhere install flow. If it were absent HERE, every assert
+        # below would pass for the wrong reason.
+        machine.succeed("test -e /run/booted-system")
+
+        # `check` runs the pre-switch checks and returns without activating
+        # anything, so these subtests cannot disturb the ones above.
+        machine.succeed("/run/current-system/bin/switch-to-configuration check")
+
+    with subtest("the guard tolerates a runtime FQDN"):
+        # systemd may have set the FQDN rather than the short name, which a
+        # strict comparison would read as the wrong host. Set through /proc —
+        # the very value the guard reads — so the subtest does not depend on
+        # hostnamed's state. And set at runtime rather than via
+        # networking.domain, which would prove nothing: nixpkgs writes only
+        # cfg.hostName into /etc/hostname, so declaring a domain does not make
+        # the kernel hostname an FQDN. A name overwritten at runtime by DHCP or
+        # cloud-init is the real scenario anyway.
+        machine.succeed("echo machine.example.test > /proc/sys/kernel/hostname")
+        machine.succeed("/run/current-system/bin/switch-to-configuration check")
+
+    with subtest("the guard aborts when the closure belongs to another host"):
+        machine.succeed("echo other-machine > /proc/sys/kernel/hostname")
+        out = machine.fail("/run/current-system/bin/switch-to-configuration check 2>&1")
+        assert "refusing to activate the closure of 'machine'" in out, out
+        assert "NIXOS_NO_CHECK=1" in out, out
+
+    with subtest("NIXOS_NO_CHECK=1 really is the escape hatch"):
+        # Proven, not assumed: it is the only variable that survives
+        # nixos-rebuild's `env -i`, so the documented way out has to work.
+        machine.succeed(
+            "NIXOS_NO_CHECK=1 /run/current-system/bin/switch-to-configuration check"
+        )
+        machine.succeed("echo machine > /proc/sys/kernel/hostname")
+
+    with subtest("the closure diff can never abort a switch"):
+        # Make dix fail for real by handing the script a closure path that does
+        # not exist, instead of trusting that `|| echo` is enough. The guard
+        # still passes (the hostname is restored), so a non-zero exit here could
+        # only come from the diff.
+        machine.succeed(
+            "${nodes.machine.config.system.preSwitchChecksScript} /nonexistent-closure switch"
+        )
   '';
 }
