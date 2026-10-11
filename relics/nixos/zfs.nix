@@ -94,11 +94,44 @@ in {
       supportedFilesystems = ["zfs"];
       initrd.supportedFilesystems = ["zfs"];
 
-      # Force-import the root pool so the system boots even when the pool
-      # was last used on a different host (e.g. after nixos-anywhere install).
+      # Do NOT force the root pool import. ZFS refuses to import a pool whose
+      # hostid does not match as a safety mechanism: it is what stops two hosts
+      # from mounting the same pool read-write and destroying it (SAN LUN,
+      # migrated cloud volume, iSCSI, a disk moved between machines). Forcing it
+      # permanently, to paper over the one-time mismatch of a freshly installed
+      # pool, turns that protection off forever on every machine.
+      #
+      # Measured before flipping it: an image built by this flake's schematics
+      # boots with an unforced import (local-vm qcow2, initrd unit with
+      # ZFS_FORCE="", login prompt reached). The mismatch the old comment
+      # described belongs to the nixos-anywhere path, which no STC schematic
+      # uses — see docs/*/relics/zfs.md for what to do there.
+      #
+      # Three deliberate choices, none of them cosmetic:
+      #
+      #   - mkDefault false, not a deleted line. Upstream's own default is
+      #     `versionOlder stateVersion "26.11"` and it *warns* whenever that
+      #     default resolves to true. With no definition here, every consumer
+      #     below 26.11 would inherit true AND the warning. An explicit
+      #     definition gives the safe value and keeps the build quiet — and at
+      #     mkDefault, a consumer overrides it with a plain `= true`, which the
+      #     old hard `true` did not allow (it needed mkForce).
+      #   - No stc.relics.zfs.* option mirroring it. The escape hatch is the
+      #     upstream option itself, one line, already documented. A second name
+      #     for the same switch is namespace noise.
+      #   - No pinned networking.hostId. srvos defaults it to the install ISO's
+      #     8425e349 (nixos/modules/profiles/base.nix) so imports always match.
+      #     STC refuses: it would re-open the same hole from the other side —
+      #     two STC hosts sharing a hostid can both import the same pool — and
+      #     it contradicts the schematics, which each demand a unique hostId.
+      #
+      # One-off recovery when a pool legitimately carries a foreign hostid: boot
+      # once with zfs_force=1 on the kernel command line (honoured by both
+      # stage-1 implementations), then export and re-import the pool cleanly.
+      #
       # forceImportAll stays false to protect non-root pools.
       zfs = {
-        forceImportRoot = true;
+        forceImportRoot = lib.mkDefault false;
         forceImportAll = false;
       };
     };
