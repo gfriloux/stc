@@ -32,10 +32,10 @@ the next one.
 **Filesystem support** — adds `"zfs"` to `boot.supportedFilesystems` and
 `boot.initrd.supportedFilesystems` so the initrd can import pools at boot.
 
-**Pool import** — sets `boot.zfs.forceImportRoot = true` so the root pool is
-imported even when the pool was last used on a different host ID (e.g. after
-installing with `nixos-anywhere`). `forceImportAll` stays `false` to protect
-non-root pools.
+**Pool import** — sets `boot.zfs.forceImportRoot = lib.mkDefault false`: the
+root pool is imported **without** `-f`, so ZFS keeps the check that refuses a
+pool whose hostId belongs to another system. `forceImportAll` stays `false`
+too, for non-root pools.
 
 **Auto-scrub** — runs `zpool scrub` on all pools at `scrubInterval`. Monthly is
 sufficient for most workloads; use `"weekly"` on write-heavy systems or large
@@ -87,6 +87,35 @@ The value is a systemd calendar expression. Valid values include `"daily"`,
 ZFS uses `networking.hostId` to identify the importing host. This prevents a pool
 that was last used on machine A from being silently imported on machine B. Generate a
 unique 8-character hex string for every machine.
+
+STC does **not** pin a default hostId. [srvos](https://github.com/nix-community/srvos)
+defaults it to the install ISO's `8425e349` so that imports always match; that
+removes the one-time mismatch at the price of making every host claim the same
+identity — two of them would import the same pool without ZFS objecting. A
+unique hostId per machine is the stricter half of what makes the unforced import
+worth anything.
+:::
+
+:::caution[If your root pool carries a foreign hostId]
+A pool that was last imported by another system — a disk moved between machines,
+a pool created by an installer that was never exported — will now refuse to
+import, and the host stops at the initrd instead of booting. Two ways out:
+
+- **One-off, at the bootloader:** add `zfs_force=1` to the kernel command line
+  for a single boot, then `zpool export <pool>` and let the next boot import it
+  cleanly. Both stage-1 implementations (scripted and systemd) honour the
+  parameter.
+- **Permanently, if your setup genuinely needs it:** put
+  `boot.zfs.forceImportRoot = true;` in your configuration. The relic's value is
+  a `mkDefault`, so a plain definition wins — no `lib.mkForce` needed. Writing
+  `lib.mkDefault true` instead collides with the relic's own `mkDefault` and
+  fails evaluation.
+
+Installing with `nixos-anywhere` (no STC schematic does — all three build an
+image) leaves the pool imported with the installer's hostId. Run
+`zpool export <pool>` before the first reboot and the import needs no force.
+Upstream makes `false` the default from `stateVersion` 26.11 on, so this is
+where NixOS is heading regardless.
 :::
 
 ## Pair With
