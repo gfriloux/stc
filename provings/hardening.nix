@@ -12,7 +12,10 @@
 {self}: {
   name = "hardening";
 
-  nodes.machine = {
+  nodes.machine = {pkgs, ...}: let
+    # Snakeoil keypair shipped with nixpkgs' own test suite.
+    sshKeys = import (pkgs.path + "/nixos/tests/ssh-keys.nix") pkgs;
+  in {
     imports = [self.nixosModules.cogitator-hardening];
     stc.cogitator.hardening.enable = true;
 
@@ -37,6 +40,29 @@
     users.users.schedtest = {
       isNormalUser = true;
       description = "unprivileged user for the scheduler allowlist subtest";
+    };
+
+    # Two users, one key. "declared" receives it through the module, "homedir"
+    # gets the very same public key planted in ~/.ssh by hand. Using a single
+    # keypair for both is deliberate: with two, the negative assertion could
+    # pass because an algorithm was refused rather than because a path was, and
+    # a test that passes for the wrong reason is worse than no test at all.
+    users.users.declared = {
+      isNormalUser = true;
+      description = "key declared in the flake - authentication must succeed";
+      openssh.authorizedKeys.keys = [sshKeys.snakeOilEd25519PublicKey];
+    };
+
+    users.users.homedir = {
+      isNormalUser = true;
+      description = "key planted in ~/.ssh - authentication must fail";
+    };
+
+    # Copied out of the store at 0600: ssh refuses a private key others can
+    # read, and every store path is world-readable.
+    environment.etc."proving-ssh-key" = {
+      source = sshKeys.snakeOilEd25519PrivateKey;
+      mode = "0600";
     };
   };
 
@@ -135,5 +161,43 @@
         banner_path = banner_lines[0].split()[1]
         assert banner_path.startswith("/nix/store/"), f"unexpected banner path: {banner_path}"
         assert "Authorized access only" in machine.succeed(f"cat {banner_path}")
+
+    with subtest("authorized keys come from the flake only"):
+        rendered = [
+            line for line in machine.succeed("sshd -T").splitlines()
+            if line.lower().startswith("authorizedkeysfile ")
+        ]
+        assert len(rendered) == 1, f"expected one AuthorizedKeysFile line, got {rendered}"
+        paths = rendered[0].split(None, 1)[1].strip()
+        assert paths == "/etc/ssh/authorized_keys.d/%u", f"unexpected search path: {paths}"
+        assert "%h" not in paths, f"the home directory is still in the auth path: {paths}"
+
+        # -n is load-bearing: without it ssh reads the console's stdin and eats
+        # the marker the test driver writes there, which surfaces as the driver
+        # failing to parse an exit status rather than as an SSH problem.
+        ssh = (
+            "ssh -n -i /etc/proving-ssh-key"
+            " -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+            " -o BatchMode=yes -o ConnectTimeout=10"
+            " -o PreferredAuthentications=publickey"
+        )
+
+        # The rendered path is only half the claim: prove that a declared key
+        # still authenticates, or a total lockout would satisfy the assertion
+        # above and look like success.
+        assert machine.succeed(f"{ssh} declared@127.0.0.1 id -un").strip() == "declared"
+
+        # Same key, planted by hand. Control first - the file sshd would have
+        # read is in place, correctly owned, byte-identical to the declared one
+        # - so the refusal below cannot be blamed on a broken fixture.
+        machine.succeed("install -d -m 700 -o homedir -g users /home/homedir/.ssh")
+        machine.succeed(
+            "install -m 600 -o homedir -g users"
+            " /etc/ssh/authorized_keys.d/declared /home/homedir/.ssh/authorized_keys"
+        )
+        planted = machine.succeed("cat /home/homedir/.ssh/authorized_keys").strip()
+        issued = machine.succeed("cat /etc/ssh/authorized_keys.d/declared").strip()
+        assert planted == issued, "the planted key is not the declared one"
+        machine.fail(f"{ssh} homedir@127.0.0.1 id -un")
   '';
 }

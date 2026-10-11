@@ -14,6 +14,16 @@
   ...
 }: let
   cfg = config.stc.relics.hardening.ssh;
+
+  # Services that write their own authorized_keys file and would lose every way
+  # in under systemAuthorizedKeysOnly. Reading config.services.<name>.enable is
+  # safe: all five are nixpkgs modules, so the options exist in any NixOS
+  # evaluation. That is NOT true of a module a consumer brings through their
+  # flake (a secrets backend, say), where the option may simply not exist and
+  # lib.mkIf false would not protect the reference.
+  keyManagingServices =
+    lib.filter (name: config.services.${name}.enable or false)
+    ["gitea" "forgejo" "gitlab" "gitolite" "gerrit"];
 in {
   imports = [
     (lib.mkRenamedOptionModule ["stc" "hardening" "ssh" "enable"] ["stc" "relics" "hardening" "ssh" "enable"])
@@ -37,6 +47,37 @@ in {
         (auth failures, crashes) with escalating temporary blocks. OpenSSH ≥ 9.8
         enables this by default; STC sets explicit, tuned values. Set to
         "no" to disable.
+      '';
+    };
+
+    systemAuthorizedKeysOnly = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = ''
+        Read authorized keys only from `/etc/ssh/authorized_keys.d/%u`, the file
+        the NixOS module generates from
+        `users.users.<name>.openssh.authorizedKeys.keys` — never from
+        `~/.ssh/authorized_keys`.
+
+        Default true: with the home directory in sshd's search path, anything
+        able to write a file there grants persistent SSH access invisibly to the
+        flake — a service compromised under that user, a careless container
+        bind-mount, a sync tool. This pairs with `users.mutableUsers = false`,
+        which STC's server-facing profiles already assume: the accounts come
+        from the flake, so the keys should too.
+
+        **This can lock you out.** A key that lives only in a user's
+        `~/.ssh/authorized_keys` and is not declared in your configuration stops
+        working at the next switch. Check before you deploy, not after.
+
+        Software that manages its own `authorized_keys` — Git forges above all —
+        loses access entirely. The relic refuses to build rather than let that
+        happen silently; see the assertion below. Setting this to false restores
+        the upstream behaviour for the whole host.
+
+        Narrower escape: the underlying `services.openssh.authorizedKeysFiles` is
+        a list and definitions merge, so a consumer can add one specific path
+        back without giving up the lockdown.
       '';
     };
 
@@ -67,10 +108,32 @@ in {
         assertion = lib.versionAtLeast config.services.openssh.package.version "9.9";
         message = "stc.relics.hardening.ssh: KexAlgorithms includes mlkem768x25519-sha256, which requires OpenSSH ≥ 9.9 (found ${config.services.openssh.package.version}). Upgrade nixpkgs, or override services.openssh.settings.KexAlgorithms to drop the post-quantum kex.";
       }
+      # Fail the build rather than let a Git forge lose its SSH access at
+      # runtime, remotely, with nothing red anywhere. srvos excludes these
+      # services automatically; that silently weakens the hardening on a host
+      # nobody decided to weaken. A build error costs one line of configuration
+      # and is impossible to miss — the lockout is not.
+      {
+        assertion = cfg.systemAuthorizedKeysOnly -> keyManagingServices == [];
+        message = let
+          names = lib.concatMapStringsSep " and " (name: "services.${name}") keyManagingServices;
+          clause =
+            if lib.length keyManagingServices > 1
+            then "manage their own authorized_keys files and would"
+            else "manages its own authorized_keys file and would";
+        in "stc.relics.hardening.ssh: systemAuthorizedKeysOnly removes ~/.ssh/authorized_keys from sshd's search path, but ${names} ${clause} lose all SSH access. Either set stc.relics.hardening.ssh.systemAuthorizedKeysOnly = false on this host, or append the path the service needs to services.openssh.authorizedKeysFiles (it is a list — definitions merge, so the system path is kept).";
+      }
     ];
 
     services.openssh = {
       enable = true;
+
+      # The flake is the only source of SSH access. Expressed through the
+      # upstream switch rather than a mkForce on authorizedKeysFiles: the option
+      # is a list whose definitions merge, so a consumer keeps the ability to add
+      # one path back (an SFTP-only account, a backup target) without turning the
+      # whole lockdown off.
+      authorizedKeysInHomedir = !cfg.systemAuthorizedKeysOnly;
 
       settings = {
         PermitRootLogin = "no";
@@ -112,6 +175,14 @@ in {
         AllowTcpForwarding = cfg.allowedTCPForwarding;
         PermitTunnel = false;
         GatewayPorts = "no";
+
+        # Remove a leftover Unix socket before binding a forwarded one, instead
+        # of failing the forward. Tied to allowedTCPForwarding rather than set
+        # to true outright: remote Unix-socket forwarding needs TCP forwarding
+        # to be allowed in the first place, so with the default (false) there is
+        # never a stale socket to unlink and an unconditional "yes" would be
+        # decoration. Do not "simplify" it to true.
+        StreamLocalBindUnlink = cfg.allowedTCPForwarding;
 
         # Forward secrecy only, declared through typed settings so the NixOS
         # module validates them (extraConfig would bypass that). Post-quantum
