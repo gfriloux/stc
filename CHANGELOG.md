@@ -3,6 +3,51 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.14.0] — 2026-10-17
+
+### Bug Fixes
+
+- **relics/plasma6**: make the documented X11 fallback reachable ([`8cbd8d5`](https://github.com/gfriloux/stc/commit/8cbd8d5e9a836321610009321d72396762e0a3db))
+- **relics/aws**: make the serial getty overridable ([`b80ef10`](https://github.com/gfriloux/stc/commit/b80ef107822ac8df90b8161d767e2408fbf2bb86))
+
+### Documentation
+
+- **plans**: plan v0.14.0 — le lot « les épreuves, palier 1 » ([`1080a6a`](https://github.com/gfriloux/stc/commit/1080a6a37ecd5c2b480b049cf224baaf5c2fa689))
+- **provings**: document the vm proving and the step the procedure skipped ([`4c3eaec`](https://github.com/gfriloux/stc/commit/4c3eaec78ad5362a9c9c8d8750a9ba5966a7d3c8))
+- **plans**: ledger du chantier 1 — la primitive d'attente était fausse, pas le produit ([`67b9bac`](https://github.com/gfriloux/stc/commit/67b9bac4d8937a0f6392ef64dcb07c2153833668))
+- **provings**: say what the vm proving proves about remote access ([`83436f9`](https://github.com/gfriloux/stc/commit/83436f9f1149bb98903dcb2b1cd91f42b4498555))
+- **plans**: ledger — l'Important de la revue, et une justification fausse corrigée ([`b6a36af`](https://github.com/gfriloux/stc/commit/b6a36af3b77a3f855f7be991ba9fea85477829ef))
+- **plans**: ledger — les Minor pris, les Minor reportés, et deux écarts au plan ([`28a5b7e`](https://github.com/gfriloux/stc/commit/28a5b7e7fe20def55a6aef8d302e1b7162cff580))
+- **provings**: document the plasma proving and what it leaves out ([`bda6792`](https://github.com/gfriloux/stc/commit/bda67926157b16f8348046b645312ff63751206b))
+- **plans**: ledger du chantier 2 — mesurer sur un nœud nu, et un chemin inféré qui était faux ([`217f55b`](https://github.com/gfriloux/stc/commit/217f55b5458e813d5af7fda8ca78f6c56f5fd142))
+- **relics/plasma6**: the X11 fallback needs two settings, not one ([`e68e7d9`](https://github.com/gfriloux/stc/commit/e68e7d90ffca351090e6c9088741cb2d49c3fabf))
+- **provings**: correct a false claim about tumbler, and say what is not asserted ([`8444bc9`](https://github.com/gfriloux/stc/commit/8444bc946acf6b20bf2f980351b5a151f1cd69bd))
+- **plans**: ledger du chantier 2 — passe de correction, et un défaut produit ([`f292bd5`](https://github.com/gfriloux/stc/commit/f292bd5fd027032ad22283d012ce9d65185ca3b2))
+- **provings**: document the gaming proving and unfree packages in a proving ([`4633ebf`](https://github.com/gfriloux/stc/commit/4633ebff6c41a64d27807df5ba9c55ab8d02587d))
+- **plans**: ledger du chantier 3 — un assert du plan invalidé avant d'être écrit ([`a6b772d`](https://github.com/gfriloux/stc/commit/a6b772d547992883067669b2f80e66a1584f9b63))
+- **provings**: correct the remote play ports, and what the unfree scoping buys ([`64960cf`](https://github.com/gfriloux/stc/commit/64960cfbe7465fc711ab4714f337e6a8997a18e9))
+- **plans**: ledger du chantier 3 — passe de correction, dont deux faits faux de ma part ([`c94bdb4`](https://github.com/gfriloux/stc/commit/c94bdb4c730509b260b1f68001e733540ec63487))
+- **provings**: document the dreadnought proving and what just test now costs ([`2ba7ac9`](https://github.com/gfriloux/stc/commit/2ba7ac95ff4efd9a3c443a153b0d78d861b20b50))
+- **plans**: ledger du chantier 4 — la décision 6 tranchée dans le bon sens ([`1edaeac`](https://github.com/gfriloux/stc/commit/1edaeaca8c953a8982fb107729ee049a91e2f267))
+- **relics/aws**: say that the serial console is a default, not a lock ([`8586f74`](https://github.com/gfriloux/stc/commit/8586f745c89d8ef57a5bd3577296ffd1adf99d2c))
+- **provings**: correct the dreadnought scope note on four counts ([`84bda21`](https://github.com/gfriloux/stc/commit/84bda217213d9aeb00458ebc47d226297e13da5f))
+- **plans**: ledger du chantier 4 — passe de correction, et une observation produit ([`f325490`](https://github.com/gfriloux/stc/commit/f325490ccc362fe0373c13612ec6d2e9a99499f0))
+
+### Testing
+
+- **provings**: prove the vm base profile boots as claimed ([`672449d`](https://github.com/gfriloux/stc/commit/672449d511a63224bd1f0ebbdaea42f20c79a0bb))
+- **provings**: register the vm proving in the suite ([`1f42fc5`](https://github.com/gfriloux/stc/commit/1f42fc5c5b411115e5f30ca31b67dc2ec4c105cb))
+- **provings**: prove a declared key actually authenticates ([`cceff0e`](https://github.com/gfriloux/stc/commit/cceff0ebb32f8e1334b5159a7730a5e3d5d16b14))
+- **provings**: harden four assertions the review found weak ([`6092382`](https://github.com/gfriloux/stc/commit/6092382740085721c13903a52f257b58b8a4caba))
+- **provings**: prove the plasma desktop profile wiring ([`23e3d2a`](https://github.com/gfriloux/stc/commit/23e3d2a619713b6f8773b4d784e0fe2f852c71d9))
+- **provings**: register the plasma proving in the suite ([`1c25b6b`](https://github.com/gfriloux/stc/commit/1c25b6b4ac3ce269895a45537297ea3c6e074188))
+- **provings**: assert what the plasma relics actually decide ([`874f046`](https://github.com/gfriloux/stc/commit/874f046341fd7889a0b23e317afbed7ac7a29be2))
+- **provings**: prove the gaming profile wiring ([`7392686`](https://github.com/gfriloux/stc/commit/73926864fe157dc8385d140de863d1c034fad830))
+- **provings**: register the gaming proving, built from a scoped unfree instance ([`7e38170`](https://github.com/gfriloux/stc/commit/7e38170a9c806a6cebe84f42d4e56eb7094a86a5))
+- **provings**: fix the gaming assertions the review found wrong or empty ([`677de73`](https://github.com/gfriloux/stc/commit/677de7350cc6610b0aa15be06db1d7a184141664))
+- **provings**: prove the dreadnought profile boots composed ([`9ee4cdd`](https://github.com/gfriloux/stc/commit/9ee4cdd70e7246adba83ba175e3e47bae5e3af2d))
+- **provings**: register the dreadnought proving in the suite ([`e904217`](https://github.com/gfriloux/stc/commit/e904217a87dbb2de6a9986d3f8595b59c52a431b))
+- **provings**: fix the dreadnought assertions the review found wrong or weak ([`3d5b41a`](https://github.com/gfriloux/stc/commit/3d5b41ae96292c83aab677c6a09210637c8f926c))
 ## [0.13.0] — 2026-10-11
 
 ### Bug Fixes
