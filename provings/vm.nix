@@ -17,9 +17,27 @@
   name = "vm";
 
   nodes = {
-    machine = {
+    machine = {pkgs, ...}: let
+      # Snakeoil keypair shipped with nixpkgs' own test suite.
+      sshKeys = import (pkgs.path + "/nixos/tests/ssh-keys.nix") pkgs;
+    in {
       imports = [self.nixosModules.cogitator-vm];
-      stc.cogitator.vm.enable = true;
+
+      stc.cogitator.vm = {
+        enable = true;
+
+        # authorizedKeys defaults to [], which means no remote access at all, so
+        # the node has to feed it for the subtest below to have anything to
+        # assert — same reason the hardening proving sets its own opt-in banner.
+        authorizedKeys = [sshKeys.snakeOilEd25519PublicKey];
+      };
+
+      # Copied out of the store at 0600: ssh refuses a private key others can
+      # read, and every store path is world-readable.
+      environment.etc."proving-ssh-key" = {
+        source = sshKeys.snakeOilEd25519PrivateKey;
+        mode = "0600";
+      };
     };
 
     dockervm = {
@@ -65,6 +83,24 @@
     with subtest("remote access"):
         machine.wait_for_unit("sshd.service")
         machine.wait_for_open_port(22)
+
+        # A TCP connect only proves sshd is listening. The profile's one
+        # remote-access option is authorizedKeys, and nothing above reaches it:
+        # without the round trip below, dropping the line that wires the option
+        # to users.users.<n>.openssh.authorizedKeys.keys would make every
+        # consumer VM unreachable and leave this proving green.
+        machine.succeed("test -s /etc/ssh/authorized_keys.d/admin")
+
+        # -n is load-bearing: without it ssh reads the console's stdin and eats
+        # the marker the test driver writes there, which surfaces as the driver
+        # failing to parse an exit status rather than as an SSH problem.
+        ssh = (
+            "ssh -n -i /etc/proving-ssh-key"
+            " -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+            " -o BatchMode=yes -o ConnectTimeout=10"
+            " -o PreferredAuthentications=publickey"
+        )
+        assert machine.succeed(f"{ssh} admin@127.0.0.1 id -un").strip() == "admin"
 
     with subtest("store growth is bounded"):
         gc_timer = machine.succeed("systemctl cat nix-gc.timer")
