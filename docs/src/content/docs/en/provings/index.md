@@ -29,7 +29,8 @@ the `just ci` gate**: a VM test is heavy, and the CI gate stays fast and static.
 and the closures include KDE twice (`workstation` and `plasma`) and Steam once. On
 a cold store that is a few GiB of downloads; warm, most scripts finish in 23-30 s.
 `sarcophagus-kvm` is the outlier at both ends: it builds a disk image in its own
-VM before the test even starts, and its script then runs 63 s for the two boots. This is said out loud because the discipline that matters is running
+VM before the test even starts, and its script then runs 66 s for the two boots.
+This is said out loud because the discipline that matters is running
 `just test` before closing a branch that touched a cogitator: a recipe too heavy
 to run is a gate that quietly stops being one. Build a single proving while
 iterating — `nix build .#legacyPackages.x86_64-linux.provings.<name> -L` — and run
@@ -118,7 +119,7 @@ its own. The test script lays a copy-on-write overlay over the store path and
 points `NIX_DISK_IMAGE` at it, which is also what lets the same disk carry writes
 from one boot to the next.
 
-Four node options make it work. None is a product fix — upstream exposes every one
+Five node options make it work. None is a product fix — upstream exposes every one
 of them for this purpose — and each was measured, not guessed:
 
 | Option | Why |
@@ -169,9 +170,17 @@ claim that survives. `environment.persistence` does not go through `fileSystems`
 it produces systemd bind mounts, which qemu-vm leaves alone. So `/var/log`,
 `/var/lib/nixos`, `/etc/machine-id` and an entry set through the cogitator's own
 `impermanence.extraDirectories` option are all checked with `findmnt`. The four
-`/etc/ssh/ssh_host_*` entries the relic also declares have **no mount unit at all**
-in this VM; whether they are bind-mounted on a real host is not settled here, and
-it matters — if they are not, every reboot changes the host's SSH keys.
+`/etc/ssh/ssh_host_*` entries the relic also declares have **no mount unit at all**,
+here or on a real host — and `sarcophagus-kvm` settled why, with an answer that is
+not the obvious one. Upstream renders `files` through `mount-file.bash`, which
+symlinks instead of bind-mounting when the target does not exist yet; that script
+also runs as the `persist-files` *activation* script, which `nixos-install`
+executes inside the image builder while `/persist` is still empty. The symlinks
+are therefore baked into the image, which means they are inside `@blank`, which
+means every rollback restores them — and `mount-file.bash` then finds a link
+already pointing at its target and does nothing. sshd reads the key through it
+from `/persist`. Measured either side of a rollback: the host key fingerprint does
+not change.
 
 **What the boot does establish.** The impermanence rollback service runs in the
 initrd, fails for want of a pool, and the boot continues anyway — the unit is

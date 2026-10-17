@@ -180,16 +180,19 @@
 
         # NOT asserted here, and no longer an open question. The four
         # /etc/ssh/ssh_host_* entries the relic also declares have no mount unit
-        # at all in this VM, and the reason is upstream: impermanence handles
-        # `files` with persist-*.service units running mount-file.bash, which
-        # bind-mounts when the target exists and *symlinks* when it does not.
-        # /etc/machine-id takes a special branch and gets the bind mount, hence
-        # the asymmetry above.
+        # at all, and the reason is upstream: impermanence renders `files`
+        # through mount-file.bash, which bind-mounts when the target exists and
+        # *symlinks* when it does not. /etc/machine-id takes a special branch
+        # that always bind-mounts, hence the asymmetry above.
         #
-        # provings/sarcophagus-kvm.nix settled what that means on a real host:
-        # the symlinks point into /persist, sshd writes through them, and the
-        # host key fingerprint is identical either side of a rollback. A
-        # sarcophagus does not change its host keys on reboot.
+        # provings/sarcophagus-kvm.nix settled what that means on a real host,
+        # and the answer is not the obvious one. The symlinks are written by the
+        # `persist-files` activation script during the *image build*, so they
+        # are inside @blank; every rollback restores them, mount-file.bash sees
+        # a link already pointing at its target and does nothing, and sshd reads
+        # the key through it from /persist. Measured there: the host key
+        # fingerprint is identical either side of a rollback. A sarcophagus does
+        # not change its host keys on reboot.
 
         # And the cogitator's own option, set on this node: without it threading
         # through to the relic, this mount would not exist.

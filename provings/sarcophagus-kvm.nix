@@ -16,7 +16,7 @@
 #
 # So this one follows nixpkgs' own nixos/tests/qemu-vm-external-disk-image.nix:
 # the node declares the image, the test driver boots *that image* instead of
-# synthesising a root. Four lines make it work, and each one is a concession to
+# synthesising a root. Five lines make it work, and each one is a concession to
 # the bench rather than a product fix — the upstream module exposes every one of
 # them on purpose:
 #
@@ -37,7 +37,7 @@
 #                                              inside the image builder needs
 #                                              switch-to-configuration
 #
-# #47 (sarcophagus-aws) can reuse this pattern as-is; it is the reason the four
+# #47 (sarcophagus-aws) can reuse this pattern as-is; it is the reason the five
 # lines are commented individually rather than as a block.
 #
 # ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@
     # pool, so the value is load-bearing for the import.
     networking.hostId = "deadbeef";
 
-    # The four bench concessions — see the header for what each one measured.
+    # The five bench concessions — see the header for what each one measured.
     virtualisation.directBoot.enable = false;
     virtualisation.mountHostNixStore = false;
     virtualisation.fileSystems = lib.mkForce {};
@@ -147,18 +147,22 @@
 
     with subtest("boot 1: the SSH host keys live in the persistent dataset"):
         # Settles the question provings/dreadnought.nix left open in writing.
-        # Measured: upstream impermanence handles `files` with persist-*.service
-        # units running mount-file.bash, which bind-mounts when the target exists
-        # and *symlinks* when it does not — so these four entries have no mount
-        # unit, while /etc/machine-id does (it takes a special branch). A symlink
-        # is a legitimate mechanism, but only if the target is real: sshd-keygen
-        # writes through it into /persist.
+        #
+        # Upstream impermanence renders `files` through mount-file.bash, which
+        # bind-mounts when the target already exists and *symlinks* when it does
+        # not. It runs that script twice over: once as a persist-*.service unit,
+        # and once as the `persist-files` activation script (nixos.nix:477) —
+        # and the activation script is what nixos-install runs inside the image
+        # builder, where /persist is still empty. So the four symlinks are baked
+        # into the image, not created at runtime. Measured below and on boot 2.
         target = machine.succeed(
             "readlink -f /etc/ssh/ssh_host_ed25519_key"
         ).strip()
         assert target == "/persist/etc/ssh/ssh_host_ed25519_key", (
             f"host key resolves to {target}, not into the persistent dataset"
         )
+        # The symlink is only a legitimate mechanism if the target became real:
+        # sshd-keygen wrote the key *through* it, into the persistent dataset.
         machine.succeed(f"test -s {target}")
 
     # Three witnesses, written *after* @blank was taken, so none of them is in
@@ -198,6 +202,36 @@
             f"{fingerprint_before} -> {fingerprint_after}"
         )
         machine.succeed("findmnt /etc/machine-id")
+
+    with subtest("boot 2: and here is why the host key survives at all"):
+        # The fingerprint assert above says *that* it survives; this one says
+        # why, because the obvious explanation is wrong and was measured wrong.
+        #
+        # It is tempting to reason that the rollback wipes boot 1's symlinks, so
+        # mount-file.bash re-runs, now finds a real file in /persist, and
+        # bind-mounts it. That is not what happens. The symlinks were written by
+        # the activation script *during the image build*, so they are already in
+        # the root dataset when the initrd takes @blank — and the rollback
+        # therefore restores them. mount-file.bash then hits its first branch
+        # ("already links to target, ignoring") and does nothing at all.
+        #
+        # Measured: @blank carries the symlink, /etc/ssh is still a symlink and
+        # has no mount, and the persist-* units are green having done nothing.
+        machine.succeed("test -L /etc/ssh/ssh_host_ed25519_key")
+        assert machine.succeed(
+            "findmnt /etc/ssh/ssh_host_ed25519_key || echo NO-MOUNT"
+        ).strip().endswith("NO-MOUNT"), "expected a symlink, not a bind mount"
+
+        machine.succeed("mkdir -p /mnt/blank")
+        machine.succeed("mount -t zfs -o ro vmpool/root@blank /mnt/blank")
+        in_blank = machine.succeed(
+            "readlink /mnt/blank/etc/ssh/ssh_host_ed25519_key"
+        ).strip()
+        machine.succeed("umount /mnt/blank")
+        assert in_blank == "/persist/etc/ssh/ssh_host_ed25519_key", (
+            f"@blank does not carry the host-key symlink, it carries {in_blank!r} "
+            "— the mechanism described above no longer holds"
+        )
 
     with subtest("boot 2: the rollback ran again on a @blank it did not recreate"):
         # The second boot takes the *existing* snapshot path, which is the branch

@@ -31,7 +31,7 @@ nœud unique deux fois — et les clôtures contiennent KDE deux fois (`workstat
 et `plasma`) et Steam une fois. Sur un store froid, ça fait quelques Gio de
 téléchargement ; à chaud, la plupart des scripts finissent en 23 à 30 s.
 `sarcophagus-kvm` sort du lot aux deux bouts : elle construit une image disque
-dans sa propre VM avant même que le test démarre, puis son script tourne 63 s
+dans sa propre VM avant même que le test démarre, puis son script tourne 66 s
 pour les deux boots. C'est dit explicitement parce que
 la discipline qui compte, c'est de lancer `just test` avant de fermer une branche
 qui a touché un cogitator : une recette trop lourde à lancer est un gate qui cesse
@@ -124,7 +124,7 @@ lui. Le script de test pose une surcouche copy-on-write au-dessus du chemin du
 store et y pointe `NIX_DISK_IMAGE` — c'est aussi ce qui permet au même disque de
 conserver ses écritures d'un boot à l'autre.
 
-Quatre options de nœud le rendent possible. Aucune n'est un correctif produit —
+Cinq options de nœud le rendent possible. Aucune n'est un correctif produit —
 l'amont les expose exactement pour ça — et chacune a été mesurée, pas devinée :
 
 | Option | Pourquoi |
@@ -178,9 +178,16 @@ revendication côté disque qui survive. `environment.persistence` ne passe pas 
 tranquilles. Donc `/var/log`, `/var/lib/nixos`, `/etc/machine-id` et une entrée
 posée via l'option `impermanence.extraDirectories` du cogitator sont tous
 contrôlés au `findmnt`. Les quatre entrées `/etc/ssh/ssh_host_*` que la relique
-déclare aussi n'ont **aucune unité de montage** dans cette VM ; savoir si elles
-sont bind-montées sur un hôte réel n'est pas tranché ici, et ça compte — si elles
-ne le sont pas, chaque reboot change les clés d'hôte SSH.
+déclare aussi n'ont **aucune unité de montage**, ici comme sur un hôte réel — et
+`sarcophagus-kvm` a tranché pourquoi, avec une réponse qui n'est pas l'évidente.
+L'amont rend les `files` par `mount-file.bash`, qui pose un lien symbolique au
+lieu d'un bind mount quand la cible n'existe pas encore ; or ce script tourne
+aussi comme script d'*activation* `persist-files`, que `nixos-install` exécute
+dans le builder d'image, alors que `/persist` est encore vide. Les liens sont donc
+cuits dans l'image, donc présents dans `@blank`, donc restaurés par chaque
+rollback — et `mount-file.bash` trouve alors un lien qui pointe déjà sur sa cible
+et ne fait rien. sshd lit la clé à travers, depuis `/persist`. Mesuré de part et
+d'autre d'un rollback : l'empreinte de la clé d'hôte ne change pas.
 
 **Ce que le boot établit quand même.** Le service de rollback d'impermanence
 tourne dans l'initrd, échoue faute de pool, et le boot continue malgré tout —

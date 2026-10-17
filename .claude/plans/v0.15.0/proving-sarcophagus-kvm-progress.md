@@ -54,3 +54,57 @@ Step 3 : complete — doc EN+FR : ligne de couverture, coût de `just test` mis 
 jour avec les chiffres **mesurés** (8 épreuves, 11 boots, 63 s pour celle-ci),
 et une section « external-image pattern » qui table les cinq options du nœud avec
 leur raison. `just docs-parity` → OK, `npm run build` → 90 pages, exit 0.
+
+## Revue de clôture par contexte neuf (2026-10-17)
+
+Sous-agent, diff `5a0c223..HEAD`, Review Focus verbatim. Aucun **Critical**. Il a
+vérifié et validé les quatre modes d'échec du Review Focus (l'échappatoire
+`mkForce {}` est réelle — `qemu-vm.nix:1397` ; la surcouche COW survit au
+`shutdown()` et le contre-contrôle `/persist` est présent ; l'ordre
+snapshot-puis-témoin est bon ; `git diff --name-only` ne touche aucun module,
+donc aucun `drvPath` de consommateur ne bouge). Sa passe de discrimination sur
+les huit sous-tests n'a trouvé **aucun** assert qui serait vert sans le code STC.
+
+**Important 1 — retenu et corrigé.** « Four lines make it work » au-dessus de
+**cinq** options, répété 4 fois (proving ×2, doc EN, doc FR). Erreur de ma main.
+Risque concret : quelqu'un reprenant le patron pour #47 en laisse une — le plus
+probablement `system.switch.enable`, la seule qui n'est pas une `virtualisation.*`.
+
+**Important 2 — retenu, et sa correction était fausse.** Il affirmait que le
+régime permanent est un *bind mount* : `@blank` étant pris avant les services
+`persist-*`, le rollback effacerait les symlinks du boot 1, et `mount-file.bash`
+trouverait alors une cible réelle. Raisonnement solide, mais c'est une lecture,
+pas une mesure. Assert écrit, proving lancé : **rouge**, `findmnt` échoue au
+boot 2. Relevé de diagnostic dans la VM :
+  - `/etc/ssh/ssh_host_*` sont **toujours** des symlinks au boot 2, mtime `19:21`
+    (= heure de build de l'image) là où `ssh_config` porte l'heure du boot ;
+  - `vmpool/root@blank` **contient lui-même les symlinks** ;
+  - les cinq unités `persist-*` sont vertes en n'ayant rien fait.
+Cause racine trouvée dans l'amont : `nixos.nix:477-480` déclare
+`system.activationScripts."persist-files"`, le **même** `mount-file.bash`, et
+`nixos-install` l'exécute dans le builder d'image où `/persist` est vide → les
+liens sont cuits dans l'image, donc dans `@blank`, donc restaurés à chaque
+rollback, et le script prend ensuite sa branche 1 (« already links to target »).
+Ruling : ma prose d'origine (« symlinks vers /persist, sshd écrit à travers »)
+était **exacte** ; ce qui manquait, aux deux, c'est *pourquoi* le lien survit.
+Nouveau sous-test « boot 2: and here is why the host key survives at all » qui
+monte `@blank` en lecture seule et y lit le lien — vu rouge puis vert.
+
+**Important 3 — écarté, argumenté.** Il jugeait « /etc/machine-id a une unité de
+montage » comme conflant deux choses. C'est littéralement vrai :
+`etc-machine\x2did.mount` apparaît dans `systemctl list-units --type=mount`,
+systemd synthétisant une unité pour toute entrée de `mountinfo` — mesuré dans le
+spike. Il valide lui-même le « special branch ». Passage resserré au passage par
+la réécriture du point 2.
+
+**Minor 4 — corrigé** (ligne non rewrappée dans la doc EN, dans un paragraphe
+que je réécrivais déjà).
+
+**Minor 5 — différé, décision utilisateur.** La surcouche COW
+(`tempfile(delete=False)`) n'est jamais supprimée. `delete=False` est nécessaire
+— elle doit survivre au `shutdown()` — et le bac à sable du builder jette le
+`TMPDIR`, donc l'effet est nul en CI et petit en interactif. Pas touché.
+
+Vérifications après la passe : `nix build` des provings `sarcophagus-kvm` **et**
+`dreadnought` → exit 0 (65,84 s et 25,65 s de script), `just docs-parity` → OK,
+`npm run build` → 90 pages. Chiffre de la doc remis à la valeur mesurée (66 s).
