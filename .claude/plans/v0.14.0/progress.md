@@ -363,3 +363,49 @@ qui tirerait plus tard un firmware unfree passerait en silence dans cette seule
 3.3 ont été fusionnés en un commit. Scinder comme le plan le disait aurait **cassé
 `just ci`** — `deadnix` signale la liaison `pkgs-unfree` non utilisée tant que la
 ligne `gaming` n'existe pas.
+
+### Chantier 4 — #45, proving `dreadnought` (branche `test/proving-dreadnought`)
+
+- **Step 4.1 — `mkDefault` sur le getty série d'`aws.nix`, livré avec sa preuve.**
+  Valeur conservée : `aws-ami` rend toujours `true`. Innocuité : les **trois**
+  schematics (`awsImage`, `qcow2`, `toplevel` de dreadnought) gardent un
+  `drvPath` identique au bit. Le commentaire de la relique dit pourquoi, et
+  interdit explicitement de « simplifier » en `true` nu.
+
+**Ruling — décision 6 tranchée par le build, et dans le bon sens.** Le plan
+prévoyait que l'échec du rollback d'impermanence dans l'initrd pourrait bloquer
+le boot, et prévoyait une réduction de portée dans ce cas. Mesuré : **le boot
+n'est pas bloqué.** L'unité est tirée par `Wants` et non `Requires`, donc
+l'initrd atteint sa cible malgré l'échec et le système monte. Aucune réduction de
+portée n'a été nécessaire.
+
+**Ruling — l'ensemble des unités en échec est borné, pas épinglé.** Première
+version de l'assert : `systemctl is-system-running --wait`, rouge — le système est
+`degraded`, pas `running`, ce qui est l'état honnête ici. Deuxième version :
+épingler l'ensemble à `{stc-grow-pool.service}`, ce qu'une **sonde** avait mesuré.
+Rouge aussi : le lancement suivant rendait `{stc-grow-pool.service,
+zfs-rollback.service}`. Même configuration, deux résultats — `zfs-rollback` tourne
+dans l'**initrd**, et le fait que son échec soit encore listé après le switch-root
+varie. Donc l'assert **borne** l'ensemble aux deux unités dépendantes du pool et
+exige la présence de `stc-grow-pool.service` : il attrape toujours la régression
+qui compte (une *autre* unité qui échoue) sans être instable pour une raison
+interne à systemd. Épingler aurait produit un proving rouge au hasard, ce qui est
+pire qu'un assert large.
+
+- **Step 4.2 — `provings/dreadnought.nix`.** 6 subtests. Discrimination mesurée
+  nœud nu contre nœud dreadnought, ce qui a de nouveau écarté un assert prévu :
+  `services.udisks2.enable` vaut **déjà `false`** sur un nœud nu, donc « udisks2
+  absent » ne distingue pas la relique AWS. Non écrit, et dit en doc.
+  `kernel.kptr_restrict` vaut 1 sur un nœud nu contre 2 ici — il discrimine, lui.
+  Le noyau ZFS épinglé (6.12.111 contre 6.18.53 sur un nœud nu) est prouvé par un
+  `modprobe zfs` réel, pas par une comparaison de version.
+- **Step 4.3 — registre + recette.**
+- **Step 5 points 3 et 4 — soldés.** Le coût de `just test` est écrit avec ses
+  chiffres : sept épreuves, **neuf boots de VM** (`vm` et `gaming` ont deux nœuds),
+  KDE deux fois, Steam une fois. Dit explicitement parce qu'une recette trop
+  lourde à lancer est un gate qui cesse discrètement d'en être un.
+
+Note de méthode, payée une fois : mon script Python a vidé `provings/dreadnought.nix`
+en imbriquant une lecture du fichier dans un `open(path, "w")` — l'ouverture en
+écriture tronque **avant** que la lecture s'exécute. Fichier réécrit en entier.
+Ne jamais lire et écrire le même chemin dans la même expression.
