@@ -82,12 +82,45 @@ donc au moment où le script interroge, elle a déjà fini et elle est
 `inactive (dead)`, état que `wait_for_unit` refuse par définition. Ce n'était pas
 un défaut du produit mais une mauvaise primitive d'attente de ma part.
 Remplacé par `systemctl show -p Result --value linger-users.service` → `success`
-**plus** la présence du marqueur `/var/lib/systemd/linger/admin` : on prouve que
-le mécanisme a tourné *et* qu'il a laissé sa trace, là où un simple `test -f`
-aurait pu passer sur un fichier posé par autre chose. Première règle appliquée :
-une seule tentative, après diagnostic, pas trois essais.
+plus la présence du marqueur `/var/lib/systemd/linger/admin`. Première règle
+appliquée : une seule tentative, après diagnostic, pas trois essais.
+
+**Correction de la ligne ci-dessus (revue de clôture, mesurée) :** j'avais écrit
+que la paire prouvait « que le mécanisme a tourné *et* qu'il a laissé sa trace ».
+C'est faux, et la revue l'a attrapé. Mesuré sur un systemd vivant :
+`systemctl show -p Result --value definitely-not-a-real-unit.service` rend
+`success` avec un code de retour **0** (`LoadState=not-found`). La propriété
+`Result` ne discrimine donc ni l'existence ni l'exécution : le seul assert
+porteur du couple est le marqueur. `LoadState` (`loaded`) serait la bonne
+propriété. À ne pas réutiliser tel quel dans les chantiers 2 à 4. Le correctif de
+code est classé Minor par la revue, donc laissé à l'arbitrage de l'utilisateur
+(règle *Closing review* : les Minor ne rentrent pas dans la passe de correction).
 
 Note de méthode (coûtée une fois, à ne pas repayer) : `nix build` sur un flake
 git refuse un fichier **non suivi** (`Path 'provings/vm.nix' … is not tracked by
 Git`). Un `git add` suffit — c'est aussi ce qui permet de vérifier avant de
 commiter, donc avant toute commande signée.
+
+**Passe de correction après revue de clôture (contexte neuf, subagent).** Un
+Important, huit Minor. Seul l'Important est corrigé ici, conformément à la règle
+*Closing review* (« Minor goes to the ledger and to the closing message as a
+deferred item. It does not enter the fix pass — the user decides »).
+
+- **Important retenu :** `authorizedKeys` est la **seule** option du profil qui
+  ouvre l'accès distant, et le proving ne la touchait pas — mesuré
+  `users.users.admin.openssh.authorizedKeys.keys == []` sur les deux nœuds. Les
+  deux asserts en place (`wait_for_unit("sshd.service")` +
+  `wait_for_open_port(22)`) ne prouvaient qu'un socket en écoute. Conséquence :
+  retirer `cogitator/nixos/vm.nix:100` rendait toute VM consommatrice injoignable
+  **sans** faire rougir le proving, et la ligne de doc (« sshd répond sur 22 »)
+  se lisait comme « l'accès distant marche ».
+  Corrigé par le patron déjà présent dans `provings/hardening.nix` : paire
+  snakeoil de nixpkgs, clé publique passée par `stc.cogitator.vm.authorizedKeys`,
+  privée copiée en `0600` dans `/etc/proving-ssh-key`, puis un vrai
+  `ssh -n … admin@127.0.0.1 id -un` dont on compare la sortie à `admin`.
+  **Reproduction vue dans les deux sens**, c'est ce qui rend l'assert crédible :
+  avec la ligne 100 retirée, `nix build …provings.vm` → `exit=1` sur
+  `test -s /etc/ssh/authorized_keys.d/admin` ; ligne restaurée → `exit=0`,
+  script en 28,8 s.
+  Ligne de couverture EN + FR recalée sur la revendication réelle (une clé
+  déclarée authentifie, pas « le port répond »).
