@@ -44,7 +44,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `workstation` | `cogitator-workstation` | The profile wires its three concerns: the hardening socle (kernel/network sysctl, module blacklist) is live, YubiKey `pcscd` is present, and the desktop's display-manager unit exists |
 | `vm` | `cogitator-vm` | The primary user is in `wheel` with a working fish login shell and lingering enabled; a key declared through `authorizedKeys` actually authenticates over SSH, not merely that port 22 answers; the GC timer fires weekly and its script carries the declared retention; Docker is absent by default and, on a second node, the opt-in path wires both the daemon and the `docker` group |
 | `plasma` | `cogitator-plasma` | SDDM is the display manager and runs Wayland with the Plasma session as its default; the session file exists in the directory sddm actually points at; both relic tunables (`keyboardLayout`, `sddmTheme`) reach the rendered configuration; the XDG portal carries the wildcard the relic configures; rtkit, the 32-bit ALSA bridge and the `default.target` want that starts WirePlumber with the graphical session are all in place; gvfs and tumbler are reachable by the session |
-| `gaming` | `cogitator-gaming` | Steam and its hardware rules are wired; the AMD relic's VDPAU/VAAPI driver reaches the merged driver tree; 32-bit graphics and the 32-bit ALSA bridge are in place for Proton and Wine; Steam Remote Play is closed by default and, on a second node, opens exactly UDP 27031-27035 |
+| `gaming` | `cogitator-gaming` | Steam is wired, with the udev rules that make a controller usable without root; the AMD relic's VDPAU/VAAPI driver reaches the merged driver tree; the Pipewire relic's three claims (rtkit, the 32-bit ALSA bridge, PulseAudio compat) are in place; Steam Remote Play is closed by default and, on a second node, opens both its UDP range and its TCP ports |
 
 ## Adding a proving
 
@@ -80,10 +80,17 @@ gaming = pkgs-unfree.testers.runNixOSTest (import ./gaming.nix {inherit self;});
 ```
 
 It is scoped to that single registry line, the same way `forge/default.nix` scopes
-one for Terraform's BSL licence. Nothing else in the flake gains the right to pull
-an unfree package in silently, and the five other provings keep a byte-identical
-`drvPath` with the instance present — which is how that was checked rather than
-assumed.
+one for Terraform's BSL licence. The five other provings keep a byte-identical
+`drvPath` with the instance present, which is how that was checked rather than
+assumed — though that check is close to a formality, since `pkgs-unfree` is a lazy
+binding Nix never forces for them.
+
+**What the scoping does and does not buy.** No other flake output can pull an
+unfree package through this. But inside that one proving, the node's *entire*
+closure is evaluated with `allowUnfree = true` — so if a relic composed into
+`cogitator-gaming` later pulls in unfree firmware or a proprietary driver, that
+proving accepts it silently where every other proving would fail the evaluation.
+The instance buys per-output scoping, not per-package scoping.
 
 ## Scope limit — filesystem mount hardening
 
