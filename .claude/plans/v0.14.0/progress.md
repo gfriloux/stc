@@ -155,3 +155,42 @@ l'assert porteur de toute façon), et le point 3 du Step 5 (l'étape `Justfile`
 manquante dans la procédure doc) est parti avec ce chantier au lieu du dernier —
 il corrigeait une page que ce chantier venait de suivre, l'y laisser aurait été
 documenter un piège connu.
+
+### Chantier 2 — #49, proving `plasma` (branche `test/proving-plasma`)
+
+Méthode changée après la revue du chantier 1, et c'est le gain le plus net du
+lot : **chaque valeur candidate a été mesurée sur un nœud nu *et* sur le nœud
+plasma**, pour séparer ce que la relique produit de ce que le framework pose
+déjà. Résultat immédiat : deux asserts prévus étaient vacants et n'ont pas été
+écrits — `services.pulseaudio.enable` et `services.xserver.enable` valent **déjà**
+`false` sur un nœud nu, donc « PulseAudio coupé » et « pas de serveur X »
+auraient été verts quoi que fasse STC. `services.tumbler` écarté pour une autre
+raison : aucune unité systemd (activation D-Bus seule), rien à lire sur disque.
+
+- **Step 2.1 — `provings/plasma.nix`.** 5 subtests. Le plus porteur est mesuré
+  comme tel : avec la relique Pipewire **seule**,
+  `systemd.user.services.wireplumber.wantedBy == ["pipewire.service"]` (amont) ;
+  le cogitator plasma y ajoute `"default.target"`. Donc
+  `/etc/systemd/user/default.target.wants/wireplumber.service` existe **à cause
+  de la seule ligne de décision STC du fichier** — retirez-la, le lien disparaît.
+  Les autres : SDDM en Wayland (`DisplayServer=wayland`,
+  `DefaultSession=plasma.desktop`, greeter en `kwin_wayland`), le portail XDG
+  (`default=*`, fichier qui n'existe pas sans la ligne de la relique), rtkit
+  (`false` en amont), les unités utilisateur Pipewire/WirePlumber, et
+  `gvfs-daemon.service` — côté **utilisateur** et non système, vérifié dans
+  `lib/systemd/user/` du paquet.
+- **Step 2.2 — registre + recette.** Les deux moitiés.
+
+Ruling (échec vu au premier build, cause racine avant correctif) : l'assert
+`test -e /run/current-system/sw/share/wayland-sessions/plasma.desktop` était
+rouge. Cause : j'avais **inféré** ce chemin de la présence de
+`plasma-workspace` dans `environment.systemPackages` au lieu de le mesurer dans
+la VM. Les sessions ne vivent pas dans le profil système mais dans une dérivation
+synthétique `desktops` que le module display-manager fabrique depuis
+`sessionPackages` et que `sddm.conf` désigne. Corrigé en **dérivant le répertoire
+de la configuration sous test** (lecture du `SessionDir=` rendu, puis
+`test -e <dir>/plasma.desktop`) : l'assert prouve désormais l'endroit où le
+display manager va réellement chercher, ce qu'un chemin deviné ne faisait pas.
+Leçon à reporter aux chantiers 3 et 4 : une valeur lue par un assert se mesure
+**dans la VM** ou se dérive de la configuration, jamais de l'intuition.
+Vérif : proving vert, 5 subtests, script en 25,4 s.
