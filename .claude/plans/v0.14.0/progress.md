@@ -124,3 +124,34 @@ deferred item. It does not enter the fix pass — the user decides »).
   script en 28,8 s.
   Ligne de couverture EN + FR recalée sur la revendication réelle (une clé
   déclarée authentifie, pas « le port répond »).
+
+**Minor arbitrés par l'utilisateur (2026-10-17).** Il prend le groupe « qualité
+des asserts » (4 des 8), laisse les autres au report :
+
+- *Pris.* `Result` → `LoadState` (`loaded`), puisque `Result` ne discrimine rien.
+  `wait_until_succeeds` sur le marqueur de linger : mesuré que l'unité ne porte
+  **aucun** `Before=` vers `multi-user.target`, donc systemd peut déclarer la
+  cible active pendant que `enable-linger` tourne encore — c'est la classe de
+  course que les autres provings évitent déjà. Suppression du pipeline
+  `su … | grep -q .`, qui rendait le code de `grep` et non celui de `su` : on lit
+  la valeur de `$FISH_VERSION` et on exige qu'elle commence par un chiffre.
+  `experimental-features` vérifié par **appartenance** et non par égalité de
+  chaîne : un ajout en amont rougissait pour une raison étrangère au profil.
+  Vérif : proving vert, 7 subtests, script en 29,2 s ; `just ci` et `just test`
+  à 0.
+- *Reportés.* (a) Couverture des options : le script code `admin` en dur à cinq
+  endroits, donc un module qui ignorerait `cfg.username` resterait vert ; idem
+  pour `linger = false` et `nix.gc.enable = false`, jamais exercés. Un second
+  nœud « toutes options hors de leur défaut » fermerait les trois à coût nul.
+  (b) En-tête du proving : la note de portée sur les montages est recopiée de
+  `hardening.nix` alors que `cogitator/nixos/vm.nix` ne déclare aucun
+  `fileSystems` — elle fait croire à un durcissement volontairement non testé ; et
+  l'en-tête annonce « les quatre choses » pour 7 subtests.
+
+Deux écarts au plan, relevés par la revue, tous deux assumés : le nœud opt-in
+attend `docker.service` et non `docker.socket` comme écrit au Step 1.1 (mesuré
+`enableOnBoot = true`, donc équivalent aujourd'hui ; `docker info` qui suit est
+l'assert porteur de toute façon), et le point 3 du Step 5 (l'étape `Justfile`
+manquante dans la procédure doc) est parti avec ce chantier au lieu du dernier —
+il corrigeait une page que ce chantier venait de suivre, l'y laisser aurait été
+documenter un piège connu.
