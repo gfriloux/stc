@@ -20,13 +20,36 @@ Automatically configures NixOS to run on AWS EC2. Loads required drivers (NVMe, 
 
 - **Early boot drivers :** Loads `nvme`, `ena`, `xen_blkfront` (Nitro and Xen)
 - **Blacklist xen_fbfront :** Prevents 30-second boot delay on Xen instances
-- **Serial console :** Enables `ttyS0` for AWS Systems Manager or EC2 Connect (keyless SSH access)
+- **Serial console :** Enables `ttyS0` for AWS Systems Manager or EC2 Connect
+  (keyless SSH access). Set with `lib.mkDefault` since v0.14.0 — see the note
+  below
 - **NVMe timeouts :** Sets `nvme_core.io_timeout=4294967295` (Amazon EBS recommendation)
 - **CPU RNG trust :** Sets `random.trust_cpu=on` to avoid first-boot entropy starvation on headless instances. Trade-off: it trusts the CPU vendor's RNG — reasonable when you already trust the hypervisor; remove it if your threat model differs.
 - **AWS internal NTP :** Uses `169.254.169.123` — always available, no internet required
 - **Disables udisks2 :** Removes unnecessary GTK dependencies from headless servers
 - **Udev rules :** Installs `amazon-ec2-utils` for full compatibility
 - **EBS expansion :** Boot-time oneshot (`stc-grow-pool`) that grows the partition and ZFS pool when the EBS volume is larger than the built image. Runs each boot (so it picks up a resized volume) but **not** on every `nixos-rebuild switch`, and surfaces real `growpart` failures instead of swallowing them
+
+
+## The serial console is a default, not a lock
+
+`systemd.services."serial-getty@ttyS0".enable` is set with `lib.mkDefault`. Before
+v0.14.0 it was a plain definition, which meant **no** consumer could turn the
+getty off without `lib.mkForce` — and a `nixosTest` could not boot a profile
+importing this relic at all, because the test instrumentation claims the same
+port at the same priority.
+
+The consequence of the fix is worth stating plainly, because it cuts the other
+way too: **any module composed into your host can now switch the serial console
+off silently.** On EC2 that console is often the only way back into a machine
+whose SSH has stopped answering, so if your host depends on it, pin it yourself:
+
+```nix
+systemd.services."serial-getty@ttyS0".enable = lib.mkForce true;
+```
+
+A host that does not ask is unaffected — the value is still `true`, and the three
+schematics build byte-identical derivations before and after the change.
 
 ## Example usage
 
