@@ -44,6 +44,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `workstation` | `cogitator-workstation` | The profile wires its three concerns: the hardening socle (kernel/network sysctl, module blacklist) is live, YubiKey `pcscd` is present, and the desktop's display-manager unit exists |
 | `vm` | `cogitator-vm` | The primary user is in `wheel` with a working fish login shell and lingering enabled; a key declared through `authorizedKeys` actually authenticates over SSH, not merely that port 22 answers; the GC timer fires weekly and its script carries the declared retention; Docker is absent by default and, on a second node, the opt-in path wires both the daemon and the `docker` group |
 | `plasma` | `cogitator-plasma` | SDDM is the display manager and runs Wayland with the Plasma session as its default; the session file exists in the directory sddm actually points at; both relic tunables (`keyboardLayout`, `sddmTheme`) reach the rendered configuration; the XDG portal carries the wildcard the relic configures; rtkit, the 32-bit ALSA bridge and the `default.target` want that starts WirePlumber with the graphical session are all in place; gvfs and tumbler are reachable by the session |
+| `gaming` | `cogitator-gaming` | Steam and its hardware rules are wired; the AMD relic's VDPAU/VAAPI driver reaches the merged driver tree; 32-bit graphics and the 32-bit ALSA bridge are in place for Proton and Wine; Steam Remote Play is closed by default and, on a second node, opens exactly UDP 27031-27035 |
 
 ## Adding a proving
 
@@ -54,6 +55,35 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
    `provings/default.nix` but absent from the recipe never runs, and a green
    `just test` is then a false green — this step is not optional.
 4. Add a row to the coverage table above (and its French mirror).
+
+## Unfree packages in a proving
+
+`cogitator-gaming` enables `programs.steam`, and Steam is unfree. The `pkgs` that
+flake-parts hands the registry does not allow unfree packages, so that proving
+cannot be built from it — and neither way of relaxing it from inside the test
+works. Both are measured closed:
+
+| Attempt | Result |
+|---|---|
+| `nixpkgs.config.allowUnfree = true` in the node | `error: nixpkgs.config is set to read-only` |
+| `node.pkgs = <instance>` | `error: node.pkgs is defined multiple times` — `runNixOSTest` defines it itself |
+
+So the instance has to be the one *building* the test:
+
+```nix
+pkgs-unfree = import inputs.nixpkgs {
+  inherit system;
+  config.allowUnfree = true;
+};
+# …
+gaming = pkgs-unfree.testers.runNixOSTest (import ./gaming.nix {inherit self;});
+```
+
+It is scoped to that single registry line, the same way `forge/default.nix` scopes
+one for Terraform's BSL licence. Nothing else in the flake gains the right to pull
+an unfree package in silently, and the five other provings keep a byte-identical
+`drvPath` with the instance present — which is how that was checked rather than
+assumed.
 
 ## Scope limit — filesystem mount hardening
 
