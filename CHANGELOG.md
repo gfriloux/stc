@@ -3,6 +3,25 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.15.0] — 2026-10-17
+
+### Bug Fixes
+
+- **provings**: correct the host-key persistence mechanism, and count to five ([`7e72529`](https://github.com/gfriloux/stc/commit/7e72529f1c763ffc0616dd73c0ee83e4ecc9bfec))
+- **relics**: make a failed impermanence rollback impossible to miss ([`e1823a5`](https://github.com/gfriloux/stc/commit/e1823a5c0a3aa90a334e819fb1f5e4f0393e424a))
+- **relics**: correct the emergencyAccess default, and guard what was unguarded ([`def358c`](https://github.com/gfriloux/stc/commit/def358cae9859e879bd5c9019a6666e34a787b83))
+
+### Documentation
+
+- **plans**: plan v0.15.0 — le lot « l'impermanence prouvée » ([`3a0f738`](https://github.com/gfriloux/stc/commit/3a0f738854cabc9c306e1a18b94daa3ab0427f4e))
+- **provings**: settle the dreadnought scope note on ssh host keys ([`460b70a`](https://github.com/gfriloux/stc/commit/460b70a541ccf6fe833c570c719ac7638ba43511))
+- **provings**: document the external-image proving pattern ([`c28e25b`](https://github.com/gfriloux/stc/commit/c28e25b87557ff68321af4fa12c9b2473aba017c))
+- **relics**: document the impermanence rollback failure contract ([`5c0c338`](https://github.com/gfriloux/stc/commit/5c0c338aaaf00f65ac28adcf41f0aef70c5bb731))
+
+### Testing
+
+- **provings**: add sarcophagus-kvm proving booting the built qcow2 ([`d7e8ef4`](https://github.com/gfriloux/stc/commit/d7e8ef4124d943ed3e004aed0b70563ef4fbef15))
+- **provings**: cover both sides of the rollback failure contract ([`3a1b332`](https://github.com/gfriloux/stc/commit/3a1b33270d51b87bc3c6182547e7c65eeb61a47d))
 ## [0.14.0] — 2026-10-17
 
 ### Bug Fixes
