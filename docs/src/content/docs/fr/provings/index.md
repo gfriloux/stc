@@ -44,7 +44,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `hardening` | `cogitator-hardening` | Durcissement sysctl kernel et réseau effectif ; SSH par clés uniquement, login root refusé |
 | `docker-server` | `cogitator-docker-server` | Les unités des conteneurs portent leur image épinglée et les flags de healthcheck ; les réseaux docker, le hook notify `OnFailure` et les timers de health-watch sont câblés ; la config statique Traefik est rendue avec le plugin bouncer CrowdSec et l'endpoint socket-proxy |
 | `workstation` | `cogitator-workstation` | Le profil câble ses trois concerns : le socle de durcissement (sysctl kernel/réseau, blacklist de modules) est effectif, le `pcscd` YubiKey est présent, et l'unité display-manager du bureau existe |
-| `vm` | `cogitator-vm` | L'utilisateur primaire est dans `wheel`, son shell fish de login fonctionne et le lingering est actif ; sshd répond sur 22 ; le timer de GC part chaque semaine et son script porte bien `keepDays` ; Docker est absent par défaut et, sur un second nœud, le chemin opt-in câble à la fois le daemon et le groupe `docker` |
+| `vm` | `cogitator-vm` | L'utilisateur primaire est dans `wheel`, son shell fish de login fonctionne et le lingering est actif ; une clé déclarée via `authorizedKeys` authentifie réellement en SSH, et pas seulement le port 22 qui répond ; le timer de GC part chaque semaine et son script porte bien la rétention déclarée ; Docker est absent par défaut et, sur un second nœud, le chemin opt-in câble à la fois le daemon et le groupe `docker` |
 
 ## Ajouter une épreuve
 
