@@ -43,9 +43,16 @@
 #     does. Only the other two AWS kernel parameters discriminate.
 #
 # What the boot does establish: the initrd rollback unit runs, fails for want of
-# a pool, and the boot continues anyway — the unit is pulled by Wants, not
-# Requires. The booted system is therefore `degraded`, with exactly one failed
-# unit that is loaded in the booted system, and the subtest below pins that set.
+# a pool, and the boot continues anyway — which is what the relic's default
+# `onRollbackFailure = "continue"` asks for. The booted system is therefore
+# `degraded`, and the subtest below pins exactly which units are in that state.
+#
+# One of them is the point of this node now. stc-impermanence-state.service is
+# the relic's way of carrying the initrd's verdict across switch-root: the
+# rollback unit has no fragment in the booted system, so before it existed a
+# failed rollback left nothing a supervisor could see. This proving is where
+# that failure is observable, because it is the only node in the suite whose
+# rollback actually fails.
 #
 # None of the unobservable parts is a code problem. Two benches cover the disk
 # layer instead: provings/sarcophagus-kvm.nix, which boots a built qcow2 under
@@ -116,9 +123,10 @@
             for line in failed.splitlines()
             if line.strip() and line.split()[1] == "loaded"
         }
-        assert failed_units == {"stc-grow-pool.service"}, (
-            f"unexpected failed units: {failed_units}"
-        )
+        assert failed_units == {
+            "stc-grow-pool.service",
+            "stc-impermanence-state.service",
+        }, f"unexpected failed units: {failed_units}"
 
     with subtest("ZFS support is functional on the booted kernel"):
         # What this proves is in its name, and no more — see the scope note on
@@ -206,6 +214,24 @@
         assert machine.succeed("sysctl -n kernel.kptr_restrict").strip() == "2"
         sshd_config = machine.succeed("sshd -T").lower()
         assert "permitrootlogin no" in sshd_config, "root login is not refused"
+
+    with subtest("the failed rollback is legible from the booted system"):
+        # Before stc-impermanence-state.service, this was the gap: the rollback
+        # could fail and the host would come up dirty with nothing but a line in
+        # an initrd journal nobody reads. The marker the script drops in /run
+        # survives switch-root (the initrd rbind-mounts /run onto /sysroot/run),
+        # and this unit turns it into a failure a supervisor can act on.
+        machine.succeed("test -e /run/stc-impermanence-rollback-failed")
+        status = machine.succeed(
+            "systemctl show -p Result --value stc-impermanence-state.service"
+        ).strip()
+        assert status == "exit-code", f"unexpected unit result: {status}"
+        journal = machine.succeed(
+            "journalctl -b -u stc-impermanence-state.service --no-pager"
+        )
+        assert "the initrd rollback FAILED" in journal, (
+            f"the failure was not reported in the booted system:\n{journal}"
+        )
 
     with subtest("the impermanence rollback ran in the initrd, and failed as expected"):
         # Queried by unit rather than grepped out of the whole journal: the unit

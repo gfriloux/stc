@@ -233,6 +233,21 @@
             "— the mechanism described above no longer holds"
         )
 
+    with subtest("boot 2: the nominal path leaves no failure behind"):
+        # The counterpart to provings/dreadnought.nix, which is where the relic's
+        # failure reporting is seen firing. Here the rollback works, so the same
+        # machinery must be completely quiet: no failure marker, the reporting
+        # unit green, and — unlike boot 1 — not even the "@blank was created"
+        # marker, because the reference already existed.
+        #
+        # A correctness fix that cried wolf on a healthy host would be worse than
+        # the silence it replaced, so this is the assertion that guards it.
+        machine.fail("test -e /run/stc-impermanence-rollback-failed")
+        machine.fail("test -e /run/stc-impermanence-blank-created")
+        assert machine.succeed(
+            "systemctl is-active stc-impermanence-state.service"
+        ).strip() == "active"
+
     with subtest("boot 2: the rollback ran again on a @blank it did not recreate"):
         # The second boot takes the *existing* snapshot path, which is the branch
         # a real host runs for the rest of its life. It must not create anything.
