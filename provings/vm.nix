@@ -64,8 +64,11 @@
         shell = machine.succeed("getent passwd admin").strip().split(":")[-1]
         assert shell.endswith("/bin/fish"), f"unexpected login shell: {shell}"
         # The shell has to work, not merely be recorded in passwd: a store path
-        # that is not in the closure would still pass the assertion above.
-        machine.succeed("su -l admin -c 'echo $FISH_VERSION' | grep -q .")
+        # that is not in the closure would still pass the assertion above. Read
+        # the value rather than piping into `grep -q .`, which would report
+        # grep's status and accept a shell that prints anything and then dies.
+        fish_version = machine.succeed("su -l admin -c 'echo $FISH_VERSION'").strip()
+        assert fish_version[:1].isdigit(), f"not a fish login shell: {fish_version!r}"
 
     with subtest("user services survive logout"):
         # users.manageLingering applies linger from linger-users.service, which
@@ -74,11 +77,19 @@
         # the time the target is up it has already run and gone back to
         # "inactive (dead)". So `wait_for_unit` can never pass here — assert the
         # result and the marker it left instead.
-        result = machine.succeed(
-            "systemctl show -p Result --value linger-users.service"
+        # LoadState and not Result: measured on a live systemd, `show -p Result`
+        # returns "success" with exit 0 for a unit that does not exist at all
+        # (LoadState=not-found), so it would still hold if users.manageLingering
+        # went false or nixpkgs renamed the unit.
+        load_state = machine.succeed(
+            "systemctl show -p LoadState --value linger-users.service"
         ).strip()
-        assert result == "success", f"linger-users.service result: {result}"
-        machine.succeed("test -f /var/lib/systemd/linger/admin")
+        assert load_state == "loaded", f"linger-users.service is {load_state}"
+
+        # wait_until_succeeds, not succeed: the unit carries no Before= towards
+        # multi-user.target, so systemd may call the target active while
+        # enable-linger is still running.
+        machine.wait_until_succeeds("test -f /var/lib/systemd/linger/admin")
 
     with subtest("remote access"):
         machine.wait_for_unit("sshd.service")
@@ -123,8 +134,16 @@
         machine.succeed("systemctl cat nix-optimise.timer")
 
     with subtest("flakes are usable"):
-        nix_conf = machine.succeed("cat /etc/nix/nix.conf")
-        assert "experimental-features = nix-command flakes" in nix_conf, nix_conf
+        features = []
+        for line in machine.succeed("cat /etc/nix/nix.conf").splitlines():
+            if line.startswith("experimental-features"):
+                features = line.split("=", 1)[1].split()
+        # Membership, not an exact string: a bare node renders an empty list, so
+        # the needles below are the profile's doing — but one feature added
+        # anywhere upstream would turn an equality check red for a reason that
+        # has nothing to do with this profile.
+        for feature in ["nix-command", "flakes"]:
+            assert feature in features, f"{feature} missing from {features}"
 
     with subtest("docker is opt-in"):
         # No unit at all, not merely a stopped one.
