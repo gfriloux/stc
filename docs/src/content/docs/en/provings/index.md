@@ -24,11 +24,12 @@ the `just ci` gate**: a VM test is heavy, and the CI gate stays fast and static.
 - Linux only (`x86_64-linux` / `aarch64-linux`) — the attribute is empty elsewhere.
 - Builder: `pkgs.testers.runNixOSTest`.
 
-**What `just test` now costs.** Seven provings, **nine VM boots** — `vm` and
-`gaming` carry two nodes each — and the closures include KDE twice (`workstation`
-and `plasma`) and Steam once. On a cold store that is a few GiB of downloads; warm,
-the whole suite runs in a couple of minutes of VM time (each script finishes in
-23-30 s). This is said out loud because the discipline that matters is running
+**What `just test` now costs.** Eight provings, **eleven VM boots** — `vm` and
+`gaming` carry two nodes each, and `sarcophagus-kvm` boots its single node twice —
+and the closures include KDE twice (`workstation` and `plasma`) and Steam once. On
+a cold store that is a few GiB of downloads; warm, most scripts finish in 23-30 s.
+`sarcophagus-kvm` is the outlier at both ends: it builds a disk image in its own
+VM before the test even starts, and its script then runs 63 s for the two boots. This is said out loud because the discipline that matters is running
 `just test` before closing a branch that touched a cogitator: a recipe too heavy
 to run is a gate that quietly stops being one. Build a single proving while
 iterating — `nix build .#legacyPackages.x86_64-linux.provings.<name> -L` — and run
@@ -55,6 +56,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `vm` | `cogitator-vm` | The primary user is in `wheel` with a working fish login shell and lingering enabled; a key declared through `authorizedKeys` actually authenticates over SSH, not merely that port 22 answers; the GC timer fires weekly and its script carries the declared retention; Docker is absent by default and, on a second node, the opt-in path wires both the daemon and the `docker` group |
 | `plasma` | `cogitator-plasma` | SDDM is the display manager and runs Wayland with the Plasma session as its default; the session file exists in the directory sddm actually points at; both relic tunables (`keyboardLayout`, `sddmTheme`) reach the rendered configuration; the XDG portal carries the wildcard the relic configures; rtkit, the 32-bit ALSA bridge and the `default.target` want that starts WirePlumber with the graphical session are all in place; gvfs and tumbler are reachable by the session |
 | `gaming` | `cogitator-gaming` | Steam is wired, with the udev rules that make a controller usable without root; the AMD relic's VDPAU/VAAPI driver reaches the merged driver tree; the Pipewire relic's three claims (rtkit, the 32-bit ALSA bridge, PulseAudio compat) are in place; Steam Remote Play is closed by default and, on a second node, opens both its UDP range and its TCP ports |
+| `sarcophagus-kvm` | `cogitator-sarcophagus-kvm` | Boots the qcow2 image the profile exists to build, twice on the same disk: the ZFS datasets the profile declares are what is actually mounted (`vmpool/root`, `vmpool/nix`, `vmpool/persist`), the relic creates the `@blank` reference the image builder does not ship, the initrd rollback runs and *succeeds*, and across a reboot a witness on the root dataset is gone while witnesses in `/persist` and under the cogitator's own `impermanence.extraDirectories` survive — with the SSH host key fingerprint unchanged |
 | `dreadnought` | `cogitator-dreadnought` | Five relics composed on one host come up, with exactly one loaded unit failing for want of a pool; ZFS support is functional on the booted kernel; the two discriminating AWS kernel parameters reach `/proc/cmdline`; the pool-growth script carries the profile's `poolName`, `ebsDisk` and `ebsPartition`; the ZFS scrub timer carries `scrubInterval`; explicit persistence is bind-mounted, including an entry set through the cogitator's own option; the hardening suite survives the composition; the impermanence rollback ran in the initrd and failed as expected |
 
 ## Adding a proving
@@ -102,6 +104,36 @@ closure is evaluated with `allowUnfree = true` — so if a relic composed into
 `cogitator-gaming` later pulls in unfree firmware or a proprietary driver, that
 proving accepts it silently where every other proving would fail the evaluation.
 The instance buys per-output scoping, not per-package scoping.
+
+## Booting a real image — the external-image pattern
+
+Seven of the eight provings let the test driver synthesise a node. `sarcophagus-kvm`
+cannot: its profile's claim *is* the disk, and on a synthesised node the qemu-vm
+module replaces `fileSystems` with its own set at priority 10 — so neither the
+pool, nor the datasets, nor the rollback would be observable.
+
+It follows nixpkgs' own `nixos/tests/qemu-vm-external-disk-image.nix` instead: the
+node declares the image, and the driver boots *that image* rather than a root of
+its own. The test script lays a copy-on-write overlay over the store path and
+points `NIX_DISK_IMAGE` at it, which is also what lets the same disk carry writes
+from one boot to the next.
+
+Four node options make it work. None is a product fix — upstream exposes every one
+of them for this purpose — and each was measured, not guessed:
+
+| Option | Why |
+|---|---|
+| `virtualisation.directBoot.enable = false` | boot the image's own GRUB instead of the driver's kernel |
+| `virtualisation.mountHostNixStore = false` | the store lives in the image |
+| `virtualisation.fileSystems = lib.mkForce {}` | the documented opt-out from the `fileSystems` override. With it, `findmnt /` reports `vmpool/root` and the disk layer becomes assertable |
+| `virtualisation.bootLoaderDevice = "/dev/vda"` | `qemu-vm.nix` pins `boot.loader.grub.device` to `/dev/disk/by-id/virtio-root` at priority 10, which beats the cogitator's own `mkForce`; the image builder then fails to install GRUB |
+| `system.switch.enable = true` | `nixos-test-base.nix` defaults it off, and `nixos-install` inside the image builder needs `switch-to-configuration` |
+
+The last two are failure modes you only meet by running it: both surface as an
+image-build error, not as an evaluation error, and the GRUB one reports a device
+that does not exist rather than a priority conflict.
+
+This is the pattern #47 (`sarcophagus-aws`) should reuse.
 
 ## Scope limit — dreadnought cannot see the disk layer
 

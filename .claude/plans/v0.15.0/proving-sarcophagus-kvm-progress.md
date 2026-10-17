@@ -50,3 +50,7 @@ Step 4 : complete — note de portée de `dreadnought` corrigée sur trois point
 question ouverte sur les clés SSH est remplacée par la mécanique amont + le
 résultat mesuré ; le paragraphe de clôture nomme les deux bancs au lieu d'un).
 `nix build …provings.dreadnought` → exit 0, toujours vert.
+Step 3 : complete — doc EN+FR : ligne de couverture, coût de `just test` mis à
+jour avec les chiffres **mesurés** (8 épreuves, 11 boots, 63 s pour celle-ci),
+et une section « external-image pattern » qui table les cinq options du nœud avec
+leur raison. `just docs-parity` → OK, `npm run build` → 90 pages, exit 0.
