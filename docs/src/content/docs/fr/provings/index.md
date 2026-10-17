@@ -45,7 +45,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `docker-server` | `cogitator-docker-server` | Les unités des conteneurs portent leur image épinglée et les flags de healthcheck ; les réseaux docker, le hook notify `OnFailure` et les timers de health-watch sont câblés ; la config statique Traefik est rendue avec le plugin bouncer CrowdSec et l'endpoint socket-proxy |
 | `workstation` | `cogitator-workstation` | Le profil câble ses trois concerns : le socle de durcissement (sysctl kernel/réseau, blacklist de modules) est effectif, le `pcscd` YubiKey est présent, et l'unité display-manager du bureau existe |
 | `vm` | `cogitator-vm` | L'utilisateur primaire est dans `wheel`, son shell fish de login fonctionne et le lingering est actif ; une clé déclarée via `authorizedKeys` authentifie réellement en SSH, et pas seulement le port 22 qui répond ; le timer de GC part chaque semaine et son script porte bien la rétention déclarée ; Docker est absent par défaut et, sur un second nœud, le chemin opt-in câble à la fois le daemon et le groupe `docker` |
-| `plasma` | `cogitator-plasma` | SDDM est bien le display manager et tourne en Wayland avec la session Plasma par défaut ; le fichier de session existe dans le répertoire que sddm désigne réellement ; le portail XDG porte le joker que la relique configure ; rtkit et les unités utilisateur Pipewire/WirePlumber sont en place, y compris le `default.target` qui démarre WirePlumber avec la session graphique |
+| `plasma` | `cogitator-plasma` | SDDM est bien le display manager et tourne en Wayland avec la session Plasma par défaut ; le fichier de session existe dans le répertoire que sddm désigne réellement ; les deux réglages de la relique (`keyboardLayout`, `sddmTheme`) atteignent la configuration rendue ; le portail XDG porte le joker que la relique configure ; rtkit, le pont ALSA 32 bits et le `default.target` qui démarre WirePlumber avec la session graphique sont en place ; gvfs et tumbler sont joignables depuis la session |
 
 ## Ajouter une épreuve
 
@@ -74,13 +74,24 @@ configuration rendue et les fichiers d'unités. Elle ne lance pas de session
 Plasma : c'est lourd dans une VM, et la session elle-même est celle de l'amont,
 pas celle de STC.
 
-Elle laisse aussi **volontairement** deux revendications de la relique sans
-assert. Mesuré sur un nœud `nixosTest` nu, `services.pulseaudio.enable` et
-`services.xserver.enable` valent déjà `false` sans aucune de ces reliques — donc
-« PulseAudio est coupé » et « pas de serveur X » seraient vrais quoi que fasse
-STC, et un assert incapable de distinguer la relique du défaut ne prouve rien.
-`services.tumbler` est écarté pour une autre raison : il ne livre aucune unité
-systemd (activation purement D-Bus), il n'y a donc rien à lire sur disque.
+**Ce qu'elle ne vérifie volontairement pas, et pourquoi.** Chaque assert candidat
+a été mesuré trois fois — sur un nœud `nixosTest` nu, sur un nœud portant le
+module `plasma6` de nixpkgs sans STC, et sur le nœud STC — pour que chacun sache
+distinguer la relique d'un défaut. Quatre candidats ont échoué à ce test et ont
+été écartés :
+
+- `services.pulseaudio.enable` et `services.xserver.enable` valent déjà `false`
+  sans aucune de ces reliques, donc « PulseAudio est coupé » et « pas de serveur
+  X » seraient vrais quoi que fasse STC.
+- `services.pipewire.enable` et `xdg.portal.enable` sont posés par le module
+  `plasma6` de nixpkgs lui-même : les **unités utilisateur** Pipewire et portail
+  existent donc même en retirant la relique Pipewire de STC du cogitator.
+  L'épreuve vérifie à la place ce qui discrimine vraiment : `rtkit`, la ligne
+  `libs.32Bit` dans `/etc/alsa/conf.d/49-pipewire-modules.conf`, et le
+  `default.target` posé sur WirePlumber.
+
+Un assert incapable de distinguer la relique du défaut ne prouve rien et se lit
+comme une couverture, ce qui est pire qu'un manque assumé.
 
 ## Limite de périmètre — docker-server vérifie le câblage, pas les conteneurs
 
