@@ -55,7 +55,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `vm` | `cogitator-vm` | The primary user is in `wheel` with a working fish login shell and lingering enabled; a key declared through `authorizedKeys` actually authenticates over SSH, not merely that port 22 answers; the GC timer fires weekly and its script carries the declared retention; Docker is absent by default and, on a second node, the opt-in path wires both the daemon and the `docker` group |
 | `plasma` | `cogitator-plasma` | SDDM is the display manager and runs Wayland with the Plasma session as its default; the session file exists in the directory sddm actually points at; both relic tunables (`keyboardLayout`, `sddmTheme`) reach the rendered configuration; the XDG portal carries the wildcard the relic configures; rtkit, the 32-bit ALSA bridge and the `default.target` want that starts WirePlumber with the graphical session are all in place; gvfs and tumbler are reachable by the session |
 | `gaming` | `cogitator-gaming` | Steam is wired, with the udev rules that make a controller usable without root; the AMD relic's VDPAU/VAAPI driver reaches the merged driver tree; the Pipewire relic's three claims (rtkit, the 32-bit ALSA bridge, PulseAudio compat) are in place; Steam Remote Play is closed by default and, on a second node, opens both its UDP range and its TCP ports |
-| `dreadnought` | `cogitator-dreadnought` | Five relics composed on one host come up, with only the pool-dependent units failing; the pinned ZFS kernel boots and its module loads; the AWS kernel parameters reach `/proc/cmdline`; the pool-growth and trim units are installed; the hardening suite survives the composition; the impermanence rollback ran in the initrd |
+| `dreadnought` | `cogitator-dreadnought` | Five relics composed on one host come up, with exactly one loaded unit failing for want of a pool; ZFS support is functional on the booted kernel; the two discriminating AWS kernel parameters reach `/proc/cmdline`; the pool-growth script carries the profile's `poolName`, `ebsDisk` and `ebsPartition`; the ZFS scrub timer carries `scrubInterval`; explicit persistence is bind-mounted, including an entry set through the cogitator's own option; the hardening suite survives the composition; the impermanence rollback ran in the initrd and failed as expected |
 
 ## Adding a proving
 
@@ -107,34 +107,55 @@ The instance buys per-output scoping, not per-package scoping.
 
 `cogitator-dreadnought` is the profile that owns disks, and a `nixosTest` VM
 replaces most of what that means. The qemu-vm module overrides whole option sets
-at priority 10 — below even `mkForce` at 50 — so on that node, measured:
+at priority 10, which **wins** against anything a relic can write (`mkForce` is
+50, a plain definition 100). On that node, measured:
 
 | What the profile declares | What the test VM has |
 |---|---|
 | ZFS mounts for `/`, `/nix`, `/persist` | the VM's own `fileSystems` set |
 | `boot.loader.grub.device` = the EBS disk | `/dev/disk/by-id/virtio-root` |
-| `networking.timeServers` = the AWS NTP endpoint | `timesyncd` is off in the test socle |
-| `usePredictableInterfaceNames` | forced back to `false` |
+| the AWS relic's NTP endpoint | `timesyncd` is off in the test socle |
+| the networking relic's Quad9 resolvers | no `/etc/resolv.conf` on the node at all |
+| `usePredictableInterfaceNames` | `false` — the relic sets it with `mkDefault`, so it loses an ordinary priority contest rather than being forced |
 | `serial-getty@ttyS0` enabled | claimed by the test instrumentation |
 
-So pool import, dataset mounting, the boot device, the NTP endpoint and the
-serial console are **not asserted** — for framework reasons, not code ones. The
-real bench for the disk layer is the `local-vm` qcow2 image booted by hand
-(`just build`, `just run`, `just ssh`), which is what proved the ZFS import change
-in v0.13.0.
+So pool import, dataset mounting, the boot device, the NTP endpoint, the resolvers
+and the serial console are **not asserted** — for framework reasons, not code
+ones. The real bench for the disk layer is the `local-vm` qcow2 image booted by
+hand (`just build`, `just run`, `just ssh`), which is what proved the ZFS import
+change in v0.13.0.
 
-**What the boot does establish.** The impermanence relic's rollback service runs
-in the initrd, fails for want of a pool, and the boot continues anyway — the unit
-is pulled by `Wants`, not `Requires`. The booted system is therefore `degraded`,
-and the proving asserts the failed set is bounded to the two pool-dependent units
-rather than tolerating failures silently. `zfs-rollback.service` ran in the
-initrd, and whether its failure is still listed after switch-root was observed
-both ways across runs, so the assertion bounds the set instead of pinning it —
-pinning would be flaky for a systemd-internal reason.
+**The AWS serial console has no coverage at all**, and that deserves saying twice:
+the getty is off here, and `console=ttyS0,115200n8` is not a usable proxy either —
+measured, the test socle sets `virtualisation.qemu.consoles = ["ttyS0,115200n8"
+"tty0"]` on a *bare* node, so that string is on the kernel command line whatever
+the relic does. Only `nvme_core.io_timeout` and `random.trust_cpu` discriminate,
+and only those two are asserted.
+
+**Explicit persistence, on the other hand, is asserted** — it is the one disk-ish
+claim that survives. `environment.persistence` does not go through `fileSystems`;
+it produces systemd bind mounts, which qemu-vm leaves alone. So `/var/log`,
+`/var/lib/nixos`, `/etc/machine-id` and an entry set through the cogitator's own
+`impermanence.extraDirectories` option are all checked with `findmnt`. The four
+`/etc/ssh/ssh_host_*` entries the relic also declares have **no mount unit at all**
+in this VM; whether they are bind-mounted on a real host is not settled here, and
+it matters — if they are not, every reboot changes the host's SSH keys.
+
+**What the boot does establish.** The impermanence rollback service runs in the
+initrd, fails for want of a pool, and the boot continues anyway — the unit is
+pulled by `Wants`, not `Requires`. The booted system is therefore `degraded`, and
+the proving pins the failed set to exactly one unit by filtering on systemd's
+`loaded` column: `zfs-rollback` has no fragment in the booted system, so whether
+its initrd failure is still listed after switch-root varies between runs, and
+filtering removes that non-determinism without widening what is accepted.
 
 Also not asserted: `services.udisks2.enable = false`, which the AWS relic sets to
-keep GTK off a headless server. Measured `false` on a bare `nixosTest` node too,
-so the assertion could not tell the relic from the default.
+keep GTK off a headless server (measured `false` on a bare node too, so it cannot
+tell the relic from the default); and `stc.relics.zfs.kernel`, since pinning
+`uname -r` would go red on every nixpkgs bump — measured, a node with only
+`boot.supportedFilesystems = ["zfs"]` gets a working ZFS module on a newer kernel,
+so loading the module proves ZFS support is functional, not that the pin is the
+relic's.
 
 ## Scope limit — filesystem mount hardening
 
