@@ -26,6 +26,7 @@ C'est une fonctionnalité, pas un bug.
 | `stc.relics.impermanence.persistDataset` | string | `"persist"` | Nom du dataset ZFS persistant sous `poolName`, monté sur `persistPath` |
 | `stc.relics.impermanence.extraDirectories` | liste de strings | `[]` | Répertoires supplémentaires à bind-monter depuis `persistPath` vers `/` |
 | `stc.relics.impermanence.extraFiles` | liste de strings | `[]` | Fichiers supplémentaires à bind-monter depuis `persistPath` vers `/` |
+| `stc.relics.impermanence.onRollbackFailure` | `"continue"` \| `"emergency"` | `"continue"` | Ce qu'un rollback en échec fait au démarrage — voir [Quand le rollback échoue](#quand-le-rollback-échoue) |
 
 ## Ce qu'elle fait
 
@@ -33,6 +34,9 @@ C'est une fonctionnalité, pas un bug.
 après l'import du pool ZFS mais avant le montage du système de fichiers racine. Au premier
 démarrage il crée `poolName/datasetName@blank`. À chaque démarrage suivant il revient
 à ce snapshot.
+
+**Compte rendu du résultat** — `stc-impermanence-state.service` dans le système démarré,
+qui lit ce que l'initrd a laissé dans `/run` et échoue si le rollback a échoué.
 
 **Montage persistant** — monte `poolName/persistDataset` (par défaut `poolName/persist`)
 à `persistPath` avec `neededForBoot = true`, pour que les clés SSH et les secrets
@@ -48,6 +52,66 @@ quel que soit `extraDirectories` / `extraFiles` :
 | `/etc/machine-id` | Identité systemd stable (journald se casse si ça change) |
 | `/etc/ssh/ssh_host_rsa_key` (et `.pub`) | Clés d'hôte SSH |
 | `/etc/ssh/ssh_host_ed25519_key` (et `.pub`) | Clés d'hôte SSH |
+
+## Quand le rollback échoue
+
+La promesse en tête de page est une promesse d'intégrité : une machine qui
+démarre propre est une machine sur laquelle un attaquant ne persiste pas en
+écrivant dans la racine. Un rollback qui échoue casse cette promesse — l'hôte
+monte en portant tout ce que le boot précédent y a laissé.
+
+**Par défaut, le boot continue.** `onRollbackFailure = "continue"` garde l'hôte
+joignable, ce qui est presque toujours ce qu'on veut sur un serveur devant lequel
+on ne peut pas s'asseoir. Ce qui change, c'est que l'échec n'est plus silencieux :
+
+- le script d'initrd laisse un marqueur dans `/run`, qui survit au `switch-root` ;
+- `stc-impermanence-state.service` le lit et **échoue**, donc l'unité apparaît
+  dans `systemctl --failed` et `systemctl is-system-running` répond `degraded`.
+
+Ça compte parce que l'unité `zfs-rollback` elle-même n'a aucun fragment dans le
+système démarré — avant ça, un rollback raté ne laissait qu'une ligne dans un
+journal d'initrd que personne ne lit.
+
+**Si vous préférez ne pas démarrer du tout**, posez :
+
+```nix
+stc.relics.impermanence.onRollbackFailure = "emergency";
+```
+
+Le service de rollback tire alors `emergency.target` depuis l'initrd et le boot
+s'arrête. Connaissez le prix d'abord : `boot.initrd.systemd.emergencyAccess` vaut
+`false` par défaut, ce qui verrouille le compte root dans l'initrd — donc **aucun
+shell** à l'invite d'urgence. Un hôte headless qui atterrit là se récupère hors
+bande. Posez `emergencyAccess` avec, si vous voulez pouvoir reprendre la main.
+
+Une nuance, parce que « le boot s'arrête » n'est pas tout à fait un arrêt net :
+`OnFailure` **démarre** `emergency.target`, il n'annule pas le boot. Le compte
+root étant verrouillé, `sulogin` annonce qu'il ne peut pas ouvrir la console et
+attend indéfiniment, donc un hôte headless reste bien bloqué — c'est l'effet
+voulu. Mais quelqu'un devant une console qui appuie sur Entrée reprend le boot,
+avec la racine sale. Lisez `emergency` comme « un humain doit trancher », pas
+comme « cet hôte ne peut pas démarrer ».
+
+## Si `@blank` disparaît
+
+Le snapshot est créé automatiquement quand il est absent, parce que rien d'autre
+ne le crée — les builders d'image n'en livrent aucun, donc sans ça un disque neuf
+ne démarrerait jamais.
+
+La conséquence mérite d'être dite franchement, parce que c'est la seule façon
+dont cette relique peut casser sa promesse en signalant un succès. Si `@blank`
+est détruit — à la main, ou en restaurant un pool depuis un `zfs send` qui ne
+l'incluait pas — le boot suivant prend un **nouveau** snapshot du dataset racine
+*tel qu'il est à cet instant*, et celui-ci devient la définition permanente de
+« propre » pour tous les boots d'après. Si la racine était sale, elle le reste,
+pour toujours, et le rollback continue de réussir.
+
+La relique ne sait pas distinguer un vrai premier boot d'une référence perdue,
+alors elle ne devine pas. Elle le dit, deux fois : un avertissement dans le
+journal d'initrd nommant le dataset, et un second marqueur qui fait journaliser
+la même chose à `stc-impermanence-state.service` dans le système démarré. Voir ce
+message sur un hôte qui n'est pas en cours d'installation veut dire que la
+référence propre a disparu et qu'il faut la rétablir délibérément.
 
 ## Exemple d'utilisation
 

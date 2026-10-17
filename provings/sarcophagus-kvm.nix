@@ -145,6 +145,32 @@
         journal = machine.succeed("journalctl -b -u zfs-rollback.service --no-pager")
         assert "Finished" in journal, f"the rollback unit did not succeed:\n{journal}"
 
+    with subtest("boot 1: creating @blank is announced, twice"):
+        # The whole mitigation for the defect the relic cannot prevent: a @blank
+        # taken on an already-dirty root silently becomes the permanent clean
+        # reference. Creation is legitimate exactly here — a fresh disk — and
+        # this boot is the only one in the suite where it happens, so it is the
+        # only place the warning path can be proven at all.
+        #
+        # Boot 2 asserts the marker is *absent*; on its own that assertion is a
+        # tautology, since it also passes if the marker is never written. These
+        # three are what give it meaning.
+        machine.succeed("test -e /run/stc-impermanence-blank-created")
+        initrd = machine.succeed("journalctl -b -u zfs-rollback.service --no-pager")
+        assert "becomes the permanent clean reference" in initrd, (
+            f"the initrd did not warn about creating @blank:\n{initrd}"
+        )
+        booted = machine.succeed(
+            "journalctl -b -u stc-impermanence-state.service --no-pager"
+        )
+        assert "was (re)created this boot" in booted, (
+            f"the booted system did not repeat the warning:\n{booted}"
+        )
+        # And it is a warning, not a failure: the host is healthy.
+        assert machine.succeed(
+            "systemctl is-active stc-impermanence-state.service"
+        ).strip() == "active"
+
     with subtest("boot 1: the SSH host keys live in the persistent dataset"):
         # Settles the question provings/dreadnought.nix left open in writing.
         #
@@ -232,6 +258,21 @@
             f"@blank does not carry the host-key symlink, it carries {in_blank!r} "
             "— the mechanism described above no longer holds"
         )
+
+    with subtest("boot 2: the nominal path leaves no failure behind"):
+        # The counterpart to provings/dreadnought.nix, which is where the relic's
+        # failure reporting is seen firing. Here the rollback works, so the same
+        # machinery must be completely quiet: no failure marker, the reporting
+        # unit green, and — unlike boot 1 — not even the "@blank was created"
+        # marker, because the reference already existed.
+        #
+        # A correctness fix that cried wolf on a healthy host would be worse than
+        # the silence it replaced, so this is the assertion that guards it.
+        machine.fail("test -e /run/stc-impermanence-rollback-failed")
+        machine.fail("test -e /run/stc-impermanence-blank-created")
+        assert machine.succeed(
+            "systemctl is-active stc-impermanence-state.service"
+        ).strip() == "active", "the reporting unit is not green on a healthy boot"
 
     with subtest("boot 2: the rollback ran again on a @blank it did not recreate"):
         # The second boot takes the *existing* snapshot path, which is the branch

@@ -43,9 +43,16 @@
 #     does. Only the other two AWS kernel parameters discriminate.
 #
 # What the boot does establish: the initrd rollback unit runs, fails for want of
-# a pool, and the boot continues anyway — the unit is pulled by Wants, not
-# Requires. The booted system is therefore `degraded`, with exactly one failed
-# unit that is loaded in the booted system, and the subtest below pins that set.
+# a pool, and the boot continues anyway — which is what the relic's default
+# `onRollbackFailure = "continue"` asks for. The booted system is therefore
+# `degraded`, and the subtest below pins exactly which units are in that state.
+#
+# One of them is the point of this node now. stc-impermanence-state.service is
+# the relic's way of carrying the initrd's verdict across switch-root: the
+# rollback unit has no fragment in the booted system, so before it existed a
+# failed rollback left nothing a supervisor could see. This proving is where
+# that failure is observable, because it is the only node in the suite whose
+# rollback actually fails.
 #
 # None of the unobservable parts is a code problem. Two benches cover the disk
 # layer instead: provings/sarcophagus-kvm.nix, which boots a built qcow2 under
@@ -88,8 +95,55 @@
     networking.hostId = "deadbeef";
   };
 
-  testScript = ''
+  # Evaluation-only node. It is never started — the test script reads two values
+  # out of its *evaluated* config and nothing else.
+  #
+  # It exists because stc.relics.impermanence.onRollbackFailure = "emergency" is
+  # the relic's only integrity escape hatch, and it cannot be exercised by
+  # booting: this profile's rollback always fails (no pool), so a node with it
+  # set would stop in the initrd and the test would hang waiting for a backdoor
+  # that never comes. Without this node the option would be unguarded — a
+  # refactor dropping the lib.optionalAttrs that adds OnFailure would leave the
+  # whole suite green and the escape hatch decorative.
+  #
+  # The guard is twofold, and the first half is the strong one: interpolating
+  # .OnFailure below means a missing attribute fails the *build* of this proving,
+  # not just an assertion inside it.
+  nodes.emergencyvariant = {
+    imports = [self.nixosModules.cogitator-dreadnought];
+    stc.cogitator.dreadnought.enable = true;
+    stc.relics.impermanence.onRollbackFailure = "emergency";
+    networking.hostId = "deadbeef";
+  };
+
+  testScript = {nodes, ...}: ''
+    # Read at build time from the two evaluated configs — see the note on the
+    # emergencyvariant node. These are Nix values baked into the script, not
+    # something observed in a VM.
+    emergency_on_failure = "${nodes.emergencyvariant.boot.initrd.systemd.services.zfs-rollback.unitConfig.OnFailure}"
+    emergency_job_mode = "${nodes.emergencyvariant.boot.initrd.systemd.services.zfs-rollback.unitConfig.OnFailureJobMode}"
+    default_has_on_failure = ${
+      if nodes.machine.boot.initrd.systemd.services.zfs-rollback.unitConfig ? OnFailure
+      then "True"
+      else "False"
+    }
+
     machine.wait_for_unit("multi-user.target")
+
+    with subtest("onRollbackFailure actually changes the unit"):
+        # The negative half matters as much as the positive one: if the default
+        # also carried OnFailure, every other assertion about "continue" in this
+        # file would be describing a profile that does not exist.
+        assert emergency_on_failure == "emergency.target", (
+            f"emergency does not reach emergency.target: {emergency_on_failure}"
+        )
+        assert emergency_job_mode == "replace-irreversibly", (
+            f"unexpected job mode: {emergency_job_mode}"
+        )
+        assert not default_has_on_failure, (
+            "the default carries OnFailure — this node is not running the "
+            "continue path the rest of this proving assumes"
+        )
 
     with subtest("the profile boots, and only the pool-dependent unit fails"):
         # The claim of the issue, and the one thing no eval can establish: five
@@ -116,9 +170,10 @@
             for line in failed.splitlines()
             if line.strip() and line.split()[1] == "loaded"
         }
-        assert failed_units == {"stc-grow-pool.service"}, (
-            f"unexpected failed units: {failed_units}"
-        )
+        assert failed_units == {
+            "stc-grow-pool.service",
+            "stc-impermanence-state.service",
+        }, f"unexpected failed units: {failed_units}"
 
     with subtest("ZFS support is functional on the booted kernel"):
         # What this proves is in its name, and no more — see the scope note on
@@ -206,6 +261,30 @@
         assert machine.succeed("sysctl -n kernel.kptr_restrict").strip() == "2"
         sshd_config = machine.succeed("sshd -T").lower()
         assert "permitrootlogin no" in sshd_config, "root login is not refused"
+
+    with subtest("the failed rollback is legible from the booted system"):
+        # Before stc-impermanence-state.service, this was the gap: the rollback
+        # could fail and the host would come up dirty with nothing but a line in
+        # an initrd journal nobody reads. The marker the script drops in /run
+        # survives switch-root (the initrd rbind-mounts /run onto /sysroot/run),
+        # and this unit turns it into a failure a supervisor can act on.
+        #
+        # Which branch fails here, precisely: there is no pool in this VM, so the
+        # script stops at its dataset check ("is the pool imported?") and never
+        # reaches `zfs rollback`. No proving in the suite exercises a rollback
+        # that fails on a dataset that *is* present — that needs a broken pool,
+        # which a nixosTest cannot stage honestly.
+        machine.succeed("test -e /run/stc-impermanence-rollback-failed")
+        status = machine.succeed(
+            "systemctl show -p Result --value stc-impermanence-state.service"
+        ).strip()
+        assert status == "exit-code", f"unexpected unit result: {status}"
+        journal = machine.succeed(
+            "journalctl -b -u stc-impermanence-state.service --no-pager"
+        )
+        assert "the initrd rollback FAILED" in journal, (
+            f"the failure was not reported in the booted system:\n{journal}"
+        )
 
     with subtest("the impermanence rollback ran in the initrd, and failed as expected"):
         # Queried by unit rather than grepped out of the whole journal: the unit

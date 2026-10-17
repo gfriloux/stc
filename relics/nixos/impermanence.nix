@@ -15,12 +15,53 @@
   ...
 }: let
   cfg = config.stc.relics.impermanence;
+  # Markers dropped in /run for the booted system to find. The initrd rbind-mounts
+  # its /run onto /sysroot/run ("We need to propagate /run", nixpkgs
+  # systemd/initrd.nix), so anything written here survives switch-root — which is
+  # the only way this unit can raise a *failure* userspace will notice. Its
+  # journal does cross over (the entries carry _SYSTEMD_UNIT, so `journalctl -u
+  # zfs-rollback` resolves them, as provings/dreadnought.nix relies on), but
+  # measured: the unit has no fragment in the booted system
+  # (LoadState=not-found), so it never shows up reliably in `systemctl --failed`.
+  failedMarker = "/run/stc-impermanence-rollback-failed";
+  blankCreatedMarker = "/run/stc-impermanence-blank-created";
+
   rollbackScript = pkgs.writeShellScript "zfs-rollback" ''
-    snapshot="${cfg.poolName}/${cfg.datasetName}@blank"
-    if ! ${pkgs.zfs}/bin/zfs list "$snapshot" 2>/dev/null; then
-      ${pkgs.zfs}/bin/zfs snapshot "$snapshot"
+    # writeShellScript emits only a runtimeShell shebang — no options — so
+    # without this line the script runs on past its own failures.
+    set -euo pipefail
+
+    dataset="${cfg.poolName}/${cfg.datasetName}"
+    snapshot="$dataset@blank"
+
+    fail() {
+      echo "impermanence: $1" >&2
+      touch ${failedMarker} || true
+      exit 1
+    }
+
+    # The dataset first, and deliberately not the snapshot. Checking only the
+    # snapshot conflates "the reference is missing" with "the pool was never
+    # imported" — and the second must never lead to taking a new reference.
+    ${pkgs.zfs}/bin/zfs list -H -o name "$dataset" >/dev/null ||
+      fail "$dataset is not available; is the pool imported?"
+
+    if ! ${pkgs.zfs}/bin/zfs list -H -o name "$snapshot" >/dev/null 2>&1; then
+      # Normal exactly once, on the very first boot of a fresh disk: the image
+      # builder ships no snapshot (measured — make-single-disk-zfs-image.nix
+      # contains no `zfs snapshot` at all). Anything later means the reference
+      # was lost, and whatever is in the root dataset right now silently becomes
+      # the new definition of "clean". The relic cannot tell those two apart, so
+      # it says so instead of guessing.
+      echo "impermanence: $snapshot is missing; creating it from the CURRENT" \
+           "state of $dataset, which becomes the permanent clean reference" >&2
+      touch ${blankCreatedMarker} || true
+      ${pkgs.zfs}/bin/zfs snapshot "$snapshot" ||
+        fail "could not create $snapshot"
     fi
-    ${pkgs.zfs}/bin/zfs rollback -r "$snapshot"
+
+    ${pkgs.zfs}/bin/zfs rollback -r "$snapshot" ||
+      fail "could not roll $dataset back to @blank; the root is NOT clean"
   '';
 in {
   imports = [
@@ -70,6 +111,31 @@ in {
       default = [];
       description = "Additional files under persistPath to bind-mount into /.";
     };
+
+    onRollbackFailure = lib.mkOption {
+      type = lib.types.enum ["continue" "emergency"];
+      default = "continue";
+      description = ''
+        What a failed rollback does to the boot.
+
+        `continue` (default) — the boot proceeds. The host comes up with
+        whatever the previous boot left in the root dataset, so it is **not**
+        clean, but it is reachable. The failure is not silent: it is reported
+        by `stc-impermanence-state.service` in the booted system, which fails
+        and turns `systemctl is-system-running` to `degraded`.
+
+        `emergency` — the rollback service pulls in `emergency.target` from the
+        initrd and the boot stops. Integrity over availability: a host that
+        cannot guarantee a clean root does not come up at all.
+
+        Know the price before choosing `emergency` on a server:
+        `boot.initrd.systemd.emergencyAccess` defaults to `false`, which locks
+        the root account in the initrd — so there is **no shell** at the
+        emergency prompt. A headless host that lands there
+        is one you have to reach out of band. Set `emergencyAccess` alongside
+        it if you want to be able to take over.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -89,12 +155,53 @@ in {
         wantedBy = ["initrd.target"];
         after = ["zfs-import-${cfg.poolName}.service"];
         before = ["sysroot.mount"];
-        unitConfig.DefaultDependencies = "no";
+        unitConfig =
+          {
+            DefaultDependencies = "no";
+          }
+          // lib.optionalAttrs (cfg.onRollbackFailure == "emergency") {
+            OnFailure = "emergency.target";
+            OnFailureJobMode = "replace-irreversibly";
+          };
         serviceConfig = {
           Type = "oneshot";
           ExecStart = rollbackScript;
         };
       };
+    };
+
+    # -------------------------------------------------------------------------
+    # Carry the initrd's verdict into the booted system.
+    #
+    # Without this the rollback can fail and leave almost no trace: the unit
+    # above exists only in the initrd, so it has no fragment after switch-root
+    # and does not reliably show up in `systemctl --failed`. The markers it
+    # drops in /run do survive, because the initrd rbind-mounts /run onto
+    # /sysroot/run — so a small unit here is what turns a dirty boot nobody
+    # notices into a named, failed unit and a `degraded` system.
+    # -------------------------------------------------------------------------
+    systemd.services.stc-impermanence-state = {
+      description = "Report the outcome of the initrd impermanence rollback";
+      wantedBy = ["multi-user.target"];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+      };
+      script = ''
+        if [ -e ${blankCreatedMarker} ]; then
+          echo "impermanence: ${cfg.poolName}/${cfg.datasetName}@blank was" \
+               "(re)created this boot. Expected on a host's first boot;" \
+               "anything else means the clean reference was lost and the" \
+               "CURRENT root is now what every later boot rolls back to." >&2
+        fi
+
+        if [ -e ${failedMarker} ]; then
+          echo "impermanence: the initrd rollback FAILED. This root was not" \
+               "restored, so it still carries whatever the previous boot left" \
+               "in it. See journalctl -b -u zfs-rollback.service." >&2
+          exit 1
+        fi
+      '';
     };
 
     # The persistent dataset must be available early so SSH host keys,
