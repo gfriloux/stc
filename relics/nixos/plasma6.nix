@@ -39,7 +39,15 @@ in {
     wayland = lib.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Use Wayland for the SDDM greeter. Set to false to fall back to X11 (older or incompatible GPUs).";
+      description = ''
+        Use Wayland for the SDDM greeter.
+
+        Setting this to `false` is **not sufficient on its own** to fall back to
+        X11: SDDM asserts that one of Wayland or `services.xserver.enable` is
+        on, so a host taking the X11 route (older or incompatible GPUs) must set
+        `services.xserver.enable = true` as well. The relic only defaults that
+        option off, so the consumer's definition wins without `mkForce`.
+      '';
     };
   };
 
@@ -65,7 +73,17 @@ in {
       xserver = {
         # Disable the X11 server — Plasma 6 runs under Wayland via SDDM.
         # xkb.layout is still read by libinput even without an X server.
-        enable = false;
+        #
+        # mkDefault, not a bare false: at normal priority this line made the
+        # relic's own `wayland = false` option unusable. Measured — with
+        # `wayland = false` the build fails on SDDM's upstream assertion
+        # ("requires either services.xserver.enable or
+        # services.displayManager.sddm.wayland.enable"), and the only escape,
+        # setting services.xserver.enable = true, collided with this very
+        # definition ("has conflicting definition values"). So the documented
+        # X11 fallback could not be reached by any means short of mkForce.
+        # Same defect class as the serial getty in relics/nixos/aws.nix.
+        enable = lib.mkDefault false;
         xkb.layout = cfg.keyboardLayout;
       };
     };

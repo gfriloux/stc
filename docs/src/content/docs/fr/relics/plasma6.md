@@ -20,7 +20,29 @@ entrées (libinput) sont inclus. Le serveur X11 est désactivé.
 | `stc.relics.plasma6.enable` | bool | `false` | Active KDE Plasma 6 |
 | `stc.relics.plasma6.keyboardLayout` | string | `"us"` | Disposition clavier xkb pour SDDM et Plasma |
 | `stc.relics.plasma6.sddmTheme` | string | `""` | Nom du thème SDDM — chaîne vide utilise le thème par défaut de SDDM |
-| `stc.relics.plasma6.wayland` | bool | `true` | Utilise Wayland pour le greeter SDDM. Mettre à `false` pour revenir à X11 (GPU anciens ou incompatibles). |
+| `stc.relics.plasma6.wayland` | bool | `true` | Utilise Wayland pour le greeter SDDM. Revenir à X11 demande **deux** réglages — voir plus bas. |
+
+### `wayland` — le repli X11 demande deux réglages
+
+Mettre `wayland = false` seul ne **suffit pas** : SDDM exige que l'un des deux,
+Wayland ou `services.xserver.enable`, soit actif, donc le build échoue sur
+
+```
+Failed assertions:
+- SDDM requires either services.xserver.enable or services.displayManager.sddm.wayland.enable to be true
+```
+
+Un hôte sur GPU ancien ou incompatible pose donc les deux :
+
+```nix
+stc.relics.plasma6.wayland = false;
+services.xserver.enable = true;
+```
+
+La relique ne fait que *défaut* à `services.xserver.enable = false`, donc ta
+définition gagne sans `lib.mkForce`. Jusqu'à la v0.14.0 elle l'épinglait à
+priorité normale, ce qui rendait ce repli inatteignable par quelque moyen que ce
+soit — si tu l'as contourné avec un `mkForce`, tu peux le retirer.
 
 ### `sddmTheme`
 
@@ -43,7 +65,7 @@ services.desktopManager.plasma6.enable = true
 services.gvfs.enable = true
 services.tumbler.enable = true
 services.libinput.enable = true
-services.xserver.enable = false
+services.xserver.enable = false   # mkDefault — un hôte sur la route X11 le surcharge
 services.xserver.xkb.layout = <keyboardLayout>
 xdg.portal.enable = true
 xdg.portal.config.common.default = "*"

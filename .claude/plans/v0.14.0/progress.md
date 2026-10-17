@@ -155,3 +155,114 @@ l'assert porteur de toute façon), et le point 3 du Step 5 (l'étape `Justfile`
 manquante dans la procédure doc) est parti avec ce chantier au lieu du dernier —
 il corrigeait une page que ce chantier venait de suivre, l'y laisser aurait été
 documenter un piège connu.
+
+### Chantier 2 — #49, proving `plasma` (branche `test/proving-plasma`)
+
+Méthode changée après la revue du chantier 1, et c'est le gain le plus net du
+lot : **chaque valeur candidate a été mesurée sur un nœud nu *et* sur le nœud
+plasma**, pour séparer ce que la relique produit de ce que le framework pose
+déjà. Résultat immédiat : deux asserts prévus étaient vacants et n'ont pas été
+écrits — `services.pulseaudio.enable` et `services.xserver.enable` valent **déjà**
+`false` sur un nœud nu, donc « PulseAudio coupé » et « pas de serveur X »
+auraient été verts quoi que fasse STC. `services.tumbler` écarté pour une autre
+raison : aucune unité systemd (activation D-Bus seule), rien à lire sur disque.
+
+- **Step 2.1 — `provings/plasma.nix`.** 5 subtests. Le plus porteur est mesuré
+  comme tel : avec la relique Pipewire **seule**,
+  `systemd.user.services.wireplumber.wantedBy == ["pipewire.service"]` (amont) ;
+  le cogitator plasma y ajoute `"default.target"`. Donc
+  `/etc/systemd/user/default.target.wants/wireplumber.service` existe **à cause
+  de la seule ligne de décision STC du fichier** — retirez-la, le lien disparaît.
+  Les autres : SDDM en Wayland (`DisplayServer=wayland`,
+  `DefaultSession=plasma.desktop`, greeter en `kwin_wayland`), le portail XDG
+  (`default=*`, fichier qui n'existe pas sans la ligne de la relique), rtkit
+  (`false` en amont), les unités utilisateur Pipewire/WirePlumber, et
+  `gvfs-daemon.service` — côté **utilisateur** et non système, vérifié dans
+  `lib/systemd/user/` du paquet.
+- **Step 2.2 — registre + recette.** Les deux moitiés.
+
+Ruling (échec vu au premier build, cause racine avant correctif) : l'assert
+`test -e /run/current-system/sw/share/wayland-sessions/plasma.desktop` était
+rouge. Cause : j'avais **inféré** ce chemin de la présence de
+`plasma-workspace` dans `environment.systemPackages` au lieu de le mesurer dans
+la VM. Les sessions ne vivent pas dans le profil système mais dans une dérivation
+synthétique `desktops` que le module display-manager fabrique depuis
+`sessionPackages` et que `sddm.conf` désigne. Corrigé en **dérivant le répertoire
+de la configuration sous test** (lecture du `SessionDir=` rendu, puis
+`test -e <dir>/plasma.desktop`) : l'assert prouve désormais l'endroit où le
+display manager va réellement chercher, ce qu'un chemin deviné ne faisait pas.
+Leçon à reporter aux chantiers 3 et 4 : une valeur lue par un assert se mesure
+**dans la VM** ou se dérive de la configuration, jamais de l'intuition.
+Vérif : proving vert, 5 subtests, script en 25,4 s.
+
+**Passe de correction après revue de clôture du chantier 2.** Six Important,
+sept Minor. La revue a poussé la méthode un cran plus loin que moi : j'avais
+comparé les **valeurs d'options** sur un nœud nu, elle a comparé aussi sur un
+nœud portant le module `plasma6` de nixpkgs **sans STC**. Ce troisième point de
+comparaison change le verdict de plusieurs asserts.
+
+- **I1 — deux asserts d'unités utilisateur étaient vacants.** Mesuré :
+  `nixos/modules/services/desktop-managers/plasma6.nix` pose
+  `services.pipewire.enable = mkDefault true`. Donc avec la relique Pipewire de
+  STC retirée du cogitator, `pipewire.socket` et `wireplumber.service` existent
+  encore. Retirés : ma règle du chantier 2 s'appliquait aux valeurs d'options, pas
+  aux fichiers d'unités, et c'est là que les deux survivaient.
+- **I2 — l'assert Pipewire qui discrimine vraiment, ajouté.**
+  `alsa.support32Bit` est `false` en amont, `true` avec la relique, et atterrit
+  dans `/etc/alsa/conf.d/49-pipewire-modules.conf`. Mesuré dans les deux sens :
+  relique coupée, le fichier existe **sans** ligne `libs.32Bit`. C'est la
+  revendication « ALSA 32 bits » sur laquelle repose tout l'argument Steam/Wine du
+  cogitator, et elle n'était pas testée.
+- **I3 — mon affirmation sur tumbler était fausse, et publiée dans les deux
+  pages de doc.** J'avais écrit qu'il « ne livre aucune unité systemd, donc rien
+  à lire sur disque ». Les deux moitiés sont fausses :
+  `tumbler-4.20.2/lib/systemd/user/tumblerd.service` existe, et le fichier
+  d'activation D-Bus atterrit dans
+  `/run/current-system/sw/share/dbus-1/services/org.xfce.Tumbler.Thumbnailer1.service`
+  (absent sur un nœud nu, `services.tumbler.enable = false`). Un assert
+  discriminant et gratuit avait donc été jeté sur une prémisse fausse. Assert
+  ajouté, les deux pages corrigées.
+- **I5 — l'assert sur l'unité du portail était vacant** (`xdg.portal.enable` est
+  posé par le module plasma6 amont). Retiré ; `default=*` reste, lui est porteur
+  (sans la ligne de la relique le fichier n'existe pas du tout).
+- **I6 — les deux réglages documentés de la relique n'étaient pas couverts.**
+  `keyboardLayout` et `sddmTheme` sont les seules options tunables du fichier, et
+  le nœud les prenait à leur défaut. Ils sont maintenant posés hors défaut sur le
+  **nœud existant** — couverture gagnée à coût nul, zéro VM de plus.
+
+Ruling (I4 — un vrai défaut produit, trouvé par la revue, corrigé sous le même
+arbitrage que la décision 4) : `relics/nixos/plasma6.nix` épinglait
+`services.xserver.enable = false` à **priorité normale**, ce qui rendait sa propre
+option documentée `wayland = false` **inutilisable**. Reproduit dans les deux
+sens avant de toucher à la ligne :
+
+- `stc.relics.plasma6.wayland = false` seul → `Failed assertions: - SDDM requires
+  either services.xserver.enable or services.displayManager.sddm.wayland.enable
+  to be true`.
+- La seule échappatoire, `services.xserver.enable = true`, était impossible :
+  `has conflicting definition values: - In relics/nixos/plasma6.nix: false`.
+
+Donc l'option que la doc présentait comme « le repli pour GPU ancien »
+n'était atteignable par aucun moyen hors `mkForce`. Correction : `lib.mkDefault
+false`, même ruling que le getty série d'`aws.nix` — la cause racine est la
+priorité, pas le test. Après : `wayland = false` + `services.xserver.enable =
+true` évalue et rend `DisplayServer=x11`. Chemin par défaut **inchangé**, prouvé
+par identité de `drvPath` (provings `workstation` et `plasma`, qcow2 de
+`local-vm` : les trois identiques avant/après). La description de l'option et les
+deux pages de relique disent maintenant que le repli demande **deux** réglages —
+c'était la deuxième moitié du mensonge.
+
+**Troisième occurrence du même défaut, non corrigée ici (à arbitrer).** La revue
+signale que `cogitator/nixos/plasma.nix:30` pose `stc.relics.pipewire.enable =
+true` à priorité normale alors que son commentaire promet « override only to
+disable » — surcharger exige un `mkForce`. Avec `aws.nix` (décision 4) et
+`plasma6.nix` (I4), ça fait trois endroits où STC épingle une valeur à priorité
+normale en documentant qu'elle est surchargeable. Le motif mérite un audit à part,
+pas un troisième correctif en passant.
+
+Minor reportés : la ligne de couverture omettait le subtest gvfs (corrigée au
+passage), le chemin `/etc/sddm.conf.d/00-nixos.conf` est codé en dur (nom choisi
+par l'amont, dérivable), `len(session_dirs) == 1` n'est vrai que parce que
+`xserver` est coupé, et l'en-tête du proving attribuait les défauts `false` au
+« framework de test » alors qu'ils viennent de nixpkgs (corrigé en réécrivant
+l'en-tête).
