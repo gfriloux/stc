@@ -266,3 +266,43 @@ par l'amont, dérivable), `len(session_dirs) == 1` n'est vrai que parce que
 `xserver` est coupé, et l'en-tête du proving attribuait les défauts `false` au
 « framework de test » alors qu'ils viennent de nixpkgs (corrigé en réécrivant
 l'en-tête).
+
+### Chantier 3 — #44, proving `gaming` (branche `test/proving-gaming`)
+
+Méthode portée à **quatre** nœuds (nu / `programs.steam` seul / relique AMD
+seule / cogitator complet), parce que ce cogitator a trois moitiés qui se
+recouvrent. Le résultat a invalidé un assert du plan avant qu'il soit écrit :
+
+**Ruling — `/run/opengl-driver-32` ne prouve pas la relique AMD.** Mesuré :
+`programs.steam.enable` **seul** pose déjà `hardware.graphics.enable32Bit`
+(et `hardware.steam-hardware.enable`). Le Step 3.2 du plan citait les pilotes
+32 bits comme « la revendication `enable32Bit` de la relique AMD, celle dont
+Proton dépend » — c'est faux : les deux moitiés du cogitator la demandent, donc
+l'assert prouve la composition, pas la relique. Il est gardé, mais son
+commentaire le dit, pour qu'aucun lecteur ne crédite la relique.
+
+Ce qui discrimine la relique AMD, et que le plan ne prévoyait pas :
+`hardware.graphics.extraPackages` est **vide sur un nœud nu et sur un nœud Steam
+seul**, et porte `libvdpau` + `libva-vdpau-driver` avec la relique. L'assert
+écrit est donc `test -e /run/opengl-driver/lib/dri/vdpau_drv_video.so`, le
+fichier que ce paquet pose dans l'arbre fusionné (chemin relevé dans le paquet,
+pas deviné — leçon du chantier 2).
+
+- **Step 3.1 — instance `pkgs-unfree`.** Les deux voies locales re-vérifiées
+  fermées, et le commentaire du registre les cite avec leurs messages d'erreur
+  exacts, pour que personne ne les retente. **Innocuité prouvée** : les cinq
+  provings existants gardent un `drvPath` identique avec l'instance en place
+  (`hardening`, `docker-server`, `workstation`, `vm`, `plasma`).
+- **Step 3.2 — `provings/gaming.nix`.** 6 subtests, deux nœuds. Le second
+  (`remoteplay`) existe parce que `steam.remotePlay` est la **seule** option
+  propre du cogitator : sans lui elle serait non testée, et l'assert « fermé par
+  défaut » n'aurait pas de contrepartie. Bornes mesurées respectées :
+  `27031:27035` en UDP, aucun range TCP — écrire `27036` (le nombre que cite la
+  doc de Steam) aurait rougi pour une raison étrangère à STC.
+- **Step 3.3 — registre + recette**, la ligne `gaming` étant la seule bâtie
+  depuis `pkgs-unfree`.
+- **Doc EN + FR** : ligne de couverture, plus une section « paquets unfree dans
+  une épreuve » qui donne les deux messages d'erreur et le patron retenu — c'est
+  un fait structurel du registre, pas un détail de ce chantier.
+
+Vérif : proving vert **du premier coup**, 6 subtests, script en 22,9 s.
