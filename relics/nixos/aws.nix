@@ -79,7 +79,16 @@ in {
     networking.timeServers = ["169.254.169.123"];
 
     # Serial console service — pairs with console=ttyS0 above.
-    systemd.services."serial-getty@ttyS0".enable = true;
+    #
+    # mkDefault, not a bare true: a real EC2 host wants this getty, but a VM that
+    # owns ttyS0 for its own purposes must be able to take it. Measured — at
+    # normal priority this collided head-on with the nixosTest instrumentation,
+    # which claims the same port at the same priority ("has conflicting
+    # definition values"), so no proving could boot a profile importing this
+    # relic. mkDefault lets the caller win without mkForce and changes nothing
+    # for a host that does not ask: the three schematics keep a byte-identical
+    # drvPath. Do not "simplify" this back to true.
+    systemd.services."serial-getty@ttyS0".enable = lib.mkDefault true;
 
     # udisks2 pulls in GTK as a dependency — not acceptable on a headless server.
     services.udisks2.enable = false;
