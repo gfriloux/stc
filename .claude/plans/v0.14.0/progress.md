@@ -194,3 +194,75 @@ display manager va réellement chercher, ce qu'un chemin deviné ne faisait pas.
 Leçon à reporter aux chantiers 3 et 4 : une valeur lue par un assert se mesure
 **dans la VM** ou se dérive de la configuration, jamais de l'intuition.
 Vérif : proving vert, 5 subtests, script en 25,4 s.
+
+**Passe de correction après revue de clôture du chantier 2.** Six Important,
+sept Minor. La revue a poussé la méthode un cran plus loin que moi : j'avais
+comparé les **valeurs d'options** sur un nœud nu, elle a comparé aussi sur un
+nœud portant le module `plasma6` de nixpkgs **sans STC**. Ce troisième point de
+comparaison change le verdict de plusieurs asserts.
+
+- **I1 — deux asserts d'unités utilisateur étaient vacants.** Mesuré :
+  `nixos/modules/services/desktop-managers/plasma6.nix` pose
+  `services.pipewire.enable = mkDefault true`. Donc avec la relique Pipewire de
+  STC retirée du cogitator, `pipewire.socket` et `wireplumber.service` existent
+  encore. Retirés : ma règle du chantier 2 s'appliquait aux valeurs d'options, pas
+  aux fichiers d'unités, et c'est là que les deux survivaient.
+- **I2 — l'assert Pipewire qui discrimine vraiment, ajouté.**
+  `alsa.support32Bit` est `false` en amont, `true` avec la relique, et atterrit
+  dans `/etc/alsa/conf.d/49-pipewire-modules.conf`. Mesuré dans les deux sens :
+  relique coupée, le fichier existe **sans** ligne `libs.32Bit`. C'est la
+  revendication « ALSA 32 bits » sur laquelle repose tout l'argument Steam/Wine du
+  cogitator, et elle n'était pas testée.
+- **I3 — mon affirmation sur tumbler était fausse, et publiée dans les deux
+  pages de doc.** J'avais écrit qu'il « ne livre aucune unité systemd, donc rien
+  à lire sur disque ». Les deux moitiés sont fausses :
+  `tumbler-4.20.2/lib/systemd/user/tumblerd.service` existe, et le fichier
+  d'activation D-Bus atterrit dans
+  `/run/current-system/sw/share/dbus-1/services/org.xfce.Tumbler.Thumbnailer1.service`
+  (absent sur un nœud nu, `services.tumbler.enable = false`). Un assert
+  discriminant et gratuit avait donc été jeté sur une prémisse fausse. Assert
+  ajouté, les deux pages corrigées.
+- **I5 — l'assert sur l'unité du portail était vacant** (`xdg.portal.enable` est
+  posé par le module plasma6 amont). Retiré ; `default=*` reste, lui est porteur
+  (sans la ligne de la relique le fichier n'existe pas du tout).
+- **I6 — les deux réglages documentés de la relique n'étaient pas couverts.**
+  `keyboardLayout` et `sddmTheme` sont les seules options tunables du fichier, et
+  le nœud les prenait à leur défaut. Ils sont maintenant posés hors défaut sur le
+  **nœud existant** — couverture gagnée à coût nul, zéro VM de plus.
+
+Ruling (I4 — un vrai défaut produit, trouvé par la revue, corrigé sous le même
+arbitrage que la décision 4) : `relics/nixos/plasma6.nix` épinglait
+`services.xserver.enable = false` à **priorité normale**, ce qui rendait sa propre
+option documentée `wayland = false` **inutilisable**. Reproduit dans les deux
+sens avant de toucher à la ligne :
+
+- `stc.relics.plasma6.wayland = false` seul → `Failed assertions: - SDDM requires
+  either services.xserver.enable or services.displayManager.sddm.wayland.enable
+  to be true`.
+- La seule échappatoire, `services.xserver.enable = true`, était impossible :
+  `has conflicting definition values: - In relics/nixos/plasma6.nix: false`.
+
+Donc l'option que la doc présentait comme « le repli pour GPU ancien »
+n'était atteignable par aucun moyen hors `mkForce`. Correction : `lib.mkDefault
+false`, même ruling que le getty série d'`aws.nix` — la cause racine est la
+priorité, pas le test. Après : `wayland = false` + `services.xserver.enable =
+true` évalue et rend `DisplayServer=x11`. Chemin par défaut **inchangé**, prouvé
+par identité de `drvPath` (provings `workstation` et `plasma`, qcow2 de
+`local-vm` : les trois identiques avant/après). La description de l'option et les
+deux pages de relique disent maintenant que le repli demande **deux** réglages —
+c'était la deuxième moitié du mensonge.
+
+**Troisième occurrence du même défaut, non corrigée ici (à arbitrer).** La revue
+signale que `cogitator/nixos/plasma.nix:30` pose `stc.relics.pipewire.enable =
+true` à priorité normale alors que son commentaire promet « override only to
+disable » — surcharger exige un `mkForce`. Avec `aws.nix` (décision 4) et
+`plasma6.nix` (I4), ça fait trois endroits où STC épingle une valeur à priorité
+normale en documentant qu'elle est surchargeable. Le motif mérite un audit à part,
+pas un troisième correctif en passant.
+
+Minor reportés : la ligne de couverture omettait le subtest gvfs (corrigée au
+passage), le chemin `/etc/sddm.conf.d/00-nixos.conf` est codé en dur (nom choisi
+par l'amont, dérivable), `len(session_dirs) == 1` n'est vrai que parce que
+`xserver` est coupé, et l'en-tête du proving attribuait les défauts `false` au
+« framework de test » alors qu'ils viennent de nixpkgs (corrigé en réécrivant
+l'en-tête).
