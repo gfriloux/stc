@@ -19,7 +19,29 @@ and file picker integration. Thumbnail generation (tumbler), virtual filesystem
 | `stc.relics.plasma6.enable` | bool | `false` | Enable KDE Plasma 6 |
 | `stc.relics.plasma6.keyboardLayout` | string | `"us"` | xkb keyboard layout for SDDM and Plasma |
 | `stc.relics.plasma6.sddmTheme` | string | `""` | SDDM theme name — empty string uses SDDM default |
-| `stc.relics.plasma6.wayland` | bool | `true` | Use Wayland for the SDDM greeter. Set to `false` to fall back to X11 (older or incompatible GPUs). |
+| `stc.relics.plasma6.wayland` | bool | `true` | Use Wayland for the SDDM greeter. Falling back to X11 takes **two** settings — see below. |
+
+### `wayland` — the X11 fallback needs two settings
+
+Setting `wayland = false` on its own does **not** work: SDDM asserts that one of
+Wayland or `services.xserver.enable` is on, so the build fails with
+
+```
+Failed assertions:
+- SDDM requires either services.xserver.enable or services.displayManager.sddm.wayland.enable to be true
+```
+
+A host on an older or incompatible GPU therefore sets both:
+
+```nix
+stc.relics.plasma6.wayland = false;
+services.xserver.enable = true;
+```
+
+The relic only *defaults* `services.xserver.enable` off, so your definition wins
+without `lib.mkForce`. Until v0.14.0 it pinned the option at normal priority,
+which made this fallback unreachable by any means — if you worked around it with
+`mkForce`, you can drop that now.
 
 ### `sddmTheme`
 
@@ -41,7 +63,7 @@ services.desktopManager.plasma6.enable = true
 services.gvfs.enable = true
 services.tumbler.enable = true
 services.libinput.enable = true
-services.xserver.enable = false
+services.xserver.enable = false   # mkDefault — a host taking the X11 route overrides it
 services.xserver.xkb.layout = <keyboardLayout>
 xdg.portal.enable = true
 xdg.portal.config.common.default = "*"
