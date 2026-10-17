@@ -80,9 +80,17 @@ stc.relics.impermanence.onRollbackFailure = "emergency";
 
 Le service de rollback tire alors `emergency.target` depuis l'initrd et le boot
 s'arrête. Connaissez le prix d'abord : `boot.initrd.systemd.emergencyAccess` vaut
-`null` par défaut, c'est-à-dire **aucun shell** à l'invite d'urgence. Un hôte
-headless qui atterrit là se récupère hors bande. Posez `emergencyAccess` avec, si
-vous voulez pouvoir reprendre la main.
+`false` par défaut, ce qui verrouille le compte root dans l'initrd — donc **aucun
+shell** à l'invite d'urgence. Un hôte headless qui atterrit là se récupère hors
+bande. Posez `emergencyAccess` avec, si vous voulez pouvoir reprendre la main.
+
+Une nuance, parce que « le boot s'arrête » n'est pas tout à fait un arrêt net :
+`OnFailure` **démarre** `emergency.target`, il n'annule pas le boot. Le compte
+root étant verrouillé, `sulogin` annonce qu'il ne peut pas ouvrir la console et
+attend indéfiniment, donc un hôte headless reste bien bloqué — c'est l'effet
+voulu. Mais quelqu'un devant une console qui appuie sur Entrée reprend le boot,
+avec la racine sale. Lisez `emergency` comme « un humain doit trancher », pas
+comme « cet hôte ne peut pas démarrer ».
 
 ## Si `@blank` disparaît
 

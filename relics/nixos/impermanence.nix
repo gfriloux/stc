@@ -18,9 +18,11 @@
   # Markers dropped in /run for the booted system to find. The initrd rbind-mounts
   # its /run onto /sysroot/run ("We need to propagate /run", nixpkgs
   # systemd/initrd.nix), so anything written here survives switch-root — which is
-  # the only way this unit can say anything at all to userspace. Measured: it has
-  # no fragment in the booted system (LoadState=not-found), so it never shows up
-  # reliably in `systemctl --failed` on its own.
+  # the only way this unit can raise a *failure* userspace will notice. Its
+  # journal does cross over (the entries carry _SYSTEMD_UNIT, so `journalctl -u
+  # zfs-rollback` resolves them, as provings/dreadnought.nix relies on), but
+  # measured: the unit has no fragment in the booted system
+  # (LoadState=not-found), so it never shows up reliably in `systemctl --failed`.
   failedMarker = "/run/stc-impermanence-rollback-failed";
   blankCreatedMarker = "/run/stc-impermanence-blank-created";
 
@@ -127,8 +129,9 @@ in {
         cannot guarantee a clean root does not come up at all.
 
         Know the price before choosing `emergency` on a server:
-        `boot.initrd.systemd.emergencyAccess` defaults to `null`, which means
-        **no shell** at the emergency prompt. A headless host that lands there
+        `boot.initrd.systemd.emergencyAccess` defaults to `false`, which locks
+        the root account in the initrd — so there is **no shell** at the
+        emergency prompt. A headless host that lands there
         is one you have to reach out of band. Set `emergencyAccess` alongside
         it if you want to be able to take over.
       '';
@@ -174,8 +177,8 @@ in {
     # above exists only in the initrd, so it has no fragment after switch-root
     # and does not reliably show up in `systemctl --failed`. The markers it
     # drops in /run do survive, because the initrd rbind-mounts /run onto
-    # /sysroot/run — so a four-line unit here is what turns a silent dirty boot
-    # into a named, failed unit and a `degraded` system.
+    # /sysroot/run — so a small unit here is what turns a dirty boot nobody
+    # notices into a named, failed unit and a `degraded` system.
     # -------------------------------------------------------------------------
     systemd.services.stc-impermanence-state = {
       description = "Report the outcome of the initrd impermanence rollback";

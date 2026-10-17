@@ -100,7 +100,7 @@ cogitators.
 | `zfs-rollback` n'a **aucun fragment** dans le système démarré (`LoadState=not-found`) | `provings/dreadnought.nix:99-104` | Un échec non fatal est **invisible** à `systemctl --failed` de façon fiable → il faut un signal porté autrement. |
 | L'initrd rbind-monte son `/run` sur `/sysroot/run` — « We need to propagate /run » | `systemd/initrd.nix:758-772` | **Un marqueur `/run` écrit dans l'initrd est lisible par le système démarré.** C'est le mécanisme du signal. |
 | `emergency.service` et `emergency.target` sont dans la liste d'unités de l'initrd | `systemd/initrd.nix:64-65` | `OnFailure = "emergency.target"` est disponible dans l'initrd. |
-| `boot.initrd.systemd.emergencyAccess` existe, défaut `null` = **aucun accès** | `systemd/initrd.nix:331-345` | Un échec fatal sur un hôte headless laisse une machine arrêtée **sans shell**. C'est l'argument de #69, et il est réel. |
+| `boot.initrd.systemd.emergencyAccess` existe, défaut **`false`** (`initrd.nix:348`) = compte root verrouillé dans l'initrd, donc aucun accès | `nix eval` sur `options.…default` | Un échec fatal sur un hôte headless laisse une machine arrêtée **sans shell**. C'est l'argument de #69, et il est réel. |
 | Trois cogitators consomment la relique : `sarcophagus-kvm`, `sarcophagus-aws`, `dreadnought` | `grep relics.impermanence` | Portée du changement de comportement. |
 | `relics/nixos/vm-variant.nix:68-78` éteint déjà la relique dans un `vmVariant`, en disant « in a VM there is neither the pool nor the snapshot, so the service can only fail » | lecture | Le dépôt **connaît déjà** le cas VM et le traite par l'extinction. Le rendre fatal ne casse pas cette voie. |
 
@@ -146,7 +146,7 @@ pour les profils headless, au lieu que ce chantier le préempte.
 **Ce qu'il coûte, et qui doit être écrit dans la doc.** Un hôte dont le rollback
 échoue démarre avec une racine sale, et c'est le défaut. L'option `"emergency"`
 existe pour qui veut l'inverse, et sa documentation doit nommer son prix mesuré :
-`boot.initrd.systemd.emergencyAccess` vaut `null` par défaut, donc un hôte
+`boot.initrd.systemd.emergencyAccess` vaut `false` par défaut, donc un hôte
 headless qui tombe en emergency dans l'initrd n'offre **aucun shell** — c'est une
 machine à redémarrer hors bande. Qui choisit `"emergency"` sur un serveur distant
 doit poser `emergencyAccess` avec.
@@ -266,7 +266,7 @@ consommateurs ne changent pas — ils héritent du défaut.
   condition d'échec doit être étroite et re-vérifiée au runtime.
 - **`"emergency"` est un chemin que personne ne prendra par accident mais que
   quelqu'un prendra.** Sa doc doit nommer le prix mesuré (`emergencyAccess` à
-  `null` = pas de shell sur un hôte headless), et le proving doit prouver que
+  `false` = pas de shell sur un hôte headless), et le proving doit prouver que
   l'option fait quelque chose, pas seulement qu'elle évalue.
 - **`OnFailureJobMode = "replace-irreversibly"` dans un initrd** : vérifier que
   ça n'interagit pas mal avec `DefaultDependencies = "no"` déjà posé sur l'unité.

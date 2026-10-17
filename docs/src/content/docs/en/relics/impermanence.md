@@ -80,9 +80,16 @@ stc.relics.impermanence.onRollbackFailure = "emergency";
 
 The rollback service then pulls in `emergency.target` from the initrd and the
 boot stops. Know the price first: `boot.initrd.systemd.emergencyAccess` defaults
-to `null`, which means **no shell** at the emergency prompt. A headless host that
-lands there has to be rescued out of band. Set `emergencyAccess` alongside it if
-you want to be able to take over.
+to `false`, which locks the root account in the initrd, so there is **no shell**
+at the emergency prompt. A headless host that lands there has to be rescued out
+of band. Set `emergencyAccess` alongside it if you want to be able to take over.
+
+One nuance, because "the boot stops" is not quite a hard stop: `OnFailure`
+*starts* `emergency.target`, it does not cancel the boot. With the root account
+locked, `sulogin` prints that it cannot open the console and waits indefinitely,
+so a headless host does hang — which is the intended outcome. But anyone at a
+console who presses Enter resumes the boot, with the dirty root. Treat
+`emergency` as "a human must decide", not as "this host cannot come up".
 
 ## If `@blank` goes missing
 
