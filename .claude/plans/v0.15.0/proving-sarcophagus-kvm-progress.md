@@ -45,3 +45,8 @@ de montage), sshd écrit à travers, et l'empreinte de `ssh_host_ed25519_key.pub
 est **identique avant et après le rollback**. Un sarcophage ne change donc pas
 ses clés d'hôte à chaque reboot — ce n'est pas un second défaut de #89, et la
 note de portée de `dreadnought` doit être corrigée (Step 4).
+Step 4 : complete — note de portée de `dreadnought` corrigée sur trois points
+(le « gagne contre tout » devient « par défaut, et voici l'échappatoire » ; la
+question ouverte sur les clés SSH est remplacée par la mécanique amont + le
+résultat mesuré ; le paragraphe de clôture nomme les deux bancs au lieu d'un).
+`nix build …provings.dreadnought` → exit 0, toujours vert.
