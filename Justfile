@@ -60,6 +60,7 @@ test:
     nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-file
     nix build .#legacyPackages.x86_64-linux.provings.docker-server -L --no-write-lock-file
     nix build .#legacyPackages.x86_64-linux.provings.workstation -L --no-write-lock-file
+    nix build .#legacyPackages.x86_64-linux.provings.vm -L --no-write-lock-file
 
 
 # ── Documentation ─────────────────────────────────────────────────────────────

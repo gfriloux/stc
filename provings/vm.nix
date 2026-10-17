@@ -1,0 +1,165 @@
+# Proving: vm cogitator
+# Boots the base dev/staging profile and asserts the four things it claims: a
+# primary user that can actually administer the box, remote access, bounded
+# store growth, and Docker *off* unless asked for.
+#
+# Two nodes on purpose. The cogitator documents that membership of the `docker`
+# group is equivalent to root — "so it is opt-in rather than a silent default".
+# A single node could only prove one half of that sentence: `machine` proves the
+# group and the daemon are absent by default, `dockervm` proves the opt-in path
+# wires both. Their closures are nearly identical, so the cost is one extra VM
+# boot.
+#
+# Scope note — nothing here asserts a mount. The qemu-vm module replaces the
+# whole `fileSystems` set with `mkVMOverride`, so filesystem claims cannot be
+# read inside a test VM (see the hardening proving for the full rationale).
+{self}: {
+  name = "vm";
+
+  nodes = {
+    machine = {pkgs, ...}: let
+      # Snakeoil keypair shipped with nixpkgs' own test suite.
+      sshKeys = import (pkgs.path + "/nixos/tests/ssh-keys.nix") pkgs;
+    in {
+      imports = [self.nixosModules.cogitator-vm];
+
+      stc.cogitator.vm = {
+        enable = true;
+
+        # authorizedKeys defaults to [], which means no remote access at all, so
+        # the node has to feed it for the subtest below to have anything to
+        # assert — same reason the hardening proving sets its own opt-in banner.
+        authorizedKeys = [sshKeys.snakeOilEd25519PublicKey];
+      };
+
+      # Copied out of the store at 0600: ssh refuses a private key others can
+      # read, and every store path is world-readable.
+      environment.etc."proving-ssh-key" = {
+        source = sshKeys.snakeOilEd25519PrivateKey;
+        mode = "0600";
+      };
+    };
+
+    dockervm = {
+      imports = [self.nixosModules.cogitator-vm];
+      stc.cogitator.vm = {
+        enable = true;
+        docker.enable = true;
+      };
+    };
+  };
+
+  testScript = ''
+    start_all()
+
+    machine.wait_for_unit("multi-user.target")
+
+    with subtest("primary user can administer the box"):
+        groups = machine.succeed("id -nG admin").split()
+        assert "wheel" in groups, f"admin is not in wheel: {groups}"
+        # The other half of the opt-in claim is on the dockervm node below.
+        # Without this line a silent default would satisfy every assertion here.
+        assert "docker" not in groups, f"admin is in docker without opting in: {groups}"
+
+        shell = machine.succeed("getent passwd admin").strip().split(":")[-1]
+        assert shell.endswith("/bin/fish"), f"unexpected login shell: {shell}"
+        # The shell has to work, not merely be recorded in passwd: a store path
+        # that is not in the closure would still pass the assertion above. Read
+        # the value rather than piping into `grep -q .`, which would report
+        # grep's status and accept a shell that prints anything and then dies.
+        fish_version = machine.succeed("su -l admin -c 'echo $FISH_VERSION'").strip()
+        assert fish_version[:1].isdigit(), f"not a fish login shell: {fish_version!r}"
+
+    with subtest("user services survive logout"):
+        # users.manageLingering applies linger from linger-users.service, which
+        # calls loginctl — there are no tmpfiles rules to read. That unit is a
+        # Type=oneshot with no RemainAfterExit, wantedBy multi-user.target: by
+        # the time the target is up it has already run and gone back to
+        # "inactive (dead)". So `wait_for_unit` can never pass here — assert the
+        # result and the marker it left instead.
+        # LoadState and not Result: measured on a live systemd, `show -p Result`
+        # returns "success" with exit 0 for a unit that does not exist at all
+        # (LoadState=not-found), so it would still hold if users.manageLingering
+        # went false or nixpkgs renamed the unit.
+        load_state = machine.succeed(
+            "systemctl show -p LoadState --value linger-users.service"
+        ).strip()
+        assert load_state == "loaded", f"linger-users.service is {load_state}"
+
+        # wait_until_succeeds, not succeed: the unit carries no Before= towards
+        # multi-user.target, so systemd may call the target active while
+        # enable-linger is still running.
+        machine.wait_until_succeeds("test -f /var/lib/systemd/linger/admin")
+
+    with subtest("remote access"):
+        machine.wait_for_unit("sshd.service")
+        machine.wait_for_open_port(22)
+
+        # A TCP connect only proves sshd is listening. The profile's one
+        # remote-access option is authorizedKeys, and nothing above reaches it:
+        # without the round trip below, dropping the line that wires the option
+        # to users.users.<n>.openssh.authorizedKeys.keys would make every
+        # consumer VM unreachable and leave this proving green.
+        machine.succeed("test -s /etc/ssh/authorized_keys.d/admin")
+
+        # -n is load-bearing: without it ssh reads the console's stdin and eats
+        # the marker the test driver writes there, which surfaces as the driver
+        # failing to parse an exit status rather than as an SSH problem.
+        ssh = (
+            "ssh -n -i /etc/proving-ssh-key"
+            " -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+            " -o BatchMode=yes -o ConnectTimeout=10"
+            " -o PreferredAuthentications=publickey"
+        )
+        assert machine.succeed(f"{ssh} admin@127.0.0.1 id -un").strip() == "admin"
+
+    with subtest("store growth is bounded"):
+        gc_timer = machine.succeed("systemctl cat nix-gc.timer")
+        assert "OnCalendar=weekly" in gc_timer, f"unexpected gc schedule:\n{gc_timer}"
+
+        # keepDays ends up inside the generated unit script, not in ExecStart, so
+        # resolve the script and read it — the same technique the docker-server
+        # proving uses to reach the rendered `docker run` line.
+        unit = machine.succeed("systemctl cat nix-gc.service")
+        exec_start = [
+            line.split("=", 1)[1].strip()
+            for line in unit.splitlines()
+            if line.startswith("ExecStart=")
+        ]
+        assert len(exec_start) == 1, f"expected one ExecStart, got {exec_start}"
+        script = machine.succeed(f"cat {exec_start[0].split()[0]}")
+        assert "--delete-older-than 5d" in script, f"unexpected gc options:\n{script}"
+
+        # Deduplication is a separate timer; the profile turns both on.
+        machine.succeed("systemctl cat nix-optimise.timer")
+
+    with subtest("flakes are usable"):
+        features = []
+        for line in machine.succeed("cat /etc/nix/nix.conf").splitlines():
+            if line.startswith("experimental-features"):
+                features = line.split("=", 1)[1].split()
+        # Membership, not an exact string: a bare node renders an empty list, so
+        # the needles below are the profile's doing — but one feature added
+        # anywhere upstream would turn an equality check red for a reason that
+        # has nothing to do with this profile.
+        for feature in ["nix-command", "flakes"]:
+            assert feature in features, f"{feature} missing from {features}"
+
+    with subtest("docker is opt-in"):
+        # No unit at all, not merely a stopped one.
+        machine.fail("systemctl cat docker.service")
+        machine.fail("test -e /run/docker.sock")
+
+    with subtest("docker opt-in wires the daemon and the group"):
+        dockervm.wait_for_unit("multi-user.target")
+
+        groups = dockervm.succeed("id -nG admin").split()
+        assert "docker" in groups, f"admin was not added to docker: {groups}"
+
+        dockervm.wait_for_unit("docker.service")
+        dockervm.succeed("docker info")
+        # docker-compose rides on the same option — the profile adds it to
+        # systemPackages only on this path.
+        dockervm.succeed("docker-compose --version")
+  '';
+}

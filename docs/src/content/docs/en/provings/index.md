@@ -42,13 +42,17 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `hardening` | `cogitator-hardening` | Kernel and network sysctl hardening are live; SSH is key-only with root login refused |
 | `docker-server` | `cogitator-docker-server` | Container units carry their pinned image and healthcheck flags; docker networks, the notify `OnFailure` hook and health-watch timers are wired; the Traefik static config renders with the CrowdSec bouncer plugin and socket-proxy endpoint |
 | `workstation` | `cogitator-workstation` | The profile wires its three concerns: the hardening socle (kernel/network sysctl, module blacklist) is live, YubiKey `pcscd` is present, and the desktop's display-manager unit exists |
+| `vm` | `cogitator-vm` | The primary user is in `wheel` with a working fish login shell and lingering enabled; a key declared through `authorizedKeys` actually authenticates over SSH, not merely that port 22 answers; the GC timer fires weekly and its script carries the declared retention; Docker is absent by default and, on a second node, the opt-in path wires both the daemon and the `docker` group |
 
 ## Adding a proving
 
 1. Create `provings/<name>.nix` — a function `{self}: { name; nodes; testScript; }`.
    The node imports the real flake module via `self.nixosModules.cogitator-<name>`.
 2. Wire it in `provings/default.nix` under `legacyPackages.provings.<name>`.
-3. Add a row to the coverage table above (and its French mirror).
+3. **Add it to the `test` recipe in the `Justfile`.** A proving registered in
+   `provings/default.nix` but absent from the recipe never runs, and a green
+   `just test` is then a false green — this step is not optional.
+4. Add a row to the coverage table above (and its French mirror).
 
 ## Scope limit — filesystem mount hardening
 
