@@ -266,3 +266,100 @@ par l'amont, dérivable), `len(session_dirs) == 1` n'est vrai que parce que
 `xserver` est coupé, et l'en-tête du proving attribuait les défauts `false` au
 « framework de test » alors qu'ils viennent de nixpkgs (corrigé en réécrivant
 l'en-tête).
+
+### Chantier 3 — #44, proving `gaming` (branche `test/proving-gaming`)
+
+Méthode portée à **quatre** nœuds (nu / `programs.steam` seul / relique AMD
+seule / cogitator complet), parce que ce cogitator a trois moitiés qui se
+recouvrent. Le résultat a invalidé un assert du plan avant qu'il soit écrit :
+
+**Ruling — `/run/opengl-driver-32` ne prouve pas la relique AMD.** Mesuré :
+`programs.steam.enable` **seul** pose déjà `hardware.graphics.enable32Bit`
+(et `hardware.steam-hardware.enable`). Le Step 3.2 du plan citait les pilotes
+32 bits comme « la revendication `enable32Bit` de la relique AMD, celle dont
+Proton dépend » — c'est faux : les deux moitiés du cogitator la demandent, donc
+l'assert prouve la composition, pas la relique. Il est gardé, mais son
+commentaire le dit, pour qu'aucun lecteur ne crédite la relique.
+
+Ce qui discrimine la relique AMD, et que le plan ne prévoyait pas :
+`hardware.graphics.extraPackages` est **vide sur un nœud nu et sur un nœud Steam
+seul**, et porte `libvdpau` + `libva-vdpau-driver` avec la relique. L'assert
+écrit est donc `test -e /run/opengl-driver/lib/dri/vdpau_drv_video.so`, le
+fichier que ce paquet pose dans l'arbre fusionné (chemin relevé dans le paquet,
+pas deviné — leçon du chantier 2).
+
+- **Step 3.1 — instance `pkgs-unfree`.** Les deux voies locales re-vérifiées
+  fermées, et le commentaire du registre les cite avec leurs messages d'erreur
+  exacts, pour que personne ne les retente. **Innocuité prouvée** : les cinq
+  provings existants gardent un `drvPath` identique avec l'instance en place
+  (`hardening`, `docker-server`, `workstation`, `vm`, `plasma`).
+- **Step 3.2 — `provings/gaming.nix`.** 6 subtests, deux nœuds. Le second
+  (`remoteplay`) existe parce que `steam.remotePlay` est la **seule** option
+  propre du cogitator : sans lui elle serait non testée, et l'assert « fermé par
+  défaut » n'aurait pas de contrepartie. Bornes mesurées respectées :
+  `27031:27035` en UDP, aucun range TCP — écrire `27036` (le nombre que cite la
+  doc de Steam) aurait rougi pour une raison étrangère à STC.
+- **Step 3.3 — registre + recette**, la ligne `gaming` étant la seule bâtie
+  depuis `pkgs-unfree`.
+- **Doc EN + FR** : ligne de couverture, plus une section « paquets unfree dans
+  une épreuve » qui donne les deux messages d'erreur et le patron retenu — c'est
+  un fait structurel du registre, pas un détail de ce chantier.
+
+Vérif : proving vert **du premier coup**, 6 subtests, script en 22,9 s.
+
+**Passe de correction après revue de clôture du chantier 3.** Quatre Important,
+quatre Minor. Deux corrections comptent plus que les autres.
+
+- **I2 — j'ai publié un fait faux pour la deuxième fois, et il était vérifiable
+  d'une commande.** Ma ligne de doc disait que `steam.remotePlay` ouvre
+  « exactement UDP 27031-27035 », et mon commentaire dans le proving prévenait
+  qu'écrire `27036` rougirait « pour une raison étrangère à STC ». Mesuré :
+  `allowedUDPPortRanges = [{from=27031;to=27035;}]`, **plus**
+  `allowedUDPPorts = [10400 10401 27036]`, **plus**
+  `allowedTCPPorts = [27036 27037]`. Donc six ports de plus, dont trois en TCP,
+  et `27036` est précisément ouvert — mon avertissement était à l'envers. Ce qui
+  m'a trompé : au chantier 2 j'avais relevé `allowedTCPPortRanges = []` et j'ai
+  lu « aucun TCP » au lieu de « aucune *plage* TCP ». Leçon : quand une mesure
+  rend une liste vide, vérifier qu'on a interrogé la bonne option avant d'en
+  tirer une négation. Corrigé : assert TCP ajouté (`27037`, TCP-only en amont,
+  donc c'est lui qui prouve la moitié que je niais), asserts par ligne et non par
+  blob, et les deux pages de doc réécrites.
+- **I1 — le subtest « with its hardware rules » n'assertait aucune règle
+  matérielle**, et son second assert (`steam-run`) était un doublon du premier :
+  les deux paquets viennent de la même liste `systemPackages`, aucune
+  configuration n'a l'un sans l'autre. Le plan demandait les règles udev
+  (Step 3.2) et je les avais laissées tomber sans ruling. Corrigé :
+  `test -e /etc/udev/rules.d/60-steam-input.rules`, chemin relevé dans
+  `steam-devices-udev-rules` (pas deviné).
+- **I3 — le subtest des pilotes 32 bits ne peut être rougi par aucun changement
+  STC**, puisque le subtest précédent prouve déjà que `programs.steam` est actif
+  et que ça suffit à poser `enable32Bit`. Mon ruling précédent lui faisait encore
+  dire trop (« prouve que la composition boote avec les pilotes 32 bits »).
+  Gardé, mais renommé et commenté comme ce qu'il est : une **sentinelle amont**,
+  utile si nixpkgs casse Proton pour tous les hôtes du profil, pas un détecteur
+  de régression STC.
+- **I4 — trois revendications non couvertes, aucune exclue honnêtement.**
+  `pulse.enable` (« compat PulseAudio », troisième revendication de l'en-tête de
+  la relique Pipewire) **discrimine ici** — contrairement au chantier 2 où le
+  module plasma6 l'allume — donc assert ajouté. `amdGpu.initrd` et
+  `hardening.filesystem.gaming` sont maintenant dans un paragraphe « ce que ce
+  proving ne vérifie pas, et pourquoi » de l'en-tête : le second n'est **pas
+  couvrable** (il retire `noexec` de `fileSystems`, que le module qemu-vm
+  remplace en bloc), et c'est précisément le footgun que l'en-tête du cogitator
+  signale — un lecteur de la ligne de couverture n'avait aucun moyen de
+  l'apprendre.
+
+Minor reportés ou traités au passage : asserts de pare-feu passés par ligne (M5),
+fragilité du rendu `iptables` face à nftables dite en commentaire (M6),
+dépendance au chemin amont `libva-vdpau-driver` notée (M7), et surtout **M8 —
+la preuve d'innocuité de l'instance unfree par identité de `drvPath` est quasi
+tautologique** (`pkgs-unfree` est une liaison paresseuse que Nix ne force jamais
+pour les autres provings). Le vrai périmètre est maintenant écrit en doc : la
+clôture **entière** du nœud gaming est évaluée en `allowUnfree`, donc une relique
+qui tirerait plus tard un firmware unfree passerait en silence dans cette seule
+épreuve. L'instance cantonne par sortie, pas par paquet.
+
+Écart au plan, non consigné à l'époque et relevé par la revue : les Steps 3.1 et
+3.3 ont été fusionnés en un commit. Scinder comme le plan le disait aurait **cassé
+`just ci`** — `deadnix` signale la liaison `pkgs-unfree` non utilisée tant que la
+ligne `gaming` n'existe pas.

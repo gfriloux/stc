@@ -62,6 +62,7 @@ test:
     nix build .#legacyPackages.x86_64-linux.provings.workstation -L --no-write-lock-file
     nix build .#legacyPackages.x86_64-linux.provings.vm -L --no-write-lock-file
     nix build .#legacyPackages.x86_64-linux.provings.plasma -L --no-write-lock-file
+    nix build .#legacyPackages.x86_64-linux.provings.gaming -L --no-write-lock-file
 
 
 # ── Documentation ─────────────────────────────────────────────────────────────

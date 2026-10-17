@@ -46,6 +46,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `workstation` | `cogitator-workstation` | Le profil câble ses trois concerns : le socle de durcissement (sysctl kernel/réseau, blacklist de modules) est effectif, le `pcscd` YubiKey est présent, et l'unité display-manager du bureau existe |
 | `vm` | `cogitator-vm` | L'utilisateur primaire est dans `wheel`, son shell fish de login fonctionne et le lingering est actif ; une clé déclarée via `authorizedKeys` authentifie réellement en SSH, et pas seulement le port 22 qui répond ; le timer de GC part chaque semaine et son script porte bien la rétention déclarée ; Docker est absent par défaut et, sur un second nœud, le chemin opt-in câble à la fois le daemon et le groupe `docker` |
 | `plasma` | `cogitator-plasma` | SDDM est bien le display manager et tourne en Wayland avec la session Plasma par défaut ; le fichier de session existe dans le répertoire que sddm désigne réellement ; les deux réglages de la relique (`keyboardLayout`, `sddmTheme`) atteignent la configuration rendue ; le portail XDG porte le joker que la relique configure ; rtkit, le pont ALSA 32 bits et le `default.target` qui démarre WirePlumber avec la session graphique sont en place ; gvfs et tumbler sont joignables depuis la session |
+| `gaming` | `cogitator-gaming` | Steam est câblé, avec les règles udev qui rendent une manette utilisable sans root ; le pilote VDPAU/VAAPI de la relique AMD atteint l'arbre de pilotes fusionné ; les trois revendications de la relique Pipewire (rtkit, pont ALSA 32 bits, compat PulseAudio) sont en place ; Steam Remote Play est fermé par défaut et, sur un second nœud, ouvre à la fois sa plage UDP et ses ports TCP |
 
 ## Ajouter une épreuve
 
@@ -56,6 +57,42 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
    `provings/default.nix` mais absente de la recette ne tourne jamais, et un
    `just test` vert est alors un faux vert — cette étape n'est pas optionnelle.
 4. Ajouter une ligne au tableau de couverture ci-dessus (et son miroir anglais).
+
+## Paquets unfree dans une épreuve
+
+`cogitator-gaming` active `programs.steam`, et Steam est unfree. Le `pkgs` que
+flake-parts donne au registre n'autorise pas l'unfree, donc cette épreuve ne peut
+pas être bâtie depuis lui — et aucune des deux façons de relâcher ça depuis
+l'intérieur du test ne marche. Les deux sont mesurées fermées :
+
+| Tentative | Résultat |
+|---|---|
+| `nixpkgs.config.allowUnfree = true` dans le nœud | `error: nixpkgs.config is set to read-only` |
+| `node.pkgs = <instance>` | `error: node.pkgs is defined multiple times` — `runNixOSTest` la définit lui-même |
+
+L'instance doit donc être celle qui **bâtit** le test :
+
+```nix
+pkgs-unfree = import inputs.nixpkgs {
+  inherit system;
+  config.allowUnfree = true;
+};
+# …
+gaming = pkgs-unfree.testers.runNixOSTest (import ./gaming.nix {inherit self;});
+```
+
+Elle est cantonnée à cette seule ligne du registre, comme `forge/default.nix` en
+cantonne une pour la licence BSL de Terraform. Les cinq autres épreuves gardent un
+`drvPath` identique au bit près avec l'instance en place — c'est comme ça que ça a
+été vérifié plutôt que supposé, même si le contrôle tient de la formalité :
+`pkgs-unfree` est une liaison paresseuse que Nix ne force jamais pour elles.
+
+**Ce que ce cantonnement achète, et ce qu'il n'achète pas.** Aucune autre sortie du
+flake ne peut tirer un paquet unfree par ce biais. Mais à l'intérieur de cette
+épreuve, la clôture **entière** du nœud est évaluée avec `allowUnfree = true` — donc
+si une relique composée dans `cogitator-gaming` se met plus tard à tirer un firmware
+unfree ou un pilote propriétaire, cette épreuve l'accepte en silence là où toutes les
+autres échoueraient à l'évaluation. L'instance cantonne par sortie, pas par paquet.
 
 ## Limite de périmètre — durcissement des montages
 
