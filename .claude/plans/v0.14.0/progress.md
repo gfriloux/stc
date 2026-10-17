@@ -363,3 +363,131 @@ qui tirerait plus tard un firmware unfree passerait en silence dans cette seule
 3.3 ont été fusionnés en un commit. Scinder comme le plan le disait aurait **cassé
 `just ci`** — `deadnix` signale la liaison `pkgs-unfree` non utilisée tant que la
 ligne `gaming` n'existe pas.
+
+### Chantier 4 — #45, proving `dreadnought` (branche `test/proving-dreadnought`)
+
+- **Step 4.1 — `mkDefault` sur le getty série d'`aws.nix`, livré avec sa preuve.**
+  Valeur conservée : `aws-ami` rend toujours `true`. Innocuité : les **trois**
+  schematics (`awsImage`, `qcow2`, `toplevel` de dreadnought) gardent un
+  `drvPath` identique au bit. Le commentaire de la relique dit pourquoi, et
+  interdit explicitement de « simplifier » en `true` nu.
+
+**Ruling — décision 6 tranchée par le build, et dans le bon sens.** Le plan
+prévoyait que l'échec du rollback d'impermanence dans l'initrd pourrait bloquer
+le boot, et prévoyait une réduction de portée dans ce cas. Mesuré : **le boot
+n'est pas bloqué.** L'unité est tirée par `Wants` et non `Requires`, donc
+l'initrd atteint sa cible malgré l'échec et le système monte. Aucune réduction de
+portée n'a été nécessaire.
+
+**Ruling — l'ensemble des unités en échec est borné, pas épinglé.** Première
+version de l'assert : `systemctl is-system-running --wait`, rouge — le système est
+`degraded`, pas `running`, ce qui est l'état honnête ici. Deuxième version :
+épingler l'ensemble à `{stc-grow-pool.service}`, ce qu'une **sonde** avait mesuré.
+Rouge aussi : le lancement suivant rendait `{stc-grow-pool.service,
+zfs-rollback.service}`. Même configuration, deux résultats — `zfs-rollback` tourne
+dans l'**initrd**, et le fait que son échec soit encore listé après le switch-root
+varie. Donc l'assert **borne** l'ensemble aux deux unités dépendantes du pool et
+exige la présence de `stc-grow-pool.service` : il attrape toujours la régression
+qui compte (une *autre* unité qui échoue) sans être instable pour une raison
+interne à systemd. Épingler aurait produit un proving rouge au hasard, ce qui est
+pire qu'un assert large.
+
+- **Step 4.2 — `provings/dreadnought.nix`.** 6 subtests. Discrimination mesurée
+  nœud nu contre nœud dreadnought, ce qui a de nouveau écarté un assert prévu :
+  `services.udisks2.enable` vaut **déjà `false`** sur un nœud nu, donc « udisks2
+  absent » ne distingue pas la relique AWS. Non écrit, et dit en doc.
+  `kernel.kptr_restrict` vaut 1 sur un nœud nu contre 2 ici — il discrimine, lui.
+  Le noyau ZFS épinglé (6.12.111 contre 6.18.53 sur un nœud nu) est prouvé par un
+  `modprobe zfs` réel, pas par une comparaison de version.
+- **Step 4.3 — registre + recette.**
+- **Step 5 points 3 et 4 — soldés.** Le coût de `just test` est écrit avec ses
+  chiffres : sept épreuves, **neuf boots de VM** (`vm` et `gaming` ont deux nœuds),
+  KDE deux fois, Steam une fois. Dit explicitement parce qu'une recette trop
+  lourde à lancer est un gate qui cesse discrètement d'en être un.
+
+Note de méthode, payée une fois : mon script Python a vidé `provings/dreadnought.nix`
+en imbriquant une lecture du fichier dans un `open(path, "w")` — l'ouverture en
+écriture tronque **avant** que la lecture s'exécute. Fichier réécrit en entier.
+Ne jamais lire et écrire le même chemin dans la même expression.
+
+**Passe de correction après revue de clôture du chantier 4.** Huit Important,
+huit Minor, aucun Critical — la revue la plus sévère du lot, et la plus utile.
+
+- **I1 — troisième fait faux publié de ma part, et le pire des trois parce qu'il
+  retournait exactement son propre argument.** J'avais écrit que « le débit est ce
+  qui discrimine : le socle passe un `console=ttyS0` nu de son côté ». Mesuré :
+  `virtualisation.qemu.consoles = ["ttyS0,115200n8" "tty0"]` sur un nœud **nu**,
+  donc c'est le socle qui pose la chaîne complète, débit compris. Retirer
+  `console=ttyS0,115200n8` de la relique AWS laissait le proving vert. Conséquence
+  nette : **la revendication « console série » de la relique n'a aucune
+  couverture** (le getty est coupé, le paramètre vient du socle), et le fichier
+  affirmait le contraire. Assert réduit aux deux paramètres qui discriminent, et
+  l'absence de couverture est maintenant écrite deux fois — en tête du proving et
+  en doc.
+- **I2 — mon ruling « borner plutôt qu'épingler » était le choix faible.** Le
+  déterminisme était à un champ de distance : la colonne 2 de la commande que
+  l'assert parse déjà. Mesuré, `zfs-rollback` n'a **pas de fragment** dans le
+  système booté (`LoadState=not-found`), d'où la variance ; filtrer sur `loaded`
+  épingle l'ensemble à `{stc-grow-pool.service}` *et* reste stable. Ce que mon
+  ensemble borné cachait : il restait vert si une vraie unité du système booté
+  nommée `zfs-rollback.service` apparaissait et échouait.
+- **I4 — la trouvaille la plus utile du lot.** `environment.persistence` ne passe
+  **pas** par `fileSystems` : il produit des bind-mounts systemd, que qemu-vm ne
+  touche pas. Donc le contrat central de la relique d'impermanence (« si ce n'est
+  pas listé, c'est perdu ») **est** observable ici, et ma note de portée
+  détournait le lecteur en rangeant `/persist` avec les montages remplacés.
+  Mesuré sur le nœud : `/var/log`, `/var/lib/nixos`, `/etc/machine-id` montés, et
+  en posant `impermanence.extraDirectories = ["/var/lib/stc-proving"]` le montage
+  apparaît — donc l'option du cogitator traverse de bout en bout, à coût VM nul.
+  Subtest ajouté.
+  **Correction à la revue sur ce point :** elle affirmait que les quatre
+  bind-mounts `/etc/ssh/ssh_host_*` « finissent avec succès ». Mesuré par sonde :
+  ils n'ont **aucune unité de montage** dans cette VM. Je n'invente pas la cause,
+  je l'écris comme non tranchée — et je la signale, parce que si ça valait aussi
+  sur un hôte réel, chaque reboot changerait les clés d'hôte SSH.
+- **I5 — `modprobe zfs` ne prouve pas l'épinglage du noyau.** Mesuré : un nœud
+  avec seulement `boot.supportedFilesystems = ["zfs"]` tourne en 6.18.53 **et**
+  obtient un module ZFS. Le subtest est renommé pour ce qu'il prouve (« le
+  support ZFS est fonctionnel »), et `stc.relics.zfs.kernel` est consigné comme
+  non couvert — épingler `uname -r` rougirait à chaque bump de nixpkgs.
+- **I6 — j'avais choisi le timer non discriminant.** `services.zfs.trim.enable`
+  vaut **déjà `true`** en amont (mesuré sur un nœud nu), donc `zpool-trim.timer`
+  existe sans aucune relique. `zfs-scrub.timer` est absent sans la relique,
+  présent ici, **et porte une valeur d'option** (`OnCalendar=monthly` =
+  `scrubInterval`). Assert échangé : il discrimine et couvre une option.
+- **I7 — la sortie de `systemctl cat stc-grow-pool.service` était jetée.** Le
+  script rendu est là où atterrissent trois options du cogitator et la règle
+  `partSep` de la relique. Asserts ajoutés sur `growpart /dev/nvme0n1 3` et
+  `zpool online -e vmpool /dev/nvme0n1p3` — ce dernier prouve que le « p » n'est
+  inséré que parce que le nom de périphérique finit par un chiffre.
+- **I3 — ma note de portée se contredisait** (« exactement une unité en échec …
+  les **deux** sont vérifiées »), texte resté de la version épinglée. Réécrite.
+- **I8 — la conséquence du `mkDefault` n'était pas là où un consommateur la
+  lit.** Elle vivait dans le commentaire de la relique, le message de commit et
+  ce ledger : trois endroits qu'un consommateur ne lit jamais. Les deux pages de
+  `relics/aws.md` ont maintenant une section qui dit l'autre tranchant : **tout
+  module composé dans l'hôte peut désormais éteindre la console série en
+  silence**, et sur EC2 c'est souvent le seul retour dans une machine dont le SSH
+  ne répond plus — avec le `mkForce true` à poser si l'hôte en dépend.
+
+Minor pris au passage, parce que c'était du texte faux que j'avais écrit : M3
+(l'endpoint NTP est la revendication de la relique **AWS**, pas networking ; et la
+note Quad9 exigée par la décision 5 avait disparu — rétablie comme non
+observable), M5 (« forcé » est faux : `usePredictableInterfaceNames` perd un
+simple arbitrage de priorité), M6 (« priorité 10 — sous `mkForce` à 50 » se lisait
+comme *plus faible que*, alors que 10 gagne), M1 (`--wait` rétabli : la cible
+`multi-user.target` active ne garantit pas que systemd a fini), M4 (`journalctl -b
+-u zfs-rollback.service` au lieu d'un grep de la description, qui rougissait si on
+reformulait la relique et embarquait le `poolName` par défaut).
+
+Reportés : M2 (le proving **exige** maintenant la dégradation — rendre
+`stc-grow-pool` tolérant à l'absence de pool le rendrait rouge), M7 (la branche
+`else` de `partSep`, cas `xvda`, n'est exercée par rien).
+
+**M8 — observation produit, pas un défaut de cette branche, et elle mérite son
+propre arbitrage.** Je présentais « le rollback échoue et le boot continue » comme
+la nouvelle rassurante. Pour une relique dont le contrat est « chaque boot est un
+départ propre », un rollback qui échoue sans arrêter le boot veut dire qu'un hôte
+monte avec **une racine sale et que personne n'est prévenu** (`Wants` +
+`Before=sysroot.mount`, aucun `Requires`). Enregistrer ça au positif est la façon
+la plus sûre de ne jamais le remarquer.

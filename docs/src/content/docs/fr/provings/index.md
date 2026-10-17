@@ -25,6 +25,17 @@ rapide et statique.
 - Linux uniquement (`x86_64-linux` / `aarch64-linux`) — l'attribut est vide ailleurs.
 - Builder : `pkgs.testers.runNixOSTest`.
 
+**Ce que `just test` coûte maintenant.** Sept épreuves, **neuf boots de VM** —
+`vm` et `gaming` portent deux nœuds chacune — et les clôtures contiennent KDE deux
+fois (`workstation` et `plasma`) et Steam une fois. Sur un store froid, ça fait
+quelques Gio de téléchargement ; à chaud, toute la suite tient en quelques minutes
+de temps VM (chaque script finit en 23 à 30 s). C'est dit explicitement parce que
+la discipline qui compte, c'est de lancer `just test` avant de fermer une branche
+qui a touché un cogitator : une recette trop lourde à lancer est un gate qui cesse
+discrètement d'en être un. Pour itérer, builder une seule épreuve —
+`nix build .#legacyPackages.x86_64-linux.provings.<nom> -L` — et lancer la recette
+complète avant la clôture.
+
 À ne pas confondre avec `forge/purity-seals/`, qui produit des *builders de checks*
 réutilisables par les flakes **consommateurs**. Les épreuves testent STC ; elles
 ne s'exportent pas.
@@ -47,6 +58,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `vm` | `cogitator-vm` | L'utilisateur primaire est dans `wheel`, son shell fish de login fonctionne et le lingering est actif ; une clé déclarée via `authorizedKeys` authentifie réellement en SSH, et pas seulement le port 22 qui répond ; le timer de GC part chaque semaine et son script porte bien la rétention déclarée ; Docker est absent par défaut et, sur un second nœud, le chemin opt-in câble à la fois le daemon et le groupe `docker` |
 | `plasma` | `cogitator-plasma` | SDDM est bien le display manager et tourne en Wayland avec la session Plasma par défaut ; le fichier de session existe dans le répertoire que sddm désigne réellement ; les deux réglages de la relique (`keyboardLayout`, `sddmTheme`) atteignent la configuration rendue ; le portail XDG porte le joker que la relique configure ; rtkit, le pont ALSA 32 bits et le `default.target` qui démarre WirePlumber avec la session graphique sont en place ; gvfs et tumbler sont joignables depuis la session |
 | `gaming` | `cogitator-gaming` | Steam est câblé, avec les règles udev qui rendent une manette utilisable sans root ; le pilote VDPAU/VAAPI de la relique AMD atteint l'arbre de pilotes fusionné ; les trois revendications de la relique Pipewire (rtkit, pont ALSA 32 bits, compat PulseAudio) sont en place ; Steam Remote Play est fermé par défaut et, sur un second nœud, ouvre à la fois sa plage UDP et ses ports TCP |
+| `dreadnought` | `cogitator-dreadnought` | Cinq reliques composées sur un même hôte démarrent, avec exactement une unité chargée en échec faute de pool ; le support ZFS est fonctionnel sur le noyau booté ; les deux paramètres noyau AWS qui discriminent atteignent `/proc/cmdline` ; le script d'agrandissement porte les `poolName`, `ebsDisk` et `ebsPartition` du profil ; le timer de scrub ZFS porte `scrubInterval` ; la persistance explicite est bien bind-montée, y compris une entrée posée par l'option du cogitator ; le durcissement survit à la composition ; le rollback d'impermanence a tourné dans l'initrd et échoué comme prévu |
 
 ## Ajouter une épreuve
 
@@ -93,6 +105,64 @@ flake ne peut tirer un paquet unfree par ce biais. Mais à l'intérieur de cette
 si une relique composée dans `cogitator-gaming` se met plus tard à tirer un firmware
 unfree ou un pilote propriétaire, cette épreuve l'accepte en silence là où toutes les
 autres échoueraient à l'évaluation. L'instance cantonne par sortie, pas par paquet.
+
+## Limite de périmètre — dreadnought ne voit pas la couche disque
+
+`cogitator-dreadnought` est le profil qui possède les disques, et une VM de
+`nixosTest` remplace l'essentiel de ce que ça veut dire. Le module qemu-vm
+surcharge des jeux d'options entiers à la priorité 10, qui **gagne** contre tout
+ce qu'une relique peut écrire (`mkForce` est à 50, une définition nue à 100). Sur
+ce nœud, mesuré :
+
+| Ce que le profil déclare | Ce que la VM de test a |
+|---|---|
+| montages ZFS pour `/`, `/nix`, `/persist` | le jeu `fileSystems` propre à la VM |
+| `boot.loader.grub.device` = le disque EBS | `/dev/disk/by-id/virtio-root` |
+| l'endpoint NTP de la relique AWS | `timesyncd` est coupé dans le socle de test |
+| les résolveurs Quad9 de la relique networking | aucun `/etc/resolv.conf` sur le nœud |
+| `usePredictableInterfaceNames` | `false` — la relique le pose en `mkDefault`, il perd donc un simple arbitrage de priorité, il n'est pas forcé |
+| `serial-getty@ttyS0` activé | réclamé par l'instrumentation du test |
+
+Donc import du pool, montage des datasets, périphérique de boot, endpoint NTP,
+résolveurs et console série ne sont **pas vérifiés** — pour des raisons de
+framework, pas de code. Le vrai banc d'essai de la couche disque est l'image
+qcow2 de `local-vm` bootée à la main (`just build`, `just run`, `just ssh`), celle
+qui a prouvé le changement d'import ZFS en v0.13.0.
+
+**La console série AWS n'a aucune couverture**, et ça vaut d'être dit deux fois :
+le getty est coupé ici, et `console=ttyS0,115200n8` n'est pas un substitut
+utilisable non plus — mesuré, le socle de test pose
+`virtualisation.qemu.consoles = ["ttyS0,115200n8" "tty0"]` sur un nœud **nu**,
+donc cette chaîne est sur la ligne de commande du noyau quoi que fasse la relique.
+Seuls `nvme_core.io_timeout` et `random.trust_cpu` discriminent, et seuls ces deux
+sont vérifiés.
+
+**La persistance explicite, en revanche, est vérifiée** — c'est la seule
+revendication côté disque qui survive. `environment.persistence` ne passe pas par
+`fileSystems` : il produit des bind-mounts systemd, que qemu-vm laisse
+tranquilles. Donc `/var/log`, `/var/lib/nixos`, `/etc/machine-id` et une entrée
+posée via l'option `impermanence.extraDirectories` du cogitator sont tous
+contrôlés au `findmnt`. Les quatre entrées `/etc/ssh/ssh_host_*` que la relique
+déclare aussi n'ont **aucune unité de montage** dans cette VM ; savoir si elles
+sont bind-montées sur un hôte réel n'est pas tranché ici, et ça compte — si elles
+ne le sont pas, chaque reboot change les clés d'hôte SSH.
+
+**Ce que le boot établit quand même.** Le service de rollback d'impermanence
+tourne dans l'initrd, échoue faute de pool, et le boot continue malgré tout —
+l'unité est tirée par `Wants`, pas `Requires`. Le système booté est donc
+`degraded`, et l'épreuve **épingle** l'ensemble des unités en échec à exactement
+une, en filtrant sur la colonne `loaded` de systemd : `zfs-rollback` n'a pas de
+fragment dans le système booté, donc le fait que son échec initrd soit encore
+listé après le switch-root varie d'un lancement à l'autre, et le filtre retire
+cette non-détermination sans élargir ce qui est accepté.
+
+Non vérifié non plus : `services.udisks2.enable = false`, que la relique AWS pose
+pour garder GTK hors d'un serveur headless (mesuré `false` sur un nœud nu aussi,
+donc l'assert ne distinguerait pas la relique du défaut) ; et
+`stc.relics.zfs.kernel`, puisque épingler `uname -r` rougirait à chaque bump de
+nixpkgs — mesuré, un nœud avec seulement `boot.supportedFilesystems = ["zfs"]`
+obtient un module ZFS fonctionnel sur un noyau plus récent, donc charger le module
+prouve que le support ZFS marche, pas que l'épinglage est celui de la relique.
 
 ## Limite de périmètre — durcissement des montages
 

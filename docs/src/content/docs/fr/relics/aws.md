@@ -20,13 +20,38 @@ Configure automatiquement NixOS pour tourner sur AWS EC2. Charge les drivers req
 
 - **Drivers au démarrage :** Charge `nvme`, `ena`, `xen_blkfront` (Nitro et Xen)
 - **Blackliste xen_fbfront :** Évite un délai de 30 secondes au boot sur instances Xen
-- **Console série :** Active `ttyS0` pour AWS Systems Manager ou EC2 Connect (accès sans clé SSH)
+- **Console série :** Active `ttyS0` pour AWS Systems Manager ou EC2 Connect
+  (accès sans clé SSH). Posé avec `lib.mkDefault` depuis la v0.14.0 — voir la note
+  plus bas
 - **Timeouts NVMe :** Configure `nvme_core.io_timeout=4294967295` (recommandation Amazon EBS)
 - **Confiance RNG CPU :** Pose `random.trust_cpu=on` pour éviter la pénurie d'entropie au premier boot sur instances headless. Trade-off : fait confiance au RNG du fondeur — raisonnable quand on fait déjà confiance à l'hyperviseur ; à retirer si ton modèle de menace diffère.
 - **NTP interne AWS :** Utilise `169.254.169.123` — toujours accessible, pas d'accès internet requis
 - **Désactive udisks2 :** Supprime les dépendances GTK inutiles sur serveur headless
 - **Udev rules :** Installe `amazon-ec2-utils` pour compatibilité complète
 - **Expansion EBS :** Oneshot au démarrage (`stc-grow-pool`) qui étend la partition et le pool ZFS quand le volume EBS est plus grand que l'image buildée. S'exécute à chaque boot (pour prendre en compte un volume redimensionné) mais **pas** à chaque `nixos-rebuild switch`, et remonte les vraies erreurs `growpart` au lieu de les avaler
+
+
+## La console série est un défaut, pas un verrou
+
+`systemd.services."serial-getty@ttyS0".enable` est posé avec `lib.mkDefault`.
+Avant la v0.14.0 c'était une définition nue, ce qui signifiait qu'**aucun**
+consommateur ne pouvait couper le getty sans `lib.mkForce` — et qu'un `nixosTest`
+ne pouvait pas booter du tout un profil important cette relique, l'instrumentation
+du test réclamant le même port à la même priorité.
+
+La conséquence du correctif mérite d'être dite franchement, parce qu'elle coupe
+aussi dans l'autre sens : **n'importe quel module composé dans ton hôte peut
+désormais éteindre la console série en silence.** Sur EC2 cette console est
+souvent le seul retour possible dans une machine dont le SSH ne répond plus ; si
+ton hôte en dépend, épingle-la toi-même :
+
+```nix
+systemd.services."serial-getty@ttyS0".enable = lib.mkForce true;
+```
+
+Un hôte qui ne demande rien n'est pas affecté — la valeur reste `true`, et les
+trois schematics produisent des dérivations identiques au bit avant et après le
+changement.
 
 ## Exemple d'utilisation
 
