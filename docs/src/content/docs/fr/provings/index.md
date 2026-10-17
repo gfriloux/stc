@@ -44,13 +44,17 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `hardening` | `cogitator-hardening` | Durcissement sysctl kernel et réseau effectif ; SSH par clés uniquement, login root refusé |
 | `docker-server` | `cogitator-docker-server` | Les unités des conteneurs portent leur image épinglée et les flags de healthcheck ; les réseaux docker, le hook notify `OnFailure` et les timers de health-watch sont câblés ; la config statique Traefik est rendue avec le plugin bouncer CrowdSec et l'endpoint socket-proxy |
 | `workstation` | `cogitator-workstation` | Le profil câble ses trois concerns : le socle de durcissement (sysctl kernel/réseau, blacklist de modules) est effectif, le `pcscd` YubiKey est présent, et l'unité display-manager du bureau existe |
+| `vm` | `cogitator-vm` | L'utilisateur primaire est dans `wheel`, son shell fish de login fonctionne et le lingering est actif ; sshd répond sur 22 ; le timer de GC part chaque semaine et son script porte bien `keepDays` ; Docker est absent par défaut et, sur un second nœud, le chemin opt-in câble à la fois le daemon et le groupe `docker` |
 
 ## Ajouter une épreuve
 
 1. Créer `provings/<nom>.nix` — une fonction `{self}: { name; nodes; testScript; }`.
    Le nœud importe le vrai module du flake via `self.nixosModules.cogitator-<nom>`.
 2. La câbler dans `provings/default.nix` sous `legacyPackages.provings.<nom>`.
-3. Ajouter une ligne au tableau de couverture ci-dessus (et son miroir anglais).
+3. **L'ajouter à la recette `test` du `Justfile`.** Une épreuve enregistrée dans
+   `provings/default.nix` mais absente de la recette ne tourne jamais, et un
+   `just test` vert est alors un faux vert — cette étape n'est pas optionnelle.
+4. Ajouter une ligne au tableau de couverture ci-dessus (et son miroir anglais).
 
 ## Limite de périmètre — durcissement des montages
 
