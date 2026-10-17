@@ -306,3 +306,60 @@ pas deviné — leçon du chantier 2).
   un fait structurel du registre, pas un détail de ce chantier.
 
 Vérif : proving vert **du premier coup**, 6 subtests, script en 22,9 s.
+
+**Passe de correction après revue de clôture du chantier 3.** Quatre Important,
+quatre Minor. Deux corrections comptent plus que les autres.
+
+- **I2 — j'ai publié un fait faux pour la deuxième fois, et il était vérifiable
+  d'une commande.** Ma ligne de doc disait que `steam.remotePlay` ouvre
+  « exactement UDP 27031-27035 », et mon commentaire dans le proving prévenait
+  qu'écrire `27036` rougirait « pour une raison étrangère à STC ». Mesuré :
+  `allowedUDPPortRanges = [{from=27031;to=27035;}]`, **plus**
+  `allowedUDPPorts = [10400 10401 27036]`, **plus**
+  `allowedTCPPorts = [27036 27037]`. Donc six ports de plus, dont trois en TCP,
+  et `27036` est précisément ouvert — mon avertissement était à l'envers. Ce qui
+  m'a trompé : au chantier 2 j'avais relevé `allowedTCPPortRanges = []` et j'ai
+  lu « aucun TCP » au lieu de « aucune *plage* TCP ». Leçon : quand une mesure
+  rend une liste vide, vérifier qu'on a interrogé la bonne option avant d'en
+  tirer une négation. Corrigé : assert TCP ajouté (`27037`, TCP-only en amont,
+  donc c'est lui qui prouve la moitié que je niais), asserts par ligne et non par
+  blob, et les deux pages de doc réécrites.
+- **I1 — le subtest « with its hardware rules » n'assertait aucune règle
+  matérielle**, et son second assert (`steam-run`) était un doublon du premier :
+  les deux paquets viennent de la même liste `systemPackages`, aucune
+  configuration n'a l'un sans l'autre. Le plan demandait les règles udev
+  (Step 3.2) et je les avais laissées tomber sans ruling. Corrigé :
+  `test -e /etc/udev/rules.d/60-steam-input.rules`, chemin relevé dans
+  `steam-devices-udev-rules` (pas deviné).
+- **I3 — le subtest des pilotes 32 bits ne peut être rougi par aucun changement
+  STC**, puisque le subtest précédent prouve déjà que `programs.steam` est actif
+  et que ça suffit à poser `enable32Bit`. Mon ruling précédent lui faisait encore
+  dire trop (« prouve que la composition boote avec les pilotes 32 bits »).
+  Gardé, mais renommé et commenté comme ce qu'il est : une **sentinelle amont**,
+  utile si nixpkgs casse Proton pour tous les hôtes du profil, pas un détecteur
+  de régression STC.
+- **I4 — trois revendications non couvertes, aucune exclue honnêtement.**
+  `pulse.enable` (« compat PulseAudio », troisième revendication de l'en-tête de
+  la relique Pipewire) **discrimine ici** — contrairement au chantier 2 où le
+  module plasma6 l'allume — donc assert ajouté. `amdGpu.initrd` et
+  `hardening.filesystem.gaming` sont maintenant dans un paragraphe « ce que ce
+  proving ne vérifie pas, et pourquoi » de l'en-tête : le second n'est **pas
+  couvrable** (il retire `noexec` de `fileSystems`, que le module qemu-vm
+  remplace en bloc), et c'est précisément le footgun que l'en-tête du cogitator
+  signale — un lecteur de la ligne de couverture n'avait aucun moyen de
+  l'apprendre.
+
+Minor reportés ou traités au passage : asserts de pare-feu passés par ligne (M5),
+fragilité du rendu `iptables` face à nftables dite en commentaire (M6),
+dépendance au chemin amont `libva-vdpau-driver` notée (M7), et surtout **M8 —
+la preuve d'innocuité de l'instance unfree par identité de `drvPath` est quasi
+tautologique** (`pkgs-unfree` est une liaison paresseuse que Nix ne force jamais
+pour les autres provings). Le vrai périmètre est maintenant écrit en doc : la
+clôture **entière** du nœud gaming est évaluée en `allowUnfree`, donc une relique
+qui tirerait plus tard un firmware unfree passerait en silence dans cette seule
+épreuve. L'instance cantonne par sortie, pas par paquet.
+
+Écart au plan, non consigné à l'époque et relevé par la revue : les Steps 3.1 et
+3.3 ont été fusionnés en un commit. Scinder comme le plan le disait aurait **cassé
+`just ci`** — `deadnix` signale la liaison `pkgs-unfree` non utilisée tant que la
+ligne `gaming` n'existe pas.
