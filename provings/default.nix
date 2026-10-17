@@ -11,6 +11,7 @@
 # import the real flake module (self.nixosModules.cogitator-*).
 {
   self,
+  inputs,
   lib,
   ...
 }: {
@@ -18,7 +19,26 @@
     pkgs,
     system,
     ...
-  }:
+  }: let
+    # Steam is unfree, and the `pkgs` flake-parts hands us does not allow it, so
+    # the gaming proving cannot be built from it. The two ways of fixing that
+    # from inside the test are both closed, measured:
+    #
+    #   - `nixpkgs.config.allowUnfree = true` in the node
+    #       → error: nixpkgs.config is set to read-only
+    #   - `node.pkgs = <instance>`
+    #       → error: node.pkgs is defined multiple times
+    #         (runNixOSTest defines it itself)
+    #
+    # So the instance has to be the one building the test. Scoped to the single
+    # registry line that needs it, exactly as forge/default.nix does for
+    # Terraform's BSL licence — the point is that no other proving, and nothing
+    # else in the flake, gains the right to pull an unfree package in silently.
+    pkgs-unfree = import inputs.nixpkgs {
+      inherit system;
+      config.allowUnfree = true;
+    };
+  in
     lib.optionalAttrs (lib.elem system ["x86_64-linux" "aarch64-linux"]) {
       legacyPackages.provings = {
         hardening = pkgs.testers.runNixOSTest (import ./hardening.nix {inherit self;});
@@ -26,6 +46,8 @@
         workstation = pkgs.testers.runNixOSTest (import ./workstation.nix {inherit self;});
         vm = pkgs.testers.runNixOSTest (import ./vm.nix {inherit self;});
         plasma = pkgs.testers.runNixOSTest (import ./plasma.nix {inherit self;});
+        # The only line built from pkgs-unfree — see the comment on that instance.
+        gaming = pkgs-unfree.testers.runNixOSTest (import ./gaming.nix {inherit self;});
       };
     };
 }
