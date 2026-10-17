@@ -13,7 +13,11 @@
 #
 # The qemu-vm module replaces whole option sets at priority 10, which *wins*
 # against everything a relic can write (mkForce is 50, a plain definition 100).
-# Measured on this very node:
+# That is the default, not a law: `virtualisation.fileSystems = lib.mkForce {}`
+# opts out of it, and provings/sarcophagus-kvm.nix uses exactly that to boot a
+# real image and assert the disk layer. It is not done here because this profile
+# targets an AMI, and the AMI's disk is EBS — see the closing paragraph.
+# Measured on this very node, as it stands:
 #
 #   - `fileSystems` becomes the VM's own set — "/", "/nix/.ro-store",
 #     "/nix/.rw-store", "/nix/store", "/tmp/shared", "/tmp/xchg". The profile's
@@ -43,10 +47,12 @@
 # Requires. The booted system is therefore `degraded`, with exactly one failed
 # unit that is loaded in the booted system, and the subtest below pins that set.
 #
-# None of the unobservable parts is a code problem. The real bench for the disk
-# layer is the local-vm qcow2 image booted by hand (`just build` + `just run` +
-# `just ssh`), which is what proved the ZFS import change in v0.13.0. A proving
-# that pretended to cover disks would be worse than one that says where to look.
+# None of the unobservable parts is a code problem. Two benches cover the disk
+# layer instead: provings/sarcophagus-kvm.nix, which boots a built qcow2 under
+# the test driver and asserts the pool, the datasets and the rollback; and the
+# local-vm qcow2 booted by hand (`just build` + `just run` + `just ssh`), which
+# is what proved the ZFS import change in v0.13.0. A proving that pretended to
+# cover disks would be worse than one that says where to look.
 #
 # Also deliberately not asserted:
 #
@@ -172,14 +178,21 @@
         # file-level bind mount that does materialise here.
         machine.succeed("findmnt /etc/machine-id")
 
-        # NOT asserted, and measured rather than assumed: the four
-        # /etc/ssh/ssh_host_* entries the relic also declares have **no mount
-        # unit at all** in this VM (`systemctl list-units --type=mount --all`
-        # lists none). Whether they are bind-mounted on a real host — where sshd
-        # generates the keys and a genuine /persist dataset exists — is not
-        # settled by this proving, and it matters: if they are not, every reboot
-        # of a dreadnought changes its host keys. That question belongs to the
-        # local-vm bench named in the scope note.
+        # NOT asserted here, and no longer an open question. The four
+        # /etc/ssh/ssh_host_* entries the relic also declares have no mount unit
+        # at all, and the reason is upstream: impermanence renders `files`
+        # through mount-file.bash, which bind-mounts when the target exists and
+        # *symlinks* when it does not. /etc/machine-id takes a special branch
+        # that always bind-mounts, hence the asymmetry above.
+        #
+        # provings/sarcophagus-kvm.nix settled what that means on a real host,
+        # and the answer is not the obvious one. The symlinks are written by the
+        # `persist-files` activation script during the *image build*, so they
+        # are inside @blank; every rollback restores them, mount-file.bash sees
+        # a link already pointing at its target and does nothing, and sshd reads
+        # the key through it from /persist. Measured there: the host key
+        # fingerprint is identical either side of a rollback. A sarcophagus does
+        # not change its host keys on reboot.
 
         # And the cogitator's own option, set on this node: without it threading
         # through to the relic, this mount would not exist.

@@ -25,11 +25,14 @@ rapide et statique.
 - Linux uniquement (`x86_64-linux` / `aarch64-linux`) — l'attribut est vide ailleurs.
 - Builder : `pkgs.testers.runNixOSTest`.
 
-**Ce que `just test` coûte maintenant.** Sept épreuves, **neuf boots de VM** —
-`vm` et `gaming` portent deux nœuds chacune — et les clôtures contiennent KDE deux
-fois (`workstation` et `plasma`) et Steam une fois. Sur un store froid, ça fait
-quelques Gio de téléchargement ; à chaud, toute la suite tient en quelques minutes
-de temps VM (chaque script finit en 23 à 30 s). C'est dit explicitement parce que
+**Ce que `just test` coûte maintenant.** Huit épreuves, **onze boots de VM** —
+`vm` et `gaming` portent deux nœuds chacune, et `sarcophagus-kvm` démarre son
+nœud unique deux fois — et les clôtures contiennent KDE deux fois (`workstation`
+et `plasma`) et Steam une fois. Sur un store froid, ça fait quelques Gio de
+téléchargement ; à chaud, la plupart des scripts finissent en 23 à 30 s.
+`sarcophagus-kvm` sort du lot aux deux bouts : elle construit une image disque
+dans sa propre VM avant même que le test démarre, puis son script tourne 66 s
+pour les deux boots. C'est dit explicitement parce que
 la discipline qui compte, c'est de lancer `just test` avant de fermer une branche
 qui a touché un cogitator : une recette trop lourde à lancer est un gate qui cesse
 discrètement d'en être un. Pour itérer, builder une seule épreuve —
@@ -58,6 +61,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `vm` | `cogitator-vm` | L'utilisateur primaire est dans `wheel`, son shell fish de login fonctionne et le lingering est actif ; une clé déclarée via `authorizedKeys` authentifie réellement en SSH, et pas seulement le port 22 qui répond ; le timer de GC part chaque semaine et son script porte bien la rétention déclarée ; Docker est absent par défaut et, sur un second nœud, le chemin opt-in câble à la fois le daemon et le groupe `docker` |
 | `plasma` | `cogitator-plasma` | SDDM est bien le display manager et tourne en Wayland avec la session Plasma par défaut ; le fichier de session existe dans le répertoire que sddm désigne réellement ; les deux réglages de la relique (`keyboardLayout`, `sddmTheme`) atteignent la configuration rendue ; le portail XDG porte le joker que la relique configure ; rtkit, le pont ALSA 32 bits et le `default.target` qui démarre WirePlumber avec la session graphique sont en place ; gvfs et tumbler sont joignables depuis la session |
 | `gaming` | `cogitator-gaming` | Steam est câblé, avec les règles udev qui rendent une manette utilisable sans root ; le pilote VDPAU/VAAPI de la relique AMD atteint l'arbre de pilotes fusionné ; les trois revendications de la relique Pipewire (rtkit, pont ALSA 32 bits, compat PulseAudio) sont en place ; Steam Remote Play est fermé par défaut et, sur un second nœud, ouvre à la fois sa plage UDP et ses ports TCP |
+| `sarcophagus-kvm` | `cogitator-sarcophagus-kvm` | Démarre l'image qcow2 que le profil existe pour produire, deux fois sur le même disque : les datasets ZFS que le profil déclare sont bien ce qui est monté (`vmpool/root`, `vmpool/nix`, `vmpool/persist`), la relique crée elle-même la référence `@blank` que le builder d'image ne livre pas, le rollback de l'initrd tourne et *réussit*, et après un reboot un témoin posé sur le dataset racine a disparu tandis que ceux de `/persist` et du chemin déclaré via `impermanence.extraDirectories` ont survécu — l'empreinte de la clé d'hôte SSH restant inchangée |
 | `dreadnought` | `cogitator-dreadnought` | Cinq reliques composées sur un même hôte démarrent, avec exactement une unité chargée en échec faute de pool ; le support ZFS est fonctionnel sur le noyau booté ; les deux paramètres noyau AWS qui discriminent atteignent `/proc/cmdline` ; le script d'agrandissement porte les `poolName`, `ebsDisk` et `ebsPartition` du profil ; le timer de scrub ZFS porte `scrubInterval` ; la persistance explicite est bien bind-montée, y compris une entrée posée par l'option du cogitator ; le durcissement survit à la composition ; le rollback d'impermanence a tourné dans l'initrd et échoué comme prévu |
 
 ## Ajouter une épreuve
@@ -106,6 +110,37 @@ si une relique composée dans `cogitator-gaming` se met plus tard à tirer un fi
 unfree ou un pilote propriétaire, cette épreuve l'accepte en silence là où toutes les
 autres échoueraient à l'évaluation. L'instance cantonne par sortie, pas par paquet.
 
+## Démarrer une vraie image — le patron « image externe »
+
+Sept des huit épreuves laissent le pilote de test synthétiser un nœud.
+`sarcophagus-kvm` ne le peut pas : la revendication de son profil **est** le
+disque, et sur un nœud synthétisé le module qemu-vm remplace `fileSystems` par le
+sien à la priorité 10 — ni le pool, ni les datasets, ni le rollback ne seraient
+observables.
+
+Elle suit donc le `nixos/tests/qemu-vm-external-disk-image.nix` de nixpkgs : le
+nœud déclare l'image, et le pilote démarre *cette image* au lieu d'une racine à
+lui. Le script de test pose une surcouche copy-on-write au-dessus du chemin du
+store et y pointe `NIX_DISK_IMAGE` — c'est aussi ce qui permet au même disque de
+conserver ses écritures d'un boot à l'autre.
+
+Cinq options de nœud le rendent possible. Aucune n'est un correctif produit —
+l'amont les expose exactement pour ça — et chacune a été mesurée, pas devinée :
+
+| Option | Pourquoi |
+|---|---|
+| `virtualisation.directBoot.enable = false` | démarrer le GRUB de l'image plutôt que le noyau du pilote |
+| `virtualisation.mountHostNixStore = false` | le store vit dans l'image |
+| `virtualisation.fileSystems = lib.mkForce {}` | l'échappatoire documentée à l'écrasement de `fileSystems`. Avec elle, `findmnt /` répond `vmpool/root` et la couche disque devient assertable |
+| `virtualisation.bootLoaderDevice = "/dev/vda"` | `qemu-vm.nix` épingle `boot.loader.grub.device` à `/dev/disk/by-id/virtio-root` à la priorité 10, ce qui bat le `mkForce` du cogitator ; le builder d'image échoue alors à installer GRUB |
+| `system.switch.enable = true` | `nixos-test-base.nix` le désactive par défaut, et `nixos-install` dans le builder d'image a besoin de `switch-to-configuration` |
+
+Les deux dernières ne se rencontrent qu'en lançant : elles sortent toutes deux
+comme une erreur de **build d'image**, pas d'évaluation, et celle de GRUB signale
+un périphérique inexistant plutôt qu'un conflit de priorités.
+
+C'est le patron que #47 (`sarcophagus-aws`) doit reprendre.
+
 ## Limite de périmètre — dreadnought ne voit pas la couche disque
 
 `cogitator-dreadnought` est le profil qui possède les disques, et une VM de
@@ -143,9 +178,16 @@ revendication côté disque qui survive. `environment.persistence` ne passe pas 
 tranquilles. Donc `/var/log`, `/var/lib/nixos`, `/etc/machine-id` et une entrée
 posée via l'option `impermanence.extraDirectories` du cogitator sont tous
 contrôlés au `findmnt`. Les quatre entrées `/etc/ssh/ssh_host_*` que la relique
-déclare aussi n'ont **aucune unité de montage** dans cette VM ; savoir si elles
-sont bind-montées sur un hôte réel n'est pas tranché ici, et ça compte — si elles
-ne le sont pas, chaque reboot change les clés d'hôte SSH.
+déclare aussi n'ont **aucune unité de montage**, ici comme sur un hôte réel — et
+`sarcophagus-kvm` a tranché pourquoi, avec une réponse qui n'est pas l'évidente.
+L'amont rend les `files` par `mount-file.bash`, qui pose un lien symbolique au
+lieu d'un bind mount quand la cible n'existe pas encore ; or ce script tourne
+aussi comme script d'*activation* `persist-files`, que `nixos-install` exécute
+dans le builder d'image, alors que `/persist` est encore vide. Les liens sont donc
+cuits dans l'image, donc présents dans `@blank`, donc restaurés par chaque
+rollback — et `mount-file.bash` trouve alors un lien qui pointe déjà sur sa cible
+et ne fait rien. sshd lit la clé à travers, depuis `/persist`. Mesuré de part et
+d'autre d'un rollback : l'empreinte de la clé d'hôte ne change pas.
 
 **Ce que le boot établit quand même.** Le service de rollback d'impermanence
 tourne dans l'initrd, échoue faute de pool, et le boot continue malgré tout —
