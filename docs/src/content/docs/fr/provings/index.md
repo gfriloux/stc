@@ -45,6 +45,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `docker-server` | `cogitator-docker-server` | Les unités des conteneurs portent leur image épinglée et les flags de healthcheck ; les réseaux docker, le hook notify `OnFailure` et les timers de health-watch sont câblés ; la config statique Traefik est rendue avec le plugin bouncer CrowdSec et l'endpoint socket-proxy |
 | `workstation` | `cogitator-workstation` | Le profil câble ses trois concerns : le socle de durcissement (sysctl kernel/réseau, blacklist de modules) est effectif, le `pcscd` YubiKey est présent, et l'unité display-manager du bureau existe |
 | `vm` | `cogitator-vm` | L'utilisateur primaire est dans `wheel`, son shell fish de login fonctionne et le lingering est actif ; une clé déclarée via `authorizedKeys` authentifie réellement en SSH, et pas seulement le port 22 qui répond ; le timer de GC part chaque semaine et son script porte bien la rétention déclarée ; Docker est absent par défaut et, sur un second nœud, le chemin opt-in câble à la fois le daemon et le groupe `docker` |
+| `plasma` | `cogitator-plasma` | SDDM est bien le display manager et tourne en Wayland avec la session Plasma par défaut ; le fichier de session existe dans le répertoire que sddm désigne réellement ; le portail XDG porte le joker que la relique configure ; rtkit et les unités utilisateur Pipewire/WirePlumber sont en place, y compris le `default.target` qui démarre WirePlumber avec la session graphique |
 
 ## Ajouter une épreuve
 
@@ -65,6 +66,21 @@ via `fileSystems`, mais le module qemu-vm de nixosTest remplace tout l'attrset
 (priorité 50) du relic. Ces montages n'existent jamais dans la VM de test : une
 vérification à l'exécution échouerait pour des raisons de framework, pas réelles.
 Le durcissement à base de sysctl n'est pas affecté et est bien vérifié.
+
+## Limite de périmètre — plasma vérifie la configuration, pas une session graphique
+
+L'épreuve `plasma` attend `multi-user.target` puis lit sur disque la
+configuration rendue et les fichiers d'unités. Elle ne lance pas de session
+Plasma : c'est lourd dans une VM, et la session elle-même est celle de l'amont,
+pas celle de STC.
+
+Elle laisse aussi **volontairement** deux revendications de la relique sans
+assert. Mesuré sur un nœud `nixosTest` nu, `services.pulseaudio.enable` et
+`services.xserver.enable` valent déjà `false` sans aucune de ces reliques — donc
+« PulseAudio est coupé » et « pas de serveur X » seraient vrais quoi que fasse
+STC, et un assert incapable de distinguer la relique du défaut ne prouve rien.
+`services.tumbler` est écarté pour une autre raison : il ne livre aucune unité
+systemd (activation purement D-Bus), il n'y a donc rien à lire sur disque.
 
 ## Limite de périmètre — docker-server vérifie le câblage, pas les conteneurs
 

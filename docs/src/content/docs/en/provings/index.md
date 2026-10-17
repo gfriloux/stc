@@ -43,6 +43,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `docker-server` | `cogitator-docker-server` | Container units carry their pinned image and healthcheck flags; docker networks, the notify `OnFailure` hook and health-watch timers are wired; the Traefik static config renders with the CrowdSec bouncer plugin and socket-proxy endpoint |
 | `workstation` | `cogitator-workstation` | The profile wires its three concerns: the hardening socle (kernel/network sysctl, module blacklist) is live, YubiKey `pcscd` is present, and the desktop's display-manager unit exists |
 | `vm` | `cogitator-vm` | The primary user is in `wheel` with a working fish login shell and lingering enabled; a key declared through `authorizedKeys` actually authenticates over SSH, not merely that port 22 answers; the GC timer fires weekly and its script carries the declared retention; Docker is absent by default and, on a second node, the opt-in path wires both the daemon and the `docker` group |
+| `plasma` | `cogitator-plasma` | SDDM is the display manager and runs Wayland with the Plasma session as its default; the session file exists in the directory sddm actually points at; the XDG portal carries the wildcard the relic configures; rtkit and the Pipewire/WirePlumber user units are in place, including the `default.target` want that starts WirePlumber with the graphical session |
 
 ## Adding a proving
 
@@ -63,6 +64,20 @@ through `fileSystems`, but the nixosTest qemu-vm module replaces the whole
 `mkForce` (priority 50). Those mounts never exist inside the test VM, so a runtime
 check would fail for framework reasons, not real ones. sysctl-based hardening is
 unaffected and is asserted.
+
+## Scope limit — plasma asserts configuration, not a graphical session
+
+The `plasma` proving waits for `multi-user.target` and reads the rendered
+configuration and unit files from disk. It does not bring up a Plasma session:
+that is heavy in a VM, and the session itself is upstream's, not STC's.
+
+It also leaves two of the relic's claims unasserted **on purpose**. Measured on a
+bare `nixosTest` node, `services.pulseaudio.enable` and `services.xserver.enable`
+are already `false` with none of these relics imported — so "PulseAudio is off"
+and "no X server" would hold whatever STC did, and an assertion that cannot tell
+the relic from the default proves nothing. `services.tumbler` is omitted for a
+different reason: it ships no systemd unit (purely D-Bus activated), so there is
+nothing on disk to read.
 
 ## Scope limit — docker-server asserts wiring, not running containers
 
