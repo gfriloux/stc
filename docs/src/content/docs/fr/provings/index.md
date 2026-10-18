@@ -25,11 +25,12 @@ rapide et statique.
 - Linux uniquement (`x86_64-linux` / `aarch64-linux`) — l'attribut est vide ailleurs.
 - Builder : `pkgs.testers.runNixOSTest`.
 
-**Ce que `just test` coûte maintenant.** Neuf épreuves, **douze boots de VM** —
+**Ce que `just test` coûte maintenant.** Dix épreuves, **treize boots de VM** —
 `vm` et `gaming` portent deux nœuds chacune, et `sarcophagus-kvm` démarre son
 nœud unique deux fois — et les clôtures contiennent KDE deux fois (`workstation`
-et `plasma`) et Steam une fois. Sur un store froid, ça fait quelques Gio de
-téléchargement ; à chaud, la plupart des scripts finissent en 23 à 30 s.
+et `plasma`), Steam une fois, et les ~40 paquets de la trousse enginseer. Sur un
+store froid, ça fait quelques Gio de téléchargement ; à chaud, la plupart des
+scripts finissent en 23 à 30 s, `enginseer` en 25 s.
 Les deux sarcophages sortent du lot, parce que chacun **construit une image
 disque dans sa propre VM avant même que son test démarre** : `sarcophagus-kvm`
 tourne ensuite 66 s pour ses deux boots, et `sarcophagus-aws` 32 s pour le
@@ -64,12 +65,16 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `gaming` | `cogitator-gaming` | Steam est câblé, avec les règles udev qui rendent une manette utilisable sans root ; le pilote VDPAU/VAAPI de la relique AMD atteint l'arbre de pilotes fusionné ; les trois revendications de la relique Pipewire (rtkit, pont ALSA 32 bits, compat PulseAudio) sont en place ; Steam Remote Play est fermé par défaut et, sur un second nœud, ouvre à la fois sa plage UDP et ses ports TCP |
 | `sarcophagus-kvm` | `cogitator-sarcophagus-kvm` | Démarre l'image qcow2 que le profil existe pour produire, deux fois sur le même disque : les datasets ZFS que le profil déclare sont bien ce qui est monté (`vmpool/root`, `vmpool/nix`, `vmpool/persist`), la relique crée elle-même la référence `@blank` que le builder d'image ne livre pas, le rollback de l'initrd tourne et *réussit*, et après un reboot un témoin posé sur le dataset racine a disparu tandis que ceux de `/persist` et du chemin déclaré via `impermanence.extraDirectories` ont survécu — l'empreinte de la clé d'hôte SSH restant inchangée, et le compte rendu d'échec de la relique restant totalement muet sur ce chemin sain |
 | `sarcophagus-aws` | `cogitator-sarcophagus-aws` | Démarre l'image raw de l'AMI que le profil existe pour produire, sur un disque **plus grand que l'image** : le pool ZFS grandit réellement pour remplir le volume qui est dessous (`stc-grow-pool` va au bout *et* `zpool list` dépasse la taille de l'image), les datasets du profil sont bien ce qui est monté, `/boot` est un ESP FAT dont le label résout vers le périphérique monté, les deux paramètres noyau AWS qui discriminent sont actifs, `xen_fbfront` est blacklisté, les règles udev EC2 sont posées, et les pilotes réseau des **deux** classes d'instance sont demandés — celui de Xen échouant à s'insérer sur ce banc *sans faire échouer le boot*, ce qui est précisément ce qui permet à une seule image de servir Nitro et Xen |
+| `enginseer` | `cogitator-enginseer` (Home Manager) | Active le profil pour un utilisateur de test dans une VM et vérifie ses revendications de runtime : les trois alias qu'il déclare se résolvent dans un shell réellement lancé (pas les quatre que rend aussi `programs.lsd`), `oh-my-posh` s'initialise depuis le thème que le cogitator livre, `git` choisit lui-même `delta` comme pager de diff avec l'`interactive.diffFilter` de delta en place, direnv est accroché à fish avec nix-direnv et silencieux, `FZF_CTRL_R_COMMAND` est posée et vide donc Ctrl-R appartient à atuin, `~/.ssh/config` porte le multiplexage **sans** le bloc par défaut legacy de Home Manager, le `pinentry-program` de gpg-agent est le `pinentry-curses` sans tête, et la saveur catppuccin déclarée atteint le thème de bat |
 | `dreadnought` | `cogitator-dreadnought` | Cinq reliques composées sur un même hôte démarrent, avec exactement une unité chargée en échec faute de pool ; le support ZFS est fonctionnel sur le noyau booté ; les deux paramètres noyau AWS qui discriminent atteignent `/proc/cmdline` ; le script d'agrandissement porte les `poolName`, `ebsDisk` et `ebsPartition` du profil ; le timer de scrub ZFS porte `scrubInterval` ; la persistance explicite est bien bind-montée, y compris une entrée posée par l'option du cogitator ; le durcissement survit à la composition ; le rollback d'impermanence a tourné dans l'initrd et échoué comme prévu, et cet échec est lisible depuis le système démarré via `stc-impermanence-state.service` et non plus seulement dans un journal d'initrd |
 
 ## Ajouter une épreuve
 
 1. Créer `provings/<nom>.nix` — une fonction `{self}: { name; nodes; testScript; }`.
    Le nœud importe le vrai module du flake via `self.nixosModules.cogitator-<nom>`.
+   Un cogitator Home Manager prend `{self, inputs}` à la place, parce que son nœud
+   doit importer le module NixOS de Home Manager depuis un input — voir *Vérifier
+   un cogitator Home Manager* plus bas. Les deux signatures coexistent à dessein.
 2. La câbler dans `provings/default.nix` sous `legacyPackages.provings.<nom>`.
 3. **L'ajouter à la recette `test` du `Justfile`.** Une épreuve enregistrée dans
    `provings/default.nix` mais absente de la recette ne tourne jamais, et un
@@ -111,6 +116,88 @@ flake ne peut tirer un paquet unfree par ce biais. Mais à l'intérieur de cette
 si une relique composée dans `cogitator-gaming` se met plus tard à tirer un firmware
 unfree ou un pilote propriétaire, cette épreuve l'accepte en silence là où toutes les
 autres échoueraient à l'évaluation. L'instance cantonne par sortie, pas par paquet.
+
+## Vérifier un cogitator Home Manager
+
+`cogitator-enginseer` est un profil Home Manager et non NixOS, et
+[#50](https://github.com/gfriloux/stc/issues/50) laissait délibérément le
+mécanisme ouvert — *« doesn't need to be `runNixOSTest` if that's the wrong tool
+for a HM-only module »*. C'est le bon outil, et la raison vaut d'être écrite parce
+que l'option la moins chère est tentante.
+
+**Pourquoi pas construire `home.activationPackage` ?** Parce que ça prouve que la
+configuration *évalue et construit*, ce que `nix flake check` et les Purity Seals
+prouvent déjà. Une épreuve qui se réduirait à un `nix build` n'ajouterait rien au
+gate tout en portant le nom d'une épreuve. Or les revendications d'enginseer sont
+des revendications de runtime : un alias qui se résout dans un shell réellement
+lancé, `delta` qui est le pager que `git` choisit lui-même, la variable de session
+qui confie Ctrl-R à atuin. Rien de tout ça n'est visible dans un `drvPath`.
+
+Le nœud importe donc `inputs.home-manager.nixosModules.home-manager` et attache le
+cogitator à un utilisateur de test par `home-manager.users.<u>.imports`.
+L'activation devient alors une unité systemd ordinaire du nœud — mesuré,
+`home-manager-<u>.service` — et `wait_for_unit` s'applique comme partout
+ailleurs. C'est aussi pourquoi ces deux épreuves prennent `inputs` là où les neuf
+autres ne prennent que `self` : `self.homeModules.*` seul ne peut pas attacher une
+configuration home à un nœud.
+
+**Quatre concessions de banc**, dans le même esprit que les cinq du patron image
+externe. Aucune n'est une recommandation de câblage pour un consommateur :
+
+| Option | Pourquoi |
+|---|---|
+| `users.users.<u>.shell = pkgs.fish` | Home Manager ne pose pas le shell de connexion — mesuré. Sans ça, aucun fish ne démarre, donc la moitié « shell de connexion » du profil ne serait pas observable |
+| `programs.fish.enable = true` | Imposé par une assertion amont dès qu'un utilisateur a fish en shell de connexion : sinon fish « [manque] les répertoires nix de base dans son PATH et peut rendre impossible la connexion de cet utilisateur ». Satisfaite plutôt que muselée par `ignoreShellProgramCheck`, parce que cette épreuve se connecte vraiment |
+| `home-manager.useGlobalPkgs = true` | HM utilise le `pkgs` du nœud au lieu d'importer sa propre nixpkgs. Une seule instance à l'évaluation — et la note sur le scoping unfree ci-dessus reste vraie pour les épreuves Home Manager, ce qu'une seconde instance rendrait faux en silence |
+| `home-manager.useUserPackages = true` | Les paquets atterrissent dans `users.users.<u>.packages`, donc sous `/etc/profiles/per-user/<u>` — un chemin déterministe. Mesuré : les deux options changent la clôture, donc aucune n'est un no-op silencieux |
+
+Mesuré et à dire : **aucun des deux cogitators Home Manager n'a besoin de
+l'instance unfree.** `gaming` reste la seule épreuve unfree de la suite.
+
+### Ce que mesurer d'abord a disqualifié
+
+Le nœud de référence ici est celui qui porte Home Manager et l'utilisateur de
+test mais **aucun cogitator STC**. Dessus, HM rend exactement cinq fichiers
+(`environment.d/10-home-manager.conf`, trois `fontconfig/conf.d/*`,
+`systemd/user/tray.target`) plus deux `.keep`, et `programs.fish.enable` comme
+`services.gpg-agent.enable` valent `false`. Cinq candidats d'assertion ont été
+corrigés ou écartés contre lui, et chacun n'aurait rien prouvé :
+
+- **Quatre des sept alias fish ne sont pas à STC.** `ls`, `ll`, `la` et `lt`
+  viennent du module `programs.lsd` de Home Manager — et pire,
+  `environment.shellAliases` de NixOS vaut **lui-même** `{l, ll, ls}` par défaut,
+  donc vérifier `ll` aurait été vert sans aucun cogitator. Seuls `cat → bat`,
+  `cp → xcp` et `ping → prettyping` sortent de ce profil.
+- **`delta` n'est pas câblé sur `core.pager`.** L'intégration passe par
+  `[pager] diff/log/show/blame` et `interactive.diffFilter` ; `core.pager` est
+  vide. Une vérification dessus n'aurait rien rendu.
+- **`programs.direnv.silent` n'écrit le mot « silent » nulle part.** Il rend une
+  section `[global]` avec `log_filter = "^$"`.
+- **`programs.fzf.historyWidget.command = ""` ne change pas `config.fish`.**
+  Mesuré contre le contre-factuel, la seule différence entre les deux fichiers
+  rendus est un chemin de store : le réglage passe par `hm-session-vars.fish`
+  sous la forme `FZF_CTRL_R_COMMAND`, vide ici et `"fzf"` par défaut. La variable
+  de session est le seul endroit où c'est visible.
+- **Le choix du pinentry n'est pas dans l'unité systemd.** Il atterrit dans
+  `~/.gnupg/gpg-agent.conf` sous forme d'une ligne `pinentry-program` ; l'unité
+  rendue ne porte que `GNUPGHOME` et l'`ExecStart` de `gpg-agent`.
+
+Une assertion avait besoin d'un **contre-factuel** pour être vérifiable du tout.
+`programs.ssh.enableDefaultConfig = false` est une revendication sur ce qui est
+*absent* : le remettre à `true` ajoute `AddKeysToAgent`, `Compression`,
+`ForwardAgent`, `HashKnownHosts`, `ServerAliveCountMax`, `ServerAliveInterval` et
+`UserKnownHostsFile`. C'est donc l'absence de ceux-là qui distingue les deux cas,
+là où la présence de `ControlMaster` ne distingue rien.
+
+### Limite de périmètre — la configuration, pas un agent vivant
+
+L'épreuve ne vérifie pas que `gpg-agent` *tourne*. C'est une unité utilisateur, il
+faudrait une session utilisateur vivante ; ce que le cogitator décide, c'est quel
+pinentry l'agent porte, et ça se lit dans la configuration rendue. L'agent qui
+tourne est celui de l'amont.
+
+Non vérifié non plus : la simple présence de paquets dans le `PATH`. Une liste de
+paquets prouve qu'une liste de paquets a été écrite.
 
 ## Démarrer une vraie image — le patron « image externe »
 
