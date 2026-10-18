@@ -28,7 +28,7 @@ rapide et statique.
 **Ce que `just test` coûte maintenant.** Dix épreuves, **treize boots de VM** —
 `vm` et `gaming` portent deux nœuds chacune, et `sarcophagus-kvm` démarre son
 nœud unique deux fois — et les clôtures contiennent KDE deux fois (`workstation`
-et `plasma`), Steam une fois, et les ~40 paquets de la trousse enginseer. Sur un
+et `plasma`), Steam une fois, et les 31 paquets nommés de la trousse enginseer. Sur un
 store froid, ça fait quelques Gio de téléchargement ; à chaud, la plupart des
 scripts finissent en 23 à 30 s, `enginseer` en 25 s.
 Les deux sarcophages sortent du lot, parce que chacun **construit une image
@@ -137,9 +137,9 @@ Le nœud importe donc `inputs.home-manager.nixosModules.home-manager` et attache
 cogitator à un utilisateur de test par `home-manager.users.<u>.imports`.
 L'activation devient alors une unité systemd ordinaire du nœud — mesuré,
 `home-manager-<u>.service` — et `wait_for_unit` s'applique comme partout
-ailleurs. C'est aussi pourquoi ces deux épreuves prennent `inputs` là où les neuf
-autres ne prennent que `self` : `self.homeModules.*` seul ne peut pas attacher une
-configuration home à un nœud.
+ailleurs. C'est aussi pourquoi cette épreuve prend `inputs` là où les neuf autres ne
+prennent que `self` — comme le fera toute future épreuve Home Manager :
+`self.homeModules.*` seul ne peut pas attacher une configuration home à un nœud.
 
 **Quatre concessions de banc**, dans le même esprit que les cinq du patron image
 externe. Aucune n'est une recommandation de câblage pour un consommateur :
@@ -149,7 +149,7 @@ externe. Aucune n'est une recommandation de câblage pour un consommateur :
 | `users.users.<u>.shell = pkgs.fish` | Home Manager ne pose pas le shell de connexion — mesuré. Sans ça, aucun fish ne démarre, donc la moitié « shell de connexion » du profil ne serait pas observable |
 | `programs.fish.enable = true` | Imposé par une assertion amont dès qu'un utilisateur a fish en shell de connexion : sinon fish « [manque] les répertoires nix de base dans son PATH et peut rendre impossible la connexion de cet utilisateur ». Satisfaite plutôt que muselée par `ignoreShellProgramCheck`, parce que cette épreuve se connecte vraiment |
 | `home-manager.useGlobalPkgs = true` | HM utilise le `pkgs` du nœud au lieu d'importer sa propre nixpkgs. Une seule instance à l'évaluation — et la note sur le scoping unfree ci-dessus reste vraie pour les épreuves Home Manager, ce qu'une seconde instance rendrait faux en silence |
-| `home-manager.useUserPackages = true` | Les paquets atterrissent dans `users.users.<u>.packages`, donc sous `/etc/profiles/per-user/<u>` — un chemin déterministe. Mesuré : les deux options changent la clôture, donc aucune n'est un no-op silencieux |
+| `home-manager.useUserPackages = true` | Les paquets atterrissent dans `users.users.<u>.packages`, donc sous `/etc/profiles/per-user/<u>`, un chemin déterministe — ce qui rendra vérifiable l'assert zen-browser du profil desktop, dont la relique ne rend aucun fichier. Mesuré, et plus étroit qu'il n'y paraît : `useUserPackages` déplace le `drvPath` d'activation, tandis que `useGlobalPkgs` seul est identique au byte au défaut — donc seule la première change la clôture, et la seconde gagne sa place en retirant une seconde instance nixpkgs |
 
 Mesuré et à dire : **aucun des deux cogitators Home Manager n'a besoin de
 l'instance unfree.** `gaming` reste la seule épreuve unfree de la suite.
@@ -163,24 +163,28 @@ test mais **aucun cogitator STC**. Dessus, HM rend exactement cinq fichiers
 `services.gpg-agent.enable` valent `false`. Cinq candidats d'assertion ont été
 corrigés ou écartés contre lui, et chacun n'aurait rien prouvé :
 
-- **Quatre des sept alias fish ne sont pas à STC.** `ls`, `ll`, `la` et `lt`
-  viennent du module `programs.lsd` de Home Manager — et pire,
+- **Six des neuf alias fish ne sont pas à STC.** `ls`, `ll`, `la`, `lt`, `lla`
+  et `llt` viennent du module `programs.lsd` de Home Manager — et pire,
   `environment.shellAliases` de NixOS vaut **lui-même** `{l, ll, ls}` par défaut,
   donc vérifier `ll` aurait été vert sans aucun cogitator. Seuls `cat → bat`,
   `cp → xcp` et `ping → prettyping` sortent de ce profil.
 - **`delta` n'est pas câblé sur `core.pager`.** L'intégration passe par
-  `[pager] diff/log/show/blame` et `interactive.diffFilter` ; `core.pager` est
-  vide. Une vérification dessus n'aurait rien rendu.
+  `[pager] diff/log/show/blame` et `interactive.diffFilter` — `[delta]` ne porte
+  que `features`. `core.pager` n'est pas posée, donc une vérification dessus
+  n'aurait pas été un faux vert mais un rouge franc : `git config --get` sort
+  en 1.
 - **`programs.direnv.silent` n'écrit le mot « silent » nulle part.** Il rend une
   section `[global]` avec `log_filter = "^$"`.
 - **`programs.fzf.historyWidget.command = ""` ne change pas `config.fish`.**
   Mesuré contre le contre-factuel, la seule différence entre les deux fichiers
   rendus est un chemin de store : le réglage passe par `hm-session-vars.fish`
-  sous la forme `FZF_CTRL_R_COMMAND`, vide ici et `"fzf"` par défaut. La variable
-  de session est le seul endroit où c'est visible.
+  sous la forme `FZF_CTRL_R_COMMAND`. Mesuré dans les deux sens : le cogitator la
+  rend **posée et vide**, et le défaut de l'option (`null`) ne rend aucune
+  variable du tout — c'est ce qui fait de « posée et vide » un état distinguable
+  et non une tautologie.
 - **Le choix du pinentry n'est pas dans l'unité systemd.** Il atterrit dans
   `~/.gnupg/gpg-agent.conf` sous forme d'une ligne `pinentry-program` ; l'unité
-  rendue ne porte que `GNUPGHOME` et l'`ExecStart` de `gpg-agent`.
+  rendue n'en dit rien.
 
 Une assertion avait besoin d'un **contre-factuel** pour être vérifiable du tout.
 `programs.ssh.enableDefaultConfig = false` est une revendication sur ce qui est
@@ -201,7 +205,7 @@ paquets prouve qu'une liste de paquets a été écrite.
 
 ## Démarrer une vraie image — le patron « image externe »
 
-Sept des huit épreuves laissent le pilote de test synthétiser un nœud.
+Huit des dix épreuves laissent le pilote de test synthétiser un nœud.
 `sarcophagus-kvm` ne le peut pas : la revendication de son profil **est** le
 disque, et sur un nœud synthétisé le module qemu-vm remplace `fileSystems` par le
 sien à la priorité 10 — ni le pool, ni les datasets, ni le rollback ne seraient

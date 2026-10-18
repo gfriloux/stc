@@ -27,7 +27,7 @@ the `just ci` gate**: a VM test is heavy, and the CI gate stays fast and static.
 **What `just test` now costs.** Ten provings, **thirteen VM boots** — `vm` and
 `gaming` carry two nodes each, and `sarcophagus-kvm` boots its single node twice —
 and the closures include KDE twice (`workstation` and `plasma`), Steam once, and
-the enginseer toolkit's ~40 packages. On a cold store that is a few GiB of
+the enginseer toolkit's 31 named packages. On a cold store that is a few GiB of
 downloads; warm, most scripts finish in 23-30 s, `enginseer` in 25 s. The two
 sarcophagi are the outliers, because each **builds a disk image in its own VM
 before its test even starts**: `sarcophagus-kvm` then runs 66 s for its two
@@ -133,8 +133,9 @@ So the node imports `inputs.home-manager.nixosModules.home-manager` and attaches
 the cogitator to a test user through `home-manager.users.<u>.imports`. Activation
 then becomes an ordinary systemd unit of the node — measured,
 `home-manager-<u>.service` — and `wait_for_unit` applies like anywhere else. This
-is also why these two provings take `inputs` where the other nine take only
-`self`: `self.homeModules.*` alone cannot attach a home configuration to a node.
+is also why this proving takes `inputs` where the other nine take only `self`,
+as will any future Home Manager proving: `self.homeModules.*` alone cannot
+attach a home configuration to a node.
 
 **Four bench concessions**, in the same spirit as the external-image pattern's
 five. None is a recommendation for how to wire a consumer:
@@ -144,7 +145,7 @@ five. None is a recommendation for how to wire a consumer:
 | `users.users.<u>.shell = pkgs.fish` | Home Manager does not set the login shell — measured. Without it there is no fish to start, so the login-shell half of the profile could not be observed |
 | `programs.fish.enable = true` | Forced by an upstream assertion once a user's login shell is fish: otherwise fish "[lacks] the basic nix directories in its PATH and might make logging in as that user impossible". Satisfied rather than suppressed with `ignoreShellProgramCheck`, because this proving does log in |
 | `home-manager.useGlobalPkgs = true` | HM uses the node's `pkgs` instead of importing its own nixpkgs. Keeps one instance at evaluation — and keeps the unfree note above true for Home Manager provings too, which a second instance would quietly falsify |
-| `home-manager.useUserPackages = true` | Packages land in `users.users.<u>.packages`, hence under `/etc/profiles/per-user/<u>` — a deterministic path. Measured: both HM options change the closure, so neither is a silent no-op |
+| `home-manager.useUserPackages = true` | Packages land in `users.users.<u>.packages`, hence under `/etc/profiles/per-user/<u>`, a deterministic path — which is what will make the zen-browser assertion writable for the desktop profile, whose relic renders no file of its own. Measured, and narrower than it looks: `useUserPackages` moves the activation `drvPath`, while `useGlobalPkgs` alone is byte-identical to the default — so only the first is a closure change, and the second earns its place by removing a second nixpkgs instance |
 
 Measured and worth saying: **neither Home Manager cogitator needs the unfree
 instance.** `gaming` remains the only unfree proving in the suite.
@@ -159,24 +160,27 @@ STC cogitator**. On it, HM renders exactly five files
 candidate assertions were corrected or dropped against it, each of which would
 otherwise have proved nothing:
 
-- **Four of the seven fish aliases are not STC's.** `ls`, `ll`, `la` and `lt`
-  come from Home Manager's `programs.lsd` module — and worse, NixOS'
-  `environment.shellAliases` *itself* defaults to `{l, ll, ls}`, so asserting
-  `ll` would have been green with no cogitator at all. Only `cat → bat`,
-  `cp → xcp` and `ping → prettyping` come from this profile.
+- **Six of the nine fish aliases are not STC's.** `ls`, `ll`, `la`, `lt`,
+  `lla` and `llt` come from Home Manager's `programs.lsd` module — and worse,
+  NixOS' `environment.shellAliases` *itself* defaults to `{l, ll, ls}`, so
+  asserting `ll` would have been green with no cogitator at all. Only
+  `cat → bat`, `cp → xcp` and `ping → prettyping` come from this profile.
 - **`delta` is not wired through `core.pager`.** The integration is
-  `[pager] diff/log/show/blame` plus `interactive.diffFilter`; `core.pager` is
-  empty. A check on it would have returned nothing.
+  `[pager] diff/log/show/blame` plus `interactive.diffFilter` — `[delta]` itself
+  carries only `features`. `core.pager` is unset, so a check on it would not
+  have been a false green but a hard red: `git config --get` exits 1.
 - **`programs.direnv.silent` writes no "silent" anywhere.** It renders a
   `[global]` section with `log_filter = "^$"`.
 - **`programs.fzf.historyWidget.command = ""` does not change `config.fish`.**
   Measured against the counterfactual, the only difference between the two
   rendered files is a store path: the setting travels through
-  `hm-session-vars.fish` as `FZF_CTRL_R_COMMAND`, empty here and `"fzf"` by
-  default. The session variable is the only place it is visible.
+  `hm-session-vars.fish` as `FZF_CTRL_R_COMMAND`. Measured both ways: the
+  cogitator renders it **set and empty**, and the option's own default (`null`)
+  renders no such variable at all — which is what makes "set and empty" a
+  distinguishable state rather than a tautology.
 - **The pinentry choice is not in the systemd unit.** It lands in
-  `~/.gnupg/gpg-agent.conf` as a `pinentry-program` line; the rendered unit
-  carries only `GNUPGHOME` and the `gpg-agent` `ExecStart`.
+  `~/.gnupg/gpg-agent.conf` as a `pinentry-program` line; the rendered unit says
+  nothing about it.
 
 One assertion needed a **counterfactual** to be assertable at all.
 `programs.ssh.enableDefaultConfig = false` is a claim about what is *absent*:
@@ -197,7 +201,7 @@ proves that a list of packages was written.
 
 ## Booting a real image — the external-image pattern
 
-Seven of the eight provings let the test driver synthesise a node. `sarcophagus-kvm`
+Eight of the ten provings let the test driver synthesise a node. `sarcophagus-kvm`
 cannot: its profile's claim *is* the disk, and on a synthesised node the qemu-vm
 module replaces `fileSystems` with its own set at priority 10 — so neither the
 pool, nor the datasets, nor the rollback would be observable.

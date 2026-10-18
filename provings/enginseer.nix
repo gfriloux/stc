@@ -27,7 +27,7 @@
 # measured, `home-manager-proving.service` — and `wait_for_unit` applies.
 #
 # ---------------------------------------------------------------------------
-# Three bench concessions, in the same spirit as the external-image pattern's
+# Four bench concessions, in the same spirit as the external-image pattern's
 # five. None is a recommendation for how to wire a consumer.
 #
 #   users.users.proving.shell = pkgs.fish
@@ -44,8 +44,13 @@
 #
 #   home-manager.useUserPackages = true
 #       Packages land in users.users.<u>.packages, hence under
-#       /etc/profiles/per-user/<u>, which is a deterministic path. Measured: both
-#       options change the closure, so neither is a no-op worth hiding.
+#       /etc/profiles/per-user/<u>, a deterministic path — which is what makes
+#       the zen-browser assertion writable in the desktop proving, since that
+#       relic renders no file of its own. Nothing here reads that path.
+#       Measured, and narrower than it first looked: `useUserPackages` moves the
+#       activation drvPath, while `useGlobalPkgs` alone is byte-identical to the
+#       default. So only the first is a closure change; the second earns its
+#       place by removing a second nixpkgs instance, not by changing output.
 #
 #   programs.fish.enable = true
 #       Forced by an upstream assertion, met while building this: a user whose
@@ -67,30 +72,40 @@
 # Manager and the same test user but *no STC cogitator*. On that node, HM renders
 # exactly five files — environment.d/10-home-manager.conf, three
 # fontconfig/conf.d/* and systemd/user/tray.target — plus two .keep stubs, and
-# programs.fish.enable and services.gpg-agent.enable are both false. So none of
-# the paths read below exists without the cogitator.
+# programs.fish.enable and services.gpg-agent.enable are both false. So Home
+# Manager renders none of the paths read below without the cogitator.
+#
+# One ordering nuance, measured rather than assumed: fish itself writes an
+# 87-byte ~/.config/fish/config.fish on its first interactive start, so that
+# path can exist on a reference node too. Every assertion below reads *content*,
+# never mere existence, which is why that does not weaken them.
 #
 # Three things that measurement changed, each of which would have produced an
 # assertion that proved nothing:
 #
-#   - The rendered config.fish carries seven aliases, but four of them
-#     (ls, ll, la, lt) come from Home Manager's own programs.lsd module. Only
-#     cat → bat, cp → xcp and ping → prettyping come from this cogitator's
-#     shellAliases, and only those three are asserted.
+#   - The rendered config.fish carries nine aliases, but six of them
+#     (ls, ll, la, lt, lla, llt) come from Home Manager's own programs.lsd
+#     module. Only cat → bat, cp → xcp and ping → prettyping come from this
+#     cogitator's shellAliases, and only those three are asserted.
 #   - delta is not wired through core.pager. Measured in the rendered git config:
-#     the integration is [pager] diff/log/show/blame plus [delta] diffFilter. A
-#     check on core.pager would have returned nothing at all.
+#     the integration is [pager] diff/log/show/blame plus interactive.diffFilter
+#     — [delta] carries only `features`. A check on core.pager would not have
+#     been a false green but a hard red: the key is unset, so `git config --get`
+#     exits 1 and machine.succeed fails.
 #   - programs.fzf.historyWidget.command = "" does not change the body of
 #     config.fish. Measured against the counterfactual, the only difference is a
 #     store path: the setting travels through hm-session-vars.fish as
-#     FZF_CTRL_R_COMMAND (empty here, "fzf" by default). The session variable is
-#     what proves it; a grep of config.fish would not.
+#     FZF_CTRL_R_COMMAND. Measured both ways — the cogitator renders it *set and
+#     empty*, and the option's own default (null) renders no such variable at
+#     all. The session variable is what proves it; a grep of config.fish would
+#     not.
 #
 # Deliberately not asserted:
 #
 #   - that gpg-agent is *running*. The agent is a user unit and would need a
 #     live user session; what the cogitator decides is which pinentry it carries,
-#     and that is readable in the rendered unit. The running agent is upstream's.
+#     and that is readable in the rendered configuration — not in the unit, which
+#     says nothing about it. The running agent is upstream's.
 #   - the mere presence of packages on PATH (bat, git, jq…). A list of packages
 #     proves a list of packages was written.
 #   - everything HM renders unasked (fontconfig, environment.d, tray.target):
@@ -147,7 +162,7 @@
         assert state == "running", f"unexpected system state: {state}"
 
     with subtest("the three aliases the cogitator declares are in the shell"):
-        # Only three. The other four aliases in this file are programs.lsd's —
+        # Only three. The other six aliases in this file are programs.lsd's —
         # see the header. Asserting those would measure Home Manager.
         rendered = machine.succeed(f"cat {FISH}")
         for alias in ["alias cat bat", "alias cp xcp", "alias ping prettyping"]:
@@ -176,8 +191,9 @@
 
     with subtest("delta is the pager git itself selects"):
         # Behaviour, not a file: git is asked what it would use. Measured, the
-        # integration is [pager] diff/log/show/blame — *not* core.pager, which is
-        # empty, so the obvious check would have passed for the wrong reason.
+        # integration is [pager] diff/log/show/blame and *not* core.pager, which
+        # is unset — so the obvious check would not have been a false green but a
+        # hard red, since `git config --get core.pager` exits 1.
         pager = as_user("git config --get pager.diff").strip()
         assert pager.endswith("/bin/delta"), (
             f"git's diff pager is {pager!r}, not delta"
@@ -213,8 +229,10 @@
         #
         # Measured against the counterfactual: clearing it leaves the body of
         # config.fish untouched and travels through hm-session-vars.fish instead.
-        # So the session variable is the only place this is visible — empty here,
-        # "fzf" if the setting were left at its default.
+        # So the session variable is the only place this is visible. Measured
+        # both ways: the cogitator renders it set and empty, and the option's own
+        # default (null) renders no such variable at all — which is what makes
+        # "set and empty" a distinguishable state rather than a tautology.
         # Double quotes inside, single quotes outside. Two consecutive single
         # quotes anywhere in this script — even in a comment — would terminate
         # the Nix indented string that holds it.
@@ -257,8 +275,7 @@
         # override is only observable on a user carrying both profiles.
         # Measured, after looking in the wrong file first: the choice lands in
         # ~/.gnupg/gpg-agent.conf as a `pinentry-program` line, and the rendered
-        # systemd user unit says nothing about it at all. The unit only carries
-        # GNUPGHOME and the gpg-agent ExecStart.
+        # systemd user unit says nothing about it at all.
         conf = machine.succeed(f"cat {HOME}/.gnupg/gpg-agent.conf")
         assert "pinentry-curses" in conf, (
             f"the agent does not carry the headless pinentry:\n{conf}"

@@ -177,3 +177,79 @@ candidats corrigés ou écartés par la mesure, le contre-factuel qu'a demandé
 vivant ».
 
 `just docs-parity` vert.
+
+## Revue de clôture par contexte neuf — zéro Critical, 8 Important, 6 Minor
+
+**Zéro Critical, et c'est mesuré et non argumenté** : le relecteur a bâti un nœud
+de référence (Home Manager + fish système + le même utilisateur, sans cogitator
+STC) et **fait tourner les neuf subtests dessus** — tous rouges. Dont les deux que
+je redoutais : `type -t cat` rend `'file'` et non `'function'`, et
+`FZF_CTRL_R_COMMAND` n'y est pas posée (l'intégration `fzf --fish` ne fait que
+*lire* la variable, jamais la poser), donc « posée et vide » est bien un état
+distinguable. Il a aussi confirmé que `type -t ll` rend `'function'` sur ce nœud
+de référence — la décision d'écarter `ll` était donc nécessaire, pas prudente.
+
+Les huit Important sont fondés, les quatre factuels revérifiés par moi avant
+acceptation. Deux classes :
+
+**(a) Deux corrections du chantier qui survivaient dans l'en-tête.** J'avais
+corrigé `[delta] diffFilter` → `[interactive] diffFilter` et « le pinentry est
+dans l'unité » → « dans `gpg-agent.conf` » **dans le corps** du fichier, et laissé
+la version fausse dans l'en-tête, à vingt lignes d'intervalle. Le fichier se
+contredisait. Leçon : corriger un fait, c'est le corriger *partout* dans le
+fichier, et l'en-tête est le premier endroit qu'on lit et le dernier qu'on relit.
+
+**(b) Quatre chiffres ou formulations faux, de ma main :**
+
+1. **« sept alias dont quatre de lsd » → neuf dont six.** Mesuré :
+   `grep -c '^    alias '` rend **9** (`cat cp la ll lla llt ls lt ping`), dont
+   **6** citant lsd. J'avais oublié `lla` et `llt`. Faux dans cinq endroits. La
+   conclusion (n'asserter que `cat`/`cp`/`ping`) ne bouge pas.
+2. **« `"fzf"` par défaut » est faux** : `historyWidget.command` a pour défaut
+   `null`, et `fzfEnvVars` filtre les `null`, donc le défaut ne rend **aucune**
+   variable. Mesuré dans les deux sens (`stc_hasVar = true` valeur `""`,
+   `dflt_hasVar = false`). C'est celui que je n'aurais jamais vu seul.
+3. **« une vérification sur `core.pager` aurait été un faux vert » est faux** :
+   `git config --get core.pager` sort en **rc=1**, donc `machine.succeed` aurait
+   rougi. Le mode de défaillance était l'inverse de ce que j'écrivais — et
+   l'en-tête du même fichier le disait juste, vingt lignes plus haut.
+4. **« Trois concessions de banc » en titre, quatre dans la liste.** Le titre n'a
+   pas suivi l'ajout de `programs.fish.enable`.
+5. **« les deux épreuves Home Manager »** : il n'y en a qu'une sur cette branche,
+   `home-desktop` est le chantier 3. Reformulé en « cette épreuve, comme toute
+   future épreuve Home Manager ».
+
+**La divergence non enregistrée qu'il a trouvée, et c'est la plus instructive.**
+J'ai écrit « Measured: both options change the closure ». Faux. Le plan avait
+mesuré la **paire** conjointement — ce qui est vrai — et j'ai promu l'énoncé en
+revendication *par option* sans remesurer. Vérifié : `useGlobalPkgs` seul rend un
+`drvPath` d'activation **identique au byte** au défaut (`d8kar8pm…` des deux
+côtés) ; seul `useUserPackages` le déplace (`zn9pca3j…`). La *justification* de
+`useGlobalPkgs` reste bonne et vérifiée (`useNixpkgsModule = !cfg.useGlobalPkgs`,
+donc elle retire bien une seconde instance nixpkgs) — c'est la phrase « mesuré »
+qui était fausse. Reformulée, et la justification de `useUserPackages` dit
+maintenant que le chemin déterministe sert au **chantier 3** et qu'aucun subtest
+ici ne le lit.
+
+Les Minor pris : `~40 paquets` → **31 nommés** (le compte de `home.packages`) ;
+« Sept des huit épreuves » → « Huit des dix » (compte périmé déjà sur `main`, que
+j'avais laissé en mettant à jour le paragraphe voisin) ; l'unité gpg-agent ne
+« porte que GNUPGHOME et ExecStart » (elle porte aussi `ExecReload` et toute une
+section `[Unit]`) → ramené à la revendication vraie et suffisante, « elle n'en dit
+rien » ; et une nuance d'ordonnancement mesurée par le relecteur, que j'ignorais :
+**fish écrit lui-même un `config.fish` de 87 octets à son premier démarrage
+interactif**, donc ce chemin peut exister sur un nœud de référence. Mes asserts
+lisent tous du *contenu* et jamais la simple existence, donc rien n'est affaibli —
+mais la phrase « aucun des chemins lus plus bas n'existe sans le cogitator » était
+absolue là où le fait est conditionnel. Reformulée.
+
+**Deux gates manquaient au record, pas à l'exécution** : `just test` (dix
+épreuves) et l'identité des `drvPath` après changement n'étaient consignés que
+dans mon message, pas ici. Le relecteur les a remesurés lui-même —
+`k2mxsivc…`, `2gymzw2p…`, `1xnz47d7…`, identiques au PF-5 — et `just ci` sort en 0.
+Consignés maintenant. `nix develop .#docs --command just docs-build` : vert,
+90 pages.
+
+Rien dans cette revue ne s'est avéré faux. Les dix affirmations amont qu'elle
+avançait ont été vérifiées, quatre par moi avec la commande, les six autres déjà
+mesurées pendant le chantier.

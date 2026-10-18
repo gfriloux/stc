@@ -49,13 +49,14 @@
         dreadnought = pkgs.testers.runNixOSTest (import ./dreadnought.nix {inherit self;});
         sarcophagus-kvm = pkgs.testers.runNixOSTest (import ./sarcophagus-kvm.nix {inherit self;});
         sarcophagus-aws = pkgs.testers.runNixOSTest (import ./sarcophagus-aws.nix {inherit self;});
-        # The two Home Manager provings take `inputs` as well as `self`, and the
-        # other nine do not. The reason is structural rather than stylistic:
-        # Home Manager's NixOS module lives in an input, and `self.homeModules.*`
-        # alone cannot attach a home configuration to a test node — the node has
-        # to import `inputs.home-manager.nixosModules.home-manager` first. The
-        # two signatures therefore coexist on purpose; do not "harmonise" the
-        # other nine onto a parameter they have no use for.
+        # This proving takes `inputs` as well as `self`, and the other nine do
+        # not — as will any future Home Manager proving. The reason is structural
+        # rather than stylistic: Home Manager's NixOS module lives in an input,
+        # and `self.homeModules.*` alone cannot attach a home configuration to a
+        # test node — the node has to import
+        # `inputs.home-manager.nixosModules.home-manager` first. The two
+        # signatures therefore coexist on purpose; do not "harmonise" the other
+        # nine onto a parameter they have no use for.
         enginseer = pkgs.testers.runNixOSTest (import ./enginseer.nix {inherit self inputs;});
         # The only line built from pkgs-unfree — see the comment on that instance.
         gaming = pkgs-unfree.testers.runNixOSTest (import ./gaming.nix {inherit self;});
