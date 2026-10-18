@@ -48,6 +48,7 @@
         plasma = pkgs.testers.runNixOSTest (import ./plasma.nix {inherit self;});
         dreadnought = pkgs.testers.runNixOSTest (import ./dreadnought.nix {inherit self;});
         sarcophagus-kvm = pkgs.testers.runNixOSTest (import ./sarcophagus-kvm.nix {inherit self;});
+        sarcophagus-aws = pkgs.testers.runNixOSTest (import ./sarcophagus-aws.nix {inherit self;});
         # The only line built from pkgs-unfree — see the comment on that instance.
         gaming = pkgs-unfree.testers.runNixOSTest (import ./gaming.nix {inherit self;});
       };
