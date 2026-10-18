@@ -6,7 +6,7 @@ choisi par l'utilisateur parmi quatre propositions (les trois autres :
 #37+#38 CIS sudo et NTP). Ordre du lot : #47, puis #83, puis #50.
 
 Pre-flight : prémisses mesurées avant écriture du plan, aucune déduite.
-  - `make-single-disk-zfs-image.nix` lignes 81-91 : le format `raw` donne le
+  - `make-single-disk-zfs-image.nix` lignes 82-91 : le format `raw` donne le
     suffixe `.img`, donc `$out/nixos.root.img`. La surcouche COW se prend dessus
     avec `-F raw` — seule différence avec le patron KVM.
   - `relics/nixos/aws.nix` : `stc-grow-pool` lance
@@ -116,8 +116,13 @@ et démarre du premier coup (le patron image externe de v0.15.0 a tenu tel quel)
    de l'assert est un plancher, et un run qui le franchit de justesse veut dire
    que le banc a changé.
 
-Verdict du banc, l'assertion phare : **le pool passe de ~4 Gio à 6,75 Gio**
-(image de 4096 Mio, disque virtuel de 8 Gio), `stc-grow-pool` va au bout. Le
+Verdict du banc, l'assertion phare : **le pool passe de ~4 Gio à 6,75 Gio**,
+`stc-grow-pool` va au bout. Sourçage inégal des deux moitiés de cette phrase, à
+dire plutôt qu'à masquer : les 6,75 Gio sont lus au runtime
+(`zpool list -Hpo size` → 7247757312 octets), les ~4 Gio sont lus sur la **table
+de partitions** de l'artefact (p3 = 8386560 secteurs = 3,999 Gio) et non sur un
+`zpool list` d'avant croissance, que le plan note lui-même impossible en un seul
+boot. Le
 chemin de croissance EBS n'avait aucune couverture avant ce commit —
 `dreadnought` ne lit que la chaîne du script, et le disque du KVM fait la taille
 de son image.
@@ -168,3 +173,71 @@ de source du flake, donc **toute** édition d'un fichier du dépôt — y compri
 ledger — invalide les dérivations des neuf épreuves. Le `just test` de gate doit
 donc être lancé une fois l'arbre figé, pas en parallèle de l'écriture. Perdu un
 run complet à l'apprendre.
+
+## Revue de clôture par contexte neuf — zéro Critical, 2 Important, 6 Minor
+
+Le gate a encore payé. Le relecteur a d'abord refait les mesures de gate pour son
+propre compte (8/8 subtests, `just ci` vert, les trois `drvPath` identiques au
+PF-4, aucun chemin sous `relics/`/`cogitator/`/`schematics/`), puis il a sorti
+**un fait faux que je n'aurais pas vu** :
+
+**Important 1 — « l'image fait 4096 MiB » est faux, et c'était la justification
+du seuil.** `rootSize = 4096` est la taille de la **partition ZFS**, pas du
+fichier. L'amont crée le fichier à `bootSize + rootSize` avec `bootSize ? 1024`.
+Vérifié moi-même avant d'accepter : `bootSize ? 1024` ligne 23 et
+`qemu-img create -f raw $rootDiskImage ${bootSize + rootSize}M` ligne 266 ;
+`ls -l` sur l'artefact → **5368709120 octets = 5120 MiB = 5 GiB pile** ;
+`sfdisk --dump` → p1 2048 secteurs, p2 2093056, **p3 8386560 secteurs = 3,999
+GiB**, `last-lba: 10485726`.
+Conséquence non cosmétique : j'avais écrit que le seuil de 5 GiB « sit[s] between
+the two, clear of GPT and ZFS metadata rounding at both ends ». Avec les vrais
+chiffres il tombe **exactement sur** la taille de l'image, zéro marge de ce
+côté. Le seuil **reste bon** pour une raison que ma prose ne nommait pas : la
+grandeur assertée est le *pool*, adossé à p3 — 3,999 GiB avant, 6,75 GiB après.
+Corrigé en nommant les **trois** quantités au lieu d'en confondre deux
+(partition ZFS 4096 MiB, fichier image 5120 MiB, disque virtuel 8 GiB) et en
+réancrant le seuil sur le pool. Six endroits : l'en-tête et deux commentaires de
+l'épreuve, les deux pages de doc, la décision 3 du plan (avec un encadré de
+correction, pour que la trace survive) et ce ledger.
+
+**Important 2 — la seconde lecture du subtest `/boot` ne peut pas échouer dans
+le sens que mon commentaire annonçait.** Fondé : conditionnellement à ce que
+`/boot` soit monté, `readlink -f /dev/disk/by-label/ESP == source` est à peu près
+impliqué, et surtout si la déclaration dérivait vers `/dev/vda2` en dur, les deux
+côtés répondraient `/dev/vda2` et l'assert resterait vert — donc ce n'est **pas**
+un garde contre la dérive de la déclaration, contrairement à ce que j'avais
+écrit. L'assert est **gardé** (il vérifie que l'index de labels d'udev porte
+toujours ESP vers ce périphérique, et il rougit si le label disparaît) mais le
+commentaire dit maintenant ce qu'il est, et attribue le travail discriminant à la
+première lecture — un nœud nu n'a aucun montage `/boot` en vfat.
+
+Les six Minor, et ce que j'en ai fait :
+
+- **timesyncd ne vient pas du socle de test** mais de `qemu-vm.nix:1489` (un
+  `false` nu à priorité normale, commenté « Don't run ntpd in the guest »).
+  Vérifié : `grep -n timesyncd nixos/lib/testing/nixos-test-base.nix` ne rend
+  **rien**. Corrigé dans l'épreuve et les deux pages. La conclusion ne bouge pas.
+- **`lignes 81-91` était décalé d'un** : la carte des suffixes va de 82 à 91, la
+  81 est vide. Corrigé dans l'épreuve, le plan et ce ledger.
+- **La moitié `zpool online -e` du script n'est pas isolée** : l'amont crée le
+  pool avec `rootPoolProperties = { autoexpand = "on"; }` (vérifié), donc un
+  `zpool online -e` cassé *pourrait* être masqué par autoexpand réagissant au
+  re-read de partition. L'en-tête de l'amont argumente l'inverse (« This
+  single-disk approach does not satisfy ZFS's requirements for autoexpand »),
+  mais c'est une prémisse non mesurée — la mesurer demande d'éditer la relique et
+  de reconstruire l'image en VM. **Écrit dans le subtest** plutôt qu'impliqué.
+- **Sourçage inégal du « ~4 Gio »** au ledger : corrigé ci-dessus.
+- **Retour de chariot FR à 114 colonnes** et **« le point d'NTP »** : corrigés.
+- **`is-active` + `== "active"` redondant** : **non corrigé, délibérément.**
+  `machine.succeed` accepte aussi `reloading`, donc la comparaison retire un état
+  ; et c'est le patron maison, identique dans `provings/sarcophagus-kvm.nix`.
+  S'en écarter ici créerait deux styles pour la même vérification.
+
+Rien dans la revue ne s'est avéré faux cette fois — contrairement au lot v0.15.0,
+où une correction proposée par le relecteur l'était. Les quatre affirmations
+amont qu'il avançait ont été revérifiées une par une avant d'être acceptées.
+
+**Piège évité au passage, de mon fait :** la correction de l'Important 1 insérait
+`${bootSize + rootSize}` dans un commentaire **à l'intérieur** du `''…''` du
+testScript, où Nix l'aurait interpolé — erreur d'évaluation garantie. Attrapé par
+un `grep '\${'` avant la construction, pas par un gate.

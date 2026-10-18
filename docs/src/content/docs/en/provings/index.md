@@ -140,8 +140,13 @@ that does not exist rather than a priority conflict.
 differ. The image is raw rather than qcow2 — measured in
 `make-single-disk-zfs-image.nix`, `format = "raw"` maps to the `.img` suffix, so
 the overlay is taken over `nixos.root.img` with `-F raw`. And the overlay is
-given a **size**: 8 GiB over a 4096 MiB image, so partition 3 ends short of the
-end of the device and `stc-grow-pool` has something to grow. That is an EC2
+given a **size**: 8 GiB over a 5 GiB image, so partition 3 ends short of the
+end of the device and `stc-grow-pool` has something to grow. Three sizes are in
+play and collapsing any two gets the arithmetic wrong — measured on the
+artefact, the ZFS partition is 4096 MiB (`rootSize`), the image *file* is
+5120 MiB (upstream sizes it at `bootSize + rootSize`, and `bootSize` defaults to
+1024), and the virtual disk is 8 GiB. The proving's threshold is therefore
+anchored on the **pool**, which goes from p3's 3.999 GiB to 6.75 GiB. That is an EC2
 instance on an EBS volume larger than its AMI, and it is the one claim neither
 `dreadnought` (which only reads the *string* of that script) nor
 `sarcophagus-kvm` (whose disk is exactly the size of its image) can reach.
@@ -199,9 +204,11 @@ rather than assumed:
   so it is not asserted, rather than asserted on an unverified premise.
 - **The AWS NTP endpoint** stays uncovered, for a reason that survives the
   external-image pattern: `services.timesyncd.enable` is measured `false` on a
-  bare node, a ZFS-only node *and* the STC node, because the test base turns it
-  off. No `/etc/systemd/timesyncd.conf` is rendered at all, so there is nothing to
-  read `169.254.169.123` from.
+  bare node, a ZFS-only node *and* the STC node, so no
+  `/etc/systemd/timesyncd.conf` is rendered at all and there is nothing to read
+  `169.254.169.123` from. It is `qemu-vm.nix:1489` that turns it off — a bare
+  `false` at normal priority, commented *"Don't run ntpd in the guest"* — and not
+  `nixos-test-base.nix`, which never mentions timesyncd.
 - **`boot.zfs.devNodes`** (`/dev`, against the default `/dev/disk/by-id`)
   discriminates in evaluation and cannot be asserted on this bench at all: the
   only runtime reading would be the store path of a unit script interpolated from

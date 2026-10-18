@@ -64,7 +64,7 @@ qui tiennent le cliquet en haut :
 
 | Fait mesuré | Commande / source | Conséquence |
 |---|---|---|
-| `make-single-disk-zfs-image.nix` mappe `raw → ".img"` et écrit `$out/nixos.root${suffix}` | lecture du fichier, lignes 81-91 (`filenameSuffix`, `rootFilename`) | La surcouche COW se prend sur **`${awsImage}/nixos.root.img`**, pas `.qcow2` — et `qemu-img` doit recevoir `-F raw`, pas `-F qcow2`. C'est la seule ligne du patron KVM qui change. |
+| `make-single-disk-zfs-image.nix` mappe `raw → ".img"` et écrit `$out/nixos.root${suffix}` | lecture du fichier, lignes 82-91 (`filenameSuffix`, `rootFilename`) | La surcouche COW se prend sur **`${awsImage}/nixos.root.img`**, pas `.qcow2` — et `qemu-img` doit recevoir `-F raw`, pas `-F qcow2`. C'est la seule ligne du patron KVM qui change. |
 | Le patron « image externe » est livré et documenté : les cinq concessions de banc (`directBoot.enable=false`, `mountHostNixStore=false`, `fileSystems = mkForce {}`, `bootLoaderDevice="/dev/vda"`, `system.switch.enable=true`) | `provings/sarcophagus-kvm.nix`, en-tête + nœud | Réutilisable **tel quel**. L'en-tête le dit : les cinq lignes sont commentées une par une « c'est la raison pour laquelle #47 peut le réutiliser ». |
 | `relics/nixos/aws.nix` : `stc-grow-pool` lance `growpart /dev/${ebsDisk} ${ebsPartition}` puis `zpool online -e ${poolName} /dev/${ebsDisk}${partSep}${ebsPartition}` ; il tolère `rc=1` (rien à agrandir) et échoue à `rc≥2` | lecture de la relique | Avec le défaut `ebsDisk = "nvme0n1"`, **le périphérique n'existe pas** dans une VM virtio → `rc≥2` → l'unité échoue → système `degraded`. D'où la décision 2. |
 | `partSep` = `"p"` si `ebsDisk` finit par un chiffre, `""` sinon (`builtins.match ".*[0-9]"`) | lecture de la relique | `"vda"` → `partSep = ""` → `/dev/vda3`. Cohérent avec la disposition 3 partitions, et `ebsPartition = 3` est déjà le défaut. **Poser `ebsDisk = "vda"` exerce la branche sans `p`**, celle des instances Xen. |
@@ -72,7 +72,7 @@ qui tiennent le cliquet en haut :
 | `systemd.services."serial-getty@ttyS0".enable = lib.mkDefault true` depuis le chantier #45 | `relics/nixos/aws.nix`, commentaire de la ligne | **Plus de conflit dur** avec l'instrumentation nixosTest : c'était le blocage qui rendait tout proving de ce profil impossible. Le getty reste éteint sous le pilote (l'instrumentation gagne un contest ordinaire), donc la console série reste non couverte. |
 | `console=ttyS0,115200n8` est posé par le socle de test sur un nœud **nu** | mesuré au chantier #45 (v0.14.0), noté dans `docs/*/provings/index.md` | **Non discriminant.** Seuls `nvme_core.io_timeout=4294967295` et `random.trust_cpu=on` distinguent la relique d'un défaut. |
 | Le pool, les datasets et les montages du profil sont observables sous le patron image externe (`findmnt /` → `vmpool/root`, `zfs`) | épreuve `sarcophagus-kvm`, verte | La couche disque est assertable ici aussi — la note de portée de `dreadnought` ne s'applique qu'au patron standard. |
-| `cogitator/nixos/sarcophagus-aws.nix` déclare `/boot` = `/dev/disk/by-label/ESP` en `vfat` (`mkForce`), et GRUB BIOS sur `/dev/vda` | lecture du cogitator | **Discriminant vis-à-vis du KVM** : la disposition BIOS/GRUB + ESP par label est propre à l'AMI. Assertable par `findmnt -no SOURCE,FSTYPE /boot`. |
+| `cogitator/nixos/sarcophagus-aws.nix` déclare `/boot` = `/dev/disk/by-label/ESP` en `vfat` (`mkForce`), et GRUB BIOS sur `/dev/vda` | lecture du cogitator | Assertable par `findmnt`. ~~**Discriminant vis-à-vis du KVM**~~ — **prémisse fausse, corrigée au banc** : `cogitator/nixos/sarcophagus-kvm.nix:114` déclare un `/boot` identique au byte. L'assert garde sa place parce que les deux cogitators portent chacun leur copie de la déclaration, pas parce que l'AWS serait différent. |
 | `blacklistedKernelModules = ["xen_fbfront"]`, `kernelModules = ["ena" "xen_netfront"]`, `services.udev.packages = [pkgs.amazon-ec2-utils]`, `boot.zfs.devNodes = "/dev"` | lecture de la relique | Quatre candidats d'assertion propres à AWS, dont aucun n'est posé par un nœud nu. Leur caractère discriminant est **à vérifier un par un** avant écriture (gate PF-3). |
 
 ### Ce qui n'est pas encore mesuré, et qui l'est au banc
@@ -127,16 +127,27 @@ toute régression qui ferait échouer une unité au boot.
 
 ### 3. La surcouche est plus grande que l'image, et c'est l'assertion phare
 
-`qemu-img create -f qcow2 -b <image> -F raw <overlay> 8G` sur une image de
-4096 MiB donne un disque virtuel de 8 GiB dont les 4 premiers GiB sont l'image.
-C'est exactement la situation d'un EC2 lancé sur un volume EBS plus grand que
-l'AMI — **la raison d'être de `stc-grow-pool`**.
+`qemu-img create -f qcow2 -b <image> -F raw <overlay> 8G` donne un disque virtuel
+de 8 GiB dont le début est l'image. C'est exactement la situation d'un EC2 lancé
+sur un volume EBS plus grand que l'AMI — **la raison d'être de
+`stc-grow-pool`**.
 
-L'assert : après le boot, `zpool list -Hpo size vmpool` doit dépasser 5 GiB
-(seuil au-dessus de la taille de l'image, en dessous du disque, donc insensible
-aux arrondis de GPT et de métadonnées ZFS). Sans la relique il n'y a aucune unité
-de croissance, et le pool resterait à ~4 GiB : l'assert **discrimine par
-construction**.
+> **Correction post-livraison (revue de clôture, 2026-10-18).** Ce paragraphe
+> disait « sur une image de 4096 MiB […] dont les 4 premiers GiB sont l'image »
+> et justifiait le seuil par « au-dessus de la taille de l'image ». **Les deux
+> étaient faux**, et c'est la revue par contexte neuf qui l'a attrapé.
+> `rootSize = 4096` est la taille de la **partition ZFS**, pas de l'image :
+> l'amont crée le fichier à `bootSize + rootSize` avec `bootSize ? 1024`, donc
+> **5120 MiB**. Mesuré sur l'artefact : fichier de 5368709120 octets (5 GiB
+> pile) et p3 de 8386560 secteurs (3,999 GiB). Le seuil de 5 GiB tombait donc
+> *exactement sur* la taille de l'image, sans aucune marge de ce côté.
+
+L'assert : après le boot, `zpool list -Hpo size vmpool` doit dépasser 5 GiB. Le
+seuil est adossé au **pool** — la grandeur effectivement lue — et non au fichier
+image : mesuré, le pool passe des 3,999 GiB de p3 à 6,75 GiB, donc 5 GiB est à
+~1 GiB au-dessus de l'un et ~1,75 GiB en dessous de l'autre. Sans la relique il
+n'y a aucune unité de croissance et le pool resterait à ~4 GiB : l'assert
+**discrimine par construction**.
 
 C'est la seule revendication du dépôt que ni `dreadnought` (qui ne voit que la
 chaîne du script) ni `sarcophagus-kvm` (dont le disque fait la taille de l'image)
@@ -286,7 +297,7 @@ subprocess.run([
     "-b", "${nodes.machine.system.build.awsImage}/nixos.root.img",
     "-F", "raw",
     overlay.name,
-    "8G",          # décision 3 : plus grand que rootSize (4096 MiB)
+    "8G",          # décision 3 : plus grand que le fichier image (5120 MiB)
 ], check=True)
 ```
 

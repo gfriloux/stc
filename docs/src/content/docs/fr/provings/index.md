@@ -32,7 +32,8 @@ et `plasma`) et Steam une fois. Sur un store froid, ça fait quelques Gio de
 téléchargement ; à chaud, la plupart des scripts finissent en 23 à 30 s.
 Les deux sarcophages sortent du lot, parce que chacun **construit une image
 disque dans sa propre VM avant même que son test démarre** : `sarcophagus-kvm`
-tourne ensuite 66 s pour ses deux boots, et `sarcophagus-aws` 32 s pour le sien. C'est dit explicitement parce que
+tourne ensuite 66 s pour ses deux boots, et `sarcophagus-aws` 32 s pour le
+sien. C'est dit explicitement parce que
 la discipline qui compte, c'est de lancer `just test` avant de fermer une branche
 qui a touché un cogitator : une recette trop lourde à lancer est un gate qui cesse
 discrètement d'en être un. Pour itérer, builder une seule épreuve —
@@ -144,8 +145,14 @@ un périphérique inexistant plutôt qu'un conflit de priorités.
 diffèrent. L'image est raw et non qcow2 — mesuré dans
 `make-single-disk-zfs-image.nix`, `format = "raw"` donne le suffixe `.img`, donc
 la surcouche se prend sur `nixos.root.img` avec `-F raw`. Et la surcouche reçoit
-une **taille** : 8 Gio sur une image de 4096 Mio, donc la partition 3 s'arrête
-avant la fin du périphérique et `stc-grow-pool` a quelque chose à agrandir. C'est
+une **taille** : 8 Gio sur une image de 5 Gio, donc la partition 3 s'arrête
+avant la fin du périphérique et `stc-grow-pool` a quelque chose à agrandir.
+Trois tailles entrent en jeu et en confondre deux fausse l'arithmétique —
+mesuré sur l'artefact, la partition ZFS fait 4096 Mio (`rootSize`), le *fichier*
+image fait 5120 Mio (l'amont le dimensionne à `bootSize + rootSize`, et
+`bootSize` vaut 1024 par défaut), et le disque virtuel fait 8 Gio. Le seuil de
+l'épreuve est donc adossé au **pool**, qui passe des 3,999 Gio de p3 à
+6,75 Gio. C'est
 une instance EC2 sur un volume EBS plus grand que son AMI, et c'est la seule
 revendication que ni `dreadnought` (qui ne lit que la *chaîne* de ce script) ni
 `sarcophagus-kvm` (dont le disque fait exactement la taille de son image) ne
@@ -204,11 +211,13 @@ trous ne sont **pas** levés, et ont été re-mesurés plutôt que supposés :
   *pourrait* discriminer là. L'établir demanderait de construire une seconde
   image sans la relique, ce que l'épreuve ne paie pas — donc ce n'est pas
   vérifié, plutôt que vérifié sur une prémisse non mesurée.
-- **Le point d'NTP AWS** reste non couvert, pour une raison qui survit au patron
+- **Le point NTP AWS** reste non couvert, pour une raison qui survit au patron
   image externe : `services.timesyncd.enable` est mesuré `false` sur un nœud nu,
-  sur un nœud ZFS seul **et** sur le nœud STC, parce que le socle de test
-  l'éteint. Aucun `/etc/systemd/timesyncd.conf` n'est rendu, donc il n'y a rien
-  où lire `169.254.169.123`.
+  sur un nœud ZFS seul **et** sur le nœud STC, donc aucun
+  `/etc/systemd/timesyncd.conf` n'est rendu et il n'y a nulle part où lire
+  `169.254.169.123`. C'est `qemu-vm.nix:1489` qui l'éteint — un `false` nu à
+  priorité normale, commenté *« Don't run ntpd in the guest »* — et non
+  `nixos-test-base.nix`, qui ne mentionne jamais timesyncd.
 - **`boot.zfs.devNodes`** (`/dev`, contre le défaut `/dev/disk/by-id`) discrimine
   à l'évaluation et ne peut pas du tout être vérifié sur ce banc : la seule
   lecture au runtime serait le chemin de store d'un script d'unité interpolé

@@ -24,9 +24,9 @@
 # Exactly two things differ from the KVM proving:
 #
 #   1. The image is raw, not qcow2. Measured in make-single-disk-zfs-image.nix
-#      (lines 81-91): `format = "raw"` maps to the suffix ".img", so the file is
+#      (lines 82-91): `format = "raw"` maps to the suffix ".img", so the file is
 #      $out/nixos.root.img and qemu-img needs `-F raw`.
-#   2. The overlay is given a size — 8G over a 4096 MiB image. That is the whole
+#   2. The overlay is given a size — 8 GiB over a 5 GiB image. That is the whole
 #      point; see the pool-growth subtest.
 #
 # The five concession lines and the qemu-img block are *copied*, not factored
@@ -59,9 +59,11 @@
 #     entries, so the default would import the pool just as well. The bench
 #     cannot tell the relic from the default.
 #   - networking.timeServers (the AWS-internal 169.254.169.123). Measured:
-#     services.timesyncd.enable is false on all three nodes, because the test
-#     base turns it off, so no /etc/systemd/timesyncd.conf is rendered at all.
-#     The AWS NTP endpoint stays uncovered, as it already does for dreadnought.
+#     services.timesyncd.enable is false on all three nodes, so no
+#     /etc/systemd/timesyncd.conf is rendered at all. It is qemu-vm.nix:1489
+#     that turns it off — a bare `false` at normal priority, commented "Don't
+#     run ntpd in the guest" — and not nixos-test-base.nix, which never mentions
+#     timesyncd. The AWS NTP endpoint stays uncovered, as for dreadnought.
 #   - the serial console. The getty loses an ordinary priority contest to the
 #     test instrumentation (it has been lib.mkDefault since #45, which is what
 #     made any proving of this profile possible). As for the
@@ -123,11 +125,20 @@
 
     # A copy-on-write overlay over the image in the store, which is read-only.
     #
-    # The trailing size is what distinguishes this proving from the KVM one: the
-    # image is 4096 MiB (rootSize), the virtual disk is 8 GiB, so partition 3
-    # ends well short of the end of the device and there is something for
-    # growpart to grow. That is an EC2 instance on an EBS volume larger than its
-    # AMI, which is the case stc-grow-pool exists for.
+    # The trailing size is what distinguishes this proving from the KVM one.
+    # Three sizes are in play here and collapsing any two of them gets the
+    # arithmetic wrong, so all three are named — measured on the built artefact:
+    #
+    #   - the ZFS partition (p3) is 4096 MiB, which is `rootSize`;
+    #   - the image *file* is 5120 MiB, because upstream creates it at
+    #     `bootSize + rootSize` and `bootSize` defaults to 1024, which the
+    #     cogitator does not pass — the `qemu-img create` line of that file
+    #     sizes the file as the sum of the two;
+    #   - the virtual disk this overlay exposes is 8 GiB.
+    #
+    # So p3 ends ~4 GiB into an 8 GiB device, and there is something for growpart
+    # to grow. That is an EC2 instance on an EBS volume larger than its AMI,
+    # which is the case stc-grow-pool exists for.
     #
     # -F raw, not qcow2: make-single-disk-zfs-image.nix maps format = "raw" to
     # the ".img" suffix.
@@ -181,10 +192,17 @@
         # partition *numbering* is nixpkgs', so it is not asserted here; what is
         # asserted is the mount the cogitator declares.
         #
-        # Two readings rather than one, because findmnt reports the kernel
-        # device node and not the path the cogitator declares — measured, it
-        # answers /dev/vda2. So the label is checked where it is observable: the
-        # by-label path must resolve to the very device /boot is mounted from.
+        # Two readings, because findmnt reports the kernel device node and not
+        # the path the cogitator declares — measured, it answers /dev/vda2.
+        #
+        # Be clear about what the second reading is and is not. It is *not* a
+        # guard against the declaration drifting: if the cogitator ever named
+        # /dev/vda2 directly, both sides would still answer /dev/vda2 and this
+        # would stay green. Conditional on /boot being mounted at all, the label
+        # resolving to the mounted device is close to implied. What it does check
+        # is that udev's label index still carries ESP pointing at that device —
+        # the discriminating work is done by the first reading, since a bare node
+        # has no vfat /boot mount for findmnt to find.
         source = machine.succeed("findmnt -no SOURCE /boot").strip()
         fstype = machine.succeed("findmnt -no FSTYPE /boot").strip()
         assert fstype == "vfat", f"/boot is {fstype}, expected vfat"
@@ -202,6 +220,17 @@
         # green for the wrong reason — a no-op growpart still exits 1, which the
         # relic deliberately tolerates, so "the unit succeeded" does not by
         # itself mean anything grew.
+        # What this pair isolates, and what it does not. A regression that stops
+        # the partition from growing turns it red: the growth is visible in the
+        # unit's own log ("CHANGED: partition=3 ... new: size=14680031") and
+        # without it the pool stays under the threshold. The script's *second*
+        # half is less well isolated — upstream builds this pool with
+        # `rootPoolProperties = { autoexpand = "on"; }`, so a broken
+        # `zpool online -e` might be masked by autoexpand reacting to growpart.
+        # Upstream's own header argues it would not be ("This single-disk
+        # approach does not satisfy ZFS's requirements for autoexpand"), but that
+        # is an unmeasured premise: checking it means editing the relic, which
+        # forces a fresh in-VM image build. Said out loud rather than implied.
         journal = machine.succeed("journalctl -b -u stc-grow-pool --no-pager")
         assert "Finished" in journal, f"stc-grow-pool did not succeed:\n{journal}"
 
@@ -209,14 +238,19 @@
         # Logged, not only asserted: the threshold below is a floor, and a run
         # that barely clears it means something changed about the bench.
         print(f"vmpool size after growth: {size} bytes ({size / 1024**3:.2f} GiB)")
-        # The image is 4096 MiB and the virtual disk is 8 GiB. The threshold sits
-        # between the two, clear of GPT and ZFS metadata rounding at both ends.
-        # Without the relic there is no growth unit at all and the pool would
-        # still be the image's ~4 GiB, so this assertion discriminates by
-        # construction.
+        # The threshold is anchored on the *pool*, which is the quantity read
+        # above — not on the image file, which is 5 GiB and would leave this
+        # threshold no clearance at all on that side.
+        #
+        # Measured on the artefact and on the bench: p3 backs the pool and is
+        # 8386560 sectors = 3.999 GiB un-grown, and the pool comes up at
+        # 7247757312 bytes = 6.75 GiB grown. So 5 GiB sits ~1 GiB above the
+        # un-grown size and ~1.75 GiB below the grown one. Without the relic
+        # there is no growth unit at all and the pool would stay at p3's ~4 GiB,
+        # so this assertion discriminates by construction.
         assert size > 5 * 1024**3, (
             f"pool is {size} bytes (~{size / 1024**3:.1f} GiB) — it did not grow "
-            "past the image's own size"
+            "past the ZFS partition it was built on"
         )
 
     with subtest("the two discriminating AWS kernel parameters are live"):
