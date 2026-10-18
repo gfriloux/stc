@@ -170,10 +170,21 @@ in {
         ClientAliveInterval = 300;
         ClientAliveCountMax = 2;
 
-        X11Forwarding = false;
-        AllowAgentForwarding = false;
+        # These three are mkDefault, and the asymmetry with the line between
+        # them is the reason. TCP forwarding already had a consumer switch
+        # (`allowedTCPForwarding`); X11, agent forwarding and tunnelling had
+        # none, so declining them meant mkForce on a relic the host is
+        # documented as trusting.
+        #
+        # None of the three weakens what this relic claims — key-only
+        # authentication, which stays pinned below. They are operational: a
+        # workstation forwarding a remote GUI application, an operator hopping
+        # through a bastion with their agent. The hardened value is still what
+        # every host that does not ask gets.
+        X11Forwarding = lib.mkDefault false;
+        AllowAgentForwarding = lib.mkDefault false;
         AllowTcpForwarding = cfg.allowedTCPForwarding;
-        PermitTunnel = false;
+        PermitTunnel = lib.mkDefault false;
         GatewayPorts = "no";
 
         # Remove a leftover Unix socket before binding a forwarded one, instead
