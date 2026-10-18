@@ -30,6 +30,25 @@ in {
       default = ["9.9.9.9" "149.112.112.112"];
       description = "DNS resolvers. Defaults to Quad9 (privacy-respecting, DNSSEC, no logging).";
     };
+
+    dhcp = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = ''
+        Use DHCP on all interfaces.
+
+        An option rather than a `lib.mkDefault` on `networking.useDHCP`, and the
+        reason is a measured collision: upstream modules write that option with
+        `mkDefault` too — `services/networking/ifstate.nix` writes `false`,
+        `virtualisation/vz-vm.nix` and the facter hardware module write `true` —
+        and two disagreeing `mkDefault`s are a build error. Measured: this relic
+        together with `services.ifstate.enable = true` did not evaluate at all.
+
+        Set this to `false` and declare your interfaces yourself, or leave it on.
+        Either way the relic's value is deterministic against whatever upstream
+        defaults next release.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -37,8 +56,9 @@ in {
       domain = lib.mkIf (cfg.domain != null) cfg.domain;
       inherit (cfg) nameservers;
       usePredictableInterfaceNames = lib.mkDefault true;
-      # DHCP on all interfaces. Override per-interface in your system config.
-      useDHCP = lib.mkDefault true;
+      # From the option, at normal priority — see stc.relics.networking.dhcp for
+      # the collision that rules out mkDefault here.
+      useDHCP = cfg.dhcp;
     };
   };
 }

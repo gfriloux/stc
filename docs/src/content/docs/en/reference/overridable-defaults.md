@@ -113,6 +113,39 @@ your build:
   impermanence rollback (the unit cannot exist in a scripted initrd),
   `neededForBoot` on the persist dataset.
 
+## The seal that keeps this page true
+
+`just option-priorities` (part of `just ci`) reads
+`scripts/option-priorities.tsv` and fails on two things:
+
+1. **An unregistered priority.** Every file under `relics/` and `cogitator/`
+   that writes `lib.mkDefault`, `lib.mkForce` or `lib.mkOverride` has a row with
+   the exact count and a reason. Add one without registering it and CI stops: a
+   priority is a decision, and an unregistered decision is one taken in secret.
+2. **A collision with an upstream default.** For every third-party option the
+   register says STC writes with `mkDefault`, the locked nixpkgs and
+   home-manager are searched for a module writing the same option, also with
+   `mkDefault`. Two disagreeing defaults are a build error at *your* end, so
+   each hit must be allow-listed with the measured reason it is harmless.
+
+This exists because the rule above was written down and still missed something.
+`v0.18.0` demoted `services.openssh.settings.X11Forwarding` to `mkDefault`;
+nixpkgs' slurm module writes the same setting as
+`mkIf cfg.client.enable (mkDefault true)`, and a hardened Slurm client that
+built on the previous release stopped evaluating. Nothing caught it, because
+nothing measured it.
+
+The seal found a second case of the same class on its first run, older than that
+chantier: `networking.useDHCP` at `mkDefault true` in the networking relic
+against `networking.ifstate`'s `mkDefault false`. That is why DHCP is now
+`stc.relics.networking.dhcp`, an option at normal priority.
+
+**Known blind spot, stated rather than hidden:** the upstream search matches an
+option's full dotted path and its last two components. A module that writes only
+a bare leaf inside a nested block can still slip past it. Matching bare leaves
+was tried and abandoned — `command`, `package` and `enable` hit half of nixpkgs,
+and a check that cries wolf gets disabled.
+
 ## Checking it yourself
 
 You do not have to take this page's word for it. Set the value you want and see

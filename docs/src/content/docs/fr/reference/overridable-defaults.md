@@ -119,6 +119,41 @@ Ce n'est pas un backlog. Chacun de ces cas est une décision, et la contredire
   d'impermanence (l'unité ne peut pas exister dans un initrd scripté),
   `neededForBoot` sur le dataset de persistance.
 
+## Le garde qui maintient cette page vraie
+
+`just option-priorities` (inclus dans `just ci`) lit
+`scripts/option-priorities.tsv` et échoue sur deux choses :
+
+1. **Une priorité non enregistrée.** Chaque fichier de `relics/` et
+   `cogitator/` qui écrit `lib.mkDefault`, `lib.mkForce` ou `lib.mkOverride` a
+   une ligne avec le compte exact et une raison. En ajouter une sans
+   l'enregistrer arrête la CI : une priorité est une décision, et une décision
+   non enregistrée est une décision prise en secret.
+2. **Une collision avec un défaut amont.** Pour chaque option tierce que le
+   registre dit écrite en `mkDefault` par STC, le nixpkgs et le home-manager
+   verrouillés sont fouillés à la recherche d'un module qui écrit la même option,
+   aussi en `mkDefault`. Deux défauts contradictoires sont une erreur de build
+   *chez toi*, donc chaque hit doit être inscrit en liste d'exception avec la
+   raison mesurée qui le rend inoffensif.
+
+Ce garde existe parce que la règle ci-dessus était écrite et a quand même raté
+quelque chose. `v0.18.0` a démoté `services.openssh.settings.X11Forwarding` en
+`mkDefault` ; le module slurm de nixpkgs écrit le même réglage en
+`mkIf cfg.client.enable (mkDefault true)`, et un client Slurm durci qui se
+construisait à la version précédente a cessé de s'évaluer. Rien ne l'a attrapé,
+parce que rien ne le mesurait.
+
+Le garde a trouvé un second cas de la même classe à sa première exécution, plus
+ancien que ce chantier : `networking.useDHCP` en `mkDefault true` dans la relique
+networking contre le `mkDefault false` de `networking.ifstate`. C'est pourquoi le
+DHCP est désormais `stc.relics.networking.dhcp`, une option à priorité normale.
+
+**Angle mort connu, dit plutôt que caché :** la recherche amont matche le chemin
+complet d'une option et ses deux derniers composants. Un module qui n'écrit
+qu'une feuille nue dans un bloc imbriqué peut encore passer. Matcher les feuilles
+nues a été essayé puis abandonné — `command`, `package` et `enable` touchent la
+moitié de nixpkgs, et un garde qui crie au loup finit désactivé.
+
 ## Le vérifier toi-même
 
 Tu n'as pas à croire cette page sur parole. Pose la valeur que tu veux et regarde

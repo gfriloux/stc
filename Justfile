@@ -38,7 +38,7 @@ show:
     nix flake show
 
 # Full CI gate: formatting + linting + flake check + doc parity
-ci: fmt-check lint check docs-parity
+ci: fmt-check lint check docs-parity option-priorities
 
 # Regenerate CHANGELOG.md from Conventional Commits + tags (git-cliff).
 # Pass the tag being released — `just changelog v0.8.0` — so its commits land
@@ -91,3 +91,11 @@ docs-preview: docs-build
 # Fail if the en/ and fr/ documentation trees diverge
 docs-parity:
     bash scripts/check-docs-parity.sh
+
+# Fail if an option priority is unregistered, or collides with an upstream default.
+# Written after v0.18.0 demoted services.openssh.settings.X11Forwarding to
+# mkDefault and broke a hardened Slurm client, which writes the same setting with
+# mkDefault too. The rule was documented and still missed, because nothing
+# measured it — this is the command that does.
+option-priorities:
+    bash scripts/check-option-priorities.sh

@@ -1,0 +1,74 @@
+# Register of option priorities — read by scripts/check-option-priorities.sh
+#
+# Tab-separated. Three kinds of row:
+#
+#   count  <file>  <mkDefault>  <mkForce>  <mkOverride>  <why these priorities are right>
+#   watch  <full option path>  <file that writes it>  <note>
+#   allow  <full option path>  <upstream module>  <why the collision is harmless>
+#
+# `count` rows exist so a priority cannot be added without a ruling: the seal
+# compares them against the source and fails on any drift.
+#
+# `watch` rows list the THIRD-PARTY options STC writes with mkDefault — the only
+# ones that can collide with an upstream module. Options under stc.* cannot, so
+# they are not watched. The full path is here because a grep cannot infer it from
+# a nested block.
+#
+# The rule these rows serve is in docs/*/reference/overridable-defaults.md.
+
+# ── counts ──────────────────────────────────────────────────────────────────
+count	cogitator/home/desktop.nix	3	0	1	three GUI relics as defaults so one terminal can be dropped; pinentry at mkOverride 900 to beat enginseer's default without beating the consumer
+count	cogitator/home/enginseer/default.nix	13	0	0	tool settings are the consumer's taste, not the profile's trade; the tool list itself stays at normal priority
+count	cogitator/nixos/docker-server.nix	4	0	0	socketProxy, crowdsec and preSwitchChecks are additive; autoPrune is a default kept off because a missed weekly window takes the stack down
+count	cogitator/nixos/dreadnought.nix	2	0	0	networking and the hardening suite are additive; zfs, impermanence and aws stay at normal priority because this profile declares the filesystems that assume them
+count	cogitator/nixos/gaming.nix	2	0	0	the profile is named for what it does, not the GPU or audio stack it assumes
+count	cogitator/nixos/hardening.nix	6	0	0	the six sub-relics are independent and nothing here assumes any one of them
+count	cogitator/nixos/plasma.nix	1	0	0	pipewire is additive; plasma6 stays pinned because it is the profile's subject
+count	cogitator/nixos/sarcophagus-aws.nix	2	8	0	networking and hardening additive; the mkForce block is an image builder having the last word on its own boot layout, over STC's own boot relic
+count	cogitator/nixos/sarcophagus-kvm.nix	2	8	0	networking and hardening additive; the mkForce block is an image builder having the last word on its own boot layout, over STC's own boot relic
+count	cogitator/nixos/vm.nix	1	0	0	store optimisation costs I/O on a timer and a consumer may not want it
+count	cogitator/nixos/workstation.nix	3	0	0	same three hardening relics as the suite, additive, and the filesystem one was already consumer-controlled
+count	relics/nixos/aws.nix	2	0	0	the serial getty must yield to a nixosTest claiming ttyS0; udisks2 documents an intent upstream already defaults to false
+count	relics/nixos/boot.nix	1	0	0	firmware that refuses EFI variable writes, and chroot installs, need canTouchEfiVariables false
+count	relics/nixos/docker/traefik.nix	4	0	0	log rotation policy belongs to the operator; files, frequency, rotate and postrotate stay pinned because they are wired to this relic
+count	relics/nixos/hardening/filesystem.nix	0	1	0	mkForce on /tmp because the relic replaces whatever the hardware configuration or disko declared for it with a tmpfs
+count	relics/nixos/hardening/kernel.nix	1	0	0	an operator must be able to re-enable core dumps for one crash; read the warning on the relic's doc page before doing it
+count	relics/nixos/impermanence.nix	1	0	0	hideMounts only changes what mount shows, so an operator debugging persistence can turn it off
+count	relics/nixos/networking.nix	1	0	0	predictable interface names are a proposal; useDHCP moved to an option after this seal measured a collision with networking.ifstate
+count	relics/nixos/plasma6.nix	1	0	0	xserver.enable as a default, without which the relic's own documented wayland = false option is unreachable
+count	relics/nixos/vm-variant.nix	0	6	0	mkForce throughout is this relic's entire job — neutralising secrets, pools and images — and it only ever writes inside virtualisation.vmVariant
+count	relics/nixos/zfs.nix	2	0	0	forceImportRoot/All stay false but reachable: a pool legitimately carrying a foreign hostid is a real one-off need
+
+
+# ── third-party options written with mkDefault, watched for collisions ───────
+watch	programs.fzf.historyWidget.command	cogitator/home/enginseer/default.nix	handing Ctrl-R back to fzf is documented, so it must not need mkForce
+watch	programs.direnv.silent	cogitator/home/enginseer/default.nix	someone debugging why an env did not load wants the chatter back
+watch	programs.micro.settings.tabsize	cogitator/home/enginseer/default.nix	editor taste; the doc page promised these were overridable
+watch	programs.micro.settings.tabstospaces	cogitator/home/enginseer/default.nix	editor taste
+watch	programs.micro.settings.autoindent	cogitator/home/enginseer/default.nix	editor taste
+watch	programs.micro.settings.ruler	cogitator/home/enginseer/default.nix	editor taste
+watch	programs.micro.settings.savecursor	cogitator/home/enginseer/default.nix	editor taste
+watch	programs.micro.settings.mouse	cogitator/home/enginseer/default.nix	editor taste
+watch	programs.ssh.enableDefaultConfig	cogitator/home/enginseer/default.nix	matches the consumer's setup and silences an upstream deprecation
+watch	services.gpg-agent.enableSshSupport	cogitator/home/enginseer/default.nix	a smartcard-held auth key wants gpg-agent AS the ssh agent
+watch	services.gpg-agent.pinentry.package	cogitator/home/enginseer/default.nix	headless default; cogitator-desktop raises it to mkOverride 900
+watch	catppuccin.autoEnable	cogitator/home/enginseer/default.nix	the line exists to reproduce an implicit default, so it must not impose one
+watch	virtualisation.docker.autoPrune.enable	cogitator/nixos/docker-server.nix	off by default; a consumer who wants pruning sets it
+watch	nix.optimise.automatic	cogitator/nixos/vm.nix	weekly store optimisation costs I/O
+watch	systemd.services."serial-getty@ttyS0".enable	relics/nixos/aws.nix	a nixosTest claims the same port at normal priority
+watch	services.udisks2.enable	relics/nixos/aws.nix	upstream already defaults it false; the line documents an intent
+watch	boot.loader.efi.canTouchEfiVariables	relics/nixos/boot.nix	firmware refusing EFI writes, chroot installs
+watch	services.logrotate.settings.traefik.compress	relics/nixos/docker/traefik.nix	operator's retention policy
+watch	services.logrotate.settings.traefik.delaycompress	relics/nixos/docker/traefik.nix	operator's retention policy
+watch	services.logrotate.settings.traefik.missingok	relics/nixos/docker/traefik.nix	operator's retention policy
+watch	services.logrotate.settings.traefik.notifempty	relics/nixos/docker/traefik.nix	operator's retention policy
+watch	systemd.coredump.enable	relics/nixos/hardening/kernel.nix	one debugging session; see the relic page for what it exposes
+watch	environment.persistence.hideMounts	relics/nixos/impermanence.nix	cosmetic; an operator debugging persistence wants the mounts visible
+watch	networking.usePredictableInterfaceNames	relics/nixos/networking.nix	a host with fixed naming replaces it
+watch	services.xserver.enable	relics/nixos/plasma6.nix	without this the relic's own wayland = false option is unreachable
+watch	boot.zfs.forceImportRoot	relics/nixos/zfs.nix	upstream warns on its own true default below stateVersion 26.11
+watch	boot.zfs.forceImportAll	relics/nixos/zfs.nix	a non-root pool carrying a foreign hostid; needs forceImportRoot too
+
+# ── collisions measured and ruled harmless ───────────────────────────────────
+allow	nix.optimise.automatic	nixos/modules/virtualisation/container-config.nix	writes mkDefault false, but only under boot.isContainer — the vm cogitator is not a container, so the two definitions never meet
+allow	services.udisks2.enable	nixos/modules/services/desktop-managers/budgie.nix	writes mkDefault true, but budgie also writes services.gvfs.enable = mkDefault true and gvfs.nix writes services.udisks2.enable = true at NORMAL priority, which masks both defaults — measured: the composition evaluates
