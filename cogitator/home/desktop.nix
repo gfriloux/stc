@@ -17,9 +17,13 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
-    stc.relics.gui.kitty.enable = true;
-    stc.relics.gui.ghostty.enable = true;
-    stc.relics.gui.zen-browser.enable = true;
+    # All three mkDefault: each relic is independent, this profile writes
+    # nothing that assumes any of them, and shipping two terminals means a
+    # consumer wanting only one had to mkForce the other off. At normal priority
+    # there was no way to take the profile and decline a single program.
+    stc.relics.gui.kitty.enable = lib.mkDefault true;
+    stc.relics.gui.ghostty.enable = lib.mkDefault true;
+    stc.relics.gui.zen-browser.enable = lib.mkDefault true;
 
     # Graphical pinentry for gpg-agent. Overrides the headless-safe default set
     # by cogitator-enginseer; inert if gpg-agent is not enabled.
