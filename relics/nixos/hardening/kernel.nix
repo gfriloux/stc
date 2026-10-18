@@ -85,7 +85,14 @@ in {
     };
 
     # Disable systemd core dump handler — /bin/false doesn't exist on NixOS.
-    systemd.coredump.enable = false;
+    #
+    # mkDefault: an operator debugging a crash on a hardened host needs core
+    # dumps back for one session, and that is an operational need rather than a
+    # change of threat model. At normal priority it cost a mkForce, while the
+    # PAM limit below stays in place either way — so re-enabling the handler
+    # alone does not silently undo the hardening, it just makes the switch
+    # reachable. The default is unchanged for every host that does not ask.
+    systemd.coredump.enable = lib.mkDefault false;
 
     # Belt-and-suspenders: also disable core dumps via PAM resource limits.
     security.pam.loginLimits = [
