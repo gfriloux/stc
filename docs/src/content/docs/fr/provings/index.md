@@ -25,14 +25,14 @@ rapide et statique.
 - Linux uniquement (`x86_64-linux` / `aarch64-linux`) — l'attribut est vide ailleurs.
 - Builder : `pkgs.testers.runNixOSTest`.
 
-**Ce que `just test` coûte maintenant.** Huit épreuves, **onze boots de VM** —
+**Ce que `just test` coûte maintenant.** Neuf épreuves, **douze boots de VM** —
 `vm` et `gaming` portent deux nœuds chacune, et `sarcophagus-kvm` démarre son
 nœud unique deux fois — et les clôtures contiennent KDE deux fois (`workstation`
 et `plasma`) et Steam une fois. Sur un store froid, ça fait quelques Gio de
 téléchargement ; à chaud, la plupart des scripts finissent en 23 à 30 s.
-`sarcophagus-kvm` sort du lot aux deux bouts : elle construit une image disque
-dans sa propre VM avant même que le test démarre, puis son script tourne 66 s
-pour les deux boots. C'est dit explicitement parce que
+Les deux sarcophages sortent du lot, parce que chacun **construit une image
+disque dans sa propre VM avant même que son test démarre** : `sarcophagus-kvm`
+tourne ensuite 66 s pour ses deux boots, et `sarcophagus-aws` 32 s pour le sien. C'est dit explicitement parce que
 la discipline qui compte, c'est de lancer `just test` avant de fermer une branche
 qui a touché un cogitator : une recette trop lourde à lancer est un gate qui cesse
 discrètement d'en être un. Pour itérer, builder une seule épreuve —
@@ -62,6 +62,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `plasma` | `cogitator-plasma` | SDDM est bien le display manager et tourne en Wayland avec la session Plasma par défaut ; le fichier de session existe dans le répertoire que sddm désigne réellement ; les deux réglages de la relique (`keyboardLayout`, `sddmTheme`) atteignent la configuration rendue ; le portail XDG porte le joker que la relique configure ; rtkit, le pont ALSA 32 bits et le `default.target` qui démarre WirePlumber avec la session graphique sont en place ; gvfs et tumbler sont joignables depuis la session |
 | `gaming` | `cogitator-gaming` | Steam est câblé, avec les règles udev qui rendent une manette utilisable sans root ; le pilote VDPAU/VAAPI de la relique AMD atteint l'arbre de pilotes fusionné ; les trois revendications de la relique Pipewire (rtkit, pont ALSA 32 bits, compat PulseAudio) sont en place ; Steam Remote Play est fermé par défaut et, sur un second nœud, ouvre à la fois sa plage UDP et ses ports TCP |
 | `sarcophagus-kvm` | `cogitator-sarcophagus-kvm` | Démarre l'image qcow2 que le profil existe pour produire, deux fois sur le même disque : les datasets ZFS que le profil déclare sont bien ce qui est monté (`vmpool/root`, `vmpool/nix`, `vmpool/persist`), la relique crée elle-même la référence `@blank` que le builder d'image ne livre pas, le rollback de l'initrd tourne et *réussit*, et après un reboot un témoin posé sur le dataset racine a disparu tandis que ceux de `/persist` et du chemin déclaré via `impermanence.extraDirectories` ont survécu — l'empreinte de la clé d'hôte SSH restant inchangée, et le compte rendu d'échec de la relique restant totalement muet sur ce chemin sain |
+| `sarcophagus-aws` | `cogitator-sarcophagus-aws` | Démarre l'image raw de l'AMI que le profil existe pour produire, sur un disque **plus grand que l'image** : le pool ZFS grandit réellement pour remplir le volume qui est dessous (`stc-grow-pool` va au bout *et* `zpool list` dépasse la taille de l'image), les datasets du profil sont bien ce qui est monté, `/boot` est un ESP FAT dont le label résout vers le périphérique monté, les deux paramètres noyau AWS qui discriminent sont actifs, `xen_fbfront` est blacklisté, les règles udev EC2 sont posées, et les pilotes réseau des **deux** classes d'instance sont demandés — celui de Xen échouant à s'insérer sur ce banc *sans faire échouer le boot*, ce qui est précisément ce qui permet à une seule image de servir Nitro et Xen |
 | `dreadnought` | `cogitator-dreadnought` | Cinq reliques composées sur un même hôte démarrent, avec exactement une unité chargée en échec faute de pool ; le support ZFS est fonctionnel sur le noyau booté ; les deux paramètres noyau AWS qui discriminent atteignent `/proc/cmdline` ; le script d'agrandissement porte les `poolName`, `ebsDisk` et `ebsPartition` du profil ; le timer de scrub ZFS porte `scrubInterval` ; la persistance explicite est bien bind-montée, y compris une entrée posée par l'option du cogitator ; le durcissement survit à la composition ; le rollback d'impermanence a tourné dans l'initrd et échoué comme prévu, et cet échec est lisible depuis le système démarré via `stc-impermanence-state.service` et non plus seulement dans un journal d'initrd |
 
 ## Ajouter une épreuve
@@ -98,7 +99,7 @@ gaming = pkgs-unfree.testers.runNixOSTest (import ./gaming.nix {inherit self;});
 ```
 
 Elle est cantonnée à cette seule ligne du registre, comme `forge/default.nix` en
-cantonne une pour la licence BSL de Terraform. Les cinq autres épreuves gardent un
+cantonne une pour la licence BSL de Terraform. Les autres épreuves gardent un
 `drvPath` identique au bit près avec l'instance en place — c'est comme ça que ça a
 été vérifié plutôt que supposé, même si le contrôle tient de la formalité :
 `pkgs-unfree` est une liaison paresseuse que Nix ne force jamais pour elles.
@@ -139,7 +140,22 @@ Les deux dernières ne se rencontrent qu'en lançant : elles sortent toutes deux
 comme une erreur de **build d'image**, pas d'évaluation, et celle de GRUB signale
 un périphérique inexistant plutôt qu'un conflit de priorités.
 
-C'est le patron que #47 (`sarcophagus-aws`) doit reprendre.
+`provings/sarcophagus-aws.nix` reprend ce patron, et exactement deux choses
+diffèrent. L'image est raw et non qcow2 — mesuré dans
+`make-single-disk-zfs-image.nix`, `format = "raw"` donne le suffixe `.img`, donc
+la surcouche se prend sur `nixos.root.img` avec `-F raw`. Et la surcouche reçoit
+une **taille** : 8 Gio sur une image de 4096 Mio, donc la partition 3 s'arrête
+avant la fin du périphérique et `stc-grow-pool` a quelque chose à agrandir. C'est
+une instance EC2 sur un volume EBS plus grand que son AMI, et c'est la seule
+revendication que ni `dreadnought` (qui ne lit que la *chaîne* de ce script) ni
+`sarcophagus-kvm` (dont le disque fait exactement la taille de son image) ne
+peuvent atteindre. Mesuré au banc : le pool arrive à 6,75 Gio.
+
+Les cinq lignes de concession et le bloc `qemu-img` sont **recopiés** dans la
+seconde épreuve plutôt que factorisés. Deux occurrences ne font pas une
+abstraction, et une fonction partagée cacherait précisément les lignes qu'un
+lecteur doit avoir sous les yeux pour faire confiance au banc. Si un troisième
+sarcophage arrive, on factorisera alors, avec trois cas en vue.
 
 ## Limite de périmètre — dreadnought ne voit pas la couche disque
 
@@ -171,6 +187,34 @@ utilisable non plus — mesuré, le socle de test pose
 donc cette chaîne est sur la ligne de commande du noyau quoi que fasse la relique.
 Seuls `nvme_core.io_timeout` et `random.trust_cpu` discriminent, et seuls ces deux
 sont vérifiés.
+
+**Ce que `sarcophagus-aws` a changé à ce tableau, et ce qu'elle n'a pas changé.**
+Démarrer l'image réelle lève les limites de framework ci-dessus : l'import du
+pool, les montages de datasets, le périphérique de boot et — c'est l'objet de
+cette épreuve — la croissance du pool au runtime y sont tous vérifiés. Trois
+trous ne sont **pas** levés, et ont été re-mesurés plutôt que supposés :
+
+- **La console série** reste non couverte. Le getty est en `lib.mkDefault` depuis
+  #45, donc il perd un contest de priorité ordinaire face à l'instrumentation au
+  lieu d'entrer en collision avec elle — c'est ce qui a rendu possible toute
+  épreuve de ce profil, mais ça veut quand même dire qu'aucun getty ne tourne.
+  Le cas de la chaîne de débit est plus subtil : sous le patron image externe,
+  `directBoot` est coupé et la ligne de commande du noyau vient du GRUB de
+  l'image, donc `virtualisation.qemu.consoles` ne l'atteint plus et la chaîne
+  *pourrait* discriminer là. L'établir demanderait de construire une seconde
+  image sans la relique, ce que l'épreuve ne paie pas — donc ce n'est pas
+  vérifié, plutôt que vérifié sur une prémisse non mesurée.
+- **Le point d'NTP AWS** reste non couvert, pour une raison qui survit au patron
+  image externe : `services.timesyncd.enable` est mesuré `false` sur un nœud nu,
+  sur un nœud ZFS seul **et** sur le nœud STC, parce que le socle de test
+  l'éteint. Aucun `/etc/systemd/timesyncd.conf` n'est rendu, donc il n'y a rien
+  où lire `169.254.169.123`.
+- **`boot.zfs.devNodes`** (`/dev`, contre le défaut `/dev/disk/by-id`) discrimine
+  à l'évaluation et ne peut pas du tout être vérifié sur ce banc : la seule
+  lecture au runtime serait le chemin de store d'un script d'unité interpolé
+  depuis la *même* évaluation, donc une tautologie — et un disque virtio **a**
+  des entrées `by-id`, donc le défaut importerait le pool aussi bien. Le banc ne
+  peut pas distinguer la relique du défaut.
 
 **La persistance explicite, en revanche, est vérifiée** — c'est la seule
 revendication côté disque qui survive. `environment.persistence` ne passe pas par
