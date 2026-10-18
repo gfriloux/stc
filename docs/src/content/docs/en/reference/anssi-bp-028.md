@@ -189,3 +189,45 @@ authorized-keys search path to `/etc/ssh/authorized_keys.d/%u`) is **out of
 ANSSI-BP-028 scope**. sshd configuration is covered by a separate ANSSI guide,
 *Recommandations pour un usage sécurisé d'(Open)SSH*. It is listed here only to
 be explicit about the boundary — no `Rxx` reference is invented for it.
+
+## Why there is no `relics.hardening.sudo`
+
+CIS ~5.3.x asks for `Defaults use_pty` and a dedicated sudo `logfile`. Neither
+becomes a relic. The reason is a measurement rather than a preference, and it is
+recorded here so the gap is not raised again as a finding.
+
+| CIS 5.3.x item | Measured state on NixOS | Source |
+|---|---|---|
+| `Defaults use_pty` | Already the default | sudo enabled it by default in **1.9.14** — `NEWS`: *"The `use_pty` sudoers option is now enabled by default. To restore the historic behavior … add `Defaults !use_pty`"*. nixpkgs ships **1.9.17p2** |
+| `Defaults use_pty` under sudo-rs | Already the default | `sudoers(5)` of sudo-rs 0.2.14, entry `use_pty`: *"This flag is on by default"* |
+| nixpkgs turning it off | Never | `grep -rn "use_pty"` over nixpkgs' `nixos/` tree returns nothing |
+| dedicated `logfile` | Absent, and declined | sudo already logs every invocation to `authpriv`, which journald collects: `journalctl -t sudo` yields `TTY=`, `PWD=`, `USER=` and `COMMAND=` per call |
+| dedicated `logfile` under sudo-rs | Not expressible | `sudoers(5)` of sudo-rs: *"sudo-rs logs events via syslog(3)"* — the implementation has no `logfile` setting at all |
+
+A relic writing `Defaults use_pty` would therefore change no behaviour on any
+host STC can build. It would read as hardening — in the consumer's configuration
+and in this very matrix — while doing nothing, which is the failure mode this
+page exists to prevent. The only host where the setting would bite is one pinned
+to sudo older than 1.9.14, and that pin is the consumer's choice, not something a
+relic should paper over.
+
+The `logfile` half is a genuine absence and is still declined. The journal is
+already bounded by `services.journald` retention; a `/var/log/sudo.log` is
+rotated by nothing on NixOS and grows until the disk is full. The accountability
+the control asks for is delivered by the journal entries above, so a second,
+unbounded copy of them buys nothing and costs a server its disk.
+
+A consumer who must satisfy the control literally can still do it per host,
+without STC:
+
+```nix
+security.sudo.extraConfig = "Defaults logfile=/var/log/sudo.log";
+```
+
+Note that `security.sudo.extraConfig` is a `lines` option: definitions from
+several modules concatenate, and for a given setting the last `Defaults` line
+sudo reads is the one that applies. That ordering is the second reason this does
+not belong in a relic — a relic cannot promise its line wins.
+
+Tracked as [issue #37](https://github.com/gfriloux/stc/issues/37), closed on this
+measurement.

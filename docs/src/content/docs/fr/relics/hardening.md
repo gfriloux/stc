@@ -336,6 +336,16 @@ rebuild. C'est tout l'intérêt de déclarer la liste ici, mais cela remplacera
 silencieusement une liste entretenue à la main.
 :::
 
+## Pas une relique : sudo
+
+Il n'existe pas de `relics.hardening.sudo`, et cette absence est délibérée. Les
+deux réglages habituellement réclamés — `Defaults use_pty` et un fichier de log
+sudo dédié — sont respectivement déjà le défaut amont (sudo ≥ 1.9.14, et de tout
+temps sous sudo-rs) et un moins bon marché que le journal où sudo écrit déjà. La
+mesure complète et la porte de sortie pour le consommateur qui doit satisfaire le
+contrôle à la lettre sont dans
+[Conformité ANSSI-BP-028](/stc/fr/reference/anssi-bp-028/).
+
 ## Exemple d'utilisation
 
 Reliques individuelles :
