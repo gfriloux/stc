@@ -120,3 +120,90 @@ Step 4: complete — `docs/{en,fr}/reference/overridable-defaults.md` carries th
 rule, the full list of what became overridable with the version, **and what stays
 pinned with its reason** (the second half matters more: it is what keeps the page
 from reading as a backlog). `just ci` green, docs build 92 pages.
+
+## Closing review — what it found, and what I verified before acting
+
+The review ran twice (unscoped, then on the branch) and the two passes
+**contradicted each other**, so every finding was re-measured here rather than
+implemented on trust. Two were right about something being *wrong* rather than
+incomplete; one was itself wrong.
+
+Review: Ruling: **the coredump safety claim I published is false, and it is
+corrected rather than defended.** `relics/nixos/hardening/kernel.nix` and both
+hardening doc pages said re-enabling `systemd.coredump` is safe because the
+relic's PAM limit stays in place. Refuted two independent ways: `loginLimits`
+writes `/etc/security/limits.conf`, applied by `pam_limits` to PAM login sessions
+only, so it never bounded a daemon; and `core(5)`, read from the pinned
+man-pages, says verbatim *"The RLIMIT_CORE limit is not enforced for core dumps
+that are piped to a program"* — and enabling systemd-coredump is what installs a
+pipe `core_pattern`. The demotion stays (an operator must be able to), the
+reassurance is replaced by the real consequence: daemons dump full address space,
+secrets included, to `/var/lib/systemd/coredump`. Fourth false fact I have
+published in a doc page across these chantiers; the pattern is naming a mechanism
+I have not measured.
+
+Review: Ruling: **the `X11Forwarding` demotion was a regression and is replaced
+by options, not reverted.** Measured on both refs: a node with
+`stc.cogitator.hardening.enable` and `services.slurm.client.enable` evaluates on
+`main` (`X11Forwarding = false`) and **fails on the branch**, because
+`slurm.nix:491` writes `X11Forwarding = mkIf cfg.client.enable (mkDefault true)`
+and two `mkDefault`s disagree. This inverts the first item of the plan's *Review
+Focus*: I predicted demotion would let a consumer win silently, and the real
+hazard is demotion *introducing* a conflict where a normal-priority pin used to
+win quietly. Fix: `allowedX11Forwarding`, `allowedAgentForwarding` and
+`allowedTunnel`, written at normal priority from the option, matching the
+`allowedTCPForwarding` two lines away. Measured after: the Slurm composition
+evaluates again with the same value as `main`, defaults unchanged, all three
+options honoured. Cost if wrong: three options in a namespace that already had
+the pattern.
+
+Review: Ruling: **one reviewer finding is wrong and is not implemented.** It
+claimed demoting `services.udisks2.enable` creates a new conflict with
+`budgie.nix:269` (`mkDefault true`). It does not: budgie also writes
+`services.gvfs.enable = mkDefault true`, and `gvfs.nix:51` writes
+`services.udisks2.enable = true` at **normal priority**, which masks both
+`mkDefault`s. The other review pass had measured this correctly and said so. Two
+reviewers, opposite conclusions, and the source settles it.
+
+Review: Ruling: **a claim made by the review itself was false.** One pass
+reported it had swept nixpkgs, home-manager, catppuccin and impermanence for
+competing `mkDefault` definitions of every demoted option and that "none exist".
+Slurm exists, and the other pass found it. A reviewer's verification claim is
+evidence, not proof — same lesson as v0.15.0, where a reviewer's proposed
+correction was itself wrong.
+
+Review: the audit's inventory had a **structural blind spot**: the grep matched
+`= (true|false);`, so it never saw `mkForce` definitions — a strictly stronger
+pin than the one the issue was about — nor non-boolean assignments. 26 `mkForce`
+occurrences exist in `relics/` and `cogitator/`; one of them
+(`cogitator/home/desktop.nix`) was measured to silently discard a consumer's own
+`pinentry` choice, which is worse than the conflicts this chantier removed.
+Fixed here with `lib.mkOverride 900` (beats enginseer's `mkDefault`, loses to a
+consumer's definition) and locked in by a third node in
+`provings/home-desktop.nix`. The remaining 25 are handled by chantier B's
+register rather than a second audit.
+
+Review: fixed without argument, each verified: the `forceImportAll` doc row
+omitted upstream's `forceImportAll -> forceImportRoot` assertion; the `udisks2`
+row ignored that `amazon-image.nix:139` pins the option at normal priority on the
+AWS path; the `canTouchEfiVariables` row was contradicted by the two sarcophagi,
+which `mkForce`d it (now a plain `false`, so the relic's `mkDefault` is still
+beaten but the consumer is not); declining the socket proxy makes the Traefik
+relic bind-mount `/run/docker.sock` read-only (`traefik.nix:391`), which the new
+doc section presented as free; the CrowdSec-without-an-image claim had no
+proving (now `nodes.nocrowdsec`, deliberately given no image); and the plasma
+node's `succeed("cat .../49-pipewire-modules.conf")` coupled the proving to an
+upstream `alsa.enable` STC does not own (now tolerant of the file's absence).
+
+Review: deviation, recorded rather than rewritten: the three corrected rows of
+`reference/overridable-defaults.md` (zfs, udisks2, EFI) rode along in the sshd
+commit instead of getting their own, because both touched the same two files and
+I staged them together. The planned fifth commit was therefore empty. Four signed
+commits would have had to be rebased and re-signed to fix the attribution — not
+worth it for an atomicity miss that makes no claim false. Cost if wrong: one
+commit message under-describes its diff.
+
+Review: `just test` green on the final tree (exit 0), and the `nocrowdsec` node
+demonstrably booted. Honest limit on that evidence: the background log was
+captured through `tail`, so the subtest lines themselves are not in it — the
+proof is `nix build`'s exit status plus the node's boot, not a printed assertion.
