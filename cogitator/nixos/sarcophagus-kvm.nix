@@ -94,7 +94,12 @@ in {
     # plain FAT32 /boot). systemd-boot refuses to install on a non-ESP partition.
     boot.loader = {
       systemd-boot.enable = lib.mkForce false;
-      efi.canTouchEfiVariables = lib.mkForce false;
+      # Plain false, not mkForce: the boot relic now writes this at mkDefault,
+      # so a definition is enough to win. mkForce additionally made the value
+      # unreachable for a consumer of this profile, while the reference page
+      # advertises it as overridable — this profile was the counter-example to
+      # its own documentation.
+      efi.canTouchEfiVariables = false;
       grub = {
         enable = lib.mkForce true;
         device = lib.mkForce "/dev/vda";

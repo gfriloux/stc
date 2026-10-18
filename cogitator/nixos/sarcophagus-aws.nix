@@ -106,7 +106,12 @@ in {
     # internally so it boots correctly regardless of the device name.
     boot.loader = {
       systemd-boot.enable = lib.mkForce false;
-      efi.canTouchEfiVariables = lib.mkForce false;
+      # Plain false, not mkForce: the boot relic now writes this at mkDefault,
+      # so a definition is enough to win. mkForce additionally made the value
+      # unreachable for a consumer of this profile, while the reference page
+      # advertises it as overridable — this profile was the counter-example to
+      # its own documentation.
+      efi.canTouchEfiVariables = false;
       grub = {
         enable = lib.mkForce true;
         device = lib.mkForce "/dev/vda";
