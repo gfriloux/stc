@@ -3,6 +3,29 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.16.0] — 2026-10-18
+
+### Bug Fixes
+
+- **provings**: correct three sizes collapsed into two, and stop a comment overclaiming ([`4348f07`](https://github.com/gfriloux/stc/commit/4348f07044cbc952a54e2dcbafb8a2ddadf5fd83))
+- **provings**: correct four counts, and two premises that survived in the header ([`3172b86`](https://github.com/gfriloux/stc/commit/3172b8699419623b2cf4cca47031589be405726e))
+- **provings**: correct a mis-moved count, and a doc table that contradicted the code ([`d5852ec`](https://github.com/gfriloux/stc/commit/d5852ece5e29d3f7ef4e7e9a7130e1b0b545b53d))
+
+### Documentation
+
+- **plans**: plan v0.16.0 — le lot « les épreuves, palier 2 » ([`c231eaf`](https://github.com/gfriloux/stc/commit/c231eaf4d9b8fd56ee85c92758c74322831f7952))
+- **provings**: record the AWS image proving and what it covers ([`3e7e7ca`](https://github.com/gfriloux/stc/commit/3e7e7ca9b9375661fce2613bb754a7e7a54104a9))
+- **plans**: ledger du chantier 1 — deux prémisses d'assert fausses, et une propriété plus forte ([`153ab9f`](https://github.com/gfriloux/stc/commit/153ab9f5ab920fc795b0976bd798805a883f9705))
+- **provings**: document the Home Manager proving mechanism ([`8170053`](https://github.com/gfriloux/stc/commit/81700536643660af9cf0b9b5f90fe6c504779f8e))
+- **plans**: ledger du chantier 2 — six prémisses fausses sur où un réglage atterrit ([`12d486f`](https://github.com/gfriloux/stc/commit/12d486f0932bb3082354dd00fdc4312442a05ebe))
+- **provings**: record the desktop proving and the cross-profile claim ([`7dc556a`](https://github.com/gfriloux/stc/commit/7dc556a6eaf85aeffc87049b5f53c61e0b1aa5e7))
+- **plans**: ledger du chantier 3 — l'assert « inerte » quitte la VM ([`166b31d`](https://github.com/gfriloux/stc/commit/166b31d0b9776d507c606982c6c88f1d5291a935))
+
+### Testing
+
+- **provings**: boot the AWS image and prove the EBS pool grows ([`d6eacae`](https://github.com/gfriloux/stc/commit/d6eacae6bb98b91b99c5ce6296bc2ad7ee8374fd))
+- **provings**: activate the enginseer profile in a VM and assert its claims ([`3e34073`](https://github.com/gfriloux/stc/commit/3e34073ca4607def99164cb4153b7e1faf300b15))
+- **provings**: prove the desktop profile and its pinentry override ([`6ed8726`](https://github.com/gfriloux/stc/commit/6ed8726ba09a18cf2dd7c644a7258e199723682e))
 ## [0.15.0] — 2026-10-17
 
 ### Bug Fixes
