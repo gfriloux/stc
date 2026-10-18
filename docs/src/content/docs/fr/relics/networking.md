@@ -63,3 +63,18 @@ modules = [
 configurer les interfaces individuellement, pose `networking.useDHCP = false`
 dans ta configuration puis déclare chaque interface explicitement.
 :::
+
+## Pas une relique : la synchronisation de temps
+
+Il n'y a pas de `relics.networking.ntp`, et cette absence est délibérée. NixOS
+active déjà `systemd-timesyncd` par défaut — mesuré `true` sur un nœud nu comme
+sur les trois schematics, sans aucune ligne de STC — et l'amont expose déjà
+`services.timesyncd.servers` pour la source autoritaire. Une relique ne serait
+qu'un alias d'options fournies par nixpkgs.
+
+Un point vaut d'être connu avant de poser un serveur de temps :
+`networking.timeServers` écrit `FallbackNTP=`, le champ de **priorité la plus
+basse**, et non le `NTP=` autoritaire. Utilise `services.timesyncd.servers` quand
+tu veux dire *« synchronise-toi depuis cet hôte »*. La mesure complète, y compris
+pourquoi la relique AWS utilise délibérément le secours, est dans
+[Fidélité ANSSI-BP-028](/stc/fr/reference/anssi-bp-028/).

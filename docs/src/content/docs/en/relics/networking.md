@@ -63,3 +63,18 @@ modules = [
 interfaces individually, set `networking.useDHCP = false` in your configuration
 and then declare each interface explicitly.
 :::
+
+## Not a relic: time synchronisation
+
+There is no `relics.networking.ntp`, and the absence is deliberate. NixOS
+already enables `systemd-timesyncd` by default — measured `true` on a bare node
+and on all three schematics, with no STC line involved — and upstream already
+exposes `services.timesyncd.servers` for the authoritative source. A relic would
+alias options nixpkgs provides.
+
+One point is worth knowing before you set a time server: `networking.timeServers`
+writes `FallbackNTP=`, the **lowest-priority** field, not the authoritative
+`NTP=`. Use `services.timesyncd.servers` when you mean *"synchronise from this
+host"*. The full measurement, including why the AWS relic deliberately uses the
+fallback, is in
+[ANSSI-BP-028 fidelity](/stc/en/reference/anssi-bp-028/).
