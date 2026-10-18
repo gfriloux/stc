@@ -66,14 +66,32 @@ position with the AMD relic.
 
 | Relic | Now overridable | Why you might |
 |---|---|---|
-| `relics-zfs` | `boot.zfs.forceImportAll` | a non-root pool legitimately carrying a foreign hostid |
-| `relics-boot` | `boot.loader.efi.canTouchEfiVariables` | firmware that refuses EFI variable writes; installs from a chroot |
+| `relics-zfs` | `boot.zfs.forceImportAll` | a non-root pool legitimately carrying a foreign hostid — **set `boot.zfs.forceImportRoot = true` as well**, or upstream asserts: *"If you enable boot.zfs.forceImportAll, you must also enable boot.zfs.forceImportRoot"* |
+| `relics-boot` | `boot.loader.efi.canTouchEfiVariables` | firmware that refuses EFI variable writes; installs from a chroot. Not applicable on the two sarcophagi: as image builders they set it themselves, and there the profile has the last word |
 | `relics-impermanence` | `environment.persistence.<path>.hideMounts` | seeing the bind mounts while debugging persistence |
-| `relics-aws` | `services.udisks2.enable` | a host that knowingly wants it (the value only ever documented an intent — upstream already defaults it off) |
-| `relics-hardening-kernel` | `systemd.coredump.enable` | re-enabling core dumps for one debugging session; the PAM limit stays in place |
-| `relics-hardening-ssh` | `X11Forwarding`, `AllowAgentForwarding`, `PermitTunnel` | forwarding a remote GUI app; hopping through a bastion with your agent |
+| `relics-aws` | `services.udisks2.enable` | a host that knowingly wants it. Note the relic is no longer what blocks you — but on an image built from `nixpkgs`' own `amazon-image` module, that module writes `false` at normal priority, so a plain definition conflicts with **upstream** and you need `lib.mkForce` there |
+| `relics-hardening-kernel` | `systemd.coredump.enable` | re-enabling core dumps for one debugging session — read the warning on the [hardening relics page](/stc/en/relics/hardening/) first: with the handler on, daemons dump secrets and the relic's PAM limit does **not** prevent it |
 | `relics-docker-traefik` | logrotate `compress`, `delaycompress`, `missingok`, `notifempty` | your own retention policy, or a shipper that wants uncompressed files |
 | `cogitator-enginseer` (Home Manager) | all of `programs.micro.settings`, `programs.direnv.silent`, `services.gpg-agent.enableSshSupport`, `catppuccin.autoEnable`, `programs.fzf.historyWidget.command` | editor taste; using gpg-agent as your SSH agent; theming tools one by one |
+
+### Set through an STC option instead
+
+`relics-hardening-ssh` writes the four sshd forwarding switches from its own
+options, at normal priority — not as `mkDefault` values. That is tier 1 of the
+rule above, and the reason is a measurement: at `mkDefault` they collided with
+upstream modules writing the same setting (nixpkgs' slurm module writes
+`services.openssh.settings.X11Forwarding = mkIf cfg.client.enable (mkDefault true)`),
+which broke a hardened Slurm client that used to build. An option keeps STC's
+value deterministic against whatever upstream defaults next release:
+
+```nix
+stc.relics.hardening.ssh = {
+  allowedX11Forwarding = true;     # forward a remote GUI app
+  allowedAgentForwarding = true;   # hop through a bastion with your agent
+  allowedTCPForwarding = true;     # pre-existing
+  allowedTunnel = true;
+};
+```
 
 ## What stays pinned, and why
 

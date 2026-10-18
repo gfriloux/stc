@@ -124,6 +124,9 @@ The `/proc` hardening is unaffected.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `stc.relics.hardening.ssh.allowedTCPForwarding` | bool | `false` | Allow TCP forwarding. Also drives `StreamLocalBindUnlink`, which only has an object when forwarding is allowed. |
+| `stc.relics.hardening.ssh.allowedX11Forwarding` | bool | `false` | Allow X11 forwarding. Needed by a workstation forwarding a remote GUI app, and by a host that is also a Slurm client. |
+| `stc.relics.hardening.ssh.allowedAgentForwarding` | bool | `false` | Allow SSH agent forwarding — hopping through a bastion with your own agent. |
+| `stc.relics.hardening.ssh.allowedTunnel` | bool | `false` | Allow tun device forwarding (`PermitTunnel`). |
 | `stc.relics.hardening.ssh.systemAuthorizedKeysOnly` | bool | `true` | Read authorized keys only from `/etc/ssh/authorized_keys.d/%u` — what the flake declares — never from `~/.ssh/authorized_keys`. **Can lock you out**; see below. |
 | `stc.relics.hardening.ssh.perSourcePenalties` | string | `"crash:3600s authfail:3600s max:86400s"` | sshd `PerSourcePenalties` — rate-limits misbehaving source addresses with escalating blocks. Set to `"no"` to disable. |
 | `stc.relics.hardening.ssh.banner` | null or lines | `null` | Pre-authentication warning banner text. The relic writes it to the store and points sshd `Banner` at that file. `null` writes no `Banner` directive at all. |
@@ -401,14 +404,40 @@ them is operational rather than a change of threat model:
 
 ```nix
 # Forward a remote GUI app, or hop through a bastion with your agent.
-services.openssh.settings.X11Forwarding = true;
-services.openssh.settings.AllowAgentForwarding = true;
-services.openssh.settings.PermitTunnel = "yes";
+stc.relics.hardening.ssh = {
+  allowedX11Forwarding = true;
+  allowedAgentForwarding = true;
+  allowedTunnel = true;
+};
 
-# Get core dumps back for one debugging session. The PAM resource limit this
-# relic also sets stays in place, so this does not silently undo the hardening.
+# Get core dumps back for one debugging session.
 systemd.coredump.enable = true;
 ```
+
+The three forwarding switches are **options**, not `mkDefault` values, and that
+is deliberate. Written as `lib.mkDefault` they collided with upstream modules
+setting the same thing — nixpkgs' slurm module writes
+`services.openssh.settings.X11Forwarding = mkIf cfg.client.enable (mkDefault true)`,
+and a hardened Slurm client stopped building. An option keeps the relic's value
+deterministic against upstream and still leaves you one line.
+
+:::danger[Re-enabling core dumps exposes secrets, and the PAM limit does not stop it]
+An earlier version of this page said the relic's `security.pam.loginLimits`
+entry keeps the hardening in place even with the handler back on. **That is
+false, for two independent reasons:**
+
+- `loginLimits` writes `/etc/security/limits.conf`, applied by `pam_limits` to
+  PAM *login sessions*. A systemd service never went through it, so it never
+  bounded a daemon's dumps.
+- Enabling `systemd-coredump` installs a pipe `core_pattern`, and `core(5)` is
+  explicit: *"The RLIMIT_CORE limit is not enforced for core dumps that are
+  piped to a program"*. The limit then stops applying even to login sessions.
+
+So with the handler on, every crashing daemon writes its **full address space** —
+TLS private keys, session tokens, decrypted secrets — into
+`/var/lib/systemd/coredump`. Enable it deliberately, for the crash you are
+chasing, and turn it back off afterwards.
+:::
 
 What stays pinned is the relic's actual claim: `PasswordAuthentication = false`,
 `KbdInteractiveAuthentication = false` and `PubkeyAuthentication = true`.

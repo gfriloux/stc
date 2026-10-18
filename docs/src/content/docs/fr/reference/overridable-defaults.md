@@ -69,14 +69,34 @@ Intel ou NVIDIA était dans la même position avec la relique AMD.
 
 | Relique | Désormais surchargeable | Pourquoi tu voudrais |
 |---|---|---|
-| `relics-zfs` | `boot.zfs.forceImportAll` | un pool non-root portant légitimement un hostid étranger |
-| `relics-boot` | `boot.loader.efi.canTouchEfiVariables` | un firmware qui refuse l'écriture des variables EFI ; une installation depuis un chroot |
+| `relics-zfs` | `boot.zfs.forceImportAll` | un pool non-root portant légitimement un hostid étranger — **pose aussi `boot.zfs.forceImportRoot = true`**, sinon l'amont asserte : *« If you enable boot.zfs.forceImportAll, you must also enable boot.zfs.forceImportRoot »* |
+| `relics-boot` | `boot.loader.efi.canTouchEfiVariables` | un firmware qui refuse l'écriture des variables EFI ; une installation depuis un chroot. Sans objet sur les deux sarcophages : en tant que constructeurs d'image ils la posent eux-mêmes, et là le profil a le dernier mot |
 | `relics-impermanence` | `environment.persistence.<chemin>.hideMounts` | voir les bind mounts en déboguant la persistance |
-| `relics-aws` | `services.udisks2.enable` | un hôte qui le veut sciemment (la valeur ne documentait qu'une intention — l'amont le laisse déjà éteint) |
-| `relics-hardening-kernel` | `systemd.coredump.enable` | réactiver les core dumps le temps d'un débogage ; la limite PAM reste en place |
-| `relics-hardening-ssh` | `X11Forwarding`, `AllowAgentForwarding`, `PermitTunnel` | relayer une application graphique distante ; rebondir par un bastion avec son agent |
+| `relics-aws` | `services.udisks2.enable` | un hôte qui le veut sciemment. À noter : ce n'est plus la relique qui te bloque — mais sur une image bâtie avec le module `amazon-image` de nixpkgs, ce module écrit `false` à priorité normale, donc une définition nue entre en conflit avec l'**amont** et il te faut `lib.mkForce` là |
+| `relics-hardening-kernel` | `systemd.coredump.enable` | réactiver les core dumps le temps d'un débogage — lis d'abord l'avertissement sur la [page des reliques de durcissement](/stc/fr/relics/hardening/) : avec le handler actif, les démons écrivent des secrets et la limite PAM de la relique ne l'empêche **pas** |
 | `relics-docker-traefik` | logrotate `compress`, `delaycompress`, `missingok`, `notifempty` | ta propre politique de rétention, ou un collecteur qui veut des fichiers non compressés |
 | `cogitator-enginseer` (Home Manager) | tout `programs.micro.settings`, `programs.direnv.silent`, `services.gpg-agent.enableSshSupport`, `catppuccin.autoEnable`, `programs.fzf.historyWidget.command` | goûts d'éditeur ; utiliser gpg-agent comme agent SSH ; thématiser ses outils un par un |
+
+### Réglé par une option STC, pas par une priorité
+
+`relics-hardening-ssh` écrit les quatre interrupteurs de forwarding sshd depuis
+ses propres options, à priorité normale — et non en `mkDefault`. C'est le niveau
+1 de la règle ci-dessus, et la raison est une mesure : en `mkDefault` ils
+entraient en collision avec les modules amont qui écrivent le même réglage (le
+module slurm de nixpkgs pose
+`services.openssh.settings.X11Forwarding = mkIf cfg.client.enable (mkDefault true)`),
+ce qui cassait un client Slurm durci qui se construisait avant. Une option garde
+la valeur de STC déterministe face à ce que l'amont décidera de mettre par défaut
+à la prochaine release :
+
+```nix
+stc.relics.hardening.ssh = {
+  allowedX11Forwarding = true;     # relayer une application graphique distante
+  allowedAgentForwarding = true;   # rebondir par un bastion avec son agent
+  allowedTCPForwarding = true;     # préexistante
+  allowedTunnel = true;
+};
+```
 
 ## Ce qui reste épinglé, et pourquoi
 

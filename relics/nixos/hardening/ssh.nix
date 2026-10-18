@@ -39,6 +39,44 @@ in {
       description = "Allow TCP forwarding. Disabled by default on server VMs.";
     };
 
+    # The three below exist for the same reason as the one above, and are
+    # deliberately options rather than mkDefault values. Measured: at mkDefault
+    # they collide with any upstream module writing the same setting — nixpkgs'
+    # slurm module writes `X11Forwarding = mkIf client.enable (mkDefault true)`,
+    # and a hardened Slurm client stopped evaluating ("has conflicting
+    # definition values"). Written from an option at normal priority, STC's
+    # value is deterministic whatever upstream decides to default next release,
+    # and the consumer still has one line to change it.
+    allowedX11Forwarding = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Allow X11 forwarding. Disabled by default: it lets a remote client open
+        windows on the server's display and widens the trusted surface.
+
+        Turn it on for a workstation that forwards a remote graphical
+        application, or for a host that is also a Slurm client (nixpkgs' slurm
+        module expects it on).
+      '';
+    };
+
+    allowedAgentForwarding = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Allow SSH agent forwarding. Disabled by default: a forwarded agent can
+        be used by anyone with root on the intermediate host.
+
+        Turn it on to hop through a bastion with your own agent.
+      '';
+    };
+
+    allowedTunnel = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Allow tun device forwarding (`PermitTunnel`). Disabled by default.";
+    };
+
     perSourcePenalties = lib.mkOption {
       type = lib.types.str;
       default = "crash:3600s authfail:3600s max:86400s";
@@ -170,21 +208,23 @@ in {
         ClientAliveInterval = 300;
         ClientAliveCountMax = 2;
 
-        # These three are mkDefault, and the asymmetry with the line between
-        # them is the reason. TCP forwarding already had a consumer switch
-        # (`allowedTCPForwarding`); X11, agent forwarding and tunnelling had
-        # none, so declining them meant mkForce on a relic the host is
-        # documented as trusting.
-        #
-        # None of the three weakens what this relic claims — key-only
-        # authentication, which stays pinned below. They are operational: a
+        # All four forwarding switches come from an option, at normal priority.
+        # Declining them is operational rather than a change of threat model — a
         # workstation forwarding a remote GUI application, an operator hopping
-        # through a bastion with their agent. The hardened value is still what
-        # every host that does not ask gets.
-        X11Forwarding = lib.mkDefault false;
-        AllowAgentForwarding = lib.mkDefault false;
+        # through a bastion with their agent — and none of them weakens what
+        # this relic claims: key-only authentication, which stays pinned below
+        # with no option, because a host documented as hardened must not be able
+        # to accept passwords again quietly.
+        #
+        # Why options and not mkDefault: measured, mkDefault made these collide
+        # with upstream modules writing the same setting (slurm's
+        # `X11Forwarding = mkIf client.enable (mkDefault true)`), which broke a
+        # composition that worked before. Normal priority keeps STC's value
+        # deterministic against upstream and still leaves the consumer one line.
+        X11Forwarding = cfg.allowedX11Forwarding;
+        AllowAgentForwarding = cfg.allowedAgentForwarding;
         AllowTcpForwarding = cfg.allowedTCPForwarding;
-        PermitTunnel = lib.mkDefault false;
+        PermitTunnel = cfg.allowedTunnel;
         GatewayPorts = "no";
 
         # Remove a leftover Unix socket before binding a forwarded one, instead

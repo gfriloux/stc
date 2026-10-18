@@ -128,6 +128,9 @@ n'est pas affecté.
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
 | `stc.relics.hardening.ssh.allowedTCPForwarding` | bool | `false` | Autoriser le TCP forwarding. Pilote aussi `StreamLocalBindUnlink`, qui n'a d'objet que si le forwarding est autorisé. |
+| `stc.relics.hardening.ssh.allowedX11Forwarding` | bool | `false` | Autoriser le X11 forwarding. Nécessaire à un poste qui relaie une application graphique distante, et à un hôte qui est aussi client Slurm. |
+| `stc.relics.hardening.ssh.allowedAgentForwarding` | bool | `false` | Autoriser le forwarding d'agent SSH — rebondir par un bastion avec son propre agent. |
+| `stc.relics.hardening.ssh.allowedTunnel` | bool | `false` | Autoriser le forwarding de périphérique tun (`PermitTunnel`). |
 | `stc.relics.hardening.ssh.systemAuthorizedKeysOnly` | bool | `true` | Ne lire les clés autorisées que dans `/etc/ssh/authorized_keys.d/%u` — ce que déclare le flake — jamais dans `~/.ssh/authorized_keys`. **Peut vous verrouiller dehors** ; voir plus bas. |
 | `stc.relics.hardening.ssh.perSourcePenalties` | string | `"crash:3600s authfail:3600s max:86400s"` | `PerSourcePenalties` de sshd — limite le débit des adresses sources fautives avec des blocages progressifs. Mettre à `"no"` pour désactiver. |
 | `stc.relics.hardening.ssh.banner` | null ou lines | `null` | Texte du bandeau d'avertissement affiché avant authentification. La relique l'écrit dans le store et pointe le `Banner` de sshd dessus. `null` n'émet aucune directive `Banner`. |
@@ -415,15 +418,42 @@ de menace :
 
 ```nix
 # Relayer une application graphique distante, ou rebondir par un bastion avec son agent.
-services.openssh.settings.X11Forwarding = true;
-services.openssh.settings.AllowAgentForwarding = true;
-services.openssh.settings.PermitTunnel = "yes";
+stc.relics.hardening.ssh = {
+  allowedX11Forwarding = true;
+  allowedAgentForwarding = true;
+  allowedTunnel = true;
+};
 
-# Récupérer les core dumps le temps d'un débogage. La limite de ressources PAM
-# que cette relique pose aussi reste en place, donc ça ne défait pas le
-# durcissement en silence.
+# Récupérer les core dumps le temps d'un débogage.
 systemd.coredump.enable = true;
 ```
+
+Les trois interrupteurs de forwarding sont des **options**, et non des valeurs
+`mkDefault` : c'est délibéré. Écrits en `lib.mkDefault`, ils entraient en
+collision avec les modules amont qui posent le même réglage — le module slurm de
+nixpkgs écrit
+`services.openssh.settings.X11Forwarding = mkIf cfg.client.enable (mkDefault true)`,
+et un client Slurm durci ne se construisait plus. Une option garde la valeur de
+la relique déterministe face à l'amont et te laisse quand même une ligne.
+
+:::danger[Réactiver les core dumps expose des secrets, et la limite PAM ne l'empêche pas]
+Une version précédente de cette page affirmait que l'entrée
+`security.pam.loginLimits` de la relique maintenait le durcissement même avec le
+handler réactivé. **C'est faux, pour deux raisons indépendantes :**
+
+- `loginLimits` écrit `/etc/security/limits.conf`, appliqué par `pam_limits` aux
+  *sessions de connexion* PAM. Un service systemd n'est jamais passé par là :
+  la limite n'a donc jamais borné les dumps d'un démon.
+- Activer `systemd-coredump` installe un `core_pattern` en tube, et `core(5)`
+  est explicite : *« The RLIMIT_CORE limit is not enforced for core dumps that
+  are piped to a program »*. La limite cesse alors de s'appliquer, y compris aux
+  sessions de connexion.
+
+Donc avec le handler actif, chaque démon qui plante écrit **tout son espace
+d'adressage** — clés privées TLS, jetons de session, secrets déchiffrés — dans
+`/var/lib/systemd/coredump`. Active-le délibérément, pour le crash que tu
+traques, puis remets-le à `false`.
+:::
 
 Ce qui reste épinglé est la revendication réelle de la relique :
 `PasswordAuthentication = false`, `KbdInteractiveAuthentication = false` et
