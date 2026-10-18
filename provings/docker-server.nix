@@ -72,6 +72,31 @@
   };
 
   # A function, so the script below can reach the generated pre-switch checks.
+  # Second node, added with issue #86: CrowdSec declined, and deliberately given
+  # no image.
+  #
+  # This locks in the sharpest claim of that chantier. The docker relics assert
+  # on a missing image, so while the cogitator pinned crowdsec.enable at normal
+  # priority a consumer who did not want CrowdSec still had to hand it an image
+  # — they were made to configure a service they were trying not to run. Now the
+  # enablement is mkDefault and a plain `= false` removes the assertion with it.
+  #
+  # The plainness and the absent image are both load-bearing. Re-pin
+  # crowdsec.enable, or move an image reference out from behind the relic's own
+  # enable guard, and this node stops evaluating — which is the regression this
+  # exists to catch.
+  nodes.nocrowdsec = {
+    imports = [self.nixosModules.cogitator-docker-server];
+
+    stc.cogitator.docker-server.enable = true;
+    stc.relics.docker.crowdsec.enable = false;
+
+    # Everything the rest of the stack needs, and nothing for CrowdSec.
+    stc.relics.docker.traefik.image = "stc-proving/traefik:placeholder";
+    stc.relics.docker.socketProxy.image = "stc-proving/socket-proxy:placeholder";
+    stc.relics.docker.traefik.acme.email = "ops@example.test";
+  };
+
   testScript = {nodes, ...}: ''
     machine.wait_for_unit("multi-user.target")
 
@@ -199,5 +224,23 @@
         machine.succeed(
             "${nodes.machine.config.system.preSwitchChecksScript} /nonexistent-closure switch"
         )
+
+    with subtest("CrowdSec can be declined without being given an image"):
+        # That this node evaluated at all is the regression guard: the docker
+        # relics assert on a missing image, so while the cogitator pinned
+        # crowdsec.enable a consumer who did not want CrowdSec still had to hand
+        # it one. Re-pin the enablement and this node stops building.
+        #
+        # Booting it too, so the claim is not merely an evaluation: the rest of
+        # the stack must still be wired on a host that declined one relic.
+        nocrowdsec.wait_for_unit("multi-user.target")
+
+        # Unit names measured, not guessed: the container units are `crowdsec`
+        # and `traefik`, and the pair discriminates — listing systemd.services
+        # with the relic enabled yields `crowdsec`, and declining it removes
+        # exactly that one while `traefik` and `docker-socket-proxy` stay.
+        nocrowdsec.fail("systemctl cat crowdsec.service")
+        nocrowdsec.succeed("systemctl cat traefik.service")
+        nocrowdsec.succeed("systemctl cat docker-socket-proxy.service")
   '';
 }

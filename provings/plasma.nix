@@ -149,7 +149,17 @@
         # and must be gone here.
         noaudio.fail("systemctl cat rtkit-daemon.service")
 
-        alsa = noaudio.succeed("cat /etc/alsa/conf.d/49-pipewire-modules.conf")
+        # Tolerant of the file's absence on purpose. The claim under test is
+        # "no 32-bit bridge", which holds whether or not the file exists — and
+        # whether it exists depends on services.pipewire.alsa.enable, which STC
+        # does not own here (measured true today on a plasma6 node with the
+        # relic declined, from upstream, while support32Bit is false). A bare
+        # `succeed("cat ...")` would couple this proving to that upstream
+        # default and fail one day with "No such file or directory" instead of a
+        # meaningful message.
+        alsa = noaudio.succeed(
+            "cat /etc/alsa/conf.d/49-pipewire-modules.conf 2>/dev/null || true"
+        )
         assert "libs.32Bit" not in alsa, (
             "the 32-bit ALSA bridge is still configured with the relic declined:\n"
             f"{alsa}"
