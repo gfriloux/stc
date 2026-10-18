@@ -79,9 +79,16 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    # zfs, and impermanence/aws below, stay at normal priority: this profile
+    # declares the pool layout and the boot device, so they are structural —
+    # forcing one off evaluates into a host that builds and does not boot, and
+    # the conflict is what prevents it. Full reasoning in the dreadnought
+    # profile and in .claude/plans/v0.18.0/triage.md.
     stc.relics.zfs.enable = true;
-    stc.relics.networking.enable = true;
-    stc.cogitator.hardening.enable = true;
+
+    # Additive: declinable without breaking anything this profile declares.
+    stc.relics.networking.enable = lib.mkDefault true;
+    stc.cogitator.hardening.enable = lib.mkDefault true;
     stc.relics.impermanence = {
       enable = true;
       inherit (cfg) poolName;
