@@ -51,7 +51,21 @@ shell, outillage de développement, rites git, et augmentations esthétiques.
 L'éditeur `micro` est livré avec des réglages opinionnés (tabulations douces de
 2 espaces, règle, curseur mémorisé, souris) et un binding LSP `nix:nixd` (le
 serveur `nixd` est fourni plus bas). Surcharge n'importe lequel depuis ta propre
-configuration home.
+configuration home :
+
+```nix
+programs.micro.settings.mouse = false;
+programs.micro.settings.tabsize = 4;
+```
+
+:::caution[Cette promesse était fausse avant v0.18.0]
+Jusqu'à `v0.18.0` ces réglages étaient écrits à priorité normale, donc la phrase
+ci-dessus n'était pas vraie : un `programs.micro.settings.mouse = false` nu
+échouait sur `has conflicting definition values`, et seul `lib.mkForce` passait.
+Ils valent désormais `lib.mkDefault`, ce que la documentation décrivait depuis
+toujours. Trouvé par l'audit de
+l'[issue #86](https://github.com/gfriloux/stc/issues/86).
+:::
 
 ### Ctrl-R appartient à Atuin
 
@@ -70,9 +84,17 @@ Pour redonner `Ctrl-R` à fzf, restaure le widget et désactive le binding d'Atu
 depuis ta propre configuration home :
 
 ```nix
-programs.fzf.historyWidget.command = lib.mkForce null;
+programs.fzf.historyWidget.command = null;
 programs.atuin.flags = ["--disable-ctrl-r"];
 ```
+
+:::note[Plus de `mkForce` depuis v0.18.0]
+Il fallait auparavant `lib.mkForce` : le profil épinglait le widget à priorité
+normale, donc une définition nue échouait sur
+`has conflicting definition values`. Il vaut désormais `lib.mkDefault`, et la
+définition nue ci-dessus suffit. Un `mkForce` existant continue de fonctionner —
+tu peux simplement le retirer.
+:::
 
 ### Agent GPG
 
@@ -82,6 +104,18 @@ son propre `ssh-agent`. Le pinentry par défaut est `pinentry-curses`, un choix
 compatible headless pour que l'Enginseer fonctionne en TTY et sur serveur. Il est
 posé avec `lib.mkDefault`, si bien que `cogitator-desktop` le surcharge avec un
 pinentry graphique (`pinentry-qt`).
+
+Depuis `v0.18.0`, la délégation SSH est un défaut et non un verdict. Si tu gardes
+ta clé d'authentification sur une carte à puce et que tu veux que gpg-agent *soit*
+ton agent SSH, une ligne suffit :
+
+```nix
+services.gpg-agent.enableSshSupport = true;
+```
+
+Avant `v0.18.0` il fallait `lib.mkForce`, parce que le profil écrivait `false` à
+priorité normale — une hypothèse sur ton installation que tu ne pouvais pas
+contredire poliment.
 
 ### Multiplexing des connexions SSH
 
