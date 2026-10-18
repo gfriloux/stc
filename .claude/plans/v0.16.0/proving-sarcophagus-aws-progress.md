@@ -70,3 +70,101 @@ ligne de la table de couverture. Pas de variante `sarcophagus_aws` ni `aws`.
 ---
 
 <!-- Une ligne par step livré, chaque ruling, chaque mineur différé. -->
+
+## Step 1 — l'épreuve et son enregistrement
+
+Ruling (avant écriture) : le nœud du plan portait
+`impermanence.extraDirectories = ["/var/lib/stc-proving"]`, recopié du patron
+KVM. **Retiré** : la décision 4 dit que la persistance n'est pas réassertée ici,
+donc l'option serait de la configuration morte — posée et jamais lue. Coût si
+c'est le mauvais choix : nul, c'est une ligne de nœud.
+
+Trois tours de banc, chacun avec sa cause lue avant correctif. L'image construit
+et démarre du premier coup (le patron image externe de v0.15.0 a tenu tel quel) :
+`multi-user.target` en 30,7 s, `is-system-running` → `running`.
+
+1. **`/boot` rouge** — `findmnt -no SOURCE /boot` rend `/dev/vda2`, pas
+   `/dev/disk/by-label/ESP`. Cause : `findmnt` résout vers le nœud de
+   périphérique du noyau, pas vers le chemin que le cogitator déclare. Ma
+   prémisse d'assert était fausse, pas le produit. Corrigé en deux lectures :
+   `FSTYPE` vaut `vfat`, **et** `readlink -f /dev/disk/by-label/ESP` doit rendre
+   le périphérique dont `/boot` est monté.
+   **Fait faux que j'avais écrit et qui a été réfuté au passage** : mon
+   commentaire présentait ce `/boot` comme « là où le cogitator AWS diffère du
+   KVM ». Faux — `cogitator/nixos/sarcophagus-kvm.nix:114` déclare un `/boot`
+   **identique au byte**. Le commentaire dit maintenant ce qui est vrai : les
+   deux cogitators portent chacun leur copie de la déclaration, et c'est
+   précisément pour ça que l'assert a sa place ici (une régression dans la copie
+   AWS ne serait pas attrapée par l'épreuve KVM, et réciproquement).
+
+2. **`xen_netfront` non chargé** — assert naïf « les deux pilotes sont chargés »,
+   rouge. Diagnostic lancé avant toute correction, et il a sorti la cause exacte :
+   `modprobe: ERROR: could not insert 'xen_netfront': No such device` (pas de bus
+   paravirt Xen sur KVM), tandis que `ena` s'insère sans problème (pilote PCI
+   ordinaire qui ne trouve simplement aucun périphérique). Et surtout :
+   `systemd-modules-load` journalise `Failed to insert module 'xen_netfront'`
+   **puis finit avec succès** et reste `active` — ce qui explique pourquoi le
+   boot est `running` et non `degraded`.
+   L'assert a été **réécrit plus fort** plutôt qu'affaibli : les deux pilotes sont
+   *demandés* (`/etc/modules-load.d/nixos.conf`), celui qui peut se charger l'est,
+   et l'unité est verte malgré l'autre. C'est la propriété qui permet à une seule
+   AMI de servir Nitro **et** Xen, et elle casserait si la relique déplaçait ces
+   modules dans `boot.initrd.kernelModules`. Délibérément **pas** « les deux sont
+   chargés », qui n'est vrai que sur un matériel que ce banc ne peut pas être.
+
+3. **Taille du pool journalisée** — un `print` permanent a été ajouté : le seuil
+   de l'assert est un plancher, et un run qui le franchit de justesse veut dire
+   que le banc a changé.
+
+Verdict du banc, l'assertion phare : **le pool passe de ~4 Gio à 6,75 Gio**
+(image de 4096 Mio, disque virtuel de 8 Gio), `stc-grow-pool` va au bout. Le
+chemin de croissance EBS n'avait aucune couverture avant ce commit —
+`dreadnought` ne lit que la chaîne du script, et le disque du KVM fait la taille
+de son image.
+
+Huit subtests verts. Script en **32,33 s** dont 31,38 s d'attente de
+`multi-user.target`, image construite dans sa propre VM avant le test.
+
+Gate d'innocuité (PF-4) : les trois `drvPath` de schematics sont **identiques**
+à ceux relevés avant le chantier. `just ci` vert. `git diff --name-only` ne
+contient aucun chemin sous `relics/`, `cogitator/` ou `schematics/`.
+
+## Step 2 — la doc EN + FR
+
+Quatre endroits, comme prévu : ligne de table de couverture, paragraphe de coût
+(huit/onze → **neuf/douze**, avec les 32 s mesurés et non estimés), la phrase
+« This is the pattern #47 should reuse » devenue le constat de la reprise avec
+**les deux seules différences** nommées, et une note de portée qui dit ce que
+l'épreuve a *levé* (import du pool, montages, périphérique de boot, croissance)
+et les **trois** trous qui restent — console série, point d'NTP AWS,
+`boot.zfs.devNodes` — chacun avec la mesure qui le justifie.
+
+Mineur drive-by, dans les deux langues : la section unfree disait « les **cinq**
+autres épreuves gardent un `drvPath` identique au byte ». Le compte était déjà
+périmé avant ce chantier et le serait à chaque ajout → remplacé par « les autres
+épreuves ». Pas de chiffre qui se périme.
+
+`just docs-parity` vert, `just docs-build` vert (90 pages).
+
+## Passe de relecture avant commit — deux affirmations de ma prose corrigées
+
+Les deux trouvées en relisant mes propres commentaires, pas par un gate :
+
+1. J'avais écrit, dans le commentaire du nœud, que `growpart` sur le périphérique
+   absent « sort ≥2 » — **inféré, pas mesuré**. Mesuré depuis :
+   `growpart /dev/nonexistent-disk-xyz 3` → **rc=2**, et la relique ne tolère que
+   `rc=1`, donc `stc-grow-pool` échoue bien. L'affirmation était juste et elle est
+   maintenant adossée à une commande. (Premier essai trompeur : sur cette machine
+   `/dev/nvme0n1` **existe**, donc le bac à sable a rendu `rc=1` pour
+   « Permission denied » — un tout autre mode de défaillance. C'est ce qui a
+   failli faire consigner un faux fait dans l'autre sens.)
+2. Le commentaire de `/boot` rattachait le défaut `ebsPartition = 3` au fait que
+   le `/boot` est du FAT nu. Imprécis : la vraie raison est la disposition en
+   trois partitions (bios_grub(1), ESP(2), ZFS(3)), c'est-à-dire que le ZFS est la
+   troisième. Reformulé.
+
+Note de discipline pour la suite du lot : l'arbre git sale fait partie du chemin
+de source du flake, donc **toute** édition d'un fichier du dépôt — y compris ce
+ledger — invalide les dérivations des neuf épreuves. Le `just test` de gate doit
+donc être lancé une fois l'arbre figé, pas en parallèle de l'écriture. Perdu un
+run complet à l'apprendre.
