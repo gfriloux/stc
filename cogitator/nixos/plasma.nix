@@ -23,7 +23,17 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    # plasma6 stays at normal priority: this profile *is* Plasma 6, and with the
+    # relic off it defines nothing at all. The conflict a consumer would hit is
+    # the right answer — they want a different profile, not this one minus its
+    # subject.
     stc.relics.plasma6.enable = true;
-    stc.relics.pipewire.enable = true;
+
+    # Pipewire is additive, so mkDefault. Measured: with the relic forced off the
+    # configuration evaluates and the host is a coherent Plasma desktop without
+    # STC's audio stack — which is an ordinary thing to want (JACK, bare ALSA, or
+    # an interface owned by another service). At normal priority that needed
+    # mkForce. This is the third case named in issue #86.
+    stc.relics.pipewire.enable = lib.mkDefault true;
   };
 }
