@@ -244,3 +244,89 @@ pas promettre que sa ligne gagne.
 
 Suivi dans l'[issue #37](https://github.com/gfriloux/stc/issues/37), fermée sur
 cette mesure.
+
+## Pourquoi il n'y a pas de `relics.networking.ntp`
+
+CIS ~2.1.x demande une source de temps explicite et validée plutôt que des
+défauts non documentés. La proposition était une relique exposant `enable` et une
+option `servers`, posant `services.timesyncd.enable = true`. Mesuré contre le
+nixpkgs verrouillé, tout ce qu'elle apporterait existe déjà en amont : aucune
+relique n'est ajoutée.
+
+| Comportement proposé | État mesuré | Comment |
+|---|---|---|
+| `services.timesyncd.enable = true` | Déjà `true` — sur un nœud nu comme sur les trois schematics, sans aucune ligne de STC (`grep -rn "timesyncd\|chrony" relics/ cogitator/ schematics/` ne trouve que le `timeServers` de la relique AWS) | `nix eval` de `config.services.timesyncd.enable` par schematic |
+| …et toujours vrai sans aucun serveur | Toujours `true` avec `networking.timeServers = []` : l'unité tourne, voulue par `sysinit.target` | `nix-instantiate --eval` sur un nœud nu, liste forcée vide |
+| …et surchargeable | `services.timesyncd.enable = false` en définition nue est accepté, et retire l'unité comme `/etc/systemd/timesyncd.conf` — le défaut amont est un `mkDefault`, donc pas besoin de `mkForce` | même sonde, avec `enable = false` |
+| une option `servers` | `services.timesyncd.servers` existe en amont (défaut `null`) et écrit `NTP=` | `nix eval` de `options.services.timesyncd` → `enable`, `servers`, `fallbackServers`, `settings` |
+| choisir une autre implémentation | `services.chrony.enable` et `services.ntp.enable` sont deux options amont, toutes deux `false` ici | idem |
+
+Une relique serait donc un alias de trois options amont, et `DESIGN.md` ne laisse
+pas de place à une relique qui renomme ce que nixpkgs expose déjà. La source de
+temps se règle par hôte, en une ligne amont :
+
+```nix
+# source autoritaire, priorité maximale hors systemd-networkd
+services.timesyncd.servers = ["ntp.interne.example"];
+```
+
+### Le piège que ce ruling évite
+
+`networking.timeServers` ne règle **pas** le serveur autoritaire. Il alimente
+`services.timesyncd.fallbackServers`, rendu en `FallbackNTP=`. Le fichier rendu
+sur `schematics/local-vm` est :
+
+```ini
+[Time]
+FallbackNTP=0.nixos.pool.ntp.org 1.nixos.pool.ntp.org 2.nixos.pool.ntp.org 3.nixos.pool.ntp.org
+```
+
+`timesyncd.conf(5)`, lu depuis le systemd que ce flake verrouille, est explicite
+sur ce que ça implique : *« Any per-interface NTP servers obtained from
+`systemd-networkd.service(8)` take precedence over this setting, as do any
+servers set via `NTP=` above. This setting is hence only relevant if no other NTP
+server information is known. »*
+
+Donc une relique dont l'option `servers` câblerait `networking.timeServers` —
+l'implémentation évidente — remettrait au consommateur une option qui se lit
+*« voici ma source de temps »* alors qu'elle écrit le champ de priorité la plus
+basse, perdant en silence contre n'importe quel serveur NTP qu'un bail DHCP
+annoncerait. C'est le même mode de défaillance que l'entrée sudo ci-dessus : de
+la configuration qui se lit comme un contrôle et n'en exerce aucun.
+
+### Là où STC pose bien un serveur de temps, et pourquoi en secours
+
+`relics/nixos/aws.nix` pose `networking.timeServers = ["169.254.169.123"]`,
+l'endpoint NTP interne d'AWS, donc `schematics/aws-ami` rend
+`FallbackNTP=169.254.169.123`. Le niveau secours est le bon ici, et c'est un
+choix délibéré : EC2 annonce ce même endpoint par DHCP, donc le chemin normal ne
+dépend pas de cette ligne — elle couvre l'instance dont le bail DHCP ne porte
+aucune option NTP. L'épingler en `NTP=` écraserait au contraire un consommateur
+qui fait tourner son propre serveur de temps autoritaire dans son VPC, décision
+que STC n'a pas à prendre à sa place.
+
+### Hors couverture, et nommé comme tel
+
+Ni ce ruling ni aucune relique ne donne un temps **authentifié**.
+`systemd-timesyncd` n'implémente pas NTS (RFC 8915) ; seul `chronyd` le fait. Un
+hôte dont le modèle de menace inclut un attaquant sur le chemin réseau qui
+décalerait son horloge — pour retarder une vérification d'expiration de
+certificat ou brouiller des horodatages d'audit — a besoin de `services.chrony`
+avec des serveurs NTS, ce qui est une autre implémentation et une décision
+produit, pas une surcouche. Aucune issue n'est ouverte pour ça, afin que ce ne
+soit pas pris pour du travail planifié.
+
+Rien de tout ceci n'est couvert par une épreuve, et ne peut pas l'être :
+`qemu-vm.nix:1489` dans le nixpkgs verrouillé pose
+`services.timesyncd.enable = false` pour toute VM que le pilote de test
+construit, donc aucun `nixosTest` ne rend de `timesyncd.conf`. Les mesures
+ci-dessus sont au niveau de l'évaluation, là où toute la question se joue.
+
+Cette section ne revendique aucune référence `Rxx`. ANSSI-BP-028 n'a pas été
+consulté pour l'écrire : le PDF du guide est servi derrière un filtre anti-robot
+qui a refusé la récupération automatisée, donc aucun numéro de règle n'est
+affirmé dans un sens ou dans l'autre. Le ruling n'en dépend pas — la relique
+serait un alias quoi que dise l'ANSSI des horloges.
+
+Suivi dans l'[issue #38](https://github.com/gfriloux/stc/issues/38), fermée sur
+ces mesures.

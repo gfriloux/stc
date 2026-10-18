@@ -76,6 +76,19 @@ in {
     };
 
     # AWS internal NTP endpoint — always reachable from EC2, no internet required.
+    #
+    # This is a *fallback*, not a pin, and deliberately so. networking.timeServers
+    # feeds services.timesyncd.fallbackServers, which renders FallbackNTP= — the
+    # lowest-priority field (timesyncd.conf(5): per-interface servers from
+    # systemd-networkd take precedence, "as do any servers set via NTP= above").
+    # Measured on schematics/aws-ami: /etc/systemd/timesyncd.conf contains
+    # FallbackNTP=169.254.169.123 and no NTP= line.
+    #
+    # That is the level we want. EC2 advertises this same endpoint over DHCP, so
+    # the normal path never needs this line; it covers the instance whose lease
+    # carries no NTP option. Pinning it via services.timesyncd.servers would
+    # override a consumer running an authoritative time server in their own VPC.
+    # Why no NTP relic exists at all: docs reference/anssi-bp-028 (issue #38).
     networking.timeServers = ["169.254.169.123"];
 
     # Serial console service — pairs with console=ttyS0 above.
