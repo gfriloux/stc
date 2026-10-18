@@ -36,8 +36,13 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
-    stc.relics.amdGpu.enable = true;
-    stc.relics.pipewire.enable = true;
+    # Both additive, both mkDefault. The profile is named for what it does, not
+    # for the hardware it assumes: a gaming host on Intel or NVIDIA graphics had
+    # to mkForce the AMD relic off, and one with audio handled elsewhere had to
+    # do the same for Pipewire. Measured — with either relic forced off the
+    # configuration evaluates and stays coherent; nothing else here reads them.
+    stc.relics.amdGpu.enable = lib.mkDefault true;
+    stc.relics.pipewire.enable = lib.mkDefault true;
 
     programs.steam = {
       enable = true;
