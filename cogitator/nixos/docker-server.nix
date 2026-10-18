@@ -55,11 +55,26 @@ in {
 
   config = lib.mkIf cfg.enable {
     stc.relics.docker = {
+      # traefik stays at normal priority: a reverse-proxied container host is
+      # what this profile *is*, and the socket-proxy wiring lives inside that
+      # relic. Declining it means wanting a different profile.
       traefik.enable = true;
+
       # Secure default: Traefik reaches the Docker API through the filtering
       # socket-proxy instead of bind-mounting the raw socket.
-      socketProxy.enable = true;
-      crowdsec.enable = true;
+      #
+      # mkDefault, because "default" is exactly what the line above claims to
+      # be. Same for crowdsec: both are additive — measured, with either forced
+      # off the profile evaluates and stays coherent.
+      #
+      # What this fixes is sharper than a priority detail. These relics assert
+      # on a missing image ("stc.relics.docker.crowdsec.enable is true but no
+      # image is set"), so a consumer who did not want CrowdSec still had to
+      # hand CrowdSec an image — made to configure a service they were trying
+      # not to run, with mkForce as the only way out.
+      socketProxy.enable = lib.mkDefault true;
+      crowdsec.enable = lib.mkDefault true;
+
       notify.enable = cfg.notify.enable;
     };
 
@@ -68,7 +83,11 @@ in {
     # the wrong closure here and you get wrong containers, wrong Traefik routers,
     # wrong users, wrong secrets — and no diff printed to warn you, because
     # `nixos-rebuild --target-host` shows none.
-    stc.relics.preSwitchChecks.enable = true;
+    # mkDefault: the guard is worth having on by default, and it is still
+    # additive — a consumer who deploys through something other than
+    # nixos-rebuild, or who runs the equivalent check in their own pipeline, can
+    # decline it. Measured: forced off, the profile evaluates and stays coherent.
+    stc.relics.preSwitchChecks.enable = lib.mkDefault true;
 
     virtualisation = {
       docker = {
