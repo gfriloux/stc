@@ -40,6 +40,23 @@
     stc.relics.plasma6.sddmTheme = "stc-proving-theme";
   };
 
+  # Second node: the same profile with its Pipewire relic declined by a *plain*
+  # definition. The plainness is the whole point — before #86 this node could not
+  # be built at all, because the cogitator pinned the value at normal priority
+  # and `= false` raised "has conflicting definition values". A mkForce here
+  # would prove nothing, since mkForce already worked.
+  #
+  # The assertion has to discriminate, which rules out the obvious candidates:
+  # nixpkgs' own plasma6 module enables Pipewire, so its units survive the relic
+  # being gone (already recorded at the top of this file). rtkit is the witness —
+  # off by default upstream, enabled only by STC's Pipewire relic — and the
+  # 32-bit ALSA bridge is the second.
+  nodes.noaudio = {
+    imports = [self.nixosModules.cogitator-plasma];
+    stc.cogitator.plasma.enable = true;
+    stc.relics.pipewire.enable = false;
+  };
+
   testScript = ''
     machine.wait_for_unit("multi-user.target")
 
@@ -118,6 +135,31 @@
         machine.succeed(
             "test -e /run/current-system/sw/share/dbus-1/services"
             "/org.xfce.Tumbler.Thumbnailer1.service"
+        )
+
+    with subtest("the Pipewire relic can be declined without mkForce"):
+        noaudio.wait_for_unit("multi-user.target")
+
+        # That this node booted at all is half the proof: the plain
+        # `stc.relics.pipewire.enable = false` it carries would have failed to
+        # evaluate before the cogitator stopped pinning the value.
+        #
+        # The other half is that declining it actually removes the relic rather
+        # than only its option. Both witnesses are present on `machine` above
+        # and must be gone here.
+        noaudio.fail("systemctl cat rtkit-daemon.service")
+
+        alsa = noaudio.succeed("cat /etc/alsa/conf.d/49-pipewire-modules.conf")
+        assert "libs.32Bit" not in alsa, (
+            "the 32-bit ALSA bridge is still configured with the relic declined:\n"
+            f"{alsa}"
+        )
+
+        # And Plasma itself is untouched: the point of the demotion is a Plasma
+        # host without STC's audio stack, not a broken desktop.
+        sddm = noaudio.succeed("cat /etc/sddm.conf.d/00-nixos.conf")
+        assert "DefaultSession=plasma.desktop" in sddm, (
+            f"declining the audio relic disturbed the session:\n{sddm}"
         )
   '';
 }
