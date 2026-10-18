@@ -152,8 +152,39 @@ Use sops-nix, agenix, or any other secrets manager — STC does not care how the
 file gets there.
 :::
 
+## Running the stack without CrowdSec or the socket proxy
+
+Since `v0.18.0`, `socketProxy`, `crowdsec` and `preSwitchChecks` are enabled with
+`lib.mkDefault`:
+
+```nix
+stc.cogitator.docker-server.enable = true;
+
+# No CrowdSec on this host — and no CrowdSec image needed either.
+stc.relics.docker.crowdsec.enable = false;
+```
+
+That second line is the part worth knowing. The Docker relics **assert** on a
+missing image, so before `v0.18.0` declining CrowdSec was not just a matter of
+priority: you had to hand CrowdSec an image you never intended to run, or write
+`lib.mkForce`. `traefik` stays pinned on purpose — a reverse-proxied container
+host is what this profile *is*. See
+[Overridable defaults](/stc/en/reference/overridable-defaults/).
+
+:::danger[Declining the socket proxy is not free]
+The socket proxy exists so Traefik never touches the raw Docker API. With
+`socketProxy.enable = false`, the Traefik relic falls back to bind-mounting
+`/run/docker.sock` into the container read-only — so Traefik gets direct access
+to the Docker API, and a compromise of that container is a path to host root.
+
+That trade is yours to make (a single-tenant host where you accept it), but make
+it knowingly. Until `v0.18.0` the priority conflict forced the question; now
+only this paragraph does.
+:::
+
 ## See Also
 
 - [Docker relics](/stc/en/relics/docker/) — Traefik, socket-proxy, CrowdSec, and notify in detail
+- [Overridable defaults](/stc/en/reference/overridable-defaults/) — which of this profile's relics you can decline
 - [Pre-Switch Checks](/stc/en/relics/pre-switch-checks/) — the deploy guard this profile enables
 - [Schematic: aws-ami](/stc/en/schematics/aws-ami/) — a complete production example using this profile

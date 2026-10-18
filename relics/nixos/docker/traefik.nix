@@ -427,10 +427,16 @@ in {
       files = "${cfg.dataDir}/logs/traefik.log";
       frequency = "daily";
       rotate = 14;
-      compress = true;
-      delaycompress = true;
-      missingok = true;
-      notifempty = true;
+      # mkDefault on the four policy switches: log rotation policy belongs to
+      # the operator (retention rules, a log shipper that wants uncompressed
+      # files), these are public upstream settings, and changing any of them
+      # breaks nothing this relic depends on. `files`, `frequency`, `rotate` and
+      # `postrotate` stay pinned — they are wired to this relic's own dataDir
+      # and to the USR1 reopen the comment below explains.
+      compress = lib.mkDefault true;
+      delaycompress = lib.mkDefault true;
+      missingok = lib.mkDefault true;
+      notifempty = lib.mkDefault true;
       # No copytruncate: it leaves a window where log lines written during the
       # copy are lost — lines CrowdSec would otherwise tail, so missed attacks.
       # Instead, rotate by rename and tell Traefik to reopen its log (USR1).

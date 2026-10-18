@@ -27,13 +27,26 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
-    stc.relics.hardening.kernel.enable = true;
-    stc.relics.hardening.network.enable = true;
-    stc.relics.hardening.filesystem.enable = true;
-    stc.relics.hardening.ssh.enable = true;
-    stc.relics.hardening.modules.enable = true;
+    # mkDefault on all six, not bare true: the six relics are independent and
+    # this profile writes nothing that assumes any one of them, so a consumer is
+    # entitled to take the suite and decline a part of it — their own sshd
+    # configuration, their own cron policy. At normal priority that cost a
+    # `mkForce`, because a plain `= false` collided
+    # ("has conflicting definition values") with the line below. The header
+    # already offered the other escape, importing the relics à la carte, which
+    # means giving up this profile's single toggle to subtract one item from it.
+    #
+    # Measured, two of six: with the ssh relic and with the scheduler relic
+    # forced off, the configuration evaluates and stays coherent — nothing else
+    # here depends on them. That is what separates these six from the relic
+    # enablements this audit deliberately left pinned (see the triage).
+    stc.relics.hardening.kernel.enable = lib.mkDefault true;
+    stc.relics.hardening.network.enable = lib.mkDefault true;
+    stc.relics.hardening.filesystem.enable = lib.mkDefault true;
+    stc.relics.hardening.ssh.enable = lib.mkDefault true;
+    stc.relics.hardening.modules.enable = lib.mkDefault true;
     # Inert unless the host actually runs cron or atd — STC schedules with
     # systemd timers, so this only bites a consumer who enables one of them.
-    stc.relics.hardening.scheduler.enable = true;
+    stc.relics.hardening.scheduler.enable = lib.mkDefault true;
   };
 }

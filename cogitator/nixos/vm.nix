@@ -82,7 +82,11 @@ in {
       "nix-command"
       "flakes"
     ];
-    nix.optimise.automatic = true;
+    # mkDefault: store optimisation costs I/O on a timer, and wanting it off is
+    # a legitimate preference that broke nothing else here. (Issue #59 wants
+    # this whole concern moved into a relic; demoting now does not conflict with
+    # that move.)
+    nix.optimise.automatic = lib.mkDefault true;
 
     nix.gc = lib.mkIf cfg.nix.gc.enable {
       automatic = true;

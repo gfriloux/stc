@@ -73,9 +73,14 @@ in {
   config = lib.mkIf cfg.enable {
     stc.cogitator.plasma.enable = cfg.desktop == "plasma";
 
-    stc.relics.hardening.kernel.enable = true;
-    stc.relics.hardening.network.enable = true;
-    stc.relics.hardening.modules.enable = true;
+    # mkDefault: additive, like the same three in cogitator/nixos/hardening.nix.
+    # Note the asymmetry this removes — the neighbouring filesystem relic is
+    # already consumer-controlled through an option of this profile, so these
+    # three were the only hardening parts a workstation could not decline
+    # without mkForce.
+    stc.relics.hardening.kernel.enable = lib.mkDefault true;
+    stc.relics.hardening.network.enable = lib.mkDefault true;
+    stc.relics.hardening.modules.enable = lib.mkDefault true;
     stc.relics.hardening.filesystem.enable = cfg.hardening.filesystem.enable;
     stc.relics.hardening.filesystem.gaming = cfg.hardening.filesystem.gaming;
 

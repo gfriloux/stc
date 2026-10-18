@@ -118,6 +118,44 @@ in {
         };
     };
 
+    # Both profiles, plus a consumer naming their own pinentry with a plain
+    # definition. Added with issue #86: desktop used to write pinentry-qt with
+    # mkForce, which beat not only enginseer's mkDefault (intended) but the
+    # consumer too (not intended) — measured, someone asking for pinentry-gnome3
+    # silently got pinentry-qt, no warning, no conflict. It is now
+    # mkOverride 900, and this node is what keeps it there: with mkForce back,
+    # the assertion below fails.
+    consumer = {pkgs, ...}: {
+      imports = [inputs.home-manager.nixosModules.home-manager];
+
+      users.users.proving = {
+        isNormalUser = true;
+        home = "/home/proving";
+        shell = pkgs.fish;
+      };
+
+      programs.fish.enable = true;
+
+      home-manager =
+        homeManagerBench
+        // {
+          users.proving = {
+            imports = [
+              self.homeModules.cogitator-enginseer
+              self.homeModules.cogitator-desktop
+            ];
+            stc.cogitator = {
+              enginseer.enable = true;
+              desktop.enable = true;
+            };
+            # A plain definition, which is the whole point: it must win without
+            # the consumer knowing anything about Nix priorities.
+            services.gpg-agent.pinentry.package = pkgs.pinentry-gnome3;
+            home.stateVersion = "25.11";
+          };
+        };
+    };
+
     # Both profiles on one user — the only place a cross-cogitator claim is
     # proven in this suite. Mirrors the enginseer node exactly, fish included,
     # so that the pinentry comparison against it is sound.
@@ -236,7 +274,21 @@ in {
             f"the graphical pinentry did not win the contest:\n{conf}"
         )
         assert "pinentry-curses" not in conf, (
-            f"the headless pinentry survived desktop's mkForce:\n{conf}"
+            f"the headless pinentry survived desktop's override:\n{conf}"
+        )
+
+    with subtest("but a consumer naming their own pinentry wins over the profile"):
+        # The other half of the contest, and the one issue #86 added. desktop
+        # has to beat enginseer's default without beating the person composing
+        # them: mkOverride 900 sits between a default (1000) and a definition
+        # (100). With mkForce (50) here instead, this node got pinentry-qt and
+        # never knew its own definition had been discarded.
+        conf = consumer.succeed(f"cat {HOME}/.gnupg/gpg-agent.conf")
+        assert "pinentry-gnome3" in conf, (
+            f"the consumer's own pinentry was discarded by the profile:\n{conf}"
+        )
+        assert "pinentry-qt" not in conf, (
+            f"the profile's pinentry survived a plain consumer definition:\n{conf}"
         )
 
     with subtest("composing the two profiles breaks neither one"):

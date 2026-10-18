@@ -22,9 +22,14 @@
   # stay with fzf. The option only exists in Home Manager releases newer than the
   # one STC pins, so it is applied conditionally — older consumers keep the
   # (identical) sourcing-order behaviour without an eval error.
+  # mkDefault: the documentation already teaches the way back ("restore the
+  # widget ... programs.fzf.historyWidget.command = lib.mkForce null"), which is
+  # the admission that a consumer legitimately wants it. Measured — at normal
+  # priority a plain `= null` conflicted and mkForce was the only route. The
+  # doc loses the mkForce in the same change.
   fzfHistoryWidget =
     lib.optionalAttrs (options.programs.fzf ? historyWidget)
-    {historyWidget.command = "";};
+    {historyWidget.command = lib.mkDefault "";};
 in {
   options.stc.cogitator.enginseer = {
     enable = lib.mkEnableOption "Enginseer CLI profile — full field-deployment toolkit";
@@ -56,7 +61,9 @@ in {
       direnv = {
         enable = true;
         nix-direnv.enable = true;
-        silent = true;
+        # mkDefault: silencing direnv's "loading" chatter is a taste, and
+        # someone debugging why an environment did not load wants it back.
+        silent = lib.mkDefault true;
       };
 
       fzf =
@@ -83,14 +90,21 @@ in {
 
       micro = {
         enable = true;
+        # Every setting is mkDefault, because the documentation already promised
+        # it: the Enginseer page says of exactly these values "Override any of
+        # them from your own home configuration". Measured before this change —
+        # `programs.micro.settings.mouse = false` raised "has conflicting
+        # definition values" and only `lib.mkForce false` got through, so the
+        # promise was false. These are an editor's taste and nothing in the
+        # profile depends on them.
         settings = {
-          tabsize = 2;
-          tabstospaces = true;
-          autoindent = true;
-          ruler = true;
-          savecursor = true;
-          mouse = true;
-          "lsp.server" = "nix:nixd";
+          tabsize = lib.mkDefault 2;
+          tabstospaces = lib.mkDefault true;
+          autoindent = lib.mkDefault true;
+          ruler = lib.mkDefault true;
+          savecursor = lib.mkDefault true;
+          mouse = lib.mkDefault true;
+          "lsp.server" = lib.mkDefault "nix:nixd";
         };
       };
 
@@ -126,7 +140,13 @@ in {
     services.gpg-agent = {
       enable = true;
       # SSH auth is delegated to a dedicated ssh-agent by the consumer, not gpg.
-      enableSshSupport = false;
+      #
+      # mkDefault: that delegation is an assumption about the consumer, not a
+      # property of this profile. Using gpg-agent *as* the SSH agent is the
+      # standard setup for a smartcard-held authentication key, and at normal
+      # priority that consumer had to mkForce the profile to get it. Note the
+      # neighbour below was already mkDefault for the same kind of reason.
+      enableSshSupport = lib.mkDefault false;
       enableFishIntegration = true;
       # Headless-safe default so the Enginseer works on servers/TTY. GUI profiles
       # (cogitator-desktop) override this with a graphical pinentry.
@@ -178,7 +198,13 @@ in {
       enable = true;
       # Match the current implicit default explicitly: silences catppuccin/nix's
       # deprecation warning ahead of autoEnable becoming the enrolment toggle.
-      autoEnable = true;
+      #
+      # mkDefault, precisely because the line's purpose is to reproduce a
+      # default rather than impose a choice. A value whose job is to change
+      # nothing has no business being unoverridable — a consumer who wants to
+      # theme their tools one by one sets it false and keeps the warning
+      # silenced.
+      autoEnable = lib.mkDefault true;
     };
   };
 }

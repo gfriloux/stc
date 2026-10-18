@@ -104,7 +104,18 @@ in {
     systemd.services."serial-getty@ttyS0".enable = lib.mkDefault true;
 
     # udisks2 pulls in GTK as a dependency — not acceptable on a headless server.
-    services.udisks2.enable = false;
+    #
+    # mkDefault, and the line is kept for what it documents rather than for what
+    # it enforces. Measured: upstream already defaults services.udisks2.enable
+    # to false (bare node, and the option's own default), so this never changed
+    # an image STC builds. And at normal priority it did not keep GTK out
+    # either — a consumer composing this relic with a desktop module that
+    # enables udisks2 got "has conflicting definition values" and a stopped
+    # build, not a headless server. Enforcing the intent would take mkForce,
+    # which would break that consumer's desktop silently instead of telling
+    # them. So: the intent stays readable, and whoever knowingly wants udisks2
+    # on an EC2 host gets it with a plain definition.
+    services.udisks2.enable = lib.mkDefault false;
 
     # EC2 instance metadata and udev rules for NVMe device naming.
     services.udev.packages = [pkgs.amazon-ec2-utils];

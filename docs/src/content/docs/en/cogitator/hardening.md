@@ -52,6 +52,24 @@ modules = [
 }
 ```
 
+## Taking the suite minus a part
+
+Since `v0.18.0` the six sub-relics are enabled with `lib.mkDefault`, so you can
+keep the single toggle and still decline one of them:
+
+```nix
+stc.cogitator.hardening.enable = true;
+
+# You own your sshd configuration, or you manage cron policy yourself.
+stc.relics.hardening.ssh.enable = false;
+```
+
+Before `v0.18.0` this needed `lib.mkForce`, or giving up this profile entirely
+and importing the six relics à la carte. See
+[Overridable defaults](/stc/en/reference/overridable-defaults/) for the rule and
+the full list.
+
 ## See Also
 
 - [Hardening relics](/stc/en/relics/hardening/) — detailed documentation of each individual relic
+- [Overridable defaults](/stc/en/reference/overridable-defaults/) — what this profile pins and what it only proposes

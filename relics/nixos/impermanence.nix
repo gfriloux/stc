@@ -221,7 +221,11 @@ in {
     #   /var/log                — persistent logs for audit and debugging
     # -------------------------------------------------------------------------
     environment.persistence."${cfg.persistPath}" = {
-      hideMounts = true;
+      # mkDefault: hideMounts only changes what `mount` and `df` show, so it
+      # changes nothing about what survives a reboot. An operator debugging
+      # persistence wants those bind mounts visible, and at normal priority
+      # that cost a mkForce for a purely cosmetic switch.
+      hideMounts = lib.mkDefault true;
 
       directories =
         [

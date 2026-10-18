@@ -129,10 +129,15 @@ in {
       # once with zfs_force=1 on the kernel command line (honoured by both
       # stage-1 implementations), then export and re-import the pool cleanly.
       #
-      # forceImportAll stays false to protect non-root pools.
+      # forceImportAll defaults to false to protect non-root pools — and at
+      # mkDefault, like its neighbour, because the argument above applies
+      # verbatim: a consumer whose non-root pool legitimately carries a foreign
+      # hostid (migrated volume, disk moved between machines) has the same
+      # one-off need, and at normal priority this line made them reach for
+      # mkForce to express it. The safe value is unchanged.
       zfs = {
         forceImportRoot = lib.mkDefault false;
-        forceImportAll = false;
+        forceImportAll = lib.mkDefault false;
       };
     };
 

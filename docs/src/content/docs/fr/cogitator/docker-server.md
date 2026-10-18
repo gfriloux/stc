@@ -155,8 +155,41 @@ Utilise sops-nix, agenix, ou tout autre gestionnaire de secrets — STC se fiche
 savoir comment le fichier y arrive.
 :::
 
+## Faire tourner la pile sans CrowdSec ni socket proxy
+
+Depuis `v0.18.0`, `socketProxy`, `crowdsec` et `preSwitchChecks` sont activés
+avec `lib.mkDefault` :
+
+```nix
+stc.cogitator.docker-server.enable = true;
+
+# Pas de CrowdSec sur cet hôte — et pas d'image CrowdSec à fournir non plus.
+stc.relics.docker.crowdsec.enable = false;
+```
+
+C'est cette seconde ligne qui vaut d'être connue. Les reliques Docker
+**assertent** sur l'image manquante : avant `v0.18.0`, décliner CrowdSec n'était
+pas qu'une affaire de priorité — il fallait fournir à CrowdSec une image que tu
+n'avais jamais l'intention de lancer, ou écrire `lib.mkForce`. `traefik` reste
+épinglée exprès : un hôte à conteneurs derrière un reverse proxy est ce que ce
+profil *est*. Voir
+[Valeurs par défaut surchargeables](/stc/fr/reference/overridable-defaults/).
+
+:::danger[Décliner le socket proxy n'est pas gratuit]
+Le socket proxy existe pour que Traefik ne touche jamais l'API Docker brute. Avec
+`socketProxy.enable = false`, la relique Traefik retombe sur un bind-mount de
+`/run/docker.sock` en lecture seule dans le conteneur — Traefik obtient donc un
+accès direct à l'API Docker, et une compromission de ce conteneur est un chemin
+vers root sur l'hôte.
+
+Ce compromis t'appartient (un hôte mono-locataire où tu l'acceptes), mais
+fais-le sciemment. Jusqu'à `v0.18.0` le conflit de priorité imposait la question ;
+désormais seul ce paragraphe la pose.
+:::
+
 ## Voir aussi
 
 - [Reliques Docker](/stc/fr/relics/docker/) — Traefik, socket-proxy, CrowdSec et notify en détail
+- [Valeurs par défaut surchargeables](/stc/fr/reference/overridable-defaults/) — quelles reliques de ce profil tu peux décliner
 - [Contrôles pré-switch](/stc/fr/relics/pre-switch-checks/) — le garde-fou de déploiement activé par ce profil
 - [Schématic : aws-ami](/stc/fr/schematics/aws-ami/) — un exemple de production complet utilisant ce profil

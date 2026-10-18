@@ -65,9 +65,22 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    # zfs stays at normal priority on purpose, and it is the case that set this
+    # audit's rule. This profile declares fileSystems."/" with fsType = "zfs"
+    # below, so the relic is structural. Measured: with the relic forced off the
+    # configuration *still evaluates* and yields a host whose root is a ZFS
+    # dataset on a system with no ZFS support — it builds and does not boot. The
+    # conflict a plain `= false` raises today is the only thing preventing that,
+    # so demoting this line would trade a loud build error for a silent
+    # unbootable host. Same reasoning for impermanence and aws below.
     stc.relics.zfs.enable = true;
-    stc.relics.networking.enable = true;
-    stc.cogitator.hardening.enable = true;
+
+    # Additive, so mkDefault: a consumer with their own DNS/DHCP policy, or one
+    # composing a different networking relic, can decline these without mkForce.
+    # Measured — both evaluate with the relic forced off and leave the profile
+    # coherent, which is what separates them from zfs above.
+    stc.relics.networking.enable = lib.mkDefault true;
+    stc.cogitator.hardening.enable = lib.mkDefault true;
     stc.relics.impermanence = {
       enable = true;
       inherit (cfg) poolName;

@@ -50,7 +50,20 @@ rites, and aesthetic augmentations.
 
 The `micro` editor ships with opinionated defaults (2-space soft tabs, ruler,
 saved cursor, mouse) and an `nix:nixd` LSP binding (the `nixd` server is provided
-below). Override any of them from your own home configuration.
+below). Override any of them from your own home configuration:
+
+```nix
+programs.micro.settings.mouse = false;
+programs.micro.settings.tabsize = 4;
+```
+
+:::caution[This promise was false before v0.18.0]
+Until `v0.18.0` these settings were written at normal priority, so the sentence
+above was not true: a plain `programs.micro.settings.mouse = false` failed with
+`has conflicting definition values`, and only `lib.mkForce` got through. They are
+now `lib.mkDefault`, which is what the documentation always described. Found by
+the audit in [issue #86](https://github.com/gfriloux/stc/issues/86).
+:::
 
 ### Ctrl-R belongs to Atuin
 
@@ -68,9 +81,16 @@ To hand `Ctrl-R` back to fzf, restore the widget and disable Atuin's binding fro
 your own home configuration:
 
 ```nix
-programs.fzf.historyWidget.command = lib.mkForce null;
+programs.fzf.historyWidget.command = null;
 programs.atuin.flags = ["--disable-ctrl-r"];
 ```
+
+:::note[No `mkForce` since v0.18.0]
+This used to need `lib.mkForce`: the profile pinned the widget at normal
+priority, so a plain definition failed with `has conflicting definition values`.
+It is now set with `lib.mkDefault`, and the plain definition above is enough. An
+existing `mkForce` keeps working — you can simply drop it.
+:::
 
 ### GPG agent
 
@@ -79,6 +99,18 @@ delegated to gpg (`enableSshSupport = false`) — the consumer wires its own
 `ssh-agent`. The pinentry defaults to `pinentry-curses`, a headless-safe choice so
 the Enginseer works over TTY and on servers. It is set with `lib.mkDefault`, so
 `cogitator-desktop` overrides it with a graphical pinentry (`pinentry-qt`).
+
+Since `v0.18.0` the SSH delegation is a default rather than a verdict. If you
+keep your authentication key on a smartcard and want gpg-agent to *be* your SSH
+agent, one line does it:
+
+```nix
+services.gpg-agent.enableSshSupport = true;
+```
+
+Before `v0.18.0` that needed `lib.mkForce`, because the profile wrote `false` at
+normal priority — an assumption about your setup you could not contradict
+politely.
 
 ### SSH connection multiplexing
 
