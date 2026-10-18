@@ -67,6 +67,15 @@ in {
       # be. Same for crowdsec: both are additive — measured, with either forced
       # off the profile evaluates and stays coherent.
       #
+      # "Additive" is not "free" for the proxy, and the relic says what happens:
+      # with it off, relics/nixos/docker/traefik.nix falls back to bind-mounting
+      # /run/docker.sock read-only into the Traefik container. So declining it
+      # trades a filtered API for direct read-only access to the Docker socket,
+      # and a container escape there is host root. Before the demotion the
+      # conflict forced the consumer to confront that; now the documentation
+      # has to, which is why the docs page spells it out rather than presenting
+      # the switch as cost-free.
+      #
       # What this fixes is sharper than a priority detail. These relics assert
       # on a missing image ("stc.relics.docker.crowdsec.enable is true but no
       # image is set"), so a consumer who did not want CrowdSec still had to

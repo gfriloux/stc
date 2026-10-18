@@ -171,6 +171,17 @@ priority: you had to hand CrowdSec an image you never intended to run, or write
 host is what this profile *is*. See
 [Overridable defaults](/stc/en/reference/overridable-defaults/).
 
+:::danger[Declining the socket proxy is not free]
+The socket proxy exists so Traefik never touches the raw Docker API. With
+`socketProxy.enable = false`, the Traefik relic falls back to bind-mounting
+`/run/docker.sock` into the container read-only — so Traefik gets direct access
+to the Docker API, and a compromise of that container is a path to host root.
+
+That trade is yours to make (a single-tenant host where you accept it), but make
+it knowingly. Until `v0.18.0` the priority conflict forced the question; now
+only this paragraph does.
+:::
+
 ## See Also
 
 - [Docker relics](/stc/en/relics/docker/) — Traefik, socket-proxy, CrowdSec, and notify in detail

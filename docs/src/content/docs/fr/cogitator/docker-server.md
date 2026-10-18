@@ -175,6 +175,18 @@ n'avais jamais l'intention de lancer, ou écrire `lib.mkForce`. `traefik` reste
 profil *est*. Voir
 [Valeurs par défaut surchargeables](/stc/fr/reference/overridable-defaults/).
 
+:::danger[Décliner le socket proxy n'est pas gratuit]
+Le socket proxy existe pour que Traefik ne touche jamais l'API Docker brute. Avec
+`socketProxy.enable = false`, la relique Traefik retombe sur un bind-mount de
+`/run/docker.sock` en lecture seule dans le conteneur — Traefik obtient donc un
+accès direct à l'API Docker, et une compromission de ce conteneur est un chemin
+vers root sur l'hôte.
+
+Ce compromis t'appartient (un hôte mono-locataire où tu l'acceptes), mais
+fais-le sciemment. Jusqu'à `v0.18.0` le conflit de priorité imposait la question ;
+désormais seul ce paragraphe la pose.
+:::
+
 ## Voir aussi
 
 - [Reliques Docker](/stc/fr/relics/docker/) — Traefik, socket-proxy, CrowdSec et notify en détail
