@@ -2,7 +2,17 @@
 #
 # Development shell for managing NixOS system configurations.
 # Covers formatting, linting, secrets, deployment inspection,
-# and generation diffing — the full NixOS operator toolkit.
+# generation diffing, and upstream version tracking for packages
+# that are not in nixpkgs — the full NixOS operator toolkit.
+#
+# nvfetcher is a generator, never a build-time step: it writes
+# _sources/generated.json, that file gets committed, and derivations
+# read it with lib.importJSON. Version detection stays an explicit
+# act, so evaluation stays pure. Renovate cannot replace it here —
+# a custom regex manager updates the version but not the hash that
+# must change with it, and the only mechanism that could recompute
+# the hash (postUpgradeTasks) needs allowedCommands, a self-hosted
+# option this repository has no access to (hosted Mend app).
 {
   pkgs,
   preCommitConfig,
@@ -18,6 +28,7 @@ pkgs.mkShell {
     nix-output-monitor
     nix-tree
     nvd
+    nvfetcher
     pre-commit
     serie
     sops
@@ -35,6 +46,7 @@ pkgs.mkShell {
     echo "  nvd diff        compare NixOS generations"
     echo "  nix-tree        inspect closure sizes"
     echo "  nh os switch    apply current config"
+    echo "  nvfetcher       bump out-of-nixpkgs sources (commit the JSON)"
     echo ""
 
     if [ ! -f .pre-commit-config.yaml ]; then

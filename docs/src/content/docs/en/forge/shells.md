@@ -166,7 +166,7 @@ On shell entry:
 ## nixos
 
 Full NixOS operator toolkit: format, lint, secrets, deployment inspection,
-and generation diffing.
+generation diffing, and upstream version tracking.
 
 | Tool | Purpose |
 |------|---------|
@@ -175,6 +175,7 @@ and generation diffing.
 | `deadnix` | Find unused bindings |
 | `nh` | Apply NixOS configurations (`nh os switch`) |
 | `nvd` | Compare NixOS generations |
+| `nvfetcher` | Track upstream versions of packages absent from nixpkgs |
 | `nix-tree` | Inspect closure sizes |
 | `nix-output-monitor` | Better build output |
 | `sops` | Secrets management |
@@ -183,3 +184,62 @@ and generation diffing.
 | `tokei` | Code statistics |
 | `just` | Task runner |
 | `pre-commit` | Git hook runner |
+
+### Tracking packages that are not in nixpkgs
+
+Renovate keeps pinned container images and flake inputs current. It does not
+cover a hand-written derivation that fetches a binary or a tarball from an
+upstream release page: there, `version` and `sha256` are edited by hand, drift
+silently, and the package is found to be months stale only when someone looks.
+
+`nvfetcher` closes that gap. It reads a TOML file declaring, per package, **how
+to find the latest version** and **where to fetch it**:
+
+```toml
+[some-cli]
+src.github = "owner/repo"
+fetch.url = "https://github.com/owner/repo/releases/download/$ver/some-cli-linux-x86_64"
+
+[vendor-binary]
+src.cmd = "curl -fsSL https://vendor.example/VERSION"
+fetch.url = "https://downloads.vendor.example/releases/$ver/linux/x64/vendor-binary"
+```
+
+Running `nvfetcher` writes `_sources/generated.json` with the resolved version
+and hash, which a derivation reads:
+
+```nix
+{
+  lib,
+  fetchurl,
+}: name: let
+  entry = (lib.importJSON ./_sources/generated.json).${name};
+in {
+  inherit (entry) version;
+  src = fetchurl {inherit (entry.src) url sha256;};
+}
+```
+
+Besides `src.github` and `src.cmd`, detection strategies include `src.pypi`,
+`src.git`, and `src.manual` for upstreams with no version endpoint at all — the
+last one being the honest option, since it records that the bump is manual
+instead of implying automation that does not exist.
+
+:::caution[Commit the generated JSON]
+`nvfetcher` is a generator you run by hand (or from CI), **never** a build-time
+step. The generated JSON is committed, so evaluation stays pure and
+reproducible: version detection is an explicit act, not a network side effect
+during a build. Invoking `nvfetcher` from a derivation would break that, which
+is the one property STC enforces everywhere else.
+:::
+
+:::note[Why not a Renovate custom manager?]
+A Renovate `customManager` of type `regex` can rewrite the version string, but
+it cannot recompute the `sha256` that has to change with it — the regex
+managers replace `currentValue`, `currentDigest` and the dependency name, and
+nothing else. The version would move, the hash would not, and the build would
+fail. The only Renovate mechanism that could recompute a hash is
+`postUpgradeTasks`, whose commands are gated by `allowedCommands`, a
+**self-hosted-only** option. STC is wired to the hosted Renovate app, so that
+route does not exist here. Hence a second tool, deliberately.
+:::

@@ -167,7 +167,7 @@ construire-inspecter-démarrer.
 ## nixos
 
 Kit complet d'opérateur NixOS : formatage, lint, secrets, inspection de déploiement,
-et comparaison de générations.
+comparaison de générations, et suivi des versions amont.
 
 | Outil | Utilité |
 |-------|---------|
@@ -176,6 +176,7 @@ et comparaison de générations.
 | `deadnix` | Trouver les bindings inutilisés |
 | `nh` | Appliquer les configurations NixOS (`nh os switch`) |
 | `nvd` | Comparer les générations NixOS |
+| `nvfetcher` | Suivre les versions amont des paquets absents de nixpkgs |
 | `nix-tree` | Inspecter les tailles de fermetures |
 | `nix-output-monitor` | Meilleur affichage de build |
 | `sops` | Gestion des secrets |
@@ -184,3 +185,65 @@ et comparaison de générations.
 | `tokei` | Statistiques de code |
 | `just` | Exécuteur de tâches |
 | `pre-commit` | Exécuteur de hooks git |
+
+### Suivre les paquets absents de nixpkgs
+
+Renovate maintient à jour les images de conteneurs épinglées et les entrées de
+flake. Il ne couvre pas une dérivation écrite à la main qui va chercher un
+binaire ou une archive sur une page de releases amont : là, `version` et
+`sha256` sont édités manuellement, dérivent en silence, et on découvre que le
+paquet a des mois de retard seulement quand quelqu'un pense à regarder.
+
+`nvfetcher` comble ce trou. Il lit un fichier TOML qui déclare, paquet par
+paquet, **comment trouver la dernière version** et **où la récupérer** :
+
+```toml
+[some-cli]
+src.github = "owner/repo"
+fetch.url = "https://github.com/owner/repo/releases/download/$ver/some-cli-linux-x86_64"
+
+[vendor-binary]
+src.cmd = "curl -fsSL https://vendor.example/VERSION"
+fetch.url = "https://downloads.vendor.example/releases/$ver/linux/x64/vendor-binary"
+```
+
+L'exécution de `nvfetcher` écrit `_sources/generated.json` avec la version et
+le hash résolus, qu'une dérivation lit :
+
+```nix
+{
+  lib,
+  fetchurl,
+}: name: let
+  entry = (lib.importJSON ./_sources/generated.json).${name};
+in {
+  inherit (entry) version;
+  src = fetchurl {inherit (entry.src) url sha256;};
+}
+```
+
+Outre `src.github` et `src.cmd`, les stratégies de détection comprennent
+`src.pypi`, `src.git`, et `src.manual` pour les amonts qui n'exposent aucun
+point d'interrogation de version — cette dernière étant l'option honnête,
+puisqu'elle inscrit que la montée de version est manuelle au lieu de laisser
+croire à une automatisation qui n'existe pas.
+
+:::caution[Le JSON généré se commite]
+`nvfetcher` est un générateur qu'on lance à la main (ou depuis la CI),
+**jamais** une étape de build. Le JSON généré est commité, donc l'évaluation
+reste pure et reproductible : la détection de version est un acte explicite, pas
+un effet de bord réseau pendant un build. Appeler `nvfetcher` depuis une
+dérivation casserait cette propriété, celle que STC fait respecter partout
+ailleurs.
+:::
+
+:::note[Pourquoi pas un custom manager Renovate ?]
+Un `customManager` Renovate de type `regex` sait réécrire la chaîne de version,
+mais pas recalculer le `sha256` qui doit changer avec elle — les regex managers
+remplacent `currentValue`, `currentDigest` et le nom de la dépendance, rien
+d'autre. La version bougerait, le hash non, et le build échouerait. Le seul
+mécanisme Renovate capable de recalculer un hash est `postUpgradeTasks`, dont
+les commandes sont filtrées par `allowedCommands`, une option réservée à
+**l'auto-hébergement**. STC est branché sur l'application Renovate hébergée :
+cette voie n'existe donc pas ici. D'où un second outil, délibérément.
+:::
