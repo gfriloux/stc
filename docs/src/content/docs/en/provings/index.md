@@ -25,8 +25,8 @@ the `just ci` gate**: a VM test is heavy, and the CI gate stays fast and static.
 - Builder: `pkgs.testers.runNixOSTest`.
 
 **What `just test` now costs.** Eleven provings, **fifteen VM boots** — `vm` and
-`gaming` and `home-desktop` carry two nodes each, and `sarcophagus-kvm` boots its
-single node twice — and the closures include KDE twice (`workstation` and
+`gaming` and `home-desktop` each boot two nodes, `dreadnought` declares a second
+node it never starts, and `sarcophagus-kvm` boots its single node twice — and the closures include KDE twice (`workstation` and
 `plasma`), Steam once, the enginseer toolkit's 31 named packages, and GIMP, VLC
 and Zen Browser for the desktop profile. On a cold store that is a few GiB of
 downloads; warm, most scripts finish in 23-30 s, `enginseer` in 25 s. The two
@@ -62,7 +62,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `gaming` | `cogitator-gaming` | Steam is wired, with the udev rules that make a controller usable without root; the AMD relic's VDPAU/VAAPI driver reaches the merged driver tree; the Pipewire relic's three claims (rtkit, the 32-bit ALSA bridge, PulseAudio compat) are in place; Steam Remote Play is closed by default and, on a second node, opens both its UDP range and its TCP ports |
 | `sarcophagus-kvm` | `cogitator-sarcophagus-kvm` | Boots the qcow2 image the profile exists to build, twice on the same disk: the ZFS datasets the profile declares are what is actually mounted (`vmpool/root`, `vmpool/nix`, `vmpool/persist`), the relic creates the `@blank` reference the image builder does not ship, the initrd rollback runs and *succeeds*, and across a reboot a witness on the root dataset is gone while witnesses in `/persist` and under the cogitator's own `impermanence.extraDirectories` survive — with the SSH host key fingerprint unchanged, and the relic's failure reporting completely quiet on this healthy path |
 | `sarcophagus-aws` | `cogitator-sarcophagus-aws` | Boots the raw AMI image the profile exists to build, on a disk **larger than the image**: the ZFS pool actually grows to fill the volume under it (`stc-grow-pool` completes *and* `zpool list` clears the image's own size), the profile's datasets are what is mounted, `/boot` is a plain FAT ESP whose label resolves to the mounted device, the two discriminating AWS kernel parameters are live, `xen_fbfront` is blacklisted, the EC2 udev rules are installed, and both instance classes' network drivers are requested — with the Xen one failing to insert on this bench *without failing the boot*, which is what lets one image serve Nitro and Xen |
-| `enginseer` | `cogitator-enginseer` (Home Manager) | Activates the profile for a test user inside a VM and asserts its runtime claims: the three aliases it declares resolve in a shell that really started (not the four `programs.lsd` also renders), `oh-my-posh` initialises from the theme the cogitator ships, `git` itself selects `delta` as its diff pager with delta's `interactive.diffFilter` in place, direnv is hooked into fish with nix-direnv and silenced, `FZF_CTRL_R_COMMAND` is set and empty so Ctrl-R belongs to atuin, `~/.ssh/config` carries multiplexing *without* Home Manager's legacy default block, gpg-agent's `pinentry-program` is the headless `pinentry-curses`, and the declared catppuccin flavour reaches bat's theme |
+| `enginseer` | `cogitator-enginseer` (Home Manager) | Activates the profile for a test user inside a VM and asserts its runtime claims: the three aliases it declares resolve in a shell that really started (not the six `programs.lsd` also renders), `oh-my-posh` initialises from the theme the cogitator ships, `git` itself selects `delta` as its diff pager with delta's `interactive.diffFilter` in place, direnv is hooked into fish with nix-direnv and silenced, `FZF_CTRL_R_COMMAND` is set and empty so Ctrl-R belongs to atuin, `~/.ssh/config` carries multiplexing *without* Home Manager's legacy default block, gpg-agent's `pinentry-program` is the headless `pinentry-curses`, and the declared catppuccin flavour reaches bat's theme |
 | `home-desktop` | `cogitator-desktop` (Home Manager) | Two nodes. On the profile **alone**: kitty renders its configuration, the ghostty relic renders its user unit and overrides, zen-browser reaches the user profile as `zen-beta`, the cogitator's own `gimp` and `vlc` are installed, and the kitty relic's `fonts` option makes the nerd fonts visible to `fc-list`. On a node carrying **both** Home Manager profiles: desktop's `mkForce pinentry-qt` wins the contest against enginseer's `mkDefault pinentry-curses` — the only cross-cogitator interaction proven in this suite — and one claim from each profile still holds under composition |
 | `dreadnought` | `cogitator-dreadnought` | Five relics composed on one host come up, with exactly one loaded unit failing for want of a pool; ZFS support is functional on the booted kernel; the two discriminating AWS kernel parameters reach `/proc/cmdline`; the pool-growth script carries the profile's `poolName`, `ebsDisk` and `ebsPartition`; the ZFS scrub timer carries `scrubInterval`; explicit persistence is bind-mounted, including an entry set through the cogitator's own option; the hardening suite survives the composition; the impermanence rollback ran in the initrd and failed as expected, and that failure is legible from the booted system through `stc-impermanence-state.service` rather than only from an initrd journal |
 
@@ -144,10 +144,10 @@ five. None is a recommendation for how to wire a consumer:
 
 | Option | Why |
 |---|---|
-| `users.users.<u>.shell = pkgs.fish` | Home Manager does not set the login shell — measured. Without it there is no fish to start, so the login-shell half of the profile could not be observed |
-| `programs.fish.enable = true` | Forced by an upstream assertion once a user's login shell is fish: otherwise fish "[lacks] the basic nix directories in its PATH and might make logging in as that user impossible". Satisfied rather than suppressed with `ignoreShellProgramCheck`, because this proving does log in |
+| `users.users.<u>.shell = pkgs.fish` | Home Manager does not set the login shell — measured. Without it there is no fish to start, so the login-shell half of the profile could not be observed. On the `enginseer` node and on `home-desktop`'s composed node only: the desktop-alone node sets no shell, because that profile claims none |
+| `programs.fish.enable = true` | Forced by an upstream assertion once a user's login shell is fish: otherwise fish "[lacks] the basic nix directories in its PATH and might make logging in as that user impossible". Satisfied rather than suppressed with `ignoreShellProgramCheck`, because those nodes do log in. Paired with the row above, so it too is absent from the desktop-alone node |
 | `home-manager.useGlobalPkgs = true` | HM uses the node's `pkgs` instead of importing its own nixpkgs. Keeps one instance at evaluation — and keeps the unfree note above true for Home Manager provings too, which a second instance would quietly falsify |
-| `home-manager.useUserPackages = true` | Packages land in `users.users.<u>.packages`, hence under `/etc/profiles/per-user/<u>`, a deterministic path — which is what will make the zen-browser assertion writable for the desktop profile, whose relic renders no file of its own. Measured, and narrower than it looks: `useUserPackages` moves the activation `drvPath`, while `useGlobalPkgs` alone is byte-identical to the default — so only the first is a closure change, and the second earns its place by removing a second nixpkgs instance |
+| `home-manager.useUserPackages = true` | Packages land in `users.users.<u>.packages`, hence under `/etc/profiles/per-user/<u>`, a deterministic path — which is what makes the zen-browser assertion writable in `home-desktop`, that relic rendering no file of its own. Measured, and narrower than it looks: `useUserPackages` moves the activation `drvPath`, while `useGlobalPkgs` alone is byte-identical to the default — so only the first is a closure change, and the second earns its place by removing a second nixpkgs instance |
 
 Measured and worth saying: **neither Home Manager cogitator needs the unfree
 instance.** `gaming` remains the only unfree proving in the suite.
@@ -194,7 +194,7 @@ presence of `ControlMaster` does not.
 ### Two nodes, and the one claim that needed a counterfactual it could not have
 
 `home-desktop` carries two nodes. The profile **alone** is the `#50` proving
-proper, and isolation is the point: an epreuve named `home-desktop` that went red
+proper, and isolation is the point: a proving named `home-desktop` that went red
 because something in enginseer broke would be a bad diagnosis. The **composed**
 node exists for a single claim, written in `cogitator/home/desktop.nix`:
 
@@ -246,9 +246,18 @@ agent is upstream's.
 Also not asserted: the mere presence of packages on `PATH`. A list of packages
 proves that a list of packages was written.
 
+### Scope limit — the GUI relics are proven configured, not launched
+
+`home-desktop` brings up no graphical session, the same limit the `plasma`
+proving states for its own reasons. kitty, ghostty and Zen Browser are therefore
+proven **installed and configured** — their files rendered, their binaries on the
+profile, their fonts visible to fontconfig — and not proven to *start*. Launching
+three GPU-oriented terminals and a browser in a VM would measure upstream's
+packaging rather than STC's wiring, which is all these three relics contribute.
+
 ## Booting a real image — the external-image pattern
 
-Ten of the eleven provings let the test driver synthesise a node. `sarcophagus-kvm`
+Nine of the eleven provings let the test driver synthesise a node. `sarcophagus-kvm`
 cannot: its profile's claim *is* the disk, and on a synthesised node the qemu-vm
 module replaces `fileSystems` with its own set at priority 10 — so neither the
 pool, nor the datasets, nor the rollback would be observable.

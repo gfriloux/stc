@@ -60,10 +60,11 @@
 #   - zen-browser's binary is `zen-beta`, not `zen`: the cogitator imports
 #     inputs.zen-browser.homeModules.beta. Asserting `zen` would have been red.
 #   - The nerd fonts are *not* reachable at the obvious path. They matter,
-#     because `stc.relics.gui.kitty.fonts.enable` (default true) is the *only*
-#     option of STC's own in these three relics — the other two do nothing but
-#     set programs.<x>.enable, so without this one the cogitator would have no
-#     tunable of its own to prove. Enabling it installs seven font packages,
+#     because `stc.relics.gui.kitty.fonts.enable` (default true) is the only
+#     option of STC's own across these three relics *beyond their three enable
+#     toggles* — the relics declare four options in all, and the cogitator sets
+#     the three toggles itself, so without this one it would have no tunable of
+#     its own to prove. Enabling it installs seven font packages,
 #     which is closure weight a consumer should know about. But measured,
 #     environment.pathsToLink carries no /share/fonts entry, so
 #     /etc/profiles/per-user/<u>/share/fonts is never populated: the fonts sit
@@ -75,10 +76,16 @@
   self,
   inputs,
 }: let
-  # The bench concessions settled by provings/enginseer.nix. Shared here so the
-  # two nodes cannot drift apart: the `composed` node has to match the enginseer
-  # node option for option, or comparing its pinentry against the pinentry-curses
-  # measured there would prove nothing.
+  # The two Home Manager-level concessions settled by provings/enginseer.nix,
+  # bound once so this file's two nodes cannot disagree about them.
+  #
+  # It does no more than that, and the difference matters: the `composed` node
+  # also has to match the *enginseer* node option for option — same user, same
+  # home, same fish login shell, same stateVersion — or comparing its pinentry
+  # against the pinentry-curses measured over there would prove nothing. That
+  # alignment lives across two files and is maintained by hand; this `let` does
+  # not enforce it. The fish concessions are deliberately outside it, since the
+  # desktop-alone node does not take them.
   homeManagerBench = {
     useGlobalPkgs = true;
     useUserPackages = true;
@@ -167,8 +174,10 @@ in {
 
     with subtest("the kitty relic's own option makes the nerd fonts visible"):
         # stc.relics.gui.kitty.fonts.enable, default true — the only option of
-        # STC's own across these three relics, and the only one whose absence
-        # would be invisible without this check. Seven font packages ride on it.
+        # STC's own across these three relics beyond their three enable toggles
+        # (four options in all, three of them set by the cogitator itself), and
+        # the only one whose absence would be invisible without this check.
+        # Seven font packages ride on it.
         #
         # Asserted through fontconfig rather than by a path test, after measuring
         # that the obvious path does not exist: environment.pathsToLink has no

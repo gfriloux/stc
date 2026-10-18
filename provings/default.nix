@@ -49,9 +49,9 @@
         dreadnought = pkgs.testers.runNixOSTest (import ./dreadnought.nix {inherit self;});
         sarcophagus-kvm = pkgs.testers.runNixOSTest (import ./sarcophagus-kvm.nix {inherit self;});
         sarcophagus-aws = pkgs.testers.runNixOSTest (import ./sarcophagus-aws.nix {inherit self;});
-        # These two provings take `inputs` as well as `self`, and the other nine
-        # do not. The reason is structural
-        # rather than stylistic: Home Manager's NixOS module lives in an input,
+        # These two provings take `inputs` as well as `self`, and the other
+        # nine do not. The reason is structural rather than stylistic: Home
+        # Manager's NixOS module lives in an input,
         # and `self.homeModules.*` alone cannot attach a home configuration to a
         # test node — the node has to import
         # `inputs.home-manager.nixosModules.home-manager` first. The two

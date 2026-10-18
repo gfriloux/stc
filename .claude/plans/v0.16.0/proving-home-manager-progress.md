@@ -375,7 +375,74 @@ GIMP/VLC/Zen Browser ajoutés aux clôtures citées) ; une sous-section
 qui porte le ruling sur l'assert « inerte », le `zen-beta` et l'histoire des
 polices ; et deux comptes remis à jour que l'ajout déplaçait — « les deux
 épreuves Home Manager » (il y en a deux maintenant, la formulation du chantier 2
-disait « cette épreuve ») et « dix des onze épreuves laissent le pilote
-synthétiser un nœud ».
+disait « cette épreuve ») et « neuf des onze épreuves laissent le pilote
+synthétiser un nœud » (corrigé en revue — voir plus bas).
 
 `just docs-parity` vert.
+
+## Revue de clôture du chantier 3 — zéro Critical, 3 Important, 7 Minor
+
+La méthode changée a payé : le relecteur a bâti le nœud de référence **et trois
+contre-factuels** (`desktop`, `desktop` avec `fonts.enable = false`, kitty seul,
+ghostty seul) et vérifié les huit subtests contre eux. **Aucun ne peut être vert
+sans le cogitator**, chacun rougit contre un contre-factuel mesuré. Et il a
+confirmé la revendication phare, celle qui m'inquiétait : le nœud `composed`
+reproduit le nœud d'`enginseer` **option pour option**, donc la comparaison
+`pinentry-curses` → `pinentry-qt` entre les deux épreuves tient.
+
+Les trois Important, les trois fondés, les trois vérifiés par moi :
+
+1. **« Dix des onze épreuves laissent le pilote synthétiser un nœud » est faux —
+   c'est neuf.** Deux épreuves utilisent le patron image externe
+   (`grep -ln directBoot provings/*.nix` → `sarcophagus-aws`, `sarcophagus-kvm`),
+   donc 11 − 2 = 9. Le texte d'avant (« huit des dix ») était juste : c'est **un
+   compte déplacé et mal déplacé**, exactement la classe de défaut sur laquelle
+   j'avais briefé le relecteur. Corrigé dans les deux pages et ici.
+2. **Un livrable du plan non livré et non arbitré.** Le step 4 du plan prévoyait
+   une note de portée disant qu'aucune session graphique n'est lancée, donc que
+   kitty/ghostty/zen-browser sont prouvés **configurés** et non **lancés**. Elle
+   n'a pas été écrite, et mon entrée de ledger énumérait quatre livrables en
+   omettant celui-là — donc silencieusement abandonné plutôt que tranché.
+   **Note ajoutée** dans les deux langues.
+3. **La table des « quatre concessions de banc » se lisait comme valant pour les
+   deux épreuves HM**, depuis que le chantier 3 a changé la phrase juste au-dessus
+   en « les deux épreuves Home Manager prennent `inputs` ». Or le nœud
+   desktop-seul n'en prend que deux, et l'épreuve le dit vingt lignes plus loin —
+   la doc contredisait le code. Les deux lignes fish sont maintenant **portées** à
+   leurs nœuds, et le futur périmé sur `useUserPackages` (« rendra vérifiable »,
+   écrit au chantier 2) est passé au présent.
+
+Les Minor pris :
+
+- **« la seule option propre à STC des trois reliques » est littéralement faux** :
+  elles déclarent **quatre** options (trois `enable` + `fonts.enable`). La
+  revendication vraie est « la seule au-delà des trois bascules `enable`, que le
+  cogitator pose lui-même ». Corrigé aux deux endroits de l'épreuve et dans les
+  deux pages.
+- **Le `let` ne fait pas ce que son commentaire prétendait.** Il ne lie que les
+  deux drapeaux HM ; l'alignement avec le nœud d'`enginseer` vit à travers deux
+  fichiers et se maintient **à la main**. Le commentaire le dit maintenant, au
+  lieu de laisser croire à une garantie.
+- Ligne de commentaire orpheline dans `provings/default.nix`, laissée par
+  l'édition du chantier 2 → reflowée.
+- Deux mots non traduits, un dans chaque sens : « epreuve » dans la page EN,
+  « contest » dans la page FR (les deux occurrences nouvelles ; celle de la
+  section plasma est antérieure).
+- **`libnotify` figurait au plan et a été retiré sans ligne de ledger.** Le retrait
+  est juste et expliqué dans l'épreuve (`libnotify` ne livre que `notify-send`,
+  vérifié), mais le plan listait quatre binaires et le ledger n'en citait que
+  trois. Dit ici.
+- **« `vm`, `gaming` et `home-desktop` portent deux nœuds chacune » est
+  incomplet** : `provings/dreadnought.nix:112` déclare un `nodes.emergencyvariant`
+  qu'elle ne démarre **jamais** (le script n'en interpole que des valeurs Nix).
+  L'arithmétique des boots était juste — quinze, vérifiée nœud par nœud — mais
+  j'avais réécrit cette phrase même, donc c'était le moment de le dire.
+  Reformulé en « démarrent deux nœuds » + la mention du nœud déclaré non démarré.
+- **Un fait faux antérieur, de ma main, à moitié corrigé.** La ligne de couverture
+  d'`enginseer` dit « pas les **quatre** que rend aussi `programs.lsd` » alors que
+  le bullet 165 lignes plus bas dit « **six** des neuf ». J'avais corrigé le
+  bullet au chantier 2 et laissé la ligne du tableau. La page se contredisait.
+  Corrigé — hors diff d'origine, mais même classe de défaut dans le même bloc.
+
+Rien dans cette revue ne s'est avéré faux. Les quatre affirmations comptables
+ont été revérifiées par commande avant acceptation.
