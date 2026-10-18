@@ -3,6 +3,49 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.18.0] — 2026-10-18
+
+### Bug Fixes
+
+- **cogitator**: let the hardening suite be taken minus a part ([`798c1d6`](https://github.com/gfriloux/stc/commit/798c1d64234f1a6ff34169338d4de955c6128c2d))
+- **cogitator**: make Plasma's Pipewire relic declinable ([`81f2e4c`](https://github.com/gfriloux/stc/commit/81f2e4cb8ab91104e84adccafd2cb026539edb87))
+- **cogitator**: stop the gaming profile assuming AMD graphics ([`52d417d`](https://github.com/gfriloux/stc/commit/52d417d8124a61c917281527b59adadf32600580))
+- **cogitator**: let a workstation decline parts of its hardening ([`d2a3f4d`](https://github.com/gfriloux/stc/commit/d2a3f4d263c98bb3baa4a088f3e7ccdc540df0c1))
+- **cogitator**: split dreadnought's structural relics from its additive ones ([`16df28a`](https://github.com/gfriloux/stc/commit/16df28ac4f4d5d0e94777e959986e898fb7c4c3f))
+- **cogitator**: same split for the AWS sarcophagus ([`b5c08ed`](https://github.com/gfriloux/stc/commit/b5c08ed263a577984c8913c9712ed0ef848581f4))
+- **cogitator**: same split for the KVM sarcophagus ([`e4b3770`](https://github.com/gfriloux/stc/commit/e4b377024bacfb8a6d9aa7482b665dbe22fcf72a))
+- **cogitator**: stop forcing CrowdSec and the socket proxy on a docker server ([`b251627`](https://github.com/gfriloux/stc/commit/b251627caba187244110b4b4fdaee7e2bf301b6e))
+- **cogitator**: make store optimisation declinable on the vm profile ([`61a0f0d`](https://github.com/gfriloux/stc/commit/61a0f0daa50ba305b5ef5ac4c7b9d2d99b4ac893))
+- **cogitator**: let the desktop profile ship one terminal, not two ([`2260c97`](https://github.com/gfriloux/stc/commit/2260c9741b3d2d5f67ceabb64110ff9a2ad7421b))
+- **cogitator**: make the Enginseer's settings overridable as documented ([`486d66b`](https://github.com/gfriloux/stc/commit/486d66bc963eb44d4f0a60060ca92508d432a56e))
+- **relics**: demote forceImportAll and canTouchEfiVariables ([`76bcc87`](https://github.com/gfriloux/stc/commit/76bcc877beda880eccb8be131ffbc178ad6071fb))
+- **relics**: let an operator see the impermanence bind mounts ([`05b64dd`](https://github.com/gfriloux/stc/commit/05b64dd618b1c5d5a309d6df23c66b83fc06bd6c))
+- **relics**: correct the udisks2 line, which missed both ways ([`b3f196a`](https://github.com/gfriloux/stc/commit/b3f196acd4e2dda7ae0c5d58db3d50532d464661))
+- **relics**: let core dumps be re-enabled for a debugging session ([`e8f7594`](https://github.com/gfriloux/stc/commit/e8f759428e1cc9301c32f4400ac69973caec3c35))
+- **relics**: make the three sshd forwarding switches overridable ([`23b4cb6`](https://github.com/gfriloux/stc/commit/23b4cb6b8f59589fd0cc94f2ee158bca76581e1b))
+- **relics**: leave Traefik's log rotation policy to the operator ([`fa83b19`](https://github.com/gfriloux/stc/commit/fa83b19a91c1a75ad331a07a15ddc84af4229b16))
+- **relics**: set the sshd forwarding switches from options, not mkDefault ([`5c58bca`](https://github.com/gfriloux/stc/commit/5c58bcacb69c62c1faec3fbef0fd98a21e1d0506))
+- **relics**: correct the false claim about core dumps and the PAM limit ([`9e8fa91`](https://github.com/gfriloux/stc/commit/9e8fa914e1907b7b0fb5ef7f03afedfa6f0fb259))
+- **cogitator**: stop desktop's pinentry from discarding the consumer's ([`24c2085`](https://github.com/gfriloux/stc/commit/24c20855c03780abd3fb07b7efe5abb42f5c9b08))
+- **cogitator**: make the advertised EFI escape real on the sarcophagi ([`f345ce8`](https://github.com/gfriloux/stc/commit/f345ce8dcb788df5526e7adc785590cc584e28c5))
+- **relics**: give the networking relic a dhcp option ([`1edbf6e`](https://github.com/gfriloux/stc/commit/1edbf6e03e7b73594da2bd42853700c101676b1b))
+
+### Documentation
+
+- **plans**: plan the audit of options pinned at normal priority ([`24f218b`](https://github.com/gfriloux/stc/commit/24f218b4803947d1374501e7f4ecec534ba559ee))
+- **plans**: sort every normal-priority definition in relics and cogitators ([`db9b388`](https://github.com/gfriloux/stc/commit/db9b38819a70975edae5d2a9d156cbe67b0d2df6))
+- **reference**: state when a relic pins a value and when it proposes one ([`78a9100`](https://github.com/gfriloux/stc/commit/78a91005ea53b08d816f968a6494e268486837c3))
+- **cogitator**: correct the Enginseer's override promises ([`5bb2bdd`](https://github.com/gfriloux/stc/commit/5bb2bdd1bd2a90c8b7952741981ea7a103480425))
+- show the escape hatch where a reader would look for it ([`d0d0f2d`](https://github.com/gfriloux/stc/commit/d0d0f2da20440459feccb51c78d667304e095d29))
+- **plans**: record the audit's execution, rulings included ([`904bf5a`](https://github.com/gfriloux/stc/commit/904bf5a5a1a84c4d477ee6f3ebd3e3d10cbe1039))
+- **cogitator**: say what declining the socket proxy costs ([`3b40988`](https://github.com/gfriloux/stc/commit/3b409884862d1d07dd6f392dc7aa47e2fa4d5a21))
+- **plans**: record the review's rulings, including where it was wrong ([`fb57077`](https://github.com/gfriloux/stc/commit/fb570773059ab12053c96818aa8bbf33ff20fc74))
+- document the seal, its first finding, and its blind spot ([`bdc771e`](https://github.com/gfriloux/stc/commit/bdc771e4e0efe68d3f9b02c9751a5dbcac2752ca))
+
+### Testing
+
+- **provings**: exercise the Pipewire override in a booted VM ([`5e437ef`](https://github.com/gfriloux/stc/commit/5e437efc920c3454e4e54cb58e5fbedb218a5d92))
+- **provings**: lock in CrowdSec-without-an-image, decouple the ALSA assert ([`1976b4d`](https://github.com/gfriloux/stc/commit/1976b4d54db1d79420995de7c2512c7d54b97721))
 ## [0.17.0] — 2026-10-18
 
 ### Documentation
