@@ -42,3 +42,17 @@ jobs:
 
       - name: Check en/fr documentation tree parity
         run: bash scripts/check-docs-parity.sh
+
+  # Its own job rather than a step of `lint`, because unlike the other seals it
+  # needs the locked nixpkgs and home-manager trees — it greps them for modules
+  # that write the same option STC writes with mkDefault. Hence the installer
+  # here, which docs-parity above does not need.
+  option-priorities:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
+
+      - name: Check option priorities (register + upstream collisions)
+        run: bash scripts/check-option-priorities.sh
