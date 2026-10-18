@@ -24,12 +24,13 @@ the `just ci` gate**: a VM test is heavy, and the CI gate stays fast and static.
 - Linux only (`x86_64-linux` / `aarch64-linux`) — the attribute is empty elsewhere.
 - Builder: `pkgs.testers.runNixOSTest`.
 
-**What `just test` now costs.** Eight provings, **eleven VM boots** — `vm` and
+**What `just test` now costs.** Nine provings, **twelve VM boots** — `vm` and
 `gaming` carry two nodes each, and `sarcophagus-kvm` boots its single node twice —
 and the closures include KDE twice (`workstation` and `plasma`) and Steam once. On
 a cold store that is a few GiB of downloads; warm, most scripts finish in 23-30 s.
-`sarcophagus-kvm` is the outlier at both ends: it builds a disk image in its own
-VM before the test even starts, and its script then runs 66 s for the two boots.
+The two sarcophagi are the outliers, because each **builds a disk image in its own
+VM before its test even starts**: `sarcophagus-kvm` then runs 66 s for its two
+boots, and `sarcophagus-aws` 32 s for its one.
 This is said out loud because the discipline that matters is running
 `just test` before closing a branch that touched a cogitator: a recipe too heavy
 to run is a gate that quietly stops being one. Build a single proving while
@@ -58,6 +59,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `plasma` | `cogitator-plasma` | SDDM is the display manager and runs Wayland with the Plasma session as its default; the session file exists in the directory sddm actually points at; both relic tunables (`keyboardLayout`, `sddmTheme`) reach the rendered configuration; the XDG portal carries the wildcard the relic configures; rtkit, the 32-bit ALSA bridge and the `default.target` want that starts WirePlumber with the graphical session are all in place; gvfs and tumbler are reachable by the session |
 | `gaming` | `cogitator-gaming` | Steam is wired, with the udev rules that make a controller usable without root; the AMD relic's VDPAU/VAAPI driver reaches the merged driver tree; the Pipewire relic's three claims (rtkit, the 32-bit ALSA bridge, PulseAudio compat) are in place; Steam Remote Play is closed by default and, on a second node, opens both its UDP range and its TCP ports |
 | `sarcophagus-kvm` | `cogitator-sarcophagus-kvm` | Boots the qcow2 image the profile exists to build, twice on the same disk: the ZFS datasets the profile declares are what is actually mounted (`vmpool/root`, `vmpool/nix`, `vmpool/persist`), the relic creates the `@blank` reference the image builder does not ship, the initrd rollback runs and *succeeds*, and across a reboot a witness on the root dataset is gone while witnesses in `/persist` and under the cogitator's own `impermanence.extraDirectories` survive — with the SSH host key fingerprint unchanged, and the relic's failure reporting completely quiet on this healthy path |
+| `sarcophagus-aws` | `cogitator-sarcophagus-aws` | Boots the raw AMI image the profile exists to build, on a disk **larger than the image**: the ZFS pool actually grows to fill the volume under it (`stc-grow-pool` completes *and* `zpool list` clears the image's own size), the profile's datasets are what is mounted, `/boot` is a plain FAT ESP whose label resolves to the mounted device, the two discriminating AWS kernel parameters are live, `xen_fbfront` is blacklisted, the EC2 udev rules are installed, and both instance classes' network drivers are requested — with the Xen one failing to insert on this bench *without failing the boot*, which is what lets one image serve Nitro and Xen |
 | `dreadnought` | `cogitator-dreadnought` | Five relics composed on one host come up, with exactly one loaded unit failing for want of a pool; ZFS support is functional on the booted kernel; the two discriminating AWS kernel parameters reach `/proc/cmdline`; the pool-growth script carries the profile's `poolName`, `ebsDisk` and `ebsPartition`; the ZFS scrub timer carries `scrubInterval`; explicit persistence is bind-mounted, including an entry set through the cogitator's own option; the hardening suite survives the composition; the impermanence rollback ran in the initrd and failed as expected, and that failure is legible from the booted system through `stc-impermanence-state.service` rather than only from an initrd journal |
 
 ## Adding a proving
@@ -94,7 +96,7 @@ gaming = pkgs-unfree.testers.runNixOSTest (import ./gaming.nix {inherit self;});
 ```
 
 It is scoped to that single registry line, the same way `forge/default.nix` scopes
-one for Terraform's BSL licence. The five other provings keep a byte-identical
+one for Terraform's BSL licence. The other provings keep a byte-identical
 `drvPath` with the instance present, which is how that was checked rather than
 assumed — though that check is close to a formality, since `pkgs-unfree` is a lazy
 binding Nix never forces for them.
@@ -134,7 +136,27 @@ The last two are failure modes you only meet by running it: both surface as an
 image-build error, not as an evaluation error, and the GRUB one reports a device
 that does not exist rather than a priority conflict.
 
-This is the pattern #47 (`sarcophagus-aws`) should reuse.
+`provings/sarcophagus-aws.nix` reuses this pattern, and exactly two things
+differ. The image is raw rather than qcow2 — measured in
+`make-single-disk-zfs-image.nix`, `format = "raw"` maps to the `.img` suffix, so
+the overlay is taken over `nixos.root.img` with `-F raw`. And the overlay is
+given a **size**: 8 GiB over a 5 GiB image, so partition 3 ends short of the
+end of the device and `stc-grow-pool` has something to grow. Three sizes are in
+play and collapsing any two gets the arithmetic wrong — measured on the
+artefact, the ZFS partition is 4096 MiB (`rootSize`), the image *file* is
+5120 MiB (upstream sizes it at `bootSize + rootSize`, and `bootSize` defaults to
+1024), and the virtual disk is 8 GiB. The proving's threshold is therefore
+anchored on the **pool**, which goes from p3's 3.999 GiB to 6.75 GiB. That is an EC2
+instance on an EBS volume larger than its AMI, and it is the one claim neither
+`dreadnought` (which only reads the *string* of that script) nor
+`sarcophagus-kvm` (whose disk is exactly the size of its image) can reach.
+Measured on the bench: the pool comes up at 6.75 GiB.
+
+The five concession lines and the `qemu-img` block are **copied** into the second
+proving rather than factored out. Two occurrences do not make an abstraction, and
+a shared helper would hide precisely the lines a reader needs in front of them to
+trust the bench. If a third sarcophagus arrives, factor it then, with three cases
+in view.
 
 ## Scope limit — dreadnought cannot see the disk layer
 
@@ -164,6 +186,35 @@ measured, the test socle sets `virtualisation.qemu.consoles = ["ttyS0,115200n8"
 "tty0"]` on a *bare* node, so that string is on the kernel command line whatever
 the relic does. Only `nvme_core.io_timeout` and `random.trust_cpu` discriminate,
 and only those two are asserted.
+
+**What `sarcophagus-aws` changed about this table, and what it did not.** Booting
+the real image lifts the framework limits above: the pool import, the dataset
+mounts, the boot device and — the point of that proving — the runtime growth of
+the pool are all asserted there. Three gaps are *not* lifted, and were re-measured
+rather than assumed:
+
+- **The serial console** stays uncovered. The getty is `lib.mkDefault` since #45,
+  so it loses an ordinary priority contest to the test instrumentation instead of
+  colliding with it — which is what made a proving of this profile possible at all,
+  but it still means no getty runs. The baud-rate string is a subtler case: under
+  the external-image pattern `directBoot` is off and the kernel command line comes
+  from the image's own GRUB, so `virtualisation.qemu.consoles` no longer reaches
+  it and the string *might* discriminate there. Establishing that would mean
+  building a second image without the relic, which the proving does not pay for —
+  so it is not asserted, rather than asserted on an unverified premise.
+- **The AWS NTP endpoint** stays uncovered, for a reason that survives the
+  external-image pattern: `services.timesyncd.enable` is measured `false` on a
+  bare node, a ZFS-only node *and* the STC node, so no
+  `/etc/systemd/timesyncd.conf` is rendered at all and there is nothing to read
+  `169.254.169.123` from. It is `qemu-vm.nix:1489` that turns it off — a bare
+  `false` at normal priority, commented *"Don't run ntpd in the guest"* — and not
+  `nixos-test-base.nix`, which never mentions timesyncd.
+- **`boot.zfs.devNodes`** (`/dev`, against the default `/dev/disk/by-id`)
+  discriminates in evaluation and cannot be asserted on this bench at all: the
+  only runtime reading would be the store path of a unit script interpolated from
+  the same evaluation, which is a tautology — and a virtio disk *does* have by-id
+  entries, so the default would import the pool just as well. The bench cannot
+  tell the relic from the default.
 
 **Explicit persistence, on the other hand, is asserted** — it is the one disk-ish
 claim that survives. `environment.persistence` does not go through `fileSystems`;
