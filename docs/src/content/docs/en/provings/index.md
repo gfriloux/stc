@@ -24,10 +24,11 @@ the `just ci` gate**: a VM test is heavy, and the CI gate stays fast and static.
 - Linux only (`x86_64-linux` / `aarch64-linux`) — the attribute is empty elsewhere.
 - Builder: `pkgs.testers.runNixOSTest`.
 
-**What `just test` now costs.** Ten provings, **thirteen VM boots** — `vm` and
-`gaming` carry two nodes each, and `sarcophagus-kvm` boots its single node twice —
-and the closures include KDE twice (`workstation` and `plasma`), Steam once, and
-the enginseer toolkit's 31 named packages. On a cold store that is a few GiB of
+**What `just test` now costs.** Eleven provings, **fifteen VM boots** — `vm` and
+`gaming` and `home-desktop` carry two nodes each, and `sarcophagus-kvm` boots its
+single node twice — and the closures include KDE twice (`workstation` and
+`plasma`), Steam once, the enginseer toolkit's 31 named packages, and GIMP, VLC
+and Zen Browser for the desktop profile. On a cold store that is a few GiB of
 downloads; warm, most scripts finish in 23-30 s, `enginseer` in 25 s. The two
 sarcophagi are the outliers, because each **builds a disk image in its own VM
 before its test even starts**: `sarcophagus-kvm` then runs 66 s for its two
@@ -62,6 +63,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `sarcophagus-kvm` | `cogitator-sarcophagus-kvm` | Boots the qcow2 image the profile exists to build, twice on the same disk: the ZFS datasets the profile declares are what is actually mounted (`vmpool/root`, `vmpool/nix`, `vmpool/persist`), the relic creates the `@blank` reference the image builder does not ship, the initrd rollback runs and *succeeds*, and across a reboot a witness on the root dataset is gone while witnesses in `/persist` and under the cogitator's own `impermanence.extraDirectories` survive — with the SSH host key fingerprint unchanged, and the relic's failure reporting completely quiet on this healthy path |
 | `sarcophagus-aws` | `cogitator-sarcophagus-aws` | Boots the raw AMI image the profile exists to build, on a disk **larger than the image**: the ZFS pool actually grows to fill the volume under it (`stc-grow-pool` completes *and* `zpool list` clears the image's own size), the profile's datasets are what is mounted, `/boot` is a plain FAT ESP whose label resolves to the mounted device, the two discriminating AWS kernel parameters are live, `xen_fbfront` is blacklisted, the EC2 udev rules are installed, and both instance classes' network drivers are requested — with the Xen one failing to insert on this bench *without failing the boot*, which is what lets one image serve Nitro and Xen |
 | `enginseer` | `cogitator-enginseer` (Home Manager) | Activates the profile for a test user inside a VM and asserts its runtime claims: the three aliases it declares resolve in a shell that really started (not the four `programs.lsd` also renders), `oh-my-posh` initialises from the theme the cogitator ships, `git` itself selects `delta` as its diff pager with delta's `interactive.diffFilter` in place, direnv is hooked into fish with nix-direnv and silenced, `FZF_CTRL_R_COMMAND` is set and empty so Ctrl-R belongs to atuin, `~/.ssh/config` carries multiplexing *without* Home Manager's legacy default block, gpg-agent's `pinentry-program` is the headless `pinentry-curses`, and the declared catppuccin flavour reaches bat's theme |
+| `home-desktop` | `cogitator-desktop` (Home Manager) | Two nodes. On the profile **alone**: kitty renders its configuration, the ghostty relic renders its user unit and overrides, zen-browser reaches the user profile as `zen-beta`, the cogitator's own `gimp` and `vlc` are installed, and the kitty relic's `fonts` option makes the nerd fonts visible to `fc-list`. On a node carrying **both** Home Manager profiles: desktop's `mkForce pinentry-qt` wins the contest against enginseer's `mkDefault pinentry-curses` — the only cross-cogitator interaction proven in this suite — and one claim from each profile still holds under composition |
 | `dreadnought` | `cogitator-dreadnought` | Five relics composed on one host come up, with exactly one loaded unit failing for want of a pool; ZFS support is functional on the booted kernel; the two discriminating AWS kernel parameters reach `/proc/cmdline`; the pool-growth script carries the profile's `poolName`, `ebsDisk` and `ebsPartition`; the ZFS scrub timer carries `scrubInterval`; explicit persistence is bind-mounted, including an entry set through the cogitator's own option; the hardening suite survives the composition; the impermanence rollback ran in the initrd and failed as expected, and that failure is legible from the booted system through `stc-impermanence-state.service` rather than only from an initrd journal |
 
 ## Adding a proving
@@ -133,9 +135,9 @@ So the node imports `inputs.home-manager.nixosModules.home-manager` and attaches
 the cogitator to a test user through `home-manager.users.<u>.imports`. Activation
 then becomes an ordinary systemd unit of the node — measured,
 `home-manager-<u>.service` — and `wait_for_unit` applies like anywhere else. This
-is also why this proving takes `inputs` where the other nine take only `self`,
-as will any future Home Manager proving: `self.homeModules.*` alone cannot
-attach a home configuration to a node.
+is also why the two Home Manager provings take `inputs` where the other nine take
+only `self`: `self.homeModules.*` alone cannot attach a home configuration to a
+node.
 
 **Four bench concessions**, in the same spirit as the external-image pattern's
 five. None is a recommendation for how to wire a consumer:
@@ -189,6 +191,51 @@ turning it back on adds `AddKeysToAgent`, `Compression`, `ForwardAgent`,
 `UserKnownHostsFile`. So the absence of those tells the two cases apart, where the
 presence of `ControlMaster` does not.
 
+### Two nodes, and the one claim that needed a counterfactual it could not have
+
+`home-desktop` carries two nodes. The profile **alone** is the `#50` proving
+proper, and isolation is the point: an epreuve named `home-desktop` that went red
+because something in enginseer broke would be a bad diagnosis. The **composed**
+node exists for a single claim, written in `cogitator/home/desktop.nix`:
+
+```nix
+# Graphical pinentry for gpg-agent. Overrides the headless-safe default set
+# by cogitator-enginseer; inert if gpg-agent is not enabled.
+services.gpg-agent.pinentry.package = lib.mkForce pkgs.pinentry-qt;
+```
+
+The first half is a priority contest between two cogitators, and neither node
+alone can show it: `enginseer` asserts the `pinentry-curses` side, `composed`
+asserts the `pinentry-qt` side.
+
+**The second half — "inert if gpg-agent is not enabled" — is deliberately not
+asserted in a VM.** The plan called for checking that no `gpg-agent` user unit
+exists on the desktop-alone node. Measured against the reference node: it has no
+such unit either, because `services.gpg-agent.enable` is `false` without any
+cogitator. The assertion would be green whatever STC did. Inertness is an
+*evaluation* property — desktop alone sets `pinentry.package` to `pinentry-qt`
+while `gpg-agent.enable` stays `false`, so nothing consumes the value — and
+reading that from inside the VM would mean interpolating the option out of the
+same evaluation that built the node. Same treatment as `docker-server`'s negative
+case and as `boot.zfs.devNodes` in `sarcophagus-aws`.
+
+Two more candidates measurement corrected before they were written:
+
+- **zen-browser's binary is `zen-beta`, not `zen`** — the cogitator imports
+  `inputs.zen-browser.homeModules.beta`. Asserting the obvious name would have
+  been red. It is also the only one of the three relics that renders no file at
+  all, so the user profile is the only place it is observable, which is what
+  `useUserPackages` buys this proving.
+- **The nerd fonts are not reachable at the obvious path.** They are what
+  `stc.relics.gui.kitty.fonts.enable` (default true) installs — the only option
+  of STC's own across these three relics, the other two doing nothing but setting
+  `programs.<x>.enable`. But `environment.pathsToLink` carries no `/share/fonts`
+  entry, so `/etc/profiles/per-user/<u>/share/fonts` is never populated: the
+  fonts sit inside the `home-manager-path` derivation, which
+  `~/.config/fontconfig/conf.d/10-hm-fonts.conf` points at. So the assertion goes
+  through `fc-list` — the behavioural question, *can the session find these
+  fonts*, is both the right one and the only one with a true answer.
+
 ### Scope limit — configuration, not a live agent
 
 The proving does not assert that `gpg-agent` is *running*. It is a user unit and
@@ -201,7 +248,7 @@ proves that a list of packages was written.
 
 ## Booting a real image — the external-image pattern
 
-Eight of the ten provings let the test driver synthesise a node. `sarcophagus-kvm`
+Ten of the eleven provings let the test driver synthesise a node. `sarcophagus-kvm`
 cannot: its profile's claim *is* the disk, and on a synthesised node the qemu-vm
 module replaces `fileSystems` with its own set at priority 10 — so neither the
 pool, nor the datasets, nor the rollback would be observable.
