@@ -14,13 +14,14 @@ Sensible networking defaults. DHCP on all interfaces, Quad9 DNS.
 | `stc.relics.networking.enable` | bool | `false` | Enable base networking configuration |
 | `stc.relics.networking.domain` | `null \| string` | `null` | DNS search domain. `null` means no domain is set |
 | `stc.relics.networking.nameservers` | list of strings | `[ "9.9.9.9" "149.112.112.112" ]` | DNS resolvers |
+| `stc.relics.networking.dhcp` | bool | `true` | Use DHCP on all interfaces. Set `false` to declare interfaces yourself |
 
 ## What It Does
 
 When enabled:
 
 - Sets `networking.usePredictableInterfaceNames = true` (mkDefault — overridable)
-- Sets `networking.useDHCP = true` (mkDefault — override per interface if needed)
+- Sets `networking.useDHCP` from `dhcp` (an option, not a `mkDefault` — see below)
 - Applies `nameservers` to `networking.nameservers`
 - Applies `domain` to `networking.domain` when it is not null
 
@@ -59,9 +60,16 @@ modules = [
 ```
 
 :::tip[Per-interface DHCP]
-`useDHCP` is set with `mkDefault`. To disable DHCP globally and configure
-interfaces individually, set `networking.useDHCP = false` in your configuration
-and then declare each interface explicitly.
+Set `stc.relics.networking.dhcp = false` and declare each interface explicitly.
+
+Since `v0.18.0` this is an **option** rather than a `lib.mkDefault` on
+`networking.useDHCP`, because the seal added in that release measured a real
+collision: `networking.ifstate` also writes that option with `mkDefault`, with
+the opposite value, and two disagreeing defaults are a build error. On the
+previous release this relic plus `networking.ifstate.enable = true` failed with
+`has conflicting definition values` and no clean way out. Now it either builds —
+with `dhcp = false` — or fails on ifstate's own assertion, which says what to do
+and links to the upstream issue.
 :::
 
 ## Not a relic: time synchronisation

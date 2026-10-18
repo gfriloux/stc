@@ -14,13 +14,14 @@ Valeurs réseau sensées. DHCP sur toutes les interfaces, DNS Quad9.
 | `stc.relics.networking.enable` | bool | `false` | Active la configuration réseau de base |
 | `stc.relics.networking.domain` | `null \| string` | `null` | Domaine de recherche DNS. `null` signifie qu'aucun domaine n'est défini |
 | `stc.relics.networking.nameservers` | liste de strings | `[ "9.9.9.9" "149.112.112.112" ]` | Résolveurs DNS |
+| `stc.relics.networking.dhcp` | bool | `true` | Utiliser DHCP sur toutes les interfaces. Mets `false` pour déclarer les interfaces toi-même |
 
 ## Ce qu'elle fait
 
 Lorsqu'elle est activée :
 
 - Pose `networking.usePredictableInterfaceNames = true` (mkDefault — surchargeable)
-- Pose `networking.useDHCP = true` (mkDefault — surcharge par interface si besoin)
+- Pose `networking.useDHCP` depuis `dhcp` (une option, pas un `mkDefault` — voir plus bas)
 - Applique `nameservers` à `networking.nameservers`
 - Applique `domain` à `networking.domain` lorsqu'il n'est pas null
 
@@ -59,9 +60,17 @@ modules = [
 ```
 
 :::tip[DHCP par interface]
-`useDHCP` est posé avec `mkDefault`. Pour désactiver le DHCP globalement et
-configurer les interfaces individuellement, pose `networking.useDHCP = false`
-dans ta configuration puis déclare chaque interface explicitement.
+Pose `stc.relics.networking.dhcp = false` puis déclare chaque interface
+explicitement.
+
+Depuis `v0.18.0` c'est une **option** et non un `lib.mkDefault` sur
+`networking.useDHCP`, parce que le garde ajouté dans cette version a mesuré une
+collision réelle : `networking.ifstate` écrit aussi cette option en `mkDefault`,
+avec la valeur opposée, et deux défauts contradictoires sont une erreur de build.
+Sur la version précédente, cette relique plus `networking.ifstate.enable = true`
+échouait sur `has conflicting definition values` sans échappatoire propre.
+Désormais, soit ça construit — avec `dhcp = false` — soit ça échoue sur
+l'assertion d'ifstate elle-même, qui dit quoi faire et renvoie à l'issue amont.
 :::
 
 ## Pas une relique : la synchronisation de temps
