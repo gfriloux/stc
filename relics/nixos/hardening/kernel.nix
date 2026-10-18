@@ -86,15 +86,34 @@ in {
 
     # Disable systemd core dump handler — /bin/false doesn't exist on NixOS.
     #
-    # mkDefault: an operator debugging a crash on a hardened host needs core
-    # dumps back for one session, and that is an operational need rather than a
-    # change of threat model. At normal priority it cost a mkForce, while the
-    # PAM limit below stays in place either way — so re-enabling the handler
-    # alone does not silently undo the hardening, it just makes the switch
-    # reachable. The default is unchanged for every host that does not ask.
+    # mkDefault, so an operator debugging a crash can get dumps back for one
+    # session without mkForce. That is the whole of the argument. An earlier
+    # version of this comment made a second claim that is false — that the PAM
+    # limit below keeps the hardening in place anyway — and it does not, for two
+    # independent reasons:
+    #
+    #   - security.pam.loginLimits writes /etc/security/limits.conf, applied by
+    #     pam_limits to PAM *login sessions*. A systemd service never went
+    #     through it, so it never bounded a daemon's dumps.
+    #   - Enabling systemd-coredump installs a pipe core_pattern, and core(5) is
+    #     explicit about that: "The RLIMIT_CORE limit is not enforced for core
+    #     dumps that are piped to a program". The limit stops applying even to
+    #     login sessions.
+    #
+    # So know what flipping it costs: every crashing daemon then writes its full
+    # address space — TLS private keys, session tokens, decrypted secrets — into
+    # /var/lib/systemd/coredump, which is the exposure this line exists to
+    # avoid. Turn it on deliberately, and turn it back off.
     systemd.coredump.enable = lib.mkDefault false;
 
-    # Belt-and-suspenders: also disable core dumps via PAM resource limits.
+    # Also refuse core dumps to login sessions, through PAM resource limits.
+    #
+    # Not "belt and suspenders" for the line above, which is what this comment
+    # used to claim: the two cover different things and neither backs up the
+    # other. This one binds interactive sessions and the processes they start;
+    # it does not reach systemd services, and it is ignored outright once
+    # core_pattern is a pipe (core(5)). It stands on its own, for the shell
+    # where a user runs a crashing binary by hand.
     security.pam.loginLimits = [
       {
         domain = "*";
