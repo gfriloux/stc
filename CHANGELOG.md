@@ -3,6 +3,18 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.17.0] — 2026-10-18
+
+### Documentation
+
+- **reference**: record why no sudo hardening relic exists ([`f605650`](https://github.com/gfriloux/stc/commit/f605650d5ab0bc654ca72da9583318a104273d5a))
+- **forge**: document nvfetcher and rule out the Renovate custom manager ([`cc2ded2`](https://github.com/gfriloux/stc/commit/cc2ded288f1e1e379384f86a98daff90236635f9))
+- **reference**: record why no NTP relic exists ([`e7aec65`](https://github.com/gfriloux/stc/commit/e7aec6592a18b047e518955bcf907ea75dd19a52))
+- **relics**: explain why the AWS NTP endpoint is a fallback ([`398b553`](https://github.com/gfriloux/stc/commit/398b553b2446ebc98b8e083fee44c4dc5ae96ec6))
+
+### Features
+
+- **forge**: add nvfetcher to the nixos dev shell ([`8686630`](https://github.com/gfriloux/stc/commit/8686630138fd72aa4443090f1bb8d3ee67475f99))
 ## [0.16.0] — 2026-10-18
 
 ### Bug Fixes
