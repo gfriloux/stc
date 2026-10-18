@@ -253,3 +253,196 @@ Consignés maintenant. `nix develop .#docs --command just docs-build` : vert,
 Rien dans cette revue ne s'est avéré faux. Les dix affirmations amont qu'elle
 avançait ont été vérifiées, quatre par moi avec la commande, les six autres déjà
 mesurées pendant le chantier.
+
+---
+
+## Chantier 3 (#50) — pre-flight exécuté le 2026-10-18
+
+Branche `test/proving-home-desktop`, ouverte sur `main` après merge de la PR #93.
+
+**Méthode changée, et c'est la revue du chantier 2 qui l'a enseignée.** Au lieu
+de mesurer les options une par une, j'ai **bâti le nœud de référence d'abord**
+(Home Manager + le même utilisateur `proving`, sans aucun cogitator STC) et
+éprouvé chaque candidat contre lui. C'est strictement mieux : c'est ce que le
+relecteur avait fait et qui lui a permis de certifier les neuf subtests d'un
+coup.
+
+**Ce que le nœud de référence rend** : les mêmes cinq fichiers qu'au chantier 2
+plus les deux `.keep`, et `users.users.proving.packages` ne contient qu'un
+`home-manager-path` — Home Manager agrège tout dans une seule dérivation.
+**Conséquence immédiate** : l'assert zen-browser doit viser un **binaire** dans
+le profil, pas un nom de paquet comme le plan le laissait entendre.
+
+**Ce que `desktop` seul ajoute** (donc ce qui discrimine) :
+`kitty/kitty.conf`, `systemd/user/app-com.mitchellh.ghostty.service` et son
+`.d/overrides.conf`, et `.local/share/dbus-1/services`.
+
+### Deux prémisses du plan corrigées par la mesure
+
+1. **Le binaire de zen-browser s'appelle `zen-beta`, pas `zen`.** Le cogitator
+   importe `inputs.zen-browser.homeModules.beta`. Mesuré en listant le `bin/` du
+   `home-manager-path` construit. Asserter `zen` aurait été rouge.
+2. **Les polices Nerd de la relique kitty** atterrissent sous
+   `share/fonts/truetype/NerdFonts/{JetBrainsMono,Inconsolata,Iosevka,BitstromWera,…}`.
+   C'est **la seule option propre à STC des trois reliques** (`kitty.fonts.enable`,
+   défaut `true`) — les deux autres ne font que poser `programs.<x>.enable = true`.
+   Elle méritait d'être relevée : activer le cogitator installe sept paquets de
+   polices, ce qui est du poids de clôture que le consommateur doit connaître.
+
+### Ruling — l'assert « inerte » quitte la VM
+
+La décision 4 du plan prévoyait, sur le nœud `desktop` seul, un assert
+« **aucune** unité `gpg-agent` utilisateur » pour prouver le mot « inert » du
+commentaire de `cogitator/home/desktop.nix`.
+
+**Mesuré : ça ne discrimine pas.** Le nœud de référence n'a pas d'unité
+`gpg-agent` non plus (`services.gpg-agent.enable = false` sans aucun cogitator).
+L'assert serait vert quoi que fasse STC — exactement la classe que la méthode dit
+de supprimer plutôt que d'affaiblir.
+
+L'inertie est une propriété d'**évaluation**, pas de runtime : `desktop` seul pose
+`services.gpg-agent.pinentry.package = pinentry-qt` (mesuré) alors que
+`services.gpg-agent.enable` vaut `false`, donc rien ne la consomme et aucun
+`gpg-agent.conf` n'est rendu. La lire depuis la VM demanderait d'interpoler la
+valeur de l'option depuis la *même* évaluation — une tautologie.
+
+**Donc : assert retiré de la VM, fait consigné ici et en doc.** Même traitement
+que le cas négatif de `docker-server` (« a negative case cannot live in a
+nixosTest, verify by `nix eval` ») et que `boot.zfs.devNodes` au chantier 1.
+
+### Les deux nœuds sont gardés, et chacun gagne son boot
+
+- **`desktop`** — les trois reliques **en isolation** : `kitty.conf`, l'unité
+  ghostty et son `overrides.conf`, les binaires `zen-beta`/`gimp`/`vlc` dans
+  `/etc/profiles/per-user/proving/bin`, et les polices Nerd. Isolé d'enginseer à
+  dessein : une épreuve nommée `home-desktop` qui rougirait à cause d'enginseer
+  serait un mauvais diagnostic.
+- **`composed`** — desktop **+** enginseer, pour la seule revendication croisée :
+  le `mkForce pinentry-qt` de desktop gagne contre le `mkDefault pinentry-curses`
+  d'enginseer. Lu dans `~/.gnupg/gpg-agent.conf` — **et non dans l'unité
+  systemd**, prémisse du plan déjà corrigée au chantier 2.
+
+Le nœud `composed` reproduit le nœud du chantier 2 au détail près (utilisateur
+`proving`, `stateVersion` 25.11, `useGlobalPkgs`/`useUserPackages`, fish système),
+sinon la comparaison avec le `pinentry-curses` mesuré là-bas ne vaudrait rien.
+Le nœud `desktop` seul **ne pose pas** fish : le profil ne revendique aucun shell,
+et poser fish y entraînerait l'assertion amont de `programs.fish.enable` pour rien.
+
+## Step 3 (#50) — l'épreuve home-desktop et son enregistrement
+
+Un seul commit pour les trois fichiers, même ruling qu'aux deux chantiers
+précédents.
+
+Le mécanisme acquis au chantier 2 a tenu sans un seul ajustement. **Un seul tour
+de banc rouge**, contre six au chantier précédent — l'écart vient directement de
+la méthode changée : bâtir le nœud de référence d'abord, puis éprouver chaque
+candidat contre lui.
+
+**Le tour rouge, et ce qu'il a appris :** l'assert des polices visait
+`/etc/profiles/per-user/proving/share/fonts/truetype/NerdFonts/JetBrainsMono`,
+chemin que j'avais relevé sur le `home-manager-path` construit. Rouge. Cause lue
+avant correctif : `environment.pathsToLink` **ne contient aucune entrée
+`/share/fonts`**, donc le profil par utilisateur ne lie jamais les polices — j'avais
+mesuré la bonne dérivation et conclu sur la mauvaise. Les polices sont dans le
+`home-manager-path`, et c'est
+`~/.config/fontconfig/conf.d/10-hm-fonts.conf` qui le désigne (lu : il liste le
+`share/fonts` de cette dérivation **et** celui du profil par utilisateur, ce
+dernier vide).
+
+L'assert est devenu **meilleur** que celui que j'avais prévu, pas juste
+réparé : `su - proving -c 'fc-list : family'` doit montrer
+`JetBrainsMono Nerd Font` et `Iosevka Nerd Font`. C'est la question de
+comportement — *la session trouve-t-elle ces polices* — qui est à la fois la
+bonne et la seule à avoir une réponse vraie. Et elle couvre toute la chaîne
+relique → fontconfig → session.
+
+Huit subtests verts sur deux nœuds, script en **23,04 s**.
+
+Écart au plan consigné : le nœud `desktop` seul **ne pose pas** fish là où le
+nœud `composed` le pose. Raison : le profil desktop ne revendique aucun shell, et
+poser fish y déclencherait l'assertion amont de `programs.fish.enable` pour rien.
+Le nœud `composed`, lui, reproduit le nœud du chantier 2 au détail près — sinon
+la comparaison de son pinentry avec le `pinentry-curses` mesuré là-bas ne
+vaudrait rien. Les concessions de banc partagées sont factorisées dans un `let`
+pour que les deux nœuds ne puissent pas dériver.
+
+## Step 4 (#50) — la doc EN + FR
+
+Ligne de table de couverture ; paragraphe de coût (dix/treize →
+**onze/quinze**, `home-desktop` nommée comme troisième épreuve à deux nœuds, et
+GIMP/VLC/Zen Browser ajoutés aux clôtures citées) ; une sous-section
+« Deux nœuds, et la revendication qui réclamait un contre-factuel impossible »
+qui porte le ruling sur l'assert « inerte », le `zen-beta` et l'histoire des
+polices ; et deux comptes remis à jour que l'ajout déplaçait — « les deux
+épreuves Home Manager » (il y en a deux maintenant, la formulation du chantier 2
+disait « cette épreuve ») et « neuf des onze épreuves laissent le pilote
+synthétiser un nœud » (corrigé en revue — voir plus bas).
+
+`just docs-parity` vert.
+
+## Revue de clôture du chantier 3 — zéro Critical, 3 Important, 7 Minor
+
+La méthode changée a payé : le relecteur a bâti le nœud de référence **et trois
+contre-factuels** (`desktop`, `desktop` avec `fonts.enable = false`, kitty seul,
+ghostty seul) et vérifié les huit subtests contre eux. **Aucun ne peut être vert
+sans le cogitator**, chacun rougit contre un contre-factuel mesuré. Et il a
+confirmé la revendication phare, celle qui m'inquiétait : le nœud `composed`
+reproduit le nœud d'`enginseer` **option pour option**, donc la comparaison
+`pinentry-curses` → `pinentry-qt` entre les deux épreuves tient.
+
+Les trois Important, les trois fondés, les trois vérifiés par moi :
+
+1. **« Dix des onze épreuves laissent le pilote synthétiser un nœud » est faux —
+   c'est neuf.** Deux épreuves utilisent le patron image externe
+   (`grep -ln directBoot provings/*.nix` → `sarcophagus-aws`, `sarcophagus-kvm`),
+   donc 11 − 2 = 9. Le texte d'avant (« huit des dix ») était juste : c'est **un
+   compte déplacé et mal déplacé**, exactement la classe de défaut sur laquelle
+   j'avais briefé le relecteur. Corrigé dans les deux pages et ici.
+2. **Un livrable du plan non livré et non arbitré.** Le step 4 du plan prévoyait
+   une note de portée disant qu'aucune session graphique n'est lancée, donc que
+   kitty/ghostty/zen-browser sont prouvés **configurés** et non **lancés**. Elle
+   n'a pas été écrite, et mon entrée de ledger énumérait quatre livrables en
+   omettant celui-là — donc silencieusement abandonné plutôt que tranché.
+   **Note ajoutée** dans les deux langues.
+3. **La table des « quatre concessions de banc » se lisait comme valant pour les
+   deux épreuves HM**, depuis que le chantier 3 a changé la phrase juste au-dessus
+   en « les deux épreuves Home Manager prennent `inputs` ». Or le nœud
+   desktop-seul n'en prend que deux, et l'épreuve le dit vingt lignes plus loin —
+   la doc contredisait le code. Les deux lignes fish sont maintenant **portées** à
+   leurs nœuds, et le futur périmé sur `useUserPackages` (« rendra vérifiable »,
+   écrit au chantier 2) est passé au présent.
+
+Les Minor pris :
+
+- **« la seule option propre à STC des trois reliques » est littéralement faux** :
+  elles déclarent **quatre** options (trois `enable` + `fonts.enable`). La
+  revendication vraie est « la seule au-delà des trois bascules `enable`, que le
+  cogitator pose lui-même ». Corrigé aux deux endroits de l'épreuve et dans les
+  deux pages.
+- **Le `let` ne fait pas ce que son commentaire prétendait.** Il ne lie que les
+  deux drapeaux HM ; l'alignement avec le nœud d'`enginseer` vit à travers deux
+  fichiers et se maintient **à la main**. Le commentaire le dit maintenant, au
+  lieu de laisser croire à une garantie.
+- Ligne de commentaire orpheline dans `provings/default.nix`, laissée par
+  l'édition du chantier 2 → reflowée.
+- Deux mots non traduits, un dans chaque sens : « epreuve » dans la page EN,
+  « contest » dans la page FR (les deux occurrences nouvelles ; celle de la
+  section plasma est antérieure).
+- **`libnotify` figurait au plan et a été retiré sans ligne de ledger.** Le retrait
+  est juste et expliqué dans l'épreuve (`libnotify` ne livre que `notify-send`,
+  vérifié), mais le plan listait quatre binaires et le ledger n'en citait que
+  trois. Dit ici.
+- **« `vm`, `gaming` et `home-desktop` portent deux nœuds chacune » est
+  incomplet** : `provings/dreadnought.nix:112` déclare un `nodes.emergencyvariant`
+  qu'elle ne démarre **jamais** (le script n'en interpole que des valeurs Nix).
+  L'arithmétique des boots était juste — quinze, vérifiée nœud par nœud — mais
+  j'avais réécrit cette phrase même, donc c'était le moment de le dire.
+  Reformulé en « démarrent deux nœuds » + la mention du nœud déclaré non démarré.
+- **Un fait faux antérieur, de ma main, à moitié corrigé.** La ligne de couverture
+  d'`enginseer` dit « pas les **quatre** que rend aussi `programs.lsd` » alors que
+  le bullet 165 lignes plus bas dit « **six** des neuf ». J'avais corrigé le
+  bullet au chantier 2 et laissé la ligne du tableau. La page se contredisait.
+  Corrigé — hors diff d'origine, mais même classe de défaut dans le même bloc.
+
+Rien dans cette revue ne s'est avéré faux. Les quatre affirmations comptables
+ont été revérifiées par commande avant acceptation.

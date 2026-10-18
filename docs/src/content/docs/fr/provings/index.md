@@ -25,10 +25,12 @@ rapide et statique.
 - Linux uniquement (`x86_64-linux` / `aarch64-linux`) — l'attribut est vide ailleurs.
 - Builder : `pkgs.testers.runNixOSTest`.
 
-**Ce que `just test` coûte maintenant.** Dix épreuves, **treize boots de VM** —
-`vm` et `gaming` portent deux nœuds chacune, et `sarcophagus-kvm` démarre son
-nœud unique deux fois — et les clôtures contiennent KDE deux fois (`workstation`
-et `plasma`), Steam une fois, et les 31 paquets nommés de la trousse enginseer. Sur un
+**Ce que `just test` coûte maintenant.** Onze épreuves, **quinze boots de VM** —
+`vm`, `gaming` et `home-desktop` démarrent deux nœuds chacune, `dreadnought` en
+déclare un second qu'elle ne démarre jamais, et `sarcophagus-kvm` démarre son
+nœud unique deux fois — et les clôtures contiennent
+KDE deux fois (`workstation` et `plasma`), Steam une fois, les 31 paquets nommés
+de la trousse enginseer, et GIMP, VLC et Zen Browser pour le profil desktop. Sur un
 store froid, ça fait quelques Gio de téléchargement ; à chaud, la plupart des
 scripts finissent en 23 à 30 s, `enginseer` en 25 s.
 Les deux sarcophages sortent du lot, parce que chacun **construit une image
@@ -65,7 +67,8 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `gaming` | `cogitator-gaming` | Steam est câblé, avec les règles udev qui rendent une manette utilisable sans root ; le pilote VDPAU/VAAPI de la relique AMD atteint l'arbre de pilotes fusionné ; les trois revendications de la relique Pipewire (rtkit, pont ALSA 32 bits, compat PulseAudio) sont en place ; Steam Remote Play est fermé par défaut et, sur un second nœud, ouvre à la fois sa plage UDP et ses ports TCP |
 | `sarcophagus-kvm` | `cogitator-sarcophagus-kvm` | Démarre l'image qcow2 que le profil existe pour produire, deux fois sur le même disque : les datasets ZFS que le profil déclare sont bien ce qui est monté (`vmpool/root`, `vmpool/nix`, `vmpool/persist`), la relique crée elle-même la référence `@blank` que le builder d'image ne livre pas, le rollback de l'initrd tourne et *réussit*, et après un reboot un témoin posé sur le dataset racine a disparu tandis que ceux de `/persist` et du chemin déclaré via `impermanence.extraDirectories` ont survécu — l'empreinte de la clé d'hôte SSH restant inchangée, et le compte rendu d'échec de la relique restant totalement muet sur ce chemin sain |
 | `sarcophagus-aws` | `cogitator-sarcophagus-aws` | Démarre l'image raw de l'AMI que le profil existe pour produire, sur un disque **plus grand que l'image** : le pool ZFS grandit réellement pour remplir le volume qui est dessous (`stc-grow-pool` va au bout *et* `zpool list` dépasse la taille de l'image), les datasets du profil sont bien ce qui est monté, `/boot` est un ESP FAT dont le label résout vers le périphérique monté, les deux paramètres noyau AWS qui discriminent sont actifs, `xen_fbfront` est blacklisté, les règles udev EC2 sont posées, et les pilotes réseau des **deux** classes d'instance sont demandés — celui de Xen échouant à s'insérer sur ce banc *sans faire échouer le boot*, ce qui est précisément ce qui permet à une seule image de servir Nitro et Xen |
-| `enginseer` | `cogitator-enginseer` (Home Manager) | Active le profil pour un utilisateur de test dans une VM et vérifie ses revendications de runtime : les trois alias qu'il déclare se résolvent dans un shell réellement lancé (pas les quatre que rend aussi `programs.lsd`), `oh-my-posh` s'initialise depuis le thème que le cogitator livre, `git` choisit lui-même `delta` comme pager de diff avec l'`interactive.diffFilter` de delta en place, direnv est accroché à fish avec nix-direnv et silencieux, `FZF_CTRL_R_COMMAND` est posée et vide donc Ctrl-R appartient à atuin, `~/.ssh/config` porte le multiplexage **sans** le bloc par défaut legacy de Home Manager, le `pinentry-program` de gpg-agent est le `pinentry-curses` sans tête, et la saveur catppuccin déclarée atteint le thème de bat |
+| `enginseer` | `cogitator-enginseer` (Home Manager) | Active le profil pour un utilisateur de test dans une VM et vérifie ses revendications de runtime : les trois alias qu'il déclare se résolvent dans un shell réellement lancé (pas les six que rend aussi `programs.lsd`), `oh-my-posh` s'initialise depuis le thème que le cogitator livre, `git` choisit lui-même `delta` comme pager de diff avec l'`interactive.diffFilter` de delta en place, direnv est accroché à fish avec nix-direnv et silencieux, `FZF_CTRL_R_COMMAND` est posée et vide donc Ctrl-R appartient à atuin, `~/.ssh/config` porte le multiplexage **sans** le bloc par défaut legacy de Home Manager, le `pinentry-program` de gpg-agent est le `pinentry-curses` sans tête, et la saveur catppuccin déclarée atteint le thème de bat |
+| `home-desktop` | `cogitator-desktop` (Home Manager) | Deux nœuds. Sur le profil **seul** : kitty rend sa configuration, la relique ghostty rend son unité utilisateur et ses overrides, zen-browser atteint le profil utilisateur sous le nom `zen-beta`, les `gimp` et `vlc` propres au cogitator sont installés, et l'option `fonts` de la relique kitty rend les polices Nerd visibles de `fc-list`. Sur un nœud portant les **deux** profils Home Manager : le `mkForce pinentry-qt` de desktop gagne l'arbitrage contre le `mkDefault pinentry-curses` d'enginseer — la seule interaction entre cogitators vérifiée de toute la suite — et une revendication de chaque profil tient encore sous composition |
 | `dreadnought` | `cogitator-dreadnought` | Cinq reliques composées sur un même hôte démarrent, avec exactement une unité chargée en échec faute de pool ; le support ZFS est fonctionnel sur le noyau booté ; les deux paramètres noyau AWS qui discriminent atteignent `/proc/cmdline` ; le script d'agrandissement porte les `poolName`, `ebsDisk` et `ebsPartition` du profil ; le timer de scrub ZFS porte `scrubInterval` ; la persistance explicite est bien bind-montée, y compris une entrée posée par l'option du cogitator ; le durcissement survit à la composition ; le rollback d'impermanence a tourné dans l'initrd et échoué comme prévu, et cet échec est lisible depuis le système démarré via `stc-impermanence-state.service` et non plus seulement dans un journal d'initrd |
 
 ## Ajouter une épreuve
@@ -137,19 +140,19 @@ Le nœud importe donc `inputs.home-manager.nixosModules.home-manager` et attache
 cogitator à un utilisateur de test par `home-manager.users.<u>.imports`.
 L'activation devient alors une unité systemd ordinaire du nœud — mesuré,
 `home-manager-<u>.service` — et `wait_for_unit` s'applique comme partout
-ailleurs. C'est aussi pourquoi cette épreuve prend `inputs` là où les neuf autres ne
-prennent que `self` — comme le fera toute future épreuve Home Manager :
-`self.homeModules.*` seul ne peut pas attacher une configuration home à un nœud.
+ailleurs. C'est aussi pourquoi les deux épreuves Home Manager prennent `inputs` là où les
+neuf autres ne prennent que `self` : `self.homeModules.*` seul ne peut pas
+attacher une configuration home à un nœud.
 
 **Quatre concessions de banc**, dans le même esprit que les cinq du patron image
 externe. Aucune n'est une recommandation de câblage pour un consommateur :
 
 | Option | Pourquoi |
 |---|---|
-| `users.users.<u>.shell = pkgs.fish` | Home Manager ne pose pas le shell de connexion — mesuré. Sans ça, aucun fish ne démarre, donc la moitié « shell de connexion » du profil ne serait pas observable |
-| `programs.fish.enable = true` | Imposé par une assertion amont dès qu'un utilisateur a fish en shell de connexion : sinon fish « [manque] les répertoires nix de base dans son PATH et peut rendre impossible la connexion de cet utilisateur ». Satisfaite plutôt que muselée par `ignoreShellProgramCheck`, parce que cette épreuve se connecte vraiment |
+| `users.users.<u>.shell = pkgs.fish` | Home Manager ne pose pas le shell de connexion — mesuré. Sans ça, aucun fish ne démarre, donc la moitié « shell de connexion » du profil ne serait pas observable. Sur le nœud `enginseer` et sur le nœud composé de `home-desktop` seulement : le nœud desktop seul ne pose aucun shell, puisque ce profil n'en revendique pas |
+| `programs.fish.enable = true` | Imposé par une assertion amont dès qu'un utilisateur a fish en shell de connexion : sinon fish « [manque] les répertoires nix de base dans son PATH et peut rendre impossible la connexion de cet utilisateur ». Satisfaite plutôt que muselée par `ignoreShellProgramCheck`, parce que ces nœuds se connectent vraiment. Appariée à la ligne du dessus, donc absente elle aussi du nœud desktop seul |
 | `home-manager.useGlobalPkgs = true` | HM utilise le `pkgs` du nœud au lieu d'importer sa propre nixpkgs. Une seule instance à l'évaluation — et la note sur le scoping unfree ci-dessus reste vraie pour les épreuves Home Manager, ce qu'une seconde instance rendrait faux en silence |
-| `home-manager.useUserPackages = true` | Les paquets atterrissent dans `users.users.<u>.packages`, donc sous `/etc/profiles/per-user/<u>`, un chemin déterministe — ce qui rendra vérifiable l'assert zen-browser du profil desktop, dont la relique ne rend aucun fichier. Mesuré, et plus étroit qu'il n'y paraît : `useUserPackages` déplace le `drvPath` d'activation, tandis que `useGlobalPkgs` seul est identique au byte au défaut — donc seule la première change la clôture, et la seconde gagne sa place en retirant une seconde instance nixpkgs |
+| `home-manager.useUserPackages = true` | Les paquets atterrissent dans `users.users.<u>.packages`, donc sous `/etc/profiles/per-user/<u>`, un chemin déterministe — ce qui rend vérifiable l'assert zen-browser de `home-desktop`, cette relique ne rendant aucun fichier. Mesuré, et plus étroit qu'il n'y paraît : `useUserPackages` déplace le `drvPath` d'activation, tandis que `useGlobalPkgs` seul est identique au byte au défaut — donc seule la première change la clôture, et la seconde gagne sa place en retirant une seconde instance nixpkgs |
 
 Mesuré et à dire : **aucun des deux cogitators Home Manager n'a besoin de
 l'instance unfree.** `gaming` reste la seule épreuve unfree de la suite.
@@ -193,6 +196,52 @@ Une assertion avait besoin d'un **contre-factuel** pour être vérifiable du tou
 `UserKnownHostsFile`. C'est donc l'absence de ceux-là qui distingue les deux cas,
 là où la présence de `ControlMaster` ne distingue rien.
 
+### Deux nœuds, et la revendication qui réclamait un contre-factuel impossible
+
+`home-desktop` porte deux nœuds. Le profil **seul** est l'épreuve de #50 à
+proprement parler, et l'isolement est délibéré : une épreuve nommée
+`home-desktop` qui rougirait parce que quelque chose a cassé dans enginseer
+serait un mauvais diagnostic. Le nœud **composé** existe pour une seule
+revendication, écrite dans `cogitator/home/desktop.nix` :
+
+```nix
+# Graphical pinentry for gpg-agent. Overrides the headless-safe default set
+# by cogitator-enginseer; inert if gpg-agent is not enabled.
+services.gpg-agent.pinentry.package = lib.mkForce pkgs.pinentry-qt;
+```
+
+La première moitié est un arbitrage de priorité entre deux cogitators, et aucun
+nœud seul ne peut le montrer : `enginseer` vérifie le côté `pinentry-curses`,
+`composed` vérifie le côté `pinentry-qt`.
+
+**La seconde moitié — « inert if gpg-agent is not enabled » — n'est
+délibérément pas vérifiée en VM.** Le plan prévoyait de vérifier qu'aucune unité
+utilisateur `gpg-agent` n'existe sur le nœud desktop seul. Mesuré contre le nœud
+de référence : il n'en a pas non plus, puisque `services.gpg-agent.enable` vaut
+`false` sans aucun cogitator. L'assertion serait verte quoi que fasse STC.
+L'inertie est une propriété d'**évaluation** — desktop seul pose
+`pinentry.package` à `pinentry-qt` alors que `gpg-agent.enable` reste `false`,
+donc rien ne la consomme — et la lire depuis la VM demanderait d'interpoler
+l'option depuis l'évaluation même qui a construit le nœud. Même traitement que le
+cas négatif de `docker-server` et que `boot.zfs.devNodes` dans `sarcophagus-aws`.
+
+Deux autres candidats que la mesure a corrigés avant écriture :
+
+- **Le binaire de zen-browser s'appelle `zen-beta`, pas `zen`** — le cogitator
+  importe `inputs.zen-browser.homeModules.beta`. Vérifier le nom évident aurait
+  été rouge. C'est aussi la seule des trois reliques à ne rendre **aucun**
+  fichier, donc le profil utilisateur est le seul endroit où elle est observable,
+  ce qui est précisément ce que `useUserPackages` apporte à cette épreuve.
+- **Les polices Nerd ne sont pas joignables au chemin évident.** Elles sont ce
+  qu'installe `stc.relics.gui.kitty.fonts.enable` (défaut `true`) — la seule
+  option propre à STC des trois reliques, les deux autres ne faisant que poser
+  `programs.<x>.enable`. Mais `environment.pathsToLink` ne porte aucune entrée
+  `/share/fonts`, donc `/etc/profiles/per-user/<u>/share/fonts` n'est jamais
+  peuplé : les polices sont dans la dérivation `home-manager-path`, que
+  `~/.config/fontconfig/conf.d/10-hm-fonts.conf` désigne. L'assertion passe donc
+  par `fc-list` — la question de comportement, *la session trouve-t-elle ces
+  polices*, est à la fois la bonne et la seule à avoir une réponse vraie.
+
 ### Limite de périmètre — la configuration, pas un agent vivant
 
 L'épreuve ne vérifie pas que `gpg-agent` *tourne*. C'est une unité utilisateur, il
@@ -203,9 +252,19 @@ tourne est celui de l'amont.
 Non vérifié non plus : la simple présence de paquets dans le `PATH`. Une liste de
 paquets prouve qu'une liste de paquets a été écrite.
 
+### Limite de périmètre — les reliques GUI sont prouvées configurées, pas lancées
+
+`home-desktop` ne démarre aucune session graphique, la même limite que l'épreuve
+`plasma` énonce pour ses propres raisons. kitty, ghostty et Zen Browser sont donc
+prouvés **installés et configurés** — leurs fichiers rendus, leurs binaires dans
+le profil, leurs polices visibles de fontconfig — et non prouvés *démarrables*.
+Lancer trois terminaux orientés GPU et un navigateur dans une VM mesurerait
+l'empaquetage de l'amont plutôt que le câblage de STC, qui est tout ce que ces
+trois reliques apportent.
+
 ## Démarrer une vraie image — le patron « image externe »
 
-Huit des dix épreuves laissent le pilote de test synthétiser un nœud.
+Neuf des onze épreuves laissent le pilote de test synthétiser un nœud.
 `sarcophagus-kvm` ne le peut pas : la revendication de son profil **est** le
 disque, et sur un nœud synthétisé le module qemu-vm remplace `fileSystems` par le
 sien à la priorité 10 — ni le pool, ni les datasets, ni le rollback ne seraient
