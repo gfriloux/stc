@@ -65,6 +65,7 @@ test:
     nix build .#legacyPackages.x86_64-linux.provings.dreadnought -L --no-write-lock-file
     nix build .#legacyPackages.x86_64-linux.provings.sarcophagus-kvm -L --no-write-lock-file
     nix build .#legacyPackages.x86_64-linux.provings.sarcophagus-aws -L --no-write-lock-file
+    nix build .#legacyPackages.x86_64-linux.provings.enginseer -L --no-write-lock-file
     nix build .#legacyPackages.x86_64-linux.provings.gaming -L --no-write-lock-file
 
 

@@ -24,12 +24,13 @@ the `just ci` gate**: a VM test is heavy, and the CI gate stays fast and static.
 - Linux only (`x86_64-linux` / `aarch64-linux`) — the attribute is empty elsewhere.
 - Builder: `pkgs.testers.runNixOSTest`.
 
-**What `just test` now costs.** Nine provings, **twelve VM boots** — `vm` and
+**What `just test` now costs.** Ten provings, **thirteen VM boots** — `vm` and
 `gaming` carry two nodes each, and `sarcophagus-kvm` boots its single node twice —
-and the closures include KDE twice (`workstation` and `plasma`) and Steam once. On
-a cold store that is a few GiB of downloads; warm, most scripts finish in 23-30 s.
-The two sarcophagi are the outliers, because each **builds a disk image in its own
-VM before its test even starts**: `sarcophagus-kvm` then runs 66 s for its two
+and the closures include KDE twice (`workstation` and `plasma`), Steam once, and
+the enginseer toolkit's 31 named packages. On a cold store that is a few GiB of
+downloads; warm, most scripts finish in 23-30 s, `enginseer` in 25 s. The two
+sarcophagi are the outliers, because each **builds a disk image in its own VM
+before its test even starts**: `sarcophagus-kvm` then runs 66 s for its two
 boots, and `sarcophagus-aws` 32 s for its one.
 This is said out loud because the discipline that matters is running
 `just test` before closing a branch that touched a cogitator: a recipe too heavy
@@ -60,12 +61,16 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `gaming` | `cogitator-gaming` | Steam is wired, with the udev rules that make a controller usable without root; the AMD relic's VDPAU/VAAPI driver reaches the merged driver tree; the Pipewire relic's three claims (rtkit, the 32-bit ALSA bridge, PulseAudio compat) are in place; Steam Remote Play is closed by default and, on a second node, opens both its UDP range and its TCP ports |
 | `sarcophagus-kvm` | `cogitator-sarcophagus-kvm` | Boots the qcow2 image the profile exists to build, twice on the same disk: the ZFS datasets the profile declares are what is actually mounted (`vmpool/root`, `vmpool/nix`, `vmpool/persist`), the relic creates the `@blank` reference the image builder does not ship, the initrd rollback runs and *succeeds*, and across a reboot a witness on the root dataset is gone while witnesses in `/persist` and under the cogitator's own `impermanence.extraDirectories` survive — with the SSH host key fingerprint unchanged, and the relic's failure reporting completely quiet on this healthy path |
 | `sarcophagus-aws` | `cogitator-sarcophagus-aws` | Boots the raw AMI image the profile exists to build, on a disk **larger than the image**: the ZFS pool actually grows to fill the volume under it (`stc-grow-pool` completes *and* `zpool list` clears the image's own size), the profile's datasets are what is mounted, `/boot` is a plain FAT ESP whose label resolves to the mounted device, the two discriminating AWS kernel parameters are live, `xen_fbfront` is blacklisted, the EC2 udev rules are installed, and both instance classes' network drivers are requested — with the Xen one failing to insert on this bench *without failing the boot*, which is what lets one image serve Nitro and Xen |
+| `enginseer` | `cogitator-enginseer` (Home Manager) | Activates the profile for a test user inside a VM and asserts its runtime claims: the three aliases it declares resolve in a shell that really started (not the four `programs.lsd` also renders), `oh-my-posh` initialises from the theme the cogitator ships, `git` itself selects `delta` as its diff pager with delta's `interactive.diffFilter` in place, direnv is hooked into fish with nix-direnv and silenced, `FZF_CTRL_R_COMMAND` is set and empty so Ctrl-R belongs to atuin, `~/.ssh/config` carries multiplexing *without* Home Manager's legacy default block, gpg-agent's `pinentry-program` is the headless `pinentry-curses`, and the declared catppuccin flavour reaches bat's theme |
 | `dreadnought` | `cogitator-dreadnought` | Five relics composed on one host come up, with exactly one loaded unit failing for want of a pool; ZFS support is functional on the booted kernel; the two discriminating AWS kernel parameters reach `/proc/cmdline`; the pool-growth script carries the profile's `poolName`, `ebsDisk` and `ebsPartition`; the ZFS scrub timer carries `scrubInterval`; explicit persistence is bind-mounted, including an entry set through the cogitator's own option; the hardening suite survives the composition; the impermanence rollback ran in the initrd and failed as expected, and that failure is legible from the booted system through `stc-impermanence-state.service` rather than only from an initrd journal |
 
 ## Adding a proving
 
 1. Create `provings/<name>.nix` — a function `{self}: { name; nodes; testScript; }`.
    The node imports the real flake module via `self.nixosModules.cogitator-<name>`.
+   A Home Manager cogitator takes `{self, inputs}` instead, because its node has
+   to import Home Manager's NixOS module out of an input — see *Proving a Home
+   Manager cogitator* below. The two signatures coexist on purpose.
 2. Wire it in `provings/default.nix` under `legacyPackages.provings.<name>`.
 3. **Add it to the `test` recipe in the `Justfile`.** A proving registered in
    `provings/default.nix` but absent from the recipe never runs, and a green
@@ -108,9 +113,95 @@ closure is evaluated with `allowUnfree = true` — so if a relic composed into
 proving accepts it silently where every other proving would fail the evaluation.
 The instance buys per-output scoping, not per-package scoping.
 
+## Proving a Home Manager cogitator
+
+`cogitator-enginseer` is a Home Manager profile, not a NixOS one, and
+[#50](https://github.com/gfriloux/stc/issues/50) deliberately left the mechanism
+open — *"doesn't need to be `runNixOSTest` if that's the wrong tool for a HM-only
+module"*. It is the right tool, and the reason is worth stating because the
+cheaper option is tempting.
+
+**Why not build `home.activationPackage`?** Because that proves the configuration
+*evaluates and builds*, which `nix flake check` and the Purity Seals already
+prove. A proving that reduced to a `nix build` would add nothing to the gate while
+carrying the name of a proving. And enginseer's claims are runtime claims: an
+alias that resolves in a shell that actually started, `delta` being the pager
+`git` itself selects, the session variable that hands Ctrl-R to atuin. None of
+that is visible in a `drvPath`.
+
+So the node imports `inputs.home-manager.nixosModules.home-manager` and attaches
+the cogitator to a test user through `home-manager.users.<u>.imports`. Activation
+then becomes an ordinary systemd unit of the node — measured,
+`home-manager-<u>.service` — and `wait_for_unit` applies like anywhere else. This
+is also why this proving takes `inputs` where the other nine take only `self`,
+as will any future Home Manager proving: `self.homeModules.*` alone cannot
+attach a home configuration to a node.
+
+**Four bench concessions**, in the same spirit as the external-image pattern's
+five. None is a recommendation for how to wire a consumer:
+
+| Option | Why |
+|---|---|
+| `users.users.<u>.shell = pkgs.fish` | Home Manager does not set the login shell — measured. Without it there is no fish to start, so the login-shell half of the profile could not be observed |
+| `programs.fish.enable = true` | Forced by an upstream assertion once a user's login shell is fish: otherwise fish "[lacks] the basic nix directories in its PATH and might make logging in as that user impossible". Satisfied rather than suppressed with `ignoreShellProgramCheck`, because this proving does log in |
+| `home-manager.useGlobalPkgs = true` | HM uses the node's `pkgs` instead of importing its own nixpkgs. Keeps one instance at evaluation — and keeps the unfree note above true for Home Manager provings too, which a second instance would quietly falsify |
+| `home-manager.useUserPackages = true` | Packages land in `users.users.<u>.packages`, hence under `/etc/profiles/per-user/<u>`, a deterministic path — which is what will make the zen-browser assertion writable for the desktop profile, whose relic renders no file of its own. Measured, and narrower than it looks: `useUserPackages` moves the activation `drvPath`, while `useGlobalPkgs` alone is byte-identical to the default — so only the first is a closure change, and the second earns its place by removing a second nixpkgs instance |
+
+Measured and worth saying: **neither Home Manager cogitator needs the unfree
+instance.** `gaming` remains the only unfree proving in the suite.
+
+### What measuring first disqualified
+
+The reference node here is one carrying Home Manager and the test user but **no
+STC cogitator**. On it, HM renders exactly five files
+(`environment.d/10-home-manager.conf`, three `fontconfig/conf.d/*`,
+`systemd/user/tray.target`) plus two `.keep` stubs, and both
+`programs.fish.enable` and `services.gpg-agent.enable` are `false`. Five
+candidate assertions were corrected or dropped against it, each of which would
+otherwise have proved nothing:
+
+- **Six of the nine fish aliases are not STC's.** `ls`, `ll`, `la`, `lt`,
+  `lla` and `llt` come from Home Manager's `programs.lsd` module — and worse,
+  NixOS' `environment.shellAliases` *itself* defaults to `{l, ll, ls}`, so
+  asserting `ll` would have been green with no cogitator at all. Only
+  `cat → bat`, `cp → xcp` and `ping → prettyping` come from this profile.
+- **`delta` is not wired through `core.pager`.** The integration is
+  `[pager] diff/log/show/blame` plus `interactive.diffFilter` — `[delta]` itself
+  carries only `features`. `core.pager` is unset, so a check on it would not
+  have been a false green but a hard red: `git config --get` exits 1.
+- **`programs.direnv.silent` writes no "silent" anywhere.** It renders a
+  `[global]` section with `log_filter = "^$"`.
+- **`programs.fzf.historyWidget.command = ""` does not change `config.fish`.**
+  Measured against the counterfactual, the only difference between the two
+  rendered files is a store path: the setting travels through
+  `hm-session-vars.fish` as `FZF_CTRL_R_COMMAND`. Measured both ways: the
+  cogitator renders it **set and empty**, and the option's own default (`null`)
+  renders no such variable at all — which is what makes "set and empty" a
+  distinguishable state rather than a tautology.
+- **The pinentry choice is not in the systemd unit.** It lands in
+  `~/.gnupg/gpg-agent.conf` as a `pinentry-program` line; the rendered unit says
+  nothing about it.
+
+One assertion needed a **counterfactual** to be assertable at all.
+`programs.ssh.enableDefaultConfig = false` is a claim about what is *absent*:
+turning it back on adds `AddKeysToAgent`, `Compression`, `ForwardAgent`,
+`HashKnownHosts`, `ServerAliveCountMax`, `ServerAliveInterval` and
+`UserKnownHostsFile`. So the absence of those tells the two cases apart, where the
+presence of `ControlMaster` does not.
+
+### Scope limit — configuration, not a live agent
+
+The proving does not assert that `gpg-agent` is *running*. It is a user unit and
+would need a live user session; what the cogitator decides is which pinentry the
+agent carries, and that is readable in the rendered configuration. The running
+agent is upstream's.
+
+Also not asserted: the mere presence of packages on `PATH`. A list of packages
+proves that a list of packages was written.
+
 ## Booting a real image — the external-image pattern
 
-Seven of the eight provings let the test driver synthesise a node. `sarcophagus-kvm`
+Eight of the ten provings let the test driver synthesise a node. `sarcophagus-kvm`
 cannot: its profile's claim *is* the disk, and on a synthesised node the qemu-vm
 module replaces `fileSystems` with its own set at priority 10 — so neither the
 pool, nor the datasets, nor the rollback would be observable.
