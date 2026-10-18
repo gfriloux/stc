@@ -253,3 +253,129 @@ Consignés maintenant. `nix develop .#docs --command just docs-build` : vert,
 Rien dans cette revue ne s'est avéré faux. Les dix affirmations amont qu'elle
 avançait ont été vérifiées, quatre par moi avec la commande, les six autres déjà
 mesurées pendant le chantier.
+
+---
+
+## Chantier 3 (#50) — pre-flight exécuté le 2026-10-18
+
+Branche `test/proving-home-desktop`, ouverte sur `main` après merge de la PR #93.
+
+**Méthode changée, et c'est la revue du chantier 2 qui l'a enseignée.** Au lieu
+de mesurer les options une par une, j'ai **bâti le nœud de référence d'abord**
+(Home Manager + le même utilisateur `proving`, sans aucun cogitator STC) et
+éprouvé chaque candidat contre lui. C'est strictement mieux : c'est ce que le
+relecteur avait fait et qui lui a permis de certifier les neuf subtests d'un
+coup.
+
+**Ce que le nœud de référence rend** : les mêmes cinq fichiers qu'au chantier 2
+plus les deux `.keep`, et `users.users.proving.packages` ne contient qu'un
+`home-manager-path` — Home Manager agrège tout dans une seule dérivation.
+**Conséquence immédiate** : l'assert zen-browser doit viser un **binaire** dans
+le profil, pas un nom de paquet comme le plan le laissait entendre.
+
+**Ce que `desktop` seul ajoute** (donc ce qui discrimine) :
+`kitty/kitty.conf`, `systemd/user/app-com.mitchellh.ghostty.service` et son
+`.d/overrides.conf`, et `.local/share/dbus-1/services`.
+
+### Deux prémisses du plan corrigées par la mesure
+
+1. **Le binaire de zen-browser s'appelle `zen-beta`, pas `zen`.** Le cogitator
+   importe `inputs.zen-browser.homeModules.beta`. Mesuré en listant le `bin/` du
+   `home-manager-path` construit. Asserter `zen` aurait été rouge.
+2. **Les polices Nerd de la relique kitty** atterrissent sous
+   `share/fonts/truetype/NerdFonts/{JetBrainsMono,Inconsolata,Iosevka,BitstromWera,…}`.
+   C'est **la seule option propre à STC des trois reliques** (`kitty.fonts.enable`,
+   défaut `true`) — les deux autres ne font que poser `programs.<x>.enable = true`.
+   Elle méritait d'être relevée : activer le cogitator installe sept paquets de
+   polices, ce qui est du poids de clôture que le consommateur doit connaître.
+
+### Ruling — l'assert « inerte » quitte la VM
+
+La décision 4 du plan prévoyait, sur le nœud `desktop` seul, un assert
+« **aucune** unité `gpg-agent` utilisateur » pour prouver le mot « inert » du
+commentaire de `cogitator/home/desktop.nix`.
+
+**Mesuré : ça ne discrimine pas.** Le nœud de référence n'a pas d'unité
+`gpg-agent` non plus (`services.gpg-agent.enable = false` sans aucun cogitator).
+L'assert serait vert quoi que fasse STC — exactement la classe que la méthode dit
+de supprimer plutôt que d'affaiblir.
+
+L'inertie est une propriété d'**évaluation**, pas de runtime : `desktop` seul pose
+`services.gpg-agent.pinentry.package = pinentry-qt` (mesuré) alors que
+`services.gpg-agent.enable` vaut `false`, donc rien ne la consomme et aucun
+`gpg-agent.conf` n'est rendu. La lire depuis la VM demanderait d'interpoler la
+valeur de l'option depuis la *même* évaluation — une tautologie.
+
+**Donc : assert retiré de la VM, fait consigné ici et en doc.** Même traitement
+que le cas négatif de `docker-server` (« a negative case cannot live in a
+nixosTest, verify by `nix eval` ») et que `boot.zfs.devNodes` au chantier 1.
+
+### Les deux nœuds sont gardés, et chacun gagne son boot
+
+- **`desktop`** — les trois reliques **en isolation** : `kitty.conf`, l'unité
+  ghostty et son `overrides.conf`, les binaires `zen-beta`/`gimp`/`vlc` dans
+  `/etc/profiles/per-user/proving/bin`, et les polices Nerd. Isolé d'enginseer à
+  dessein : une épreuve nommée `home-desktop` qui rougirait à cause d'enginseer
+  serait un mauvais diagnostic.
+- **`composed`** — desktop **+** enginseer, pour la seule revendication croisée :
+  le `mkForce pinentry-qt` de desktop gagne contre le `mkDefault pinentry-curses`
+  d'enginseer. Lu dans `~/.gnupg/gpg-agent.conf` — **et non dans l'unité
+  systemd**, prémisse du plan déjà corrigée au chantier 2.
+
+Le nœud `composed` reproduit le nœud du chantier 2 au détail près (utilisateur
+`proving`, `stateVersion` 25.11, `useGlobalPkgs`/`useUserPackages`, fish système),
+sinon la comparaison avec le `pinentry-curses` mesuré là-bas ne vaudrait rien.
+Le nœud `desktop` seul **ne pose pas** fish : le profil ne revendique aucun shell,
+et poser fish y entraînerait l'assertion amont de `programs.fish.enable` pour rien.
+
+## Step 3 (#50) — l'épreuve home-desktop et son enregistrement
+
+Un seul commit pour les trois fichiers, même ruling qu'aux deux chantiers
+précédents.
+
+Le mécanisme acquis au chantier 2 a tenu sans un seul ajustement. **Un seul tour
+de banc rouge**, contre six au chantier précédent — l'écart vient directement de
+la méthode changée : bâtir le nœud de référence d'abord, puis éprouver chaque
+candidat contre lui.
+
+**Le tour rouge, et ce qu'il a appris :** l'assert des polices visait
+`/etc/profiles/per-user/proving/share/fonts/truetype/NerdFonts/JetBrainsMono`,
+chemin que j'avais relevé sur le `home-manager-path` construit. Rouge. Cause lue
+avant correctif : `environment.pathsToLink` **ne contient aucune entrée
+`/share/fonts`**, donc le profil par utilisateur ne lie jamais les polices — j'avais
+mesuré la bonne dérivation et conclu sur la mauvaise. Les polices sont dans le
+`home-manager-path`, et c'est
+`~/.config/fontconfig/conf.d/10-hm-fonts.conf` qui le désigne (lu : il liste le
+`share/fonts` de cette dérivation **et** celui du profil par utilisateur, ce
+dernier vide).
+
+L'assert est devenu **meilleur** que celui que j'avais prévu, pas juste
+réparé : `su - proving -c 'fc-list : family'` doit montrer
+`JetBrainsMono Nerd Font` et `Iosevka Nerd Font`. C'est la question de
+comportement — *la session trouve-t-elle ces polices* — qui est à la fois la
+bonne et la seule à avoir une réponse vraie. Et elle couvre toute la chaîne
+relique → fontconfig → session.
+
+Huit subtests verts sur deux nœuds, script en **23,04 s**.
+
+Écart au plan consigné : le nœud `desktop` seul **ne pose pas** fish là où le
+nœud `composed` le pose. Raison : le profil desktop ne revendique aucun shell, et
+poser fish y déclencherait l'assertion amont de `programs.fish.enable` pour rien.
+Le nœud `composed`, lui, reproduit le nœud du chantier 2 au détail près — sinon
+la comparaison de son pinentry avec le `pinentry-curses` mesuré là-bas ne
+vaudrait rien. Les concessions de banc partagées sont factorisées dans un `let`
+pour que les deux nœuds ne puissent pas dériver.
+
+## Step 4 (#50) — la doc EN + FR
+
+Ligne de table de couverture ; paragraphe de coût (dix/treize →
+**onze/quinze**, `home-desktop` nommée comme troisième épreuve à deux nœuds, et
+GIMP/VLC/Zen Browser ajoutés aux clôtures citées) ; une sous-section
+« Deux nœuds, et la revendication qui réclamait un contre-factuel impossible »
+qui porte le ruling sur l'assert « inerte », le `zen-beta` et l'histoire des
+polices ; et deux comptes remis à jour que l'ajout déplaçait — « les deux
+épreuves Home Manager » (il y en a deux maintenant, la formulation du chantier 2
+disait « cette épreuve ») et « dix des onze épreuves laissent le pilote
+synthétiser un nœud ».
+
+`just docs-parity` vert.
