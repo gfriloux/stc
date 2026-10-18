@@ -61,3 +61,62 @@ Step 1: minor (deferred, not fixed): `relics/nixos/plasma6.nix` claims in a
 comment that "the GTK portal provides a fallback for non-KDE applications" while
 `xdg.portal.extraPortals = []` installs no such portal. A false statement in a
 comment, unrelated to priority — recorded in the triage, worth its own issue.
+
+Step 2: Ruling: innocuousness is measured on **14 witnesses**, not the 3 the plan
+names. The three schematics do not import `enginseer`, `desktop`, `plasma`,
+`gaming` or `vm`, so for those files a schematic `drvPath` proves nothing. The
+battery is the 3 schematics plus the 11 provings, recorded before and after the
+whole set of edits. Result: **14/14 byte-identical** — cost if wrong: none, this
+is strictly more coverage than the plan asked for.
+
+Step 2: Ruling: `relics/nixos/zfs.nix` and `relics/nixos/boot.nix` share one
+commit instead of one each, against the plan's "one commit per file". Both are
+single-line relic defaults with the same argument (a safe default a consumer
+could not express otherwise) and separate commits would have been noise — cost if
+wrong: a slightly coarser revert.
+
+Step 2: Two of my first usefulness witnesses did not discriminate, and I nearly
+recorded them as proof: `services.pipewire.enable` and
+`hardware.graphics.enable32Bit` stay true with the relic declined, because
+nixpkgs' plasma6 module and `programs.steam` set them on their own. Replaced with
+the STC option itself plus `security.rtkit.enable`, which only the Pipewire relic
+writes — measured true on the baseline and false with the relic declined. This is
+the repository's named error profile repeating.
+
+Step 2: complete — 45 demotions across 18 files, 17 commits (798c1d6..HEAD).
+Usefulness proved per class with *plain* definitions: pipewire off under plasma,
+amdGpu off under gaming, scheduler off under the hardening suite,
+AllowAgentForwarding on, canTouchEfiVariables off, kitty off under desktop, and
+five Home Manager settings. Best control of the lot: with no CrowdSec image
+supplied, declining the relic evaluates while *not* declining it fails on
+"crowdsec.enable is true but no image is set" — so the fix is exactly what the
+triage claimed.
+
+Step 3: complete — `provings/plasma.nix` gains a second node carrying a plain
+`stc.relics.pipewire.enable = false`. The plainness is the proof: that node could
+not have been built before this chantier. Assertions chosen to discriminate
+(rtkit absent, no `libs.32Bit` in the ALSA config, session untouched) because the
+Pipewire units themselves come from nixpkgs' plasma6 module. The VM log is the
+nicest evidence: `pipewire: mod.rt: RTKit error: ServiceUnknown` — Pipewire runs,
+STC's relic is gone.
+
+Step 3: `just test` green, exit 0. Honest note: only the plasma proving actually
+re-ran; the other ten were cache hits, which is exactly what the witness identity
+predicted — unchanged `drvPath` means unchanged test.
+
+Step 4: Ruling: the per-option documentation is **one reference page plus four
+targeted call-outs**, not a paragraph appended to all sixteen affected pages. The
+plan asked for "per demoted option, on the relic's own page" — sixteen pages × two
+languages of near-identical boilerplate would age into drift, and the sidebar
+autogenerates the reference section so the page is discoverable. The call-outs go
+where the demotion changes what a reader can *do*: the hardening cogitator (six
+sub-relics), docker-server (the image trap), desktop (one terminal instead of
+two), and the hardening relics (the three sshd switches plus coredumps).
+Enginseer keeps its own detailed treatment because its documentation was false.
+Cost if wrong: a reader of, say, the zfs relic page finds the escape hatch one
+link away instead of in place.
+
+Step 4: complete — `docs/{en,fr}/reference/overridable-defaults.md` carries the
+rule, the full list of what became overridable with the version, **and what stays
+pinned with its reason** (the second half matters more: it is what keeps the page
+from reading as a backlog). `just ci` green, docs build 92 pages.
