@@ -199,3 +199,48 @@ le chemin de recherche des clés autorisées à `/etc/ssh/authorized_keys.d/%u`)
 guide ANSSI distinct, *Recommandations pour un usage sécurisé d'(Open)SSH*. Elle
 figure ici uniquement pour expliciter la frontière — aucune référence `Rxx` n'est
 inventée pour elle.
+
+## Pourquoi `relics.hardening.sudo` n'existe pas
+
+CIS ~5.3.x demande `Defaults use_pty` et un `logfile` sudo dédié. Ni l'un ni
+l'autre ne devient une relique. Le motif est une mesure et non une préférence, et
+il est consigné ici pour que l'écart ne soit pas resoulevé comme un constat.
+
+| Point CIS 5.3.x | État mesuré sur NixOS | Source |
+|---|---|---|
+| `Defaults use_pty` | Déjà le défaut | sudo l'active par défaut depuis la **1.9.14** — `NEWS` : *« The `use_pty` sudoers option is now enabled by default. To restore the historic behavior … add `Defaults !use_pty` »*. nixpkgs empaquette la **1.9.17p2** |
+| `Defaults use_pty` sous sudo-rs | Déjà le défaut | `sudoers(5)` de sudo-rs 0.2.14, entrée `use_pty` : *« This flag is on by default »* |
+| nixpkgs qui le désactiverait | Jamais | `grep -rn "use_pty"` sur l'arbre `nixos/` de nixpkgs ne renvoie rien |
+| `logfile` dédié | Absent, et écarté | sudo journalise déjà chaque appel dans `authpriv`, que journald collecte : `journalctl -t sudo` donne `TTY=`, `PWD=`, `USER=` et `COMMAND=` pour chaque invocation |
+| `logfile` dédié sous sudo-rs | Inexprimable | `sudoers(5)` de sudo-rs : *« sudo-rs logs events via syslog(3) »* — l'implémentation n'a aucun réglage `logfile` |
+
+Une relique qui écrirait `Defaults use_pty` ne changerait donc **aucun**
+comportement sur un hôte que STC sait construire. Elle se lirait comme du
+durcissement — dans la configuration du consommateur comme dans cette matrice —
+sans rien faire, ce qui est précisément le mode de défaillance que cette page
+existe pour éviter. Le seul hôte où le réglage mordrait est celui épinglé sur un
+sudo antérieur à la 1.9.14, et cet épinglage relève du choix du consommateur, pas
+d'une relique qui le masquerait.
+
+Le volet `logfile` est une absence réelle, et il est tout de même écarté. Le
+journal est déjà borné par la rétention `services.journald` ; un
+`/var/log/sudo.log` n'est rotaté par rien sur NixOS et grossit jusqu'à remplir le
+disque. L'imputabilité que le contrôle réclame est déjà rendue par les entrées de
+journal ci-dessus : une seconde copie non bornée n'apporte rien et coûte son
+disque à un serveur.
+
+Le consommateur qui doit satisfaire le contrôle à la lettre peut toujours le faire
+hôte par hôte, sans STC :
+
+```nix
+security.sudo.extraConfig = "Defaults logfile=/var/log/sudo.log";
+```
+
+À noter : `security.sudo.extraConfig` est une option de type `lines`, donc les
+définitions de plusieurs modules se concatènent, et pour un réglage donné c'est la
+dernière ligne `Defaults` lue par sudo qui s'applique. Cet ordre est la seconde
+raison pour laquelle cela n'a pas sa place dans une relique — une relique ne peut
+pas promettre que sa ligne gagne.
+
+Suivi dans l'[issue #37](https://github.com/gfriloux/stc/issues/37), fermée sur
+cette mesure.

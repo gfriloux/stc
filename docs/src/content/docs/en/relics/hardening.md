@@ -323,6 +323,16 @@ of declaring the allowlist here, but it will silently replace an allowlist
 maintained by hand.
 :::
 
+## Not a relic: sudo
+
+There is no `relics.hardening.sudo`, and the absence is deliberate. The two
+settings usually asked for — `Defaults use_pty` and a dedicated sudo logfile —
+are respectively already the upstream default (sudo ≥ 1.9.14, and always under
+sudo-rs) and a worse deal than the journal sudo already writes to. The full
+measurement and the escape hatch for a consumer who must satisfy the control
+literally are in
+[ANSSI-BP-028 fidelity](/stc/en/reference/anssi-bp-028/).
+
 ## Usage Example
 
 Individual relics:
