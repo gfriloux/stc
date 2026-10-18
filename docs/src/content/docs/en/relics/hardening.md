@@ -393,3 +393,25 @@ modules = [ stc.nixosModules.cogitator-hardening ];
 The cogitator does not prevent you from tuning individual options afterward —
 `stc.relics.hardening.filesystem.tmpSize` and `stc.relics.hardening.ssh.allowedTCPForwarding`
 remain configurable.
+
+## Operational escapes added in v0.18.0
+
+Four values these relics used to pin are now `lib.mkDefault`, because declining
+them is operational rather than a change of threat model:
+
+```nix
+# Forward a remote GUI app, or hop through a bastion with your agent.
+services.openssh.settings.X11Forwarding = true;
+services.openssh.settings.AllowAgentForwarding = true;
+services.openssh.settings.PermitTunnel = "yes";
+
+# Get core dumps back for one debugging session. The PAM resource limit this
+# relic also sets stays in place, so this does not silently undo the hardening.
+systemd.coredump.enable = true;
+```
+
+What stays pinned is the relic's actual claim: `PasswordAuthentication = false`,
+`KbdInteractiveAuthentication = false` and `PubkeyAuthentication = true`.
+Demoting those would let a host documented as hardened quietly accept passwords
+again, so contradicting them still stops your build. Full rule in
+[Overridable defaults](/stc/en/reference/overridable-defaults/).

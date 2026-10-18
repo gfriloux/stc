@@ -77,3 +77,17 @@ The Desktop profile imports `inputs.zen-browser.homeModules.beta` automatically.
 The upstream `zen-browser` flake is bundled as an STC input — you do not need to
 add it yourself. If you already have it, there is no conflict.
 :::
+
+## Keeping one terminal instead of two
+
+The profile ships both kitty and ghostty. Since `v0.18.0` the three GUI relics
+are enabled with `lib.mkDefault`, so you can take the profile and keep only the
+terminal you use:
+
+```nix
+stc.cogitator.desktop.enable = true;
+stc.relics.gui.kitty.enable = false;   # ghostty only
+```
+
+Before `v0.18.0` this needed `lib.mkForce`. See
+[Overridable defaults](/stc/en/reference/overridable-defaults/).

@@ -406,3 +406,28 @@ modules = [ stc.nixosModules.cogitator-hardening ];
 Le cogitator ne t'empêche pas de régler les options individuelles ensuite —
 `stc.relics.hardening.filesystem.tmpSize` et `stc.relics.hardening.ssh.allowedTCPForwarding`
 restent configurables.
+
+## Échappatoires opérationnelles ajoutées en v0.18.0
+
+Quatre valeurs que ces reliques épinglaient valent désormais `lib.mkDefault`,
+parce que les décliner relève de l'exploitation et non d'un changement de modèle
+de menace :
+
+```nix
+# Relayer une application graphique distante, ou rebondir par un bastion avec son agent.
+services.openssh.settings.X11Forwarding = true;
+services.openssh.settings.AllowAgentForwarding = true;
+services.openssh.settings.PermitTunnel = "yes";
+
+# Récupérer les core dumps le temps d'un débogage. La limite de ressources PAM
+# que cette relique pose aussi reste en place, donc ça ne défait pas le
+# durcissement en silence.
+systemd.coredump.enable = true;
+```
+
+Ce qui reste épinglé est la revendication réelle de la relique :
+`PasswordAuthentication = false`, `KbdInteractiveAuthentication = false` et
+`PubkeyAuthentication = true`. Les démoter laisserait un hôte documenté comme
+durci accepter de nouveau les mots de passe sans bruit : les contredire arrête
+donc toujours ton build. Règle complète dans
+[Valeurs par défaut surchargeables](/stc/fr/reference/overridable-defaults/).
