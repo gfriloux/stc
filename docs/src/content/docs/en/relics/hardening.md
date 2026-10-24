@@ -33,7 +33,9 @@ never the `WARNING: ... at <file>:<line>` traces that a benign driver quirk
 emits. Check `cat /proc/sys/kernel/tainted` on the host: if bit 7 (`128`) never
 lights up under your workload, no oops has occurred and the setting costs you
 nothing. Keep a frozen machine for post-mortem instead of rebooting with
-`boot.kernel.sysctl."kernel.panic" = lib.mkForce 0;`. Full reasoning in
+`boot.kernel.sysctl."kernel.panic" = lib.mkForce 0;` — and on a server profile,
+also `stc.relics.serverSurvivability.panicReboot = false;`, whose `panic=30` on
+the command line covers the boot before the sysctl applies. Full reasoning in
 [ANSSI-BP-028 fidelity](/stc/en/reference/anssi-bp-028/).
 :::
 

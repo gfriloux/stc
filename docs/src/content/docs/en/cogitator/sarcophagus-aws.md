@@ -24,6 +24,7 @@ Instances deployed from this AMI are intended to be managed with
 | `relics-impermanence` | Root rollback to `@blank` on every boot |
 | `relics-aws` | NVMe/ENA drivers, NTP, serial console, EBS pool expansion |
 | `cogitator-hardening` | Kernel + network + filesystem + SSH hardening |
+| `relics-server-survivability` | No emergency shell, reboot on panic, hardware watchdog, bounded `/boot`, no suspend (`mkDefault`) |
 | Disk layout | GPT on `/dev/vda` — BIOS/GRUB: bios_grub + ESP(`/boot`) + ZFS pool (3 partitions) |
 | GRUB override | BIOS/GRUB required by `make-single-disk-zfs-image.nix` |
 | `system.build.awsImage` | Raw image builder |
@@ -129,6 +130,7 @@ the ZFS pool to the full EBS volume size.
 
 ## See Also
 
+- [Server Survivability](/stc/en/relics/server-survivability/) — what this profile does instead of waiting for a console
 - [aws-ami schematic](/stc/en/schematics/aws-ami/) — ready-to-use example built on this cogitator
 - [cogitator-dreadnought](/stc/en/cogitator/dreadnought/) — profile for instances deployed from this AMI
 - [relics-aws](/stc/en/relics/aws/) — the AWS platform relic

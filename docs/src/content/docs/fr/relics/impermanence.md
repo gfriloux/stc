@@ -92,6 +92,12 @@ voulu. Mais quelqu'un devant une console qui appuie sur Entrée reprend le boot,
 avec la racine sale. Lisez `emergency` comme « un humain doit trancher », pas
 comme « cet hôte ne peut pas démarrer ».
 
+Sur les quatre profils serveur,
+[Survie des serveurs](/stc/fr/relics/server-survivability/) met
+`boot.panic_on_fail` sur la ligne de commande, ce qui transforme cet arrêt en
+boucle de reboot. La combinaison est refusée au build. Posez
+`stc.relics.serverSurvivability.panicReboot = false;` avec `emergency`.
+
 ## Si `@blank` disparaît
 
 Le snapshot est créé automatiquement quand il est absent, parce que rien d'autre

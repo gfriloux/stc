@@ -19,6 +19,7 @@ the disk layout and image builder — no external `disko` import required.
 | `relics-networking` | DHCP, Quad9 DNS |
 | `relics-impermanence` | Root rollback to `@blank` on every boot |
 | `cogitator-hardening` | Kernel + network + filesystem + SSH hardening |
+| `relics-server-survivability` | No emergency shell, reboot on panic, hardware watchdog, bounded `/boot`, no suspend (`mkDefault`) |
 | Disk layout | GPT on `/dev/vda` — BIOS/GRUB: bios_grub + ESP(`/boot`) + ZFS pool (3 partitions) |
 | GRUB override | BIOS/GRUB required by `make-single-disk-zfs-image.nix` |
 | `system.build.qcow2` | qcow2 image builder |
@@ -111,6 +112,7 @@ and fail to boot under BIOS/GRUB.
 
 ## See Also
 
+- [Server Survivability](/stc/en/relics/server-survivability/) — what this profile does instead of waiting for a console
 - [local-vm schematic](/stc/en/schematics/local-vm/) — ready-to-use example built on this cogitator
 - [relics-impermanence](/stc/en/relics/impermanence/) — how the root rollback works
 - [cogitator-hardening](/stc/en/cogitator/hardening/) — the hardening suite this composes

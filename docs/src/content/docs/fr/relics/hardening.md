@@ -34,7 +34,10 @@ bénin de pilote. Vérifie `cat /proc/sys/kernel/tainted` sur l'hôte : si le bi
 (`128`) ne s'allume jamais sous ta charge de travail, aucun oops n'a eu lieu et
 le réglage ne te coûte rien. Pour garder une machine figée en vue d'un
 post-mortem plutôt que de redémarrer :
-`boot.kernel.sysctl."kernel.panic" = lib.mkForce 0;`. Raisonnement complet dans
+`boot.kernel.sysctl."kernel.panic" = lib.mkForce 0;` — et sur un profil serveur,
+aussi `stc.relics.serverSurvivability.panicReboot = false;`, dont le `panic=30`
+sur la ligne de commande couvre le boot avant que le sysctl s'applique.
+Raisonnement complet dans
 [Fidélité ANSSI-BP-028](/stc/fr/reference/anssi-bp-028/).
 :::
 

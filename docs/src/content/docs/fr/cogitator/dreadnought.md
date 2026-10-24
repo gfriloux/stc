@@ -30,6 +30,7 @@ etc.) pour construire le profil de services dont tu as besoin.
 | `relics-impermanence` | Rollback du root vers `@blank` à chaque démarrage |
 | `relics-aws` | Pilotes NVMe/ENA, NTP, console série, expansion pool EBS |
 | `cogitator-hardening` | Durcissement noyau + réseau + système de fichiers + SSH |
+| `relics-server-survivability` | Pas de shell d'urgence, reboot sur panique, watchdog matériel, `/boot` borné, pas de veille (`mkDefault`) |
 
 `impermanence.nixosModules.impermanence` est injecté automatiquement.
 
@@ -109,6 +110,7 @@ par le cogitator et n'ont pas besoin d'être répétés.
 
 ## Voir aussi
 
+- [Survie des serveurs](/stc/fr/relics/server-survivability/) — ce que fait ce profil plutôt que d'attendre une console
 - [cogitator-sarcophagus-aws](/stc/fr/cogitator/sarcophagus-aws/) — construit l'AMI sur laquelle ce profil s'exécute
 - [relics-aws](/stc/fr/relics/aws/) — la relique de plateforme AWS
 - [relics-impermanence](/stc/fr/relics/impermanence/) — fonctionnement du rollback root
