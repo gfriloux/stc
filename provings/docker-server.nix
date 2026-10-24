@@ -91,6 +91,11 @@
     stc.cogitator.docker-server.enable = true;
     stc.relics.docker.crowdsec.enable = false;
 
+    # Also the counter-example for serverSurvivability: every assert on that
+    # relic below is checked red here. A plain `= false` also proves the
+    # cogitator enables it with mkDefault, as documented.
+    stc.relics.serverSurvivability.enable = false;
+
     # Everything the rest of the stack needs, and nothing for CrowdSec.
     stc.relics.docker.traefik.image = "stc-proving/traefik:placeholder";
     stc.relics.docker.socketProxy.image = "stc-proving/socket-proxy:placeholder";
@@ -242,5 +247,40 @@
         nocrowdsec.fail("systemctl cat crowdsec.service")
         nocrowdsec.succeed("systemctl cat traefik.service")
         nocrowdsec.succeed("systemctl cat docker-socket-proxy.service")
+
+    with subtest("a headless server reboots instead of waiting for a console"):
+        # Each assert is paired with nocrowdsec, which has the relic off, so none
+        # of them can pass on stock defaults. What is NOT asserted, deliberately:
+        # `panic=1` and `boot.panic_on_fail` — the test harness puts both on
+        # every test VM's cmdline — and RebootWatchdogSec, whose 10min is
+        # systemd's own default.
+        for node, on in [(machine, True), (nocrowdsec, False)]:
+            state = node.succeed(
+                "systemctl show -p LoadState --value emergency.service"
+            ).strip()
+            assert (state == "not-found") == on, f"{node.name}: emergency.service {state}"
+
+            # Presence, not effect: the harness's own panic=1 is on the same
+            # cmdline. What this proves is that STC put panic=30 there.
+            cmdline = node.succeed("cat /proc/cmdline").split()
+            assert ("panic=30" in cmdline) == on, f"{node.name}: {cmdline}"
+
+            # The q35 test machine exposes iTCO_wdt, so systemd really arms a
+            # device here; this is its own report, not our config echoed back.
+            armed = node.execute(
+                "journalctl -b -o cat _PID=1 "
+                "| grep -q 'Watchdog running with a hardware timeout of 30s'"
+            )[0] == 0
+            assert armed == on, f"{node.name}: watchdog armed={armed}"
+
+            sleep = node.succeed("systemd-analyze cat-config systemd/sleep.conf")
+            assert ("AllowSuspend=no" in sleep) == on, f"{node.name}: {sleep}"
+            assert ("AllowHibernation=no" in sleep) == on, f"{node.name}: {sleep}"
+
+        # A test VM has no bootloader to read back, so the generation cap is
+        # checked on the evaluated configs; the off node shows GRUB's default.
+        assert ${toString nodes.machine.boot.loader.grub.configurationLimit} == 5
+        assert ${toString nodes.machine.boot.loader.systemd-boot.configurationLimit} == 5
+        assert ${toString nodes.nocrowdsec.boot.loader.grub.configurationLimit} != 5
   '';
 }
