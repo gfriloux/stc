@@ -307,13 +307,14 @@ reports an empty `State.Health.Status`, so the `unhealthy` test never matches:
 the timer fires every 30 s forever without ever acting, while appearing active
 in `systemctl list-timers`. That reads as monitoring which does not exist.
 
-STC therefore emits an evaluation **warning** for every watched container whose
-healthcheck it cannot see, naming the container and both remedies.
+STC therefore fails the build with an evaluation **assertion** for every watched
+container whose healthcheck it cannot see, naming the container and both
+remedies. (Up to v0.18.x this was a warning; it was promoted in v0.19.0.)
 
 ### When the healthcheck lives in the image
 
 A `HEALTHCHECK` baked into the image works at runtime but is invisible at
-evaluation time, so it trips the warning. Record it instead of silencing the
+evaluation time, so it trips the assertion. Record it instead of silencing the
 relic:
 
 ```nix
@@ -327,7 +328,7 @@ virtualisation.oci-containers.containers.mysqldump = {
 };
 ```
 
-This label is fixed, not configurable, and it affects **only** the warning: the
+This label is fixed, not configurable, and it affects **only** the assertion: the
 container stays fully watched. Use it when the image really does declare a
 healthcheck — it is a statement of fact, not a mute button.
 

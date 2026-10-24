@@ -41,7 +41,7 @@
     stc.relics.docker.notify.notifyCommand = "true";
 
     # A watched container whose HEALTHCHECK lives in its image. The opt-out label
-    # suppresses the eval-time warning; it must NOT suppress the wiring, which is
+    # suppresses the eval-time assertion; it must NOT suppress the wiring, which is
     # what this node asserts below. It also exercises the serviceName fallback
     # (unit = docker-<name>) that traefik/crowdsec never reach, since both set
     # serviceName explicitly.
@@ -147,7 +147,7 @@
         machine.succeed("systemctl cat stc-docker-health-watch@crowdsec.timer")
         machine.fail("systemctl cat stc-docker-health-watch@docker-socket-proxy.timer")
 
-    with subtest("the health-cmd-in-image opt-out silences the warning, not the watch"):
+    with subtest("the health-cmd-in-image opt-out satisfies the assertion, not the watch"):
         # The label only tells evaluation "the healthcheck is in the image, I
         # checked". A container carrying it stays fully watched — if this ever
         # stops holding, consumers would silently lose monitoring by documenting
