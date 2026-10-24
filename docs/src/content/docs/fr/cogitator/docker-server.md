@@ -31,6 +31,7 @@ stc.relics.docker.crowdsec.enable = true;
 stc.relics.docker.notify.enable = cfg.notify.enable;  # off sauf opt-in explicite
 stc.relics.preSwitchChecks.enable = true;             # voir plus bas
 stc.relics.serverSurvivability.enable = lib.mkDefault true;  # redémarrer plutôt qu'attendre une console
+stc.relics.nixHousekeeping.enable = lib.mkDefault true;      # store et journal bornés
 
 virtualisation.docker.enable = true;
 virtualisation.docker.autoPrune.enable = lib.mkDefault false;  # voir plus bas
@@ -194,4 +195,5 @@ désormais seul ce paragraphe la pose.
 - [Valeurs par défaut surchargeables](/stc/fr/reference/overridable-defaults/) — quelles reliques de ce profil tu peux décliner
 - [Contrôles pré-switch](/stc/fr/relics/pre-switch-checks/) — le garde-fou de déploiement activé par ce profil
 - [Survie des serveurs](/stc/fr/relics/server-survivability/) — ce que fait ce profil plutôt que d'attendre une console
+- [Entretien de Nix](/stc/fr/relics/nix-housekeeping/) — comment le store et le journal restent bornés
 - [Schématic : aws-ami](/stc/fr/schematics/aws-ami/) — un exemple de production complet utilisant ce profil

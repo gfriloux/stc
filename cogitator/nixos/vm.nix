@@ -2,7 +2,7 @@
 #
 # Opinionated base for a NixOS development or staging VM:
 # fish shell, SSH, a primary user with wheel access, optional Docker,
-# and automatic Nix GC to keep store bloat under control.
+# and a bounded Nix store (stc.relics.nixHousekeeping, with a 5-day GC window).
 #
 # Compose with stc.cogitator.hardening and stc.cogitator.enginseer as needed.
 {
@@ -13,6 +13,17 @@
 }: let
   cfg = config.stc.cogitator.vm;
 in {
+  imports = [
+    ../../relics/nixos/nix-housekeeping.nix
+
+    # The GC options moved to the relic in v0.19.0 (#59). A value set on the old
+    # path is forwarded at its own priority, so it still beats the 5-day default
+    # below.
+    (lib.mkRenamedOptionModule ["stc" "cogitator" "vm" "nix" "gc" "enable"] ["stc" "relics" "nixHousekeeping" "gc" "enable"])
+    (lib.mkRenamedOptionModule ["stc" "cogitator" "vm" "nix" "gc" "dates"] ["stc" "relics" "nixHousekeeping" "gc" "dates"])
+    (lib.mkRenamedOptionModule ["stc" "cogitator" "vm" "nix" "gc" "keepDays"] ["stc" "relics" "nixHousekeeping" "gc" "keepDays"])
+  ];
+
   options.stc.cogitator.vm = {
     enable = lib.mkEnableOption "STC base VM profile";
 
@@ -55,26 +66,6 @@ in {
         '';
       };
     };
-
-    nix = {
-      gc = {
-        enable = lib.mkOption {
-          type = lib.types.bool;
-          default = true;
-          description = "Enable automatic Nix garbage collection.";
-        };
-        dates = lib.mkOption {
-          type = lib.types.str;
-          default = "weekly";
-          description = "When to run Nix GC (systemd calendar expression).";
-        };
-        keepDays = lib.mkOption {
-          type = lib.types.int;
-          default = 5;
-          description = "Delete Nix store paths older than this many days.";
-        };
-      };
-    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -82,16 +73,13 @@ in {
       "nix-command"
       "flakes"
     ];
-    # mkDefault: store optimisation costs I/O on a timer, and wanting it off is
-    # a legitimate preference that broke nothing else here. (Issue #59 wants
-    # this whole concern moved into a relic; demoting now does not conflict with
-    # that move.)
-    nix.optimise.automatic = lib.mkDefault true;
-
-    nix.gc = lib.mkIf cfg.nix.gc.enable {
-      automatic = true;
-      dates = cfg.nix.gc.dates;
-      options = "--delete-older-than ${toString cfg.nix.gc.keepDays}d";
+    # Store and journal housekeeping is the relic's concern. A development VM is
+    # throwaway: keep the 5-day GC window this profile has always had, as a
+    # default so the old stc.cogitator.vm.nix.gc.keepDays (renamed above) and
+    # the relic's own option both still win.
+    stc.relics.nixHousekeeping = {
+      enable = lib.mkDefault true;
+      gc.keepDays = lib.mkDefault 5;
     };
 
     programs.fish.enable = true;

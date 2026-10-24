@@ -62,6 +62,13 @@ merely awkward — you had to hand CrowdSec an image you never intended to run, 
 reach for `mkForce`. A gaming host on Intel or NVIDIA graphics was in the same
 position with the AMD relic.
 
+Since `v0.19.0`, the four server profiles (`docker-server`, `dreadnought`,
+`sarcophagus-{kvm,aws}`) also enable two relics with `mkDefault`, both
+declinable: `stc.relics.serverSurvivability.enable` and
+`stc.relics.nixHousekeeping.enable`. `cogitator-vm` enables the second one too;
+its `nix.optimise.automatic` row above now lives in that relic, still as a
+default.
+
 ### Relic settings
 
 | Relic | Now overridable | Why you might |

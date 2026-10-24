@@ -31,6 +31,7 @@ stc.relics.docker.crowdsec.enable = true;
 stc.relics.docker.notify.enable = cfg.notify.enable;  # off unless you opt in
 stc.relics.preSwitchChecks.enable = true;             # see below
 stc.relics.serverSurvivability.enable = lib.mkDefault true;  # reboot rather than wait for a console
+stc.relics.nixHousekeeping.enable = lib.mkDefault true;      # bounded store and journal
 
 virtualisation.docker.enable = true;
 virtualisation.docker.autoPrune.enable = lib.mkDefault false;  # see below
@@ -189,4 +190,5 @@ only this paragraph does.
 - [Overridable defaults](/stc/en/reference/overridable-defaults/) — which of this profile's relics you can decline
 - [Pre-Switch Checks](/stc/en/relics/pre-switch-checks/) — the deploy guard this profile enables
 - [Server Survivability](/stc/en/relics/server-survivability/) — what this profile does instead of waiting for a console
+- [Nix Housekeeping](/stc/en/relics/nix-housekeeping/) — how the store and the journal stay bounded
 - [Schematic: aws-ami](/stc/en/schematics/aws-ami/) — a complete production example using this profile

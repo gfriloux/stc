@@ -31,6 +31,7 @@ to build the service profile you need.
 | `relics-aws` | NVMe/ENA drivers, NTP, serial console, EBS pool expansion |
 | `cogitator-hardening` | Kernel + network + filesystem + SSH hardening |
 | `relics-server-survivability` | No emergency shell, reboot on panic, hardware watchdog, bounded `/boot`, no suspend (`mkDefault`) |
+| `relics-nix-housekeeping` | Scheduled GC, GC under disk pressure, weekly dedup, builds that yield, journal cap (`mkDefault`) |
 
 `impermanence.nixosModules.impermanence` is injected automatically.
 
@@ -110,6 +111,7 @@ repeated.
 ## See Also
 
 - [Server Survivability](/stc/en/relics/server-survivability/) — what this profile does instead of waiting for a console
+- [Nix Housekeeping](/stc/en/relics/nix-housekeeping/) — how the store and the journal stay bounded
 - [cogitator-sarcophagus-aws](/stc/en/cogitator/sarcophagus-aws/) — builds the AMI this profile runs on
 - [relics-aws](/stc/en/relics/aws/) — the AWS platform relic
 - [relics-impermanence](/stc/en/relics/impermanence/) — how the root rollback works

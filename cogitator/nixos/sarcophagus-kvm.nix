@@ -26,6 +26,7 @@ in {
     ../../relics/nixos/networking.nix
     ../../relics/nixos/impermanence.nix
     ../../relics/nixos/server-survivability.nix
+    ../../relics/nixos/nix-housekeeping.nix
     ./hardening.nix
   ];
 
@@ -80,6 +81,11 @@ in {
     # so mkDefault — a consumer with IPMI or a KVM-over-IP may prefer the
     # emergency shell, and every sub-behaviour also has its own switch.
     stc.relics.serverSurvivability.enable = lib.mkDefault true;
+
+    # A long-lived host: bound the store and the journal, and let builds yield
+    # to what the machine serves. Additive, so mkDefault.
+    stc.relics.nixHousekeeping.enable = lib.mkDefault true;
+
     stc.relics.impermanence = {
       enable = true;
       inherit (cfg) poolName;

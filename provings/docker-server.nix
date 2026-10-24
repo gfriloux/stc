@@ -91,10 +91,11 @@
     stc.cogitator.docker-server.enable = true;
     stc.relics.docker.crowdsec.enable = false;
 
-    # Also the counter-example for serverSurvivability: every assert on that
-    # relic below is checked red here. A plain `= false` also proves the
-    # cogitator enables it with mkDefault, as documented.
+    # Also the counter-example for serverSurvivability and nixHousekeeping:
+    # every assert on those relics below is checked red here. A plain `= false`
+    # also proves the cogitator enables them with mkDefault, as documented.
     stc.relics.serverSurvivability.enable = false;
+    stc.relics.nixHousekeeping.enable = false;
 
     # Everything the rest of the stack needs, and nothing for CrowdSec.
     stc.relics.docker.traefik.image = "stc-proving/traefik:placeholder";
@@ -282,5 +283,44 @@
         assert ${toString nodes.machine.boot.loader.grub.configurationLimit} == 5
         assert ${toString nodes.machine.boot.loader.systemd-boot.configurationLimit} == 5
         assert ${toString nodes.nocrowdsec.boot.loader.grub.configurationLimit} != 5
+
+    with subtest("the store and the journal stay bounded"):
+        def show(node, unit, prop):
+            return node.succeed(f"systemctl show -p {prop} --value {unit}").strip()
+
+        for node, on in [(machine, True), (nocrowdsec, False)]:
+            # The build-time pressure valve: nix.conf carries no min-free at all
+            # on stock NixOS.
+            conf = node.succeed("cat /etc/nix/nix.conf").splitlines()
+            assert ("min-free = 5368709120" in conf) == on, f"{node.name}: min-free"
+            assert ("max-free = 16106127360" in conf) == on, f"{node.name}: max-free"
+
+            # Scheduled retention. nix-gc.service exists either way (nixpkgs
+            # defines it whenever nix.enable); the timer and the 30-day window
+            # are what the relic adds. keepDays is in the unit's script, as in
+            # provings/vm.nix.
+            has_timer = node.execute("systemctl cat nix-gc.timer")[0] == 0
+            assert has_timer == on, f"{node.name}: nix-gc.timer present={has_timer}"
+            script = node.succeed(
+                f"cat {show(node, 'nix-gc.service', 'ExecStart').split('path=')[1].split()[0]}"
+            )
+            assert ("--delete-older-than 30d" in script) == on, f"{node.name}: {script}"
+
+            # Builds yield: these are what systemd applied to the units, read
+            # back from the manager, not the Nix options echoed.
+            for unit, prop, want in [
+                ("nix-daemon.service", "OOMScoreAdjust", "250"),
+                ("nix-daemon.service", "CPUSchedulingPolicy", "3"),  # batch
+                ("nix-daemon.service", "IOSchedulingPriority", "7"),  # stock: 4
+                ("nix-gc.service", "CPUSchedulingPolicy", "3"),
+            ]:
+                got = show(node, unit, prop)
+                assert (got == want) == on, f"{node.name}: {unit} {prop}={got}"
+            io = show(node, "nix-gc.service", "IOSchedulingClass")
+            assert (io == "3") == on, f"{node.name}: nix-gc IOSchedulingClass={io}"
+
+            journald = node.succeed("systemd-analyze cat-config systemd/journald.conf")
+            assert ("SystemMaxUse=500M" in journald) == on, f"{node.name}: {journald}"
+            assert ("MaxRetentionSec=1month" in journald) == on, f"{node.name}: {journald}"
   '';
 }

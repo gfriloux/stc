@@ -20,6 +20,7 @@ le schéma disque et le constructeur d'image — aucun import `disko` externe n'
 | `relics-impermanence` | Rollback du root vers `@blank` à chaque démarrage |
 | `cogitator-hardening` | Durcissement noyau + réseau + système de fichiers + SSH |
 | `relics-server-survivability` | Pas de shell d'urgence, reboot sur panique, watchdog matériel, `/boot` borné, pas de veille (`mkDefault`) |
+| `relics-nix-housekeeping` | GC planifié, GC sous pression disque, déduplication hebdomadaire, builds qui cèdent, journal plafonné (`mkDefault`) |
 | Schéma disque | GPT sur `/dev/vda` — BIOS/GRUB : bios_grub + ESP (`/boot`) + pool ZFS (3 partitions) |
 | Override GRUB | BIOS/GRUB requis par `make-single-disk-zfs-image.nix` |
 | `system.build.qcow2` | Constructeur d'image qcow2 |
@@ -113,6 +114,7 @@ disque omettrait `bios_grub` et ne démarrerait pas en BIOS/GRUB.
 ## Voir aussi
 
 - [Survie des serveurs](/stc/fr/relics/server-survivability/) — ce que fait ce profil plutôt que d'attendre une console
+- [Entretien de Nix](/stc/fr/relics/nix-housekeeping/) — comment le store et le journal restent bornés
 - [Schéma local-vm](/stc/fr/schematics/local-vm/) — exemple prêt à l'emploi basé sur ce cogitator
 - [relics-impermanence](/stc/fr/relics/impermanence/) — fonctionnement du rollback root
 - [cogitator-hardening](/stc/fr/cogitator/hardening/) — la suite de durcissement composée
