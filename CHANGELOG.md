@@ -3,6 +3,11 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.18.1] — 2026-10-24
+
+### Bug Fixes
+
+- **zfs**: track nixpkgs' default LTS kernel instead of a stale series list ([`64e6ddc`](https://github.com/gfriloux/stc/commit/64e6ddc7d458c430b5dbea8ee7f47556d4979636))
 ## [0.18.0] — 2026-10-18
 
 ### Bug Fixes
