@@ -65,6 +65,13 @@ pas seulement pénible — il fallait fournir à CrowdSec une image que tu n'ava
 jamais l'intention de lancer, ou recourir à `mkForce`. Un hôte de jeu sur GPU
 Intel ou NVIDIA était dans la même position avec la relique AMD.
 
+Depuis `v0.19.0`, les quatre profils serveur (`docker-server`, `dreadnought`,
+`sarcophagus-{kvm,aws}`) activent aussi deux reliques en `mkDefault`, toutes deux
+déclinables : `stc.relics.serverSurvivability.enable` et
+`stc.relics.nixHousekeeping.enable`. `cogitator-vm` active aussi la seconde ; sa
+ligne `nix.optimise.automatic` ci-dessus vit désormais dans cette relique,
+toujours comme défaut.
+
 ### Réglages de reliques
 
 | Relique | Désormais surchargeable | Pourquoi tu voudrais |

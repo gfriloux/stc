@@ -25,6 +25,7 @@ Les instances déployées depuis cette AMI sont destinées à être gérées ave
 | `relics-aws` | Pilotes NVMe/ENA, NTP, console série, expansion pool EBS |
 | `cogitator-hardening` | Durcissement noyau + réseau + système de fichiers + SSH |
 | `relics-server-survivability` | Pas de shell d'urgence, reboot sur panique, watchdog matériel, `/boot` borné, pas de veille (`mkDefault`) |
+| `relics-nix-housekeeping` | GC planifié, GC sous pression disque, déduplication hebdomadaire, builds qui cèdent, journal plafonné (`mkDefault`) |
 | Schéma disque | GPT sur `/dev/vda` — BIOS/GRUB : bios_grub + ESP (`/boot`) + pool ZFS (3 partitions) |
 | Override GRUB | BIOS/GRUB requis par `make-single-disk-zfs-image.nix` |
 | `system.build.awsImage` | Constructeur d'image brute |
@@ -131,6 +132,7 @@ Au démarrage sur EC2, `relics-aws` exécute `growpart` + `zpool online -e` pour
 ## Voir aussi
 
 - [Survie des serveurs](/stc/fr/relics/server-survivability/) — ce que fait ce profil plutôt que d'attendre une console
+- [Entretien de Nix](/stc/fr/relics/nix-housekeeping/) — comment le store et le journal restent bornés
 - [Schéma aws-ami](/stc/fr/schematics/aws-ami/) — exemple prêt à l'emploi basé sur ce cogitator
 - [cogitator-dreadnought](/stc/fr/cogitator/dreadnought/) — profil pour les instances déployées depuis cette AMI
 - [relics-aws](/stc/fr/relics/aws/) — la relique de plateforme AWS
