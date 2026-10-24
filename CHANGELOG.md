@@ -3,6 +3,30 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.19.0] — 2026-10-24
+
+### Documentation
+
+- **plans**: add the v0.19.0 server-survivability plan and ledger ([`e8abdaf`](https://github.com/gfriloux/stc/commit/e8abdaf9c2a4c87e9cfbe7cb3381beffe745dc83))
+- **relics**: document the server-survivability relic (en, fr) ([`e30abc9`](https://github.com/gfriloux/stc/commit/e30abc9279f7c53779bc1624c7727afe21c312a5))
+- **plans**: add the v0.19.0 nix-housekeeping plan and ledger ([`9be74ba`](https://github.com/gfriloux/stc/commit/9be74bae8f73789676b97380cf406dc12738c4e9))
+- **relics**: document the nix-housekeeping relic (en, fr) ([`abd0538`](https://github.com/gfriloux/stc/commit/abd0538dd8386bf241ce7191941c1866699b49e0))
+
+### Features
+
+- **relics-docker-notify**: promote the missing-healthcheck warning to an assertion ([`df311c9`](https://github.com/gfriloux/stc/commit/df311c914d0b764ad3684949e57c5f4c15cb2aac))
+- **relics-server-survivability**: add a relic that keeps a headless host recoverable ([`ed214ee`](https://github.com/gfriloux/stc/commit/ed214eef1c1032a758a14ddc969b8528b66b7c8a))
+- **cogitator**: enable server survivability on the four server profiles ([`d21e25c`](https://github.com/gfriloux/stc/commit/d21e25c4b355089d8591a7192f4e4fd11aa97642))
+- **relics-nix-housekeeping**: add a relic that bounds the Nix store and the journal ([`0be1329`](https://github.com/gfriloux/stc/commit/0be1329bce4bab2543574709697d73756be3db1f))
+
+### Refactoring
+
+- **cogitator**: move vm's Nix GC into the housekeeping relic and enable it on servers ([`0737627`](https://github.com/gfriloux/stc/commit/0737627819f4f3769cd8ddd186523e0b6b339428))
+
+### Testing
+
+- **provings**: prove server survivability against a node with it off ([`6c96ccc`](https://github.com/gfriloux/stc/commit/6c96ccc7726184d457442dbd86d61ac798dbeaa5))
+- **provings**: prove nix housekeeping against a node with it off ([`1b55dbd`](https://github.com/gfriloux/stc/commit/1b55dbd6badc64200688a9916de110c4ec2498f7))
 ## [0.18.1] — 2026-10-24
 
 ### Bug Fixes
