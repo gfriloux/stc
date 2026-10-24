@@ -16,24 +16,33 @@
     )
     pkgs.linuxKernel.packages;
 
-  latestKernelPackage = lib.last (
-    lib.sort (a: b: (lib.versionOlder a.kernel.version b.kernel.version)) (
-      builtins.attrValues zfsCompatibleKernelPackages
-    )
-  );
+  newestOf = kernelPackagesList:
+    lib.last (lib.sort (a: b: (lib.versionOlder a.kernel.version b.kernel.version)) kernelPackagesList);
 
-  # Known LTS kernel series, newest first. ZFS supports LTS releases longest;
-  # non-LTS kernels often reach EOL before ZFS supports the next one (see the
-  # nixpkgs zfs.latestCompatibleLinuxPackages deprecation note). Add a newer
-  # series here when it lands.
-  ltsKernelSeries = ["linux_6_12" "linux_6_6" "linux_6_1" "linux_5_15"];
+  latestKernelPackage = newestOf (builtins.attrValues zfsCompatibleKernelPackages);
+
+  # nixpkgs' default kernel (pkgs.linuxPackages) is the newest LTS series, so
+  # "lts" follows it instead of a hand-kept list of series — that list went
+  # stale once already (6.18 shipped, "lts" stayed on 6.12). ZFS supports LTS
+  # releases longest, so the default is normally compatible.
+  #
+  # If it is not, fall back to the newest compatible kernel no newer than it.
+  # Below the default, nixpkgs only keeps maintained series, i.e. older LTS
+  # ones (the EOL non-LTS attributes throw and are filtered out above), so the
+  # fallback is still an LTS kernel.
+  defaultKernelPackage = pkgs.linuxPackages;
 
   ltsKernelPackage = let
-    available = builtins.filter (n: zfsCompatibleKernelPackages ? ${n}) ltsKernelSeries;
+    olderCompatible =
+      builtins.filter
+      (kp: !(lib.versionOlder defaultKernelPackage.kernel.version kp.kernel.version))
+      (builtins.attrValues zfsCompatibleKernelPackages);
   in
-    if available == []
-    then throw "stc.relics.zfs: no ZFS-compatible LTS kernel found among ${toString ltsKernelSeries}; set stc.relics.zfs.kernel = \"latest\" or update ltsKernelSeries."
-    else zfsCompatibleKernelPackages.${builtins.head available};
+    if !defaultKernelPackage.${config.boot.zfs.package.kernelModuleAttribute}.meta.broken
+    then defaultKernelPackage
+    else if olderCompatible == []
+    then throw "stc.relics.zfs: no ZFS-compatible kernel at or below nixpkgs' default (${defaultKernelPackage.kernel.version}); set stc.relics.zfs.kernel = \"latest\"."
+    else newestOf olderCompatible;
 
   selectedKernelPackage =
     if cfg.kernel == "lts"
@@ -56,8 +65,9 @@ in {
       default = "lts";
       description = ''
         Which ZFS-compatible kernel to track.
-        - "lts" (default): newest ZFS-compatible long-term-support kernel — stable,
-          minimal churn, the right choice for production/servers.
+        - "lts" (default): nixpkgs' default kernel (the newest LTS series) when
+          ZFS supports it, otherwise the newest older ZFS-compatible LTS kernel —
+          stable, minimal churn, the right choice for production/servers.
         - "latest": newest ZFS-compatible kernel — follows nixpkgs closely, more churn.
 
         ZFS supports LTS kernels longest; non-LTS releases often reach EOL before

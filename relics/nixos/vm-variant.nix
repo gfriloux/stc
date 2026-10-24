@@ -58,9 +58,11 @@ in {
         VM build, so what this removes is the forced root-pool import and the
         pinned ZFS-compatible kernel.
 
-        Note the consequence: with this on, the VM runs a generic kernel rather
-        than the one production runs. Set it to `false` to keep the production
-        kernel, at the cost of a pool import that will fail.
+        Note the consequence: with this on, the VM runs nixpkgs' default kernel.
+        With `stc.relics.zfs.kernel = "lts"` that is normally the production
+        kernel too; with "latest", or when ZFS lags behind the default LTS, it is
+        not. Set it to `false` to keep the production kernel, at the cost of a
+        pool import that will fail.
 
         Ignored when the ZFS relic is not imported.
       '';

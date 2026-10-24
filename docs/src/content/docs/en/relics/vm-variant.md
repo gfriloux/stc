@@ -149,9 +149,11 @@ stc.relics.vmVariant = {
 
 That granularity is the point: you may want containers off but ZFS on.
 
-:::note[`disableZfs` changes the kernel]
-The ZFS relic pins a ZFS-compatible LTS kernel. Turning it off in the VM means
-the VM runs a generic kernel rather than the one production runs. Accepted on
+:::note[`disableZfs` can change the kernel]
+The ZFS relic picks a ZFS-compatible kernel. With its default `kernel = "lts"`
+that is normally nixpkgs' default kernel, so nothing changes; with
+`kernel = "latest"`, or when ZFS lags behind the default LTS, turning it off in
+the VM means the VM runs a different kernel from production. Accepted on
 purpose: the target of this gate is systemd wiring, not the storage driver. Set
 `disableZfs = false` to keep the production kernel, at the cost of a pool import
 that will fail.
