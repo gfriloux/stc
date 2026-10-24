@@ -20,6 +20,7 @@
     relics-vm-variant = ./nixos/vm-variant.nix;
     relics-pre-switch-checks = ./nixos/pre-switch-checks.nix;
     relics-server-survivability = ./nixos/server-survivability.nix;
+    relics-nix-housekeeping = ./nixos/nix-housekeeping.nix;
 
     # Impermanence needs the upstream module injected via inputs closure.
     relics-impermanence = {...}: {
