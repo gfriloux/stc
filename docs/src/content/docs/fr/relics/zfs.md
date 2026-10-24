@@ -24,11 +24,16 @@ maintenance continue (scrub, TRIM, ZED).
 
 **Noyau** — sélectionne un noyau compatible avec le module ZFS hors-arbre (ZFS peut
 prendre du retard sur le noyau ; une paire non assortie échoue à compiler). Avec
-`kernel = "lts"` (défaut), il choisit la dernière série LTS compatible ZFS — stable
-et peu de churn, le bon choix en production. Avec `kernel = "latest"`, il choisit le
-dernier noyau compatible, suivant nixpkgs de près. Les LTS restent compatibles ZFS le
-plus longtemps ; les noyaux non-LTS atteignent souvent l'EOL avant que ZFS ne supporte
-le suivant.
+`kernel = "lts"` (défaut), il prend le noyau par défaut de nixpkgs
+(`pkgs.linuxPackages`, la dernière série LTS) — le même qu'une machine sans ZFS — et
+ne se replie sur une série LTS plus ancienne compatible ZFS que si ZFS ne supporte
+pas encore celui-là. Stable et peu de churn, le bon choix en production. Avec
+`kernel = "latest"`, il choisit le dernier noyau compatible, suivant nixpkgs de près.
+Les LTS restent compatibles ZFS le plus longtemps ; les noyaux non-LTS atteignent
+souvent l'EOL avant que ZFS ne supporte le suivant.
+
+Une machine **sans** cette relique ne subit aucune restriction : STC laisse
+`boot.kernelPackages` à nixpkgs.
 
 **Support système de fichiers** — ajoute `"zfs"` à `boot.supportedFilesystems` et
 `boot.initrd.supportedFilesystems` pour que l'initrd puisse importer les pools au

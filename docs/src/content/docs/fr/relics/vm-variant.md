@@ -155,10 +155,11 @@ stc.relics.vmVariant = {
 C'est tout l'intérêt de cette granularité : on peut vouloir ses conteneurs
 éteints mais son ZFS debout.
 
-:::note[`disableZfs` change le noyau]
-La relique ZFS épingle un noyau LTS compatible ZFS. L'éteindre dans la VM
-signifie que la VM tourne sur un noyau générique, et non sur celui de la
-production. Assumé : la cible de ce garde-fou est le câblage systemd, pas le
+:::note[`disableZfs` peut changer le noyau]
+La relique ZFS choisit un noyau compatible ZFS. Avec son `kernel = "lts"` par
+défaut, c'est normalement le noyau par défaut de nixpkgs : rien ne change. Avec
+`kernel = "latest"`, ou quand ZFS est en retard sur la LTS par défaut, l'éteindre
+dans la VM signifie que la VM tourne sur un autre noyau que la production. Assumé : la cible de ce garde-fou est le câblage systemd, pas le
 pilote de stockage. Posez `disableZfs = false` pour garder le noyau de
 production, au prix d'un import de pool qui échouera.
 :::

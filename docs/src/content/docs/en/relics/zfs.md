@@ -23,11 +23,16 @@ initrd, pool import settings, and ongoing maintenance (scrub, TRIM, ZED).
 
 **Kernel** — selects a kernel compatible with the out-of-tree ZFS module (ZFS
 occasionally lags behind the kernel; a mismatched pair fails to build). With
-`kernel = "lts"` (default) it picks the newest ZFS-compatible LTS series —
-stable and low-churn, the right choice for production. With `kernel = "latest"`
-it picks the newest compatible kernel, tracking nixpkgs closely. LTS releases
-stay ZFS-compatible longest; non-LTS kernels often reach EOL before ZFS supports
-the next one.
+`kernel = "lts"` (default) it takes nixpkgs' default kernel (`pkgs.linuxPackages`,
+the newest LTS series) — the same kernel a machine without ZFS gets — and only
+falls back to an older ZFS-compatible LTS series if ZFS does not support that
+one yet. Stable and low-churn, the right choice for production. With
+`kernel = "latest"` it picks the newest compatible kernel, tracking nixpkgs
+closely. LTS releases stay ZFS-compatible longest; non-LTS kernels often reach
+EOL before ZFS supports the next one.
+
+A machine **without** this relic is not restricted at all: STC leaves
+`boot.kernelPackages` to nixpkgs.
 
 **Filesystem support** — adds `"zfs"` to `boot.supportedFilesystems` and
 `boot.initrd.supportedFilesystems` so the initrd can import pools at boot.
