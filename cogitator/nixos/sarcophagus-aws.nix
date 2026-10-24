@@ -27,6 +27,7 @@ in {
     ../../relics/nixos/networking.nix
     ../../relics/nixos/impermanence.nix
     ../../relics/nixos/aws.nix
+    ../../relics/nixos/server-survivability.nix
     ./hardening.nix
   ];
 
@@ -89,6 +90,11 @@ in {
     # Additive: declinable without breaking anything this profile declares.
     stc.relics.networking.enable = lib.mkDefault true;
     stc.cogitator.hardening.enable = lib.mkDefault true;
+
+    # A remote host with no one at the console: reboot rather than wait. Additive,
+    # so mkDefault — a consumer with IPMI or a KVM-over-IP may prefer the
+    # emergency shell, and every sub-behaviour also has its own switch.
+    stc.relics.serverSurvivability.enable = lib.mkDefault true;
     stc.relics.impermanence = {
       enable = true;
       inherit (cfg) poolName;

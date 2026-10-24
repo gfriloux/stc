@@ -29,6 +29,7 @@ in {
     ../../relics/nixos/docker/crowdsec.nix
     ../../relics/nixos/docker/notify.nix
     ../../relics/nixos/pre-switch-checks.nix
+    ../../relics/nixos/server-survivability.nix
   ];
 
   options.stc.cogitator.docker-server = {
@@ -97,6 +98,11 @@ in {
     # nixos-rebuild, or who runs the equivalent check in their own pipeline, can
     # decline it. Measured: forced off, the profile evaluates and stays coherent.
     stc.relics.preSwitchChecks.enable = lib.mkDefault true;
+
+    # A remote host with no one at the console: reboot rather than wait. Additive,
+    # so mkDefault — a consumer with IPMI or a KVM-over-IP may prefer the
+    # emergency shell, and every sub-behaviour also has its own switch.
+    stc.relics.serverSurvivability.enable = lib.mkDefault true;
 
     virtualisation = {
       docker = {

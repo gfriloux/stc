@@ -19,13 +19,13 @@
 # ── counts ──────────────────────────────────────────────────────────────────
 count	cogitator/home/desktop.nix	3	0	1	three GUI relics as defaults so one terminal can be dropped; pinentry at mkOverride 900 to beat enginseer's default without beating the consumer
 count	cogitator/home/enginseer/default.nix	13	0	0	tool settings are the consumer's taste, not the profile's trade; the tool list itself stays at normal priority
-count	cogitator/nixos/docker-server.nix	4	0	0	socketProxy, crowdsec and preSwitchChecks are additive; autoPrune is a default kept off because a missed weekly window takes the stack down
-count	cogitator/nixos/dreadnought.nix	2	0	0	networking and the hardening suite are additive; zfs, impermanence and aws stay at normal priority because this profile declares the filesystems that assume them
+count	cogitator/nixos/docker-server.nix	5	0	0	socketProxy, crowdsec and preSwitchChecks are additive; autoPrune is a default kept off because a missed weekly window takes the stack down; serverSurvivability is additive
+count	cogitator/nixos/dreadnought.nix	3	0	0	networking and the hardening suite are additive; zfs, impermanence and aws stay at normal priority because this profile declares the filesystems that assume them; serverSurvivability is additive
 count	cogitator/nixos/gaming.nix	2	0	0	the profile is named for what it does, not the GPU or audio stack it assumes
 count	cogitator/nixos/hardening.nix	6	0	0	the six sub-relics are independent and nothing here assumes any one of them
 count	cogitator/nixos/plasma.nix	1	0	0	pipewire is additive; plasma6 stays pinned because it is the profile's subject
-count	cogitator/nixos/sarcophagus-aws.nix	2	8	0	networking and hardening additive; the mkForce block is an image builder having the last word on its own boot layout, over STC's own boot relic
-count	cogitator/nixos/sarcophagus-kvm.nix	2	8	0	networking and hardening additive; the mkForce block is an image builder having the last word on its own boot layout, over STC's own boot relic
+count	cogitator/nixos/sarcophagus-aws.nix	3	8	0	networking and hardening additive; the mkForce block is an image builder having the last word on its own boot layout, over STC's own boot relic; serverSurvivability is additive
+count	cogitator/nixos/sarcophagus-kvm.nix	3	8	0	networking and hardening additive; the mkForce block is an image builder having the last word on its own boot layout, over STC's own boot relic; serverSurvivability is additive
 count	cogitator/nixos/vm.nix	1	0	0	store optimisation costs I/O on a timer and a consumer may not want it
 count	cogitator/nixos/workstation.nix	3	0	0	same three hardening relics as the suite, additive, and the filesystem one was already consumer-controlled
 count	relics/nixos/aws.nix	2	0	0	the serial getty must yield to a nixosTest claiming ttyS0; udisks2 documents an intent upstream already defaults to false
@@ -36,6 +36,7 @@ count	relics/nixos/hardening/kernel.nix	1	0	0	an operator must be able to re-ena
 count	relics/nixos/impermanence.nix	1	0	0	hideMounts only changes what mount shows, so an operator debugging persistence can turn it off
 count	relics/nixos/networking.nix	1	0	0	predictable interface names are a proposal; useDHCP moved to an option after this seal measured a collision with networking.ifstate
 count	relics/nixos/plasma6.nix	1	0	0	xserver.enable as a default, without which the relic's own documented wayland = false option is unreachable
+count	relics/nixos/server-survivability.nix	6	0	0	emergency mode, the generation cap, the watchdog timeout and the sleep ban are policy a consumer with console access, a larger ESP or a flaky watchdog may want otherwise
 count	relics/nixos/vm-variant.nix	0	6	0	mkForce throughout is this relic's entire job — neutralising secrets, pools and images — and it only ever writes inside virtualisation.vmVariant
 count	relics/nixos/zfs.nix	2	0	0	forceImportRoot/All stay false but reachable: a pool legitimately carrying a foreign hostid is a real one-off need
 
@@ -68,6 +69,12 @@ watch	networking.usePredictableInterfaceNames	relics/nixos/networking.nix	a host
 watch	services.xserver.enable	relics/nixos/plasma6.nix	without this the relic's own wayland = false option is unreachable
 watch	boot.zfs.forceImportRoot	relics/nixos/zfs.nix	upstream warns on its own true default below stateVersion 26.11
 watch	boot.zfs.forceImportAll	relics/nixos/zfs.nix	a non-root pool carrying a foreign hostid; needs forceImportRoot too
+watch	systemd.enableEmergencyMode	relics/nixos/server-survivability.nix	a host with IPMI or KVM-over-IP may want the shell back
+watch	boot.loader.grub.configurationLimit	relics/nixos/server-survivability.nix	ESP size is per machine
+watch	boot.loader.systemd-boot.configurationLimit	relics/nixos/server-survivability.nix	ESP size is per machine
+watch	systemd.settings.Manager.RuntimeWatchdogSec	relics/nixos/server-survivability.nix	a slow firmware watchdog needs a longer timeout
+watch	systemd.sleep.settings.Sleep.AllowSuspend	relics/nixos/server-survivability.nix	a lab box may legitimately suspend
+watch	systemd.sleep.settings.Sleep.AllowHibernation	relics/nixos/server-survivability.nix	same
 
 # ── collisions measured and ruled harmless ───────────────────────────────────
 allow	nix.optimise.automatic	nixos/modules/virtualisation/container-config.nix	writes mkDefault false, but only under boot.isContainer — the vm cogitator is not a container, so the two definitions never meet
