@@ -319,14 +319,15 @@ jamais : le timer se déclenche toutes les 30 s indéfiniment sans jamais agir,
 tout en apparaissant actif dans `systemctl list-timers`. Ça se lit comme une
 surveillance qui n'existe pas.
 
-STC émet donc un **avertissement** à l'évaluation pour chaque conteneur
-surveillé dont il ne voit pas le healthcheck, en nommant le conteneur et les
-deux remèdes.
+STC fait donc échouer le build par une **assertion** à l'évaluation pour chaque
+conteneur surveillé dont il ne voit pas le healthcheck, en nommant le conteneur
+et les deux remèdes. (Jusqu'à v0.18.x c'était un avertissement ; il est devenu
+une assertion en v0.19.0.)
 
 ### Quand le healthcheck vit dans l'image
 
 Un `HEALTHCHECK` intégré à l'image fonctionne à l'exécution mais reste invisible
-à l'évaluation, donc il déclenche l'avertissement. Déclare-le plutôt que de
+à l'évaluation, donc il déclenche l'assertion. Déclare-le plutôt que de
 faire taire la relique :
 
 ```nix
@@ -340,7 +341,7 @@ virtualisation.oci-containers.containers.mysqldump = {
 };
 ```
 
-Ce label est fixe, non configurable, et n'affecte **que** l'avertissement : le
+Ce label est fixe, non configurable, et n'affecte **que** l'assertion : le
 conteneur reste intégralement surveillé. À utiliser quand l'image déclare
 réellement un healthcheck — c'est un constat, pas un bouton « muet ».
 

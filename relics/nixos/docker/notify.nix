@@ -18,10 +18,10 @@
 # one, `docker inspect` reports an empty State.Health.Status, the "unhealthy" test
 # never matches, and the timer fires every 30s forever without ever acting — while
 # an active stc-docker-health-watch@<name>.timer in `systemctl list-timers` reads
-# as proof that the container is monitored. So the relic warns about every watched
-# container whose healthcheck it cannot see. A HEALTHCHECK baked into the image is
-# invisible at evaluation time and is a legitimate case: those containers say so
-# with stc.docker/health-cmd-in-image = "true".
+# as proof that the container is monitored. So the relic refuses to build while
+# any watched container has no healthcheck it can see. A HEALTHCHECK baked into
+# the image is invisible at evaluation time and is a legitimate case: those
+# containers say so with stc.docker/health-cmd-in-image = "true".
 #
 # Recovery vs. give-up: a container that stays `unhealthy` is `docker kill`ed by
 # the health-watch every 30s and restarted (Restart=on-failure). With
@@ -165,26 +165,25 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
-    assertions = [
-      {
-        assertion = cfg.notifyCommand != "";
+    assertions =
+      [
+        {
+          assertion = cfg.notifyCommand != "";
+          message = ''
+            stc.relics.docker.notify.enable is true but notifyCommand is empty.
+            Set stc.relics.docker.notify.notifyCommand to the shell command that
+            delivers the alert (it receives STC_NOTIFY_SERVICE and
+            STC_NOTIFY_HOSTNAME in the environment).
+          '';
+        }
+      ]
+      # An assertion, not a warning: a watched container without a visible
+      # healthcheck is monitoring that does not exist. It shipped as a warning in
+      # v0.11.0 to give consumers a release to annotate or fix their containers
+      # (#61), and was promoted once the known consumer evaluated clean (#77).
+      ++ map (w: {
+        assertion = false;
         message = ''
-          stc.relics.docker.notify.enable is true but notifyCommand is empty.
-          Set stc.relics.docker.notify.notifyCommand to the shell command that
-          delivers the alert (it receives STC_NOTIFY_SERVICE and
-          STC_NOTIFY_HOSTNAME in the environment).
-        '';
-      }
-    ];
-
-    # Warning and not an assertion, deliberately: a watched container without a
-    # visible healthcheck is a real defect, but promoting it to an assertion now
-    # would break the build of every consumer already in this situation the day
-    # they bump their stc input. Promotion is tracked separately, once consumers
-    # have had a release to annotate or fix their containers.
-    warnings =
-      map (
-        w: ''
           Container "${w.container}" carries ${cfg.watchLabel} = "true" but STC can
           see no healthcheck on it, so the health-watch monitors nothing: `docker
           inspect` reports an empty State.Health.Status, the "unhealthy" test never
@@ -198,9 +197,8 @@ in {
             - or, if the image already declares a HEALTHCHECK (which evaluation
               cannot see), record that:
                 labels."${healthCmdInImageLabel}" = "true";
-        ''
-      )
-      (lib.filter (w: !w.healthCheckVisible) watchedList);
+        '';
+      }) (lib.filter (w: !w.healthCheckVisible) watchedList);
 
     systemd = {
       services =
