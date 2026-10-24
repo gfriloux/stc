@@ -30,6 +30,7 @@ in {
     ../../relics/nixos/docker/notify.nix
     ../../relics/nixos/pre-switch-checks.nix
     ../../relics/nixos/server-survivability.nix
+    ../../relics/nixos/nix-housekeeping.nix
   ];
 
   options.stc.cogitator.docker-server = {
@@ -103,6 +104,10 @@ in {
     # so mkDefault — a consumer with IPMI or a KVM-over-IP may prefer the
     # emergency shell, and every sub-behaviour also has its own switch.
     stc.relics.serverSurvivability.enable = lib.mkDefault true;
+
+    # A long-lived host: bound the store and the journal, and let builds yield
+    # to what the machine serves. Additive, so mkDefault.
+    stc.relics.nixHousekeeping.enable = lib.mkDefault true;
 
     virtualisation = {
       docker = {
