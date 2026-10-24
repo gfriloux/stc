@@ -91,6 +91,12 @@ so a headless host does hang — which is the intended outcome. But anyone at a
 console who presses Enter resumes the boot, with the dirty root. Treat
 `emergency` as "a human must decide", not as "this host cannot come up".
 
+On the four server profiles,
+[Server Survivability](/stc/en/relics/server-survivability/) puts
+`boot.panic_on_fail` on the command line, which turns that stop into a reboot
+loop. The combination is refused at build time. Set
+`stc.relics.serverSurvivability.panicReboot = false;` alongside `emergency`.
+
 ## If `@blank` goes missing
 
 The snapshot is created automatically when it is absent, because nothing else

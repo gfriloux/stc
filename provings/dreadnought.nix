@@ -113,6 +113,9 @@
     imports = [self.nixosModules.cogitator-dreadnought];
     stc.cogitator.dreadnought.enable = true;
     stc.relics.impermanence.onRollbackFailure = "emergency";
+    # Required since serverSurvivability: boot.panic_on_fail would turn the
+    # emergency stop into a reboot loop, and the relic asserts against that.
+    stc.relics.serverSurvivability.panicReboot = false;
     networking.hostId = "deadbeef";
   };
 

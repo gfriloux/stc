@@ -30,6 +30,7 @@ stc.relics.docker.socketProxy.enable = true;  # Traefik uses the proxy, not the 
 stc.relics.docker.crowdsec.enable = true;
 stc.relics.docker.notify.enable = cfg.notify.enable;  # off unless you opt in
 stc.relics.preSwitchChecks.enable = true;             # see below
+stc.relics.serverSurvivability.enable = lib.mkDefault true;  # reboot rather than wait for a console
 
 virtualisation.docker.enable = true;
 virtualisation.docker.autoPrune.enable = lib.mkDefault false;  # see below
@@ -187,4 +188,5 @@ only this paragraph does.
 - [Docker relics](/stc/en/relics/docker/) — Traefik, socket-proxy, CrowdSec, and notify in detail
 - [Overridable defaults](/stc/en/reference/overridable-defaults/) — which of this profile's relics you can decline
 - [Pre-Switch Checks](/stc/en/relics/pre-switch-checks/) — the deploy guard this profile enables
+- [Server Survivability](/stc/en/relics/server-survivability/) — what this profile does instead of waiting for a console
 - [Schematic: aws-ami](/stc/en/schematics/aws-ami/) — a complete production example using this profile

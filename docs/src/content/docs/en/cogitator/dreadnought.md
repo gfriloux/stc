@@ -30,6 +30,7 @@ to build the service profile you need.
 | `relics-impermanence` | Root rollback to `@blank` on every boot |
 | `relics-aws` | NVMe/ENA drivers, NTP, serial console, EBS pool expansion |
 | `cogitator-hardening` | Kernel + network + filesystem + SSH hardening |
+| `relics-server-survivability` | No emergency shell, reboot on panic, hardware watchdog, bounded `/boot`, no suspend (`mkDefault`) |
 
 `impermanence.nixosModules.impermanence` is injected automatically.
 
@@ -108,6 +109,7 @@ repeated.
 
 ## See Also
 
+- [Server Survivability](/stc/en/relics/server-survivability/) — what this profile does instead of waiting for a console
 - [cogitator-sarcophagus-aws](/stc/en/cogitator/sarcophagus-aws/) — builds the AMI this profile runs on
 - [relics-aws](/stc/en/relics/aws/) — the AWS platform relic
 - [relics-impermanence](/stc/en/relics/impermanence/) — how the root rollback works
