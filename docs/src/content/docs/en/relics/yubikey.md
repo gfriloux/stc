@@ -73,6 +73,10 @@ PIV work side by side. This needs pcscd, so the system relic must be enabled
 too. The settings only take effect where `programs.gpg.enable` is true; both
 are `mkDefault`, so a host can override them.
 
+After a PIV operation, the first gpg command that reads the card (such as
+`gpg --card-status`) can fail once with `General error`: the PIV applet is
+still selected. scdaemon reselects OpenPGP and the next command works.
+
 ## Usage Example
 
 ```nix

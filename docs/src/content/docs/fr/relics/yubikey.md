@@ -75,6 +75,11 @@ côte à côte. Il faut pcscd, donc le relic système doit aussi être activé. 
 réglages ne s'appliquent que si `programs.gpg.enable` vaut true ; les deux sont
 en `mkDefault`, une machine peut donc les surcharger.
 
+Après une opération PIV, la première commande gpg qui lit la carte (comme
+`gpg --card-status`) peut échouer une fois avec `Erreur générale` : l'applet
+PIV est encore sélectionnée. scdaemon resélectionne OpenPGP et la commande
+suivante fonctionne.
+
 ## Exemple d'utilisation
 
 ```nix
