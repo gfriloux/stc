@@ -76,6 +76,7 @@ modules = [
 | `relics-docker-traefik` | `stc.relics.docker.traefik.enable` | Conteneur reverse proxy Traefik v3 (Docker) |
 | `relics-docker-socket-proxy` | `stc.relics.docker.socketProxy.enable` | Proxy filtrant devant le socket Docker |
 | `relics-docker-crowdsec` | `stc.relics.docker.crowdsec.enable` | Conteneur IDS/IPS CrowdSec |
+| `relics-docker-guards` | `stc.relics.docker.guards.enable` | Avertir des conteneurs publiés sur toutes les interfaces ou qui montent le socket Docker brut |
 | `relics-docker-notify` | `stc.relics.docker.notify.enable` | Notifications d'échec de conteneur (agnostique au transport) |
 
 ## Reliques Home Manager

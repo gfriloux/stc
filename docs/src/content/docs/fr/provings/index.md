@@ -27,7 +27,7 @@ rapide et statique.
 
 **Ce que `just test` coûte maintenant.** Treize épreuves, **dix-neuf boots de VM** —
 `vm`, `gaming`, `home-desktop`, `docker-server` et `smart` démarrent deux nœuds chacune, `dreadnought` en
-déclare un second qu'elle ne démarre jamais, et `sarcophagus-kvm` démarre son
+déclare un second qu'elle ne démarre jamais, `docker-server` un troisième, et `sarcophagus-kvm` démarre son
 nœud unique deux fois — et les clôtures contiennent
 KDE deux fois (`workstation` et `plasma`), Steam une fois, les 31 paquets nommés
 de la trousse enginseer, et GIMP, VLC et Zen Browser pour le profil desktop. Sur un
@@ -60,7 +60,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | Épreuve | Cogitator testé | Ce qu'elle vérifie |
 |---------|-----------------|--------------------|
 | `hardening` | `cogitator-hardening` | Durcissement sysctl kernel et réseau effectif ; SSH par clés uniquement, login root refusé |
-| `docker-server` | `cogitator-docker-server` | Les unités des conteneurs portent leur image épinglée et les flags de healthcheck ; les réseaux docker, le hook notify `OnFailure` et les timers de health-watch sont câblés ; la config statique Traefik est rendue avec le plugin bouncer CrowdSec et l'endpoint socket-proxy |
+| `docker-server` | `cogitator-docker-server` | Les unités des conteneurs portent leur image épinglée et les flags de healthcheck ; les réseaux docker, le hook notify `OnFailure` et les timers de health-watch sont câblés ; la config statique Traefik est rendue avec le plugin bouncer CrowdSec et l'endpoint socket-proxy ; les garde-fous docker avertissent exactement du port public et du montage de socket brut sans label — ni du conteneur labellisé, ni des 80/443 du Traefik de STC et du proxy, ni d'une écoute sur loopback, mais d'un port ajouté à Traefik ; de rien sur un nœud qui les décline ; et, lu sur un troisième nœud jamais démarré, du repli de Traefik sur le socket brut et d'un imposteur portant le nom du proxy quand la relique proxy est coupée |
 | `workstation` | `cogitator-workstation` | Le profil câble ses trois concerns : le socle de durcissement (sysctl kernel/réseau, blacklist de modules) est effectif, le `pcscd` YubiKey est présent, et l'unité display-manager du bureau existe |
 | `vm` | `cogitator-vm` | L'utilisateur primaire est dans `wheel`, son shell fish de login fonctionne et le lingering est actif ; une clé déclarée via `authorizedKeys` authentifie réellement en SSH, et pas seulement le port 22 qui répond ; le timer de GC part chaque semaine et son script porte bien la rétention déclarée ; Docker est absent par défaut et, sur un second nœud, le chemin opt-in câble à la fois le daemon et le groupe `docker` |
 | `plasma` | `cogitator-plasma` | SDDM est bien le display manager et tourne en Wayland avec la session Plasma par défaut ; le fichier de session existe dans le répertoire que sddm désigne réellement ; les deux réglages de la relique (`keyboardLayout`, `sddmTheme`) atteignent la configuration rendue ; le portail XDG porte le joker que la relique configure ; rtkit, le pont ALSA 32 bits et le `default.target` qui démarre WirePlumber avec la session graphique sont en place ; gvfs et tumbler sont joignables depuis la session |

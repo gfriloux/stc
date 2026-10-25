@@ -347,6 +347,97 @@ réellement un healthcheck — c'est un constat, pas un bouton « muet ».
 
 ---
 
+## Garde-fous Docker
+
+**Module :** `stc.nixosModules.relics-docker-guards`
+
+Deux réglages de conteneur contournent ce que protègent les autres reliques
+docker, et rien d'autre dans le build ne le signale :
+
+- **Un port publié sur toutes les interfaces.** `ports = ["3000:8080"]` écoute
+  sur `0.0.0.0`. Docker le relaie avec ses propres règles iptables, que les
+  règles d'entrée de `networking.firewall` ne voient jamais : le port est
+  joignable depuis Internet quoi que dise `allowedTCPPorts`, et il contourne
+  Traefik, TLS et le middleware CrowdSec.
+- **Un montage du socket Docker brut.** `/run/docker.sock` ou
+  `/var/run/docker.sock` dans `volumes`, c'est root sur l'hôte. `:ro` n'y
+  change rien : l'API reste entièrement accessible en écriture à travers un
+  fichier de socket en lecture seule. Ce montage contourne aussi le socket
+  proxy.
+
+La relique transforme chaque cas en **warning** d'évaluation qui nomme le
+conteneur et le correctif. Le build passe quand même.
+
+### Options
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `stc.relics.docker.guards.enable` | bool | `false` (`true` dans `cogitator-docker-server`) | Avertir des deux contournements |
+
+La relique ne vérifie les conteneurs que si
+`virtualisation.oci-containers.backend` vaut `docker` ; avec un autre backend,
+elle avertit une fois qu'elle ne vérifie rien. Si tu importes les
+reliques docker une par une plutôt que le cogitator, importe
+`relics-docker-guards` et active-la toi-même.
+
+### Ce qui déclenche un warning
+
+| Entrée de `ports` | Résultat |
+|---|---|
+| `"8080"`, `"3000:8080"`, `"3000:8080/tcp"` | warning : sans adresse, c'est toutes les interfaces |
+| `"0.0.0.0:3000:8080"`, `"[::]:80:80"`, `"[::0]:80:80"` | warning |
+| `"127.0.0.1:3000:8080"`, `"[::1]:80:80"`, `"100.64.0.1:3000:8080"` | passe : une adresse précise |
+
+Tout conteneur dont les `volumes` montent `/run/docker.sock` ou
+`/var/run/docker.sock`, ou tout le `/run` ou `/var/run` qui le contient,
+déclenche un warning.
+
+Les conteneurs de STC sont exemptés là où le contournement est leur rôle :
+
+- les `80:80/tcp` et `443:443/tcp` posés par la relique sur `traefik` tant
+  que `relics-docker-traefik` est active — un port que tu ajoutes à `traefik`
+  déclenche toujours un warning ;
+- le socket de `docker-socket-proxy` tant que `relics-docker-socket-proxy`
+  est active.
+
+Sans le proxy, la relique Traefik monte elle-même le socket brut, et cela
+déclenche un warning. C'est exactement le contournement que signale cette
+relique.
+
+### Dire pourquoi
+
+Un conteneur qui a besoin du contournement le dit avec un label. La valeur du
+label est la raison, et le warning disparaît :
+
+```nix
+virtualisation.oci-containers.containers.mailserver.labels."stc.docker/public-ports" =
+  "SMTP: Traefik cannot front it";
+
+virtualisation.oci-containers.containers.crowdsec-manager.labels."stc.docker/raw-docker-socket" =
+  "needs exec and restart, which the proxy can only grant as root anyway";
+```
+
+Pour le socket brut de Traefik sans proxy, pose
+`virtualisation.oci-containers.containers.traefik.labels."stc.docker/raw-docker-socket"` :
+il fusionne avec la définition de la relique.
+
+### Limites
+
+- `-p`, `-v` et `--mount` passés par `extraOptions` ne sont pas vérifiés :
+  déclare les ports dans `ports` et les montages dans `volumes`.
+- Une adresse par défaut au niveau du démon
+  (`virtualisation.docker.daemon.settings.ip = "127.0.0.1"`) fait écouter
+  `"3000:8080"` sur loopback, mais la relique avertit quand même : écris
+  l'adresse dans l'entrée.
+- Écouter sur `127.0.0.1` ne met un port hors du réseau qu'à partir de Docker
+  28 ; avant, les hôtes du même lien pouvaient l'atteindre.
+- `--network=host` ne déclenche pas de warning. La pile réseau de l'hôte sert
+  ces ports, donc `networking.firewall` s'y applique.
+
+Ce sont des warnings pour l'instant. Ils deviendront des assertions quand les
+consommateurs connus buildent sans eux, le même chemin qu'a suivi la
+[vérification du healthcheck](#quand-le-healthcheck-vit-dans-limage).
+
 ## Exemple de pile complète
 
 ```nix
