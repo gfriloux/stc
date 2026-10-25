@@ -21,6 +21,7 @@
     relics-pre-switch-checks = ./nixos/pre-switch-checks.nix;
     relics-server-survivability = ./nixos/server-survivability.nix;
     relics-nix-housekeeping = ./nixos/nix-housekeeping.nix;
+    relics-state = ./nixos/state.nix;
 
     # Impermanence needs the upstream module injected via inputs closure.
     relics-impermanence = {...}: {
