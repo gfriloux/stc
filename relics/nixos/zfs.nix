@@ -50,6 +50,7 @@
     else latestKernelPackage;
 in {
   imports = [
+    ./state.nix
     (lib.mkRenamedOptionModule ["stc" "zfs" "enable"] ["stc" "relics" "zfs" "enable"])
     (lib.mkRenamedOptionModule ["stc" "zfs" "scrubInterval"] ["stc" "relics" "zfs" "scrubInterval"])
     (lib.mkRenamedOptionModule ["stc" "zfs" "autoSnapshot" "enable"] ["stc" "relics" "zfs" "autoSnapshot" "enable"])
@@ -98,6 +99,15 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    stc.relics.state.paths = [
+      {
+        path = "/var/log/zed.debug.log";
+        type = "file";
+        description = "ZFS Event Daemon debug log: the pool events ZED handled.";
+        kind = "log";
+      }
+    ];
+
     boot = {
       kernelPackages = selectedKernelPackage;
 

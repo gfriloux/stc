@@ -17,6 +17,7 @@
   cfg = config.stc.relics.traefik;
 in {
   imports = [
+    ./state.nix
     (lib.mkRenamedOptionModule ["stc" "traefik" "enable"] ["stc" "relics" "traefik" "enable"])
     (lib.mkRenamedOptionModule ["stc" "traefik" "email"] ["stc" "relics" "traefik" "email"])
     (lib.mkRenamedOptionModule ["stc" "traefik" "logLevel"] ["stc" "relics" "traefik" "logLevel"])
@@ -38,6 +39,15 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    stc.relics.state.paths = [
+      {
+        path = config.services.traefik.dataDir;
+        type = "directory";
+        description = "Traefik's ACME account key and certificates with their private keys (acme.json), and its logs. Without it every certificate is re-issued, against Let's Encrypt rate limits.";
+        kind = "credentials";
+      }
+    ];
+
     services.traefik = {
       enable = true;
 
@@ -60,12 +70,12 @@ in {
 
         log = {
           level = cfg.logLevel;
-          filePath = "/var/lib/traefik/traefik.log";
+          filePath = "${config.services.traefik.dataDir}/traefik.log";
           format = "json";
         };
 
         accessLog = {
-          filePath = "/var/lib/traefik/access.log";
+          filePath = "${config.services.traefik.dataDir}/access.log";
           format = "json";
           fields = {
             # Request fields (method, status, duration…) are safe to keep.
@@ -94,7 +104,7 @@ in {
 
     networking.firewall.allowedTCPPorts = [80 443];
 
-    # /var/lib/traefik holds ACME certs — must survive reboots.
+    # services.traefik.dataDir (/var/lib/traefik) holds ACME certs — must survive reboots.
     # Only emitted when the impermanence relic is present (so Traefik stays
     # evaluable on its own — environment stays {} otherwise), and only active
     # when it is enabled. The persist root follows its configurable persistPath.
@@ -102,7 +112,7 @@ in {
       persistence.${config.stc.relics.impermanence.persistPath} = lib.mkIf config.stc.relics.impermanence.enable {
         directories = [
           {
-            directory = "/var/lib/traefik";
+            directory = config.services.traefik.dataDir;
             user = "traefik";
             group = "traefik";
             mode = "0700";

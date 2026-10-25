@@ -5,8 +5,12 @@
   ...
 }: let
   cfg = config.stc.relics.vaultwarden;
+  # Read from upstream, not repeated: nixpkgs keeps the pre-24.11 name
+  # (/var/lib/bitwarden_rs) for hosts with an older stateVersion.
+  stateDir = "/var/lib/${config.systemd.services.vaultwarden.serviceConfig.StateDirectory}";
 in {
   imports = [
+    ./state.nix
     (lib.mkRenamedOptionModule ["stc" "vaultwarden" "enable"] ["stc" "relics" "vaultwarden" "enable"])
     (lib.mkRenamedOptionModule ["stc" "vaultwarden" "hostname"] ["stc" "relics" "vaultwarden" "hostname"])
     (lib.mkRenamedOptionModule ["stc" "vaultwarden" "backup"] ["stc" "relics" "vaultwarden" "backup"])
@@ -54,6 +58,22 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    stc.relics.state.paths =
+      [
+        {
+          path = stateDir;
+          type = "directory";
+          description = "Vaultwarden's database (every user's encrypted vault), attachments, and rsa_key.pem, its token signing key.";
+          kind = "data";
+        }
+      ]
+      ++ lib.optional cfg.backup {
+        path = "/var/backup/vaultwarden";
+        type = "directory";
+        description = "Vaultwarden's daily local backup. On the same disk as the data: copy it off the host.";
+        kind = "data";
+      };
+
     services.vaultwarden =
       {
         enable = true;
@@ -103,7 +123,7 @@ in {
         directories =
           [
             {
-              directory = "/var/lib/vaultwarden";
+              directory = stateDir;
               user = "vaultwarden";
               group = "vaultwarden";
               mode = "0700";
