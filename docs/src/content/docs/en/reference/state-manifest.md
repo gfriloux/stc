@@ -59,6 +59,7 @@ you **what exists**. Your backup job and your
 | `relics-vaultwarden` | `/var/backup/vaultwarden` (with `backup = true`) | directory | data |
 | `relics-hardening-ssh` | each `services.openssh.hostKeys` path | file | credentials |
 | `relics-zfs` | `/var/log/zed.debug.log` | file | log |
+| `relics-smart` | `/var/lib/smartmontools` | directory | cache |
 
 Vaultwarden's directory is listed as `data`, but it also holds `rsa_key.pem`,
 the key that signs login tokens. If you encrypt credentials apart, include it.

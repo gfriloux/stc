@@ -24,8 +24,8 @@ the `just ci` gate**: a VM test is heavy, and the CI gate stays fast and static.
 - Linux only (`x86_64-linux` / `aarch64-linux`) — the attribute is empty elsewhere.
 - Builder: `pkgs.testers.runNixOSTest`.
 
-**What `just test` now costs.** Eleven provings, **fifteen VM boots** — `vm` and
-`gaming` and `home-desktop` each boot two nodes, `dreadnought` declares a second
+**What `just test` now costs.** Twelve provings, **eighteen VM boots** — `vm`,
+`gaming`, `home-desktop`, `docker-server` and `smart` each boot two nodes, `dreadnought` declares a second
 node it never starts, and `sarcophagus-kvm` boots its single node twice — and the closures include KDE twice (`workstation` and
 `plasma`), Steam once, the enginseer toolkit's 31 named packages, and GIMP, VLC
 and Zen Browser for the desktop profile. On a cold store that is a few GiB of
@@ -65,6 +65,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `enginseer` | `cogitator-enginseer` (Home Manager) | Activates the profile for a test user inside a VM and asserts its runtime claims: the three aliases it declares resolve in a shell that really started (not the six `programs.lsd` also renders), `oh-my-posh` initialises from the theme the cogitator ships, `git` itself selects `delta` as its diff pager with delta's `interactive.diffFilter` in place, direnv is hooked into fish with nix-direnv and silenced, `FZF_CTRL_R_COMMAND` is set and empty so Ctrl-R belongs to atuin, `~/.ssh/config` carries multiplexing *without* Home Manager's legacy default block, gpg-agent's `pinentry-program` is the headless `pinentry-curses`, and the declared catppuccin flavour reaches bat's theme |
 | `home-desktop` | `cogitator-desktop` (Home Manager) | Two nodes. On the profile **alone**: kitty renders its configuration, the ghostty relic renders its user unit and overrides, zen-browser reaches the user profile as `zen-beta`, the cogitator's own `gimp` and `vlc` are installed, and the kitty relic's `fonts` option makes the nerd fonts visible to `fc-list`. On a node carrying **both** Home Manager profiles: desktop's `mkForce pinentry-qt` wins the contest against enginseer's `mkDefault pinentry-curses` — the only cross-cogitator interaction proven in this suite — and one claim from each profile still holds under composition |
 | `dreadnought` | `cogitator-dreadnought` | Five relics composed on one host come up, with exactly one loaded unit failing for want of a pool; ZFS support is functional on the booted kernel; the two discriminating AWS kernel parameters reach `/proc/cmdline`; the pool-growth script carries the profile's `poolName`, `ebsDisk` and `ebsPartition`; the ZFS scrub timer carries `scrubInterval`; explicit persistence is bind-mounted, including an entry set through the cogitator's own option; the hardening suite survives the composition; the impermanence rollback ran in the initrd and failed as expected, and that failure is legible from the booted system through `stc-impermanence-state.service` rather than only from an initrd journal |
+| `smart` | `relics-smart` (no cogitator enables it) | On an emulated SATA disk that answers SMART, smartd's own `EmailTest` and `Temperature` alerts reach `notifyCommand` with the documented environment, and its output reaches the journal; smartd.conf carries one alert path; the state file exists. A second node with only a virtio disk shows `smartd.service` failed with smartd's "no device" exit, and no alert |
 
 ## Adding a proving
 
@@ -257,7 +258,7 @@ packaging rather than STC's wiring, which is all these three relics contribute.
 
 ## Booting a real image — the external-image pattern
 
-Nine of the eleven provings let the test driver synthesise a node. `sarcophagus-kvm`
+Ten of the twelve provings let the test driver synthesise a node. `sarcophagus-kvm`
 cannot: its profile's claim *is* the disk, and on a synthesised node the qemu-vm
 module replaces `fileSystems` with its own set at priority 10 — so neither the
 pool, nor the datasets, nor the rollback would be observable.

@@ -59,6 +59,7 @@ modules = [
 | `relics-server-survivability` | `stc.relics.serverSurvivability.enable` | Hôte sans écran : pas de shell d'urgence, reboot sur panique, watchdog matériel, `/boot` borné, pas de veille |
 | `relics-nix-housekeeping` | `stc.relics.nixHousekeeping.enable` | Hôte qui dure : GC planifié, GC sous pression disque, déduplication hebdomadaire, builds qui cèdent, journal plafonné |
 | `relics-state` | `stc.relics.state.paths` (pas d'`enable`) | Manifeste de l'état persistant que créent les reliques activées — descriptif seulement |
+| `relics-smart` | `stc.relics.smart.enable` | smartd sur chaque disque SMART, alertes confiées à ton `notifyCommand` — disques physiques seulement |
 | `relics-amd-gpu` | `stc.relics.amdGpu.enable` | GPU AMD : VDPAU, VAAPI, pilotes 32 bits, KMS précoce optionnel |
 | `relics-pipewire` | `stc.relics.pipewire.enable` | Pipewire : RTKit + ALSA 32 bits + compat PulseAudio |
 | `relics-plasma6` | `stc.relics.plasma6.enable` | Bureau KDE Plasma 6 Wayland (SDDM + portail XDG) |
@@ -103,4 +104,5 @@ modules = [
 - [Contrôles pré-switch](/stc/fr/relics/pre-switch-checks/) — refuser d'activer le closure du mauvais host
 - [Survie des serveurs](/stc/fr/relics/server-survivability/) — redémarrer plutôt qu'attendre une console
 - [Entretien de Nix](/stc/fr/relics/nix-housekeeping/) — un store et un journal bornés
+- [SMART](/stc/fr/relics/smart/) — être prévenu avant que le pool se dégrade
 - [Manifeste d'état](/stc/fr/reference/state-manifest/) — quoi sauvegarder, tel que les reliques le déclarent

@@ -60,6 +60,7 @@ existe**. C'est à ta sauvegarde et à ton
 | `relics-vaultwarden` | `/var/backup/vaultwarden` (avec `backup = true`) | directory | data |
 | `relics-hardening-ssh` | chaque chemin de `services.openssh.hostKeys` | file | credentials |
 | `relics-zfs` | `/var/log/zed.debug.log` | file | log |
+| `relics-smart` | `/var/lib/smartmontools` | directory | cache |
 
 Le répertoire de Vaultwarden est classé `data`, mais il contient aussi
 `rsa_key.pem`, la clé qui signe les jetons de connexion. Si tu chiffres les
