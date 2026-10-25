@@ -79,6 +79,7 @@ default.
 | `relics-aws` | `services.udisks2.enable` | a host that knowingly wants it. Note the relic is no longer what blocks you — but on an image built from `nixpkgs`' own `amazon-image` module, that module writes `false` at normal priority, so a plain definition conflicts with **upstream** and you need `lib.mkForce` there |
 | `relics-hardening-kernel` | `systemd.coredump.enable` | re-enabling core dumps for one debugging session — read the warning on the [hardening relics page](/stc/en/relics/hardening/) first: with the handler on, daemons dump secrets and the relic's PAM limit does **not** prevent it |
 | `relics-docker-traefik` | logrotate `compress`, `delaycompress`, `missingok`, `notifempty` | your own retention policy, or a shipper that wants uncompressed files |
+| `relics-yubikey-user` (Home Manager) | `programs.gpg.scdaemonSettings.{disable-ccid,pcsc-shared}` | a host running gpg without pcscd, which needs scdaemon's own CCID driver |
 | `cogitator-enginseer` (Home Manager) | all of `programs.micro.settings`, `programs.direnv.silent`, `services.gpg-agent.enableSshSupport`, `catppuccin.autoEnable`, `programs.fzf.historyWidget.command` | editor taste; using gpg-agent as your SSH agent; theming tools one by one |
 
 ### Set through an STC option instead

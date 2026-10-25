@@ -2,6 +2,7 @@
 # Installs the YubiKey management suite and runs yubikey-touch-detector as a
 # user service. The detector fires a libnotify notification whenever the key
 # waits for a physical touch (GPG signing, FIDO2 assertion, etc.).
+# Also installs age-plugin-yubikey and makes scdaemon share the card via pcscd.
 # Requires the system relic (relics-yubikey-system) on the NixOS side.
 {
   config,
@@ -21,11 +22,22 @@ in {
 
   config = lib.mkIf cfg.enable {
     home.packages = with pkgs; [
+      age-plugin-yubikey # age identities in a PIV slot (sops, rage)
       libfido2 # FIDO2/WebAuthn library and CLI tools
       yubikey-manager # ykman — configure slots, FIDO2, PIV, OpenPGP
       yubikey-touch-detector # notifies when the key waits for a touch
       yubioath-flutter # GUI for TOTP/HOTP (Yubico Authenticator)
     ];
+
+    # By default scdaemon claims the CCID interface for itself, so PIV tools
+    # (ykman, age-plugin-yubikey) fail with "Failed to connect to YubiKey"
+    # until it is killed. Going through pcscd in shared mode lets gpg and PIV
+    # use the card side by side. Needs pcscd, from the system relic.
+    # Only takes effect where programs.gpg is enabled.
+    programs.gpg.scdaemonSettings = {
+      disable-ccid = lib.mkDefault true;
+      pcsc-shared = lib.mkDefault true;
+    };
 
     # Runs as a user service bound to the graphical session lifetime.
     # Sends a libnotify notification on touch-required operations.

@@ -28,6 +28,7 @@ count	cogitator/nixos/sarcophagus-aws.nix	4	8	0	networking and hardening additiv
 count	cogitator/nixos/sarcophagus-kvm.nix	4	8	0	networking and hardening additive; the mkForce block is an image builder having the last word on its own boot layout, over STC's own boot relic; serverSurvivability and nixHousekeeping are additive
 count	cogitator/nixos/vm.nix	2	0	0	nixHousekeeping is additive; the 5-day GC window is the profile's default for a throwaway VM, and the old stc.cogitator.vm.nix.gc.keepDays must still beat it
 count	cogitator/nixos/workstation.nix	3	0	0	same three hardening relics as the suite, additive, and the filesystem one was already consumer-controlled
+count	relics/home/yubikey.nix	2	0	0	sharing the card through pcscd is right with the system relic on; a host using gpg without pcscd turns it back off without mkForce
 count	relics/nixos/aws.nix	2	0	0	the serial getty must yield to a nixosTest claiming ttyS0; udisks2 documents an intent upstream already defaults to false
 count	relics/nixos/boot.nix	1	0	0	firmware that refuses EFI variable writes, and chroot installs, need canTouchEfiVariables false
 count	relics/nixos/docker/traefik.nix	4	0	0	log rotation policy belongs to the operator; files, frequency, rotate and postrotate stay pinned because they are wired to this relic
@@ -93,6 +94,8 @@ watch	services.journald.settings.Journal.MaxRetentionSec	relics/nixos/nix-housek
 watch	services.smartd.notifications.mail.enable	relics/nixos/smart.nix	asserted off: send mail from notifyCommand
 watch	services.smartd.notifications.wall.enable	relics/nixos/smart.nix	same
 watch	services.smartd.notifications.x11.enable	relics/nixos/smart.nix	same
+watch	programs.gpg.scdaemonSettings.disable-ccid	relics/home/yubikey.nix	a host without pcscd needs scdaemon's own CCID driver back
+watch	programs.gpg.scdaemonSettings.pcsc-shared	relics/home/yubikey.nix	same
 
 # ── collisions measured and ruled harmless ───────────────────────────────────
 allow	nix.optimise.automatic	nixos/modules/virtualisation/container-config.nix	writes mkDefault false, but only under boot.isContainer — the housekeeping relic writes its mkDefault true only when !boot.isContainer, so the two definitions never meet
