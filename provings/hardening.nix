@@ -66,7 +66,7 @@
     };
   };
 
-  testScript = ''
+  testScript = {nodes, ...}: ''
     machine.wait_for_unit("multi-user.target")
 
     with subtest("kernel sysctl hardening"):
@@ -151,6 +151,24 @@
         assert "crash:3600" in sshd_config
         assert "authfail:3600" in sshd_config
         assert "max:86400" in sshd_config
+
+        # The state manifest's host keys are the ones sshd actually loads, and
+        # they exist. Only the manifest's /etc/ssh entries are compared, so a
+        # relic added to this node later does not break the subtest; paths come
+        # from the raw `sshd -T`, since sshd_config above is lowercased. A JSON
+        # list of plain strings is also a Python list literal.
+        manifest = [
+            p for p in ${builtins.toJSON (map (e: e.path) nodes.machine.stc.relics.state.paths)}
+            if p.startswith("/etc/ssh/")
+        ]
+        loaded = [
+            line.split()[1]
+            for line in machine.succeed("sshd -T").splitlines()
+            if line.lower().startswith("hostkey ")
+        ]
+        assert loaded and sorted(manifest) == sorted(loaded), f"{manifest} vs {loaded}"
+        for path in manifest:
+            machine.succeed(f"test -s {path}")
 
     with subtest("ssh banner"):
         banner_lines = [
