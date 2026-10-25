@@ -63,6 +63,7 @@
         gaming = pkgs-unfree.testers.runNixOSTest (import ./gaming.nix {inherit self;});
         smart = pkgs.testers.runNixOSTest (import ./smart.nix {inherit self;});
         polkit-units = pkgs.testers.runNixOSTest (import ./polkit-units.nix {inherit self;});
+        heartbeat = pkgs.testers.runNixOSTest (import ./heartbeat.nix {inherit self;});
       };
     };
 }
