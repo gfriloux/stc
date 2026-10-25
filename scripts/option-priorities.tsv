@@ -38,6 +38,7 @@ count	relics/nixos/networking.nix	1	0	0	predictable interface names are a propos
 count	relics/nixos/plasma6.nix	1	0	0	xserver.enable as a default, without which the relic's own documented wayland = false option is unreachable
 count	relics/nixos/server-survivability.nix	6	0	0	emergency mode, the generation cap, the watchdog timeout and the sleep ban are policy a consumer with console access, a larger ESP or a flaky watchdog may want otherwise
 count	relics/nixos/nix-housekeeping.nix	14	0	0	the relic's options are the knobs; every nix, nix-daemon, nix-gc and journald setting underneath is a default so a consumer writing it directly wins without mkForce
+count	relics/nixos/smart.nix	3	0	0	upstream's mail, wall and x11 channels are off because the relic owns the alert path; defaults, so a consumer turning one back on meets the relic's assertion rather than a bare conflict
 count	relics/nixos/vm-variant.nix	0	6	0	mkForce throughout is this relic's entire job — neutralising secrets, pools and images — and it only ever writes inside virtualisation.vmVariant
 count	relics/nixos/zfs.nix	2	0	0	forceImportRoot/All stay false but reachable: a pool legitimately carrying a foreign hostid is a real one-off need
 
@@ -89,6 +90,9 @@ watch	systemd.services.nix-gc.serviceConfig.CPUSchedulingPolicy	relics/nixos/nix
 watch	systemd.services.nix-gc.serviceConfig.IOSchedulingClass	relics/nixos/nix-housekeeping.nix	same
 watch	services.journald.settings.Journal.SystemMaxUse	relics/nixos/nix-housekeeping.nix	log volume is per host
 watch	services.journald.settings.Journal.MaxRetentionSec	relics/nixos/nix-housekeeping.nix	retention may be a compliance requirement
+watch	services.smartd.notifications.mail.enable	relics/nixos/smart.nix	asserted off: send mail from notifyCommand
+watch	services.smartd.notifications.wall.enable	relics/nixos/smart.nix	same
+watch	services.smartd.notifications.x11.enable	relics/nixos/smart.nix	same
 
 # ── collisions measured and ruled harmless ───────────────────────────────────
 allow	nix.optimise.automatic	nixos/modules/virtualisation/container-config.nix	writes mkDefault false, but only under boot.isContainer — the housekeeping relic writes its mkDefault true only when !boot.isContainer, so the two definitions never meet

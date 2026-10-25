@@ -22,6 +22,7 @@
     relics-server-survivability = ./nixos/server-survivability.nix;
     relics-nix-housekeeping = ./nixos/nix-housekeeping.nix;
     relics-state = ./nixos/state.nix;
+    relics-smart = ./nixos/smart.nix;
 
     # Impermanence needs the upstream module injected via inputs closure.
     relics-impermanence = {...}: {
