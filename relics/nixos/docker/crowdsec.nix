@@ -25,6 +25,7 @@
   traefikCfg = config.stc.relics.docker.traefik;
 in {
   imports = [
+    ../state.nix
     (lib.mkRenamedOptionModule ["stc" "docker" "crowdsec" "enable"] ["stc" "relics" "docker" "crowdsec" "enable"])
     (lib.mkRenamedOptionModule ["stc" "docker" "crowdsec" "image"] ["stc" "relics" "docker" "crowdsec" "image"])
     (lib.mkRenamedOptionModule ["stc" "docker" "crowdsec" "dataDir"] ["stc" "relics" "docker" "crowdsec" "dataDir"])
@@ -64,6 +65,21 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    stc.relics.state.paths = [
+      {
+        path = "${cfg.dataDir}/data";
+        type = "directory";
+        description = "CrowdSec's local API database: decisions (active bans), alerts and machine registrations.";
+        kind = "data";
+      }
+      {
+        path = "${cfg.dataDir}/etc";
+        type = "directory";
+        description = "CrowdSec's configuration as the container keeps it: local and central API credentials, installed hub collections and scenarios.";
+        kind = "credentials";
+      }
+    ];
+
     assertions = [
       {
         assertion = cfg.image != null;

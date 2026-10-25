@@ -26,6 +26,7 @@
     ["gitea" "forgejo" "gitlab" "gitolite" "gerrit"];
 in {
   imports = [
+    ../state.nix
     (lib.mkRenamedOptionModule ["stc" "hardening" "ssh" "enable"] ["stc" "relics" "hardening" "ssh" "enable"])
     (lib.mkRenamedOptionModule ["stc" "hardening" "ssh" "allowedTCPForwarding"] ["stc" "relics" "hardening" "ssh" "allowedTCPForwarding"])
   ];
@@ -137,6 +138,17 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    # Read from the option, not repeated: a consumer who moves or adds host keys
+    # sees the real paths.
+    stc.relics.state.paths =
+      map (k: {
+        inherit (k) path;
+        type = "file";
+        description = "SSH host ${lib.optionalString (k ? type) "${k.type} "}private key. If it changes, every client's known_hosts entry for this host breaks.";
+        kind = "credentials";
+      })
+      config.services.openssh.hostKeys;
+
     # mlkem768x25519-sha256 (post-quantum hybrid kex, first in KexAlgorithms)
     # requires OpenSSH ≥ 9.9. With inputs.nixpkgs.follows, a consumer pinned to an
     # older nixpkgs would otherwise get an sshd that refuses to start on an unknown

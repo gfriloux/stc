@@ -57,6 +57,7 @@ modules = [
 | `relics-pre-switch-checks` | `stc.relics.preSwitchChecks.enable` | Abort a switch that would activate another host's closure; print the diff on a remote deploy |
 | `relics-server-survivability` | `stc.relics.serverSurvivability.enable` | Headless host: no emergency shell, reboot on panic, hardware watchdog, bounded `/boot`, no suspend |
 | `relics-nix-housekeeping` | `stc.relics.nixHousekeeping.enable` | Long-lived host: scheduled GC, GC under disk pressure, weekly dedup, builds that yield, journal cap |
+| `relics-state` | `stc.relics.state.paths` (no `enable`) | Manifest of the persistent state the enabled relics create — descriptive only |
 | `relics-amd-gpu` | `stc.relics.amdGpu.enable` | AMD GPU: VDPAU, VAAPI, 32-bit drivers, optional early KMS |
 | `relics-pipewire` | `stc.relics.pipewire.enable` | Pipewire: RTKit + ALSA 32-bit + PulseAudio compat |
 | `relics-plasma6` | `stc.relics.plasma6.enable` | KDE Plasma 6 Wayland desktop (SDDM + XDG portal) |
@@ -101,3 +102,4 @@ modules = [
 - [Pre-Switch Checks](/stc/en/relics/pre-switch-checks/) — refuse to activate the wrong host's closure
 - [Server Survivability](/stc/en/relics/server-survivability/) — reboot instead of waiting for a console
 - [Nix Housekeeping](/stc/en/relics/nix-housekeeping/) — a bounded store and journal
+- [State manifest](/stc/en/reference/state-manifest/) — what to back up, as the relics declare it

@@ -284,6 +284,28 @@
         assert ${toString nodes.machine.boot.loader.systemd-boot.configurationLimit} == 5
         assert ${toString nodes.nocrowdsec.boot.loader.grub.configurationLimit} != 5
 
+    with subtest("the state manifest names paths that exist"):
+        # The manifest is descriptive, so the only thing worth proving is that
+        # it describes the machine: every path it lists exists on the booted
+        # node, and a relic that is off contributes nothing.
+        # A JSON list of plain strings is also a Python list literal.
+        import shlex
+        manifests = {
+            machine: ${builtins.toJSON (map (e: e.path) nodes.machine.stc.relics.state.paths)},
+            nocrowdsec: ${builtins.toJSON (map (e: e.path) nodes.nocrowdsec.stc.relics.state.paths)},
+        }
+        # The one exception is the Traefik dynamic config: with no
+        # dynamicConfigFile the consumer writes it by hand, so it is listed
+        # (that is the point) but nothing on a fresh node creates it.
+        by_hand = "/srv/docker/traefik/conf/traefik_dynamic.yml"
+        for node, paths in manifests.items():
+            assert by_hand in paths, f"{node.name}: {paths}"
+            for path in paths:
+                if path != by_hand:
+                    node.succeed(f"test -e {shlex.quote(path)}")
+        assert "/srv/docker/crowdsec/data" in manifests[machine], manifests[machine]
+        assert not any("crowdsec" in p for p in manifests[nocrowdsec]), manifests[nocrowdsec]
+
     with subtest("the store and the journal stay bounded"):
         def show(node, unit, prop):
             return node.succeed(f"systemctl show -p {prop} --value {unit}").strip()

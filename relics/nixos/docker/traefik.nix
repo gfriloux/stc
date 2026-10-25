@@ -224,6 +224,7 @@
   # STC can say nothing about those, and flagging them would be noise.
 in {
   imports = [
+    ../state.nix
     (lib.mkRenamedOptionModule ["stc" "docker" "traefik" "enable"] ["stc" "relics" "docker" "traefik" "enable"])
     (lib.mkRenamedOptionModule ["stc" "docker" "traefik" "image"] ["stc" "relics" "docker" "traefik" "image"])
     (lib.mkRenamedOptionModule ["stc" "docker" "traefik" "dataDir"] ["stc" "relics" "docker" "traefik" "dataDir"])
@@ -311,6 +312,32 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    stc.relics.state.paths =
+      [
+        {
+          path = "${cfg.dataDir}/acme.json";
+          type = "file";
+          description = "Traefik's ACME account key and the issued certificates with their private keys. Without it every certificate is re-issued, against Let's Encrypt rate limits.";
+          kind = "credentials";
+        }
+        {
+          path = "${cfg.dataDir}/logs";
+          type = "directory";
+          description = "Traefik's own and access logs; CrowdSec reads the access log from here.";
+          kind = "log";
+        }
+      ]
+      # With no dynamicConfigFile, the container mounts a file the consumer
+      # writes by hand: routers, middlewares, perhaps basic-auth hashes. Nothing
+      # regenerates it. (conf/traefik.yml is not listed: it is a store symlink
+      # re-created at every boot.)
+      ++ lib.optional (cfg.dynamicConfigFile == null) {
+        path = "${cfg.dataDir}/conf/traefik_dynamic.yml";
+        type = "file";
+        description = "Traefik's dynamic configuration, written by hand when dynamicConfigFile is unset: routers, middlewares, possibly basic-auth hashes. Nothing regenerates it.";
+        kind = "data";
+      };
+
     assertions =
       [
         {
