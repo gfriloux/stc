@@ -3,6 +3,30 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.21.0] — 2026-10-25
+
+### Bug Fixes
+
+- **relics-yubikey**: share the card between gpg and PIV, ship age-plugin-yubikey ([`eb38ce7`](https://github.com/gfriloux/stc/commit/eb38ce7c0dbf6056d3d53c03f5a8aaab19ab93a6))
+
+### Documentation
+
+- **plans**: add the v0.21.0 docker guards plan and ledger ([`6818593`](https://github.com/gfriloux/stc/commit/681859372050bf5e1950b972d8e1dd9553cf389d))
+- **relics**: document the docker guards (en, fr) ([`9ab7794`](https://github.com/gfriloux/stc/commit/9ab7794bf93b85c2936f3321f3c63662a97e2d8a))
+- **plans**: add the v0.21.0 heartbeat plan and ledger ([`f3bcdb8`](https://github.com/gfriloux/stc/commit/f3bcdb82e4696f3eb2c49d4f35615db25ff01313))
+- **relics**: document the heartbeat relic (en, fr) ([`b635840`](https://github.com/gfriloux/stc/commit/b635840aca1b297c76d0abf92dba84251c68029d))
+- **relics**: document the shared YubiKey card and age-plugin-yubikey (en, fr) ([`456a9c2`](https://github.com/gfriloux/stc/commit/456a9c210f67573e6d30d9e4b881a31d0f06224b))
+- **relics**: note the one-off gpg card error after a PIV operation (en, fr) ([`f0ce5e3`](https://github.com/gfriloux/stc/commit/f0ce5e35ee01e1d130c898a208381d4ee56a4902))
+
+### Features
+
+- **relics-docker-guards**: warn about containers that bypass Traefik or the socket proxy ([`e974860`](https://github.com/gfriloux/stc/commit/e97486094ff349d74c41160393fa728762dfd984))
+- **relics-heartbeat**: ping a URL when a named unit succeeds, and only then ([`eda33bc`](https://github.com/gfriloux/stc/commit/eda33bc3036dbdc7e77a0bdef7c010fe809a723b))
+
+### Testing
+
+- **provings**: prove the docker guards warn on exactly the bypasses ([`0b299af`](https://github.com/gfriloux/stc/commit/0b299af1947e9b2155f5416153a4270c69c72867))
+- **provings**: prove heartbeats ping on success and stay quiet otherwise ([`f7bcf56`](https://github.com/gfriloux/stc/commit/f7bcf56f7152d0cf6d163e8f38fdf515ba6086dc))
 ## [0.20.0] — 2026-10-25
 
 ### Documentation
