@@ -60,6 +60,7 @@
     relics-docker-socket-proxy = ./nixos/docker/socket-proxy.nix;
     relics-docker-crowdsec = ./nixos/docker/crowdsec.nix;
     relics-docker-notify = ./nixos/docker/notify.nix;
+    relics-docker-guards = ./nixos/docker/guards.nix;
   };
 
   flake.homeModules = {
