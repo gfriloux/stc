@@ -25,7 +25,7 @@ rapide et statique.
 - Linux uniquement (`x86_64-linux` / `aarch64-linux`) — l'attribut est vide ailleurs.
 - Builder : `pkgs.testers.runNixOSTest`.
 
-**Ce que `just test` coûte maintenant.** Treize épreuves, **dix-neuf boots de VM** —
+**Ce que `just test` coûte maintenant.** Quatorze épreuves, **vingt boots de VM** —
 `vm`, `gaming`, `home-desktop`, `docker-server` et `smart` démarrent deux nœuds chacune, `dreadnought` en
 déclare un second qu'elle ne démarre jamais, `docker-server` un troisième, et `sarcophagus-kvm` démarre son
 nœud unique deux fois — et les clôtures contiennent
@@ -72,6 +72,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `dreadnought` | `cogitator-dreadnought` | Cinq reliques composées sur un même hôte démarrent, avec exactement une unité chargée en échec faute de pool ; le support ZFS est fonctionnel sur le noyau booté ; les deux paramètres noyau AWS qui discriminent atteignent `/proc/cmdline` ; le script d'agrandissement porte les `poolName`, `ebsDisk` et `ebsPartition` du profil ; le timer de scrub ZFS porte `scrubInterval` ; la persistance explicite est bien bind-montée, y compris une entrée posée par l'option du cogitator ; le durcissement survit à la composition ; le rollback d'impermanence a tourné dans l'initrd et échoué comme prévu, et cet échec est lisible depuis le système démarré via `stc-impermanence-state.service` et non plus seulement dans un journal d'initrd |
 | `smart` | `relics-smart` (aucun cogitator ne l'active) | Sur un disque SATA émulé qui répond au SMART, les alertes `EmailTest` et `Temperature` de smartd lui-même arrivent dans `notifyCommand` avec l'environnement documenté, et sa sortie arrive dans le journal ; smartd.conf ne porte qu'un chemin d'alerte ; le fichier d'état existe. Un second nœud avec un seul disque virtio montre `smartd.service` en échec avec le code « aucun disque » de smartd, et aucune alerte |
 | `polkit-units` | `relics-polkit-units` (aucun cogitator ne l'active) | Des utilisateurs sans privilèges lancent `systemctl` : un membre du groupe redémarre, arrête et démarre l'unité nommée et redémarre une unité couverte seulement par le préfixe, et pilote une instance de modèle listée ; une autre instance, une autre unité, un autre verbe, geler/dégeler, `enable`, un non-membre, un appel du gestionnaire sans unité et `systemd-run --unit=` sous un nom préfixé ou délégué sont tous refusés, sans erreur de règle dans le journal de polkit. Joué deux fois, la seconde avec `/proc` remonté en `hidepid=2` comme le pose la relique de durcissement |
+| `heartbeat` | `relics-heartbeat` (aucun cogitator ne l'active) | Face à un petit serveur HTTP local : un job réussi pinge, de même qu'un job sorti avec un statut déclaré dans `SuccessExitStatus=` ; un lancement manuel du heartbeat ne pinge pas ; un job en échec, un oneshot arrêté en cours et un service arrêté en cours (que systemd enregistre en `Result=success`) ne pingent pas ; un récepteur injoignable ne fait échouer que l'unité heartbeat ; l'URL n'apparaît dans aucun fichier d'unité ni script |
 
 ## Ajouter une épreuve
 
@@ -266,7 +267,7 @@ trois reliques apportent.
 
 ## Démarrer une vraie image — le patron « image externe »
 
-Onze des treize épreuves laissent le pilote de test synthétiser un nœud.
+Douze des quatorze épreuves laissent le pilote de test synthétiser un nœud.
 `sarcophagus-kvm` ne le peut pas : la revendication de son profil **est** le
 disque, et sur un nœud synthétisé le module qemu-vm remplace `fileSystems` par le
 sien à la priorité 10 — ni le pool, ni les datasets, ni le rollback ne seraient

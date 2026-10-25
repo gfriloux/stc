@@ -60,6 +60,7 @@ modules = [
 | `relics-state` | `stc.relics.state.paths` (no `enable`) | Manifest of the persistent state the enabled relics create — descriptive only |
 | `relics-smart` | `stc.relics.smart.enable` | smartd over every SMART disk, alerts handed to your own `notifyCommand` — physical disks only |
 | `relics-polkit-units` | `stc.relics.polkitUnits.enable` | Let a group start, stop or restart named units without sudo — one generated, scoped polkit rule |
+| `relics-heartbeat` | `stc.relics.heartbeat.enable` | Named jobs ping your monitor on each success, and only then — a job that stops running raises an alert |
 | `relics-amd-gpu` | `stc.relics.amdGpu.enable` | AMD GPU: VDPAU, VAAPI, 32-bit drivers, optional early KMS |
 | `relics-pipewire` | `stc.relics.pipewire.enable` | Pipewire: RTKit + ALSA 32-bit + PulseAudio compat |
 | `relics-plasma6` | `stc.relics.plasma6.enable` | KDE Plasma 6 Wayland desktop (SDDM + XDG portal) |
@@ -107,4 +108,5 @@ modules = [
 - [Nix Housekeeping](/stc/en/relics/nix-housekeeping/) — a bounded store and journal
 - [SMART](/stc/en/relics/smart/) — disk failure warnings before the pool degrades
 - [polkit unit delegation](/stc/en/relics/polkit-units/) — `systemctl restart` on named units, without sudo
+- [Heartbeat](/stc/en/relics/heartbeat/) — be told when a scheduled job stops succeeding
 - [State manifest](/stc/en/reference/state-manifest/) — what to back up, as the relics declare it
