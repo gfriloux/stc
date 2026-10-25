@@ -46,6 +46,7 @@ Paquets installés :
 
 | Paquet | Rôle |
 |--------|------|
+| `age-plugin-yubikey` | Identités age dans un slot PIV — permet à `sops` et `rage` de déchiffrer avec la clé |
 | `libfido2` | Bibliothèque FIDO2/WebAuthn et CLI `fido2-token` |
 | `yubikey-manager` | `ykman` — configurer les slots, FIDO2, PIV, OpenPGP |
 | `yubikey-touch-detector` | Envoie une notification libnotify lors de l'attente d'un toucher |
@@ -54,6 +55,25 @@ Paquets installés :
 Service : `systemd.user.services.yubikey-touch-detector`
 - Lié à `graphical-session.target` — démarre et s'arrête avec la session graphique
 - Exécute `yubikey-touch-detector -libnotify`
+
+### Partager la carte entre GnuPG et PIV
+
+Par défaut, le `scdaemon` de GnuPG s'approprie l'interface CCID de la YubiKey.
+Les outils PIV (`ykman piv`, `age-plugin-yubikey`) échouent alors avec
+`Failed to connect to YubiKey` tant qu'on n'a pas lancé
+`gpgconf --kill scdaemon`.
+
+Le relic règle, via `programs.gpg.scdaemonSettings` :
+
+```
+disable-ccid = true
+pcsc-shared = true
+```
+
+`scdaemon` passe alors par pcscd, en mode partagé, et GPG et PIV fonctionnent
+côte à côte. Il faut pcscd, donc le relic système doit aussi être activé. Ces
+réglages ne s'appliquent que si `programs.gpg.enable` vaut true ; les deux sont
+en `mkDefault`, une machine peut donc les surcharger.
 
 ## Exemple d'utilisation
 
