@@ -334,6 +334,89 @@ healthcheck — it is a statement of fact, not a mute button.
 
 ---
 
+## Docker Guards
+
+**Module:** `stc.nixosModules.relics-docker-guards`
+
+Two container settings step around what the other docker relics protect, and
+nothing else in the build says so:
+
+- **A port published on every interface.** `ports = ["3000:8080"]` binds
+  `0.0.0.0`. Docker forwards it with its own iptables rules, which
+  `networking.firewall`'s input rules never see, so the port is reachable from
+  the Internet whatever `allowedTCPPorts` says, and it skips Traefik, TLS and
+  the CrowdSec middleware.
+- **A raw Docker socket mount.** `/run/docker.sock` or `/var/run/docker.sock`
+  in `volumes` is root on the host. `:ro` does not change that: the API is
+  still fully writable through a read-only socket file. It also bypasses the
+  socket proxy.
+
+The relic turns each case into an evaluation **warning** naming the container
+and the fix. The build still succeeds.
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `stc.relics.docker.guards.enable` | bool | `false` (`true` in `cogitator-docker-server`) | Warn about the two bypasses |
+
+The relic only checks containers when `virtualisation.oci-containers.backend`
+is `docker`; with another backend it warns once that it checks nothing. If you import the docker relics one by one instead of the
+cogitator, import `relics-docker-guards` and enable it yourself.
+
+### What warns
+
+| `ports` entry | Result |
+|---|---|
+| `"8080"`, `"3000:8080"`, `"3000:8080/tcp"` | warns: no address means every interface |
+| `"0.0.0.0:3000:8080"`, `"[::]:80:80"`, `"[::0]:80:80"` | warns |
+| `"127.0.0.1:3000:8080"`, `"[::1]:80:80"`, `"100.64.0.1:3000:8080"` | passes: a specific address |
+
+Every container whose `volumes` mount `/run/docker.sock` or
+`/var/run/docker.sock`, or the whole `/run` or `/var/run` that holds it, warns.
+
+STC's own containers are exempt where the bypass is their job:
+
+- the relic's own `80:80/tcp` and `443:443/tcp` on `traefik` while
+  `relics-docker-traefik` is on — a port you add to `traefik` still warns;
+- `docker-socket-proxy`'s socket while `relics-docker-socket-proxy` is on.
+
+With the proxy off, the Traefik relic mounts the raw socket itself, and that
+warns. It is exactly the bypass this relic reports.
+
+### Saying why
+
+A container that needs the bypass says so with a label. The label's value is
+the reason, and the warning goes away:
+
+```nix
+virtualisation.oci-containers.containers.mailserver.labels."stc.docker/public-ports" =
+  "SMTP: Traefik cannot front it";
+
+virtualisation.oci-containers.containers.crowdsec-manager.labels."stc.docker/raw-docker-socket" =
+  "needs exec and restart, which the proxy can only grant as root anyway";
+```
+
+To label Traefik's own raw-socket fallback, set
+`virtualisation.oci-containers.containers.traefik.labels."stc.docker/raw-docker-socket"`:
+it merges into the relic's definition.
+
+### Limits
+
+- `-p`, `-v` and `--mount` passed through `extraOptions` are not checked:
+  declare ports in `ports` and mounts in `volumes`.
+- A daemon-wide default address (`virtualisation.docker.daemon.settings.ip =
+  "127.0.0.1"`) makes `"3000:8080"` bind to loopback, but the relic still
+  warns: write the address in the entry.
+- Binding to `127.0.0.1` keeps a port off the network only with Docker 28 or
+  later; older versions let hosts on the same link reach it.
+- `--network=host` does not warn. The host's own network stack serves those
+  ports, so `networking.firewall` applies to them.
+
+These are warnings for now. They will become assertions once known consumers
+build without them, the same path the [healthcheck check](#when-the-healthcheck-lives-in-the-image)
+took.
+
 ## Full Stack Example
 
 ```nix

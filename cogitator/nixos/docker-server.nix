@@ -28,6 +28,7 @@ in {
     ../../relics/nixos/docker/socket-proxy.nix
     ../../relics/nixos/docker/crowdsec.nix
     ../../relics/nixos/docker/notify.nix
+    ../../relics/nixos/docker/guards.nix
     ../../relics/nixos/pre-switch-checks.nix
     ../../relics/nixos/server-survivability.nix
     ../../relics/nixos/nix-housekeeping.nix
@@ -87,6 +88,12 @@ in {
       crowdsec.enable = lib.mkDefault true;
 
       notify.enable = cfg.notify.enable;
+
+      # This profile promises that Traefik and the socket-proxy are the only
+      # ways in; the guards warn when a container steps around them. mkDefault:
+      # warnings only, additive, and a consumer with their own audit can
+      # decline them.
+      guards.enable = lib.mkDefault true;
     };
 
     # A Docker server is the shape this guards: a remote host, deployed with a

@@ -69,6 +69,47 @@
         "traefik.http.middlewares.proving-headers.headers.frameDeny" = "true";
       };
     };
+
+    # docker guards: one container in each case. Placeholder images, never run;
+    # the guards are evaluation-time warnings, read back in the script below.
+    virtualisation.oci-containers.containers = {
+      # Unlabelled bypasses: one public port, one raw socket. Each must warn.
+      "stc-proving-exposed" = {
+        image = "stc-proving/exposed:placeholder";
+        ports = ["8080:80/tcp" "127.0.0.1:9090:90"];
+        volumes = ["/var/run/docker.sock:/var/run/docker.sock:ro"];
+      };
+      # A port appended to STC's own Traefik: the exemption covers the relic's
+      # 80/443 only, so this one must warn.
+      "traefik".ports = ["8081:8080"];
+      # The same bypasses, each with its reason. Must not warn.
+      "stc-proving-declared" = {
+        image = "stc-proving/declared:placeholder";
+        ports = ["2525:25/tcp"];
+        volumes = ["/run/docker.sock:/var/run/docker.sock"];
+        labels = {
+          "stc.docker/public-ports" = "SMTP, Traefik cannot front it";
+          "stc.docker/raw-docker-socket" = "proving the opt-out";
+        };
+      };
+    };
+  };
+
+  # Never started: the script reads its evaluated warnings only. The socket
+  # proxy is declined, so Traefik falls back to the raw socket (must warn), and
+  # a consumer container that merely carries the proxy's name gets no
+  # exemption (must warn).
+  nodes.noproxy = {
+    imports = [self.nixosModules.cogitator-docker-server];
+    stc.cogitator.docker-server.enable = true;
+    stc.relics.docker.socketProxy.enable = false;
+    stc.relics.docker.crowdsec.enable = false;
+    stc.relics.docker.traefik.image = "stc-proving/traefik:placeholder";
+    stc.relics.docker.traefik.acme.email = "ops@example.test";
+    virtualisation.oci-containers.containers."docker-socket-proxy" = {
+      image = "stc-proving/impostor:placeholder";
+      volumes = ["/run/docker.sock:/var/run/docker.sock:ro"];
+    };
   };
 
   # A function, so the script below can reach the generated pre-switch checks.
@@ -96,6 +137,14 @@
     # also proves the cogitator enables them with mkDefault, as documented.
     stc.relics.serverSurvivability.enable = false;
     stc.relics.nixHousekeeping.enable = false;
+    # Counter-example for the docker guards: the same unlabelled bypass, with
+    # the guards declined, warns about nothing.
+    stc.relics.docker.guards.enable = false;
+    virtualisation.oci-containers.containers."stc-proving-exposed" = {
+      image = "stc-proving/exposed:placeholder";
+      ports = ["8080:80/tcp"];
+      volumes = ["/var/run/docker.sock:/var/run/docker.sock:ro"];
+    };
 
     # Everything the rest of the stack needs, and nothing for CrowdSec.
     stc.relics.docker.traefik.image = "stc-proving/traefik:placeholder";
@@ -283,6 +332,43 @@
         assert ${toString nodes.machine.boot.loader.grub.configurationLimit} == 5
         assert ${toString nodes.machine.boot.loader.systemd-boot.configurationLimit} == 5
         assert ${toString nodes.nocrowdsec.boot.loader.grub.configurationLimit} != 5
+
+    with subtest("the docker guards warn on bypasses and only on them"):
+        # The nodes' evaluated warnings, as a Python list of strings. Only the
+        # guards' messages start with 'Container "'.
+        guarded = {
+            machine: [
+                w.splitlines()[0]
+                for w in ${builtins.toJSON nodes.machine.warnings}
+                if w.startswith('Container "')
+            ],
+            nocrowdsec: [
+                w.splitlines()[0]
+                for w in ${builtins.toJSON nodes.nocrowdsec.warnings}
+                if w.startswith('Container "')
+            ],
+            "noproxy": [
+                w.splitlines()[0]
+                for w in ${builtins.toJSON nodes.noproxy.warnings}
+                if w.startswith('Container "')
+            ],
+        }
+        print(guarded[machine])
+        # Exactly the unlabelled bypasses: not the labelled container, not
+        # Traefik's own 80/443, not the socket-proxy's socket, not
+        # 127.0.0.1:9090 — but the port a consumer appended to Traefik.
+        assert sorted(guarded[machine]) == [
+            'Container "stc-proving-exposed" mounts the raw Docker socket',
+            'Container "stc-proving-exposed" publishes 8080:80/tcp on every',
+            'Container "traefik" publishes 8081:8080 on every',
+        ], guarded[machine]
+        assert guarded[nocrowdsec] == [], guarded[nocrowdsec]
+        # The exemptions follow the relics: with the proxy off, Traefik's own
+        # raw-socket fallback warns, and so does a stand-in with the proxy's name.
+        assert sorted(guarded["noproxy"]) == [
+            'Container "docker-socket-proxy" mounts the raw Docker socket',
+            'Container "traefik" mounts the raw Docker socket',
+        ], guarded["noproxy"]
 
     with subtest("the state manifest names paths that exist"):
         # The manifest is descriptive, so the only thing worth proving is that

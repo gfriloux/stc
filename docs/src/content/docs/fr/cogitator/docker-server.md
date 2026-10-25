@@ -29,6 +29,7 @@ stc.relics.docker.traefik.enable = true;
 stc.relics.docker.socketProxy.enable = true;  # Traefik utilise le proxy, pas le socket brut
 stc.relics.docker.crowdsec.enable = true;
 stc.relics.docker.notify.enable = cfg.notify.enable;  # off sauf opt-in explicite
+stc.relics.docker.guards.enable = lib.mkDefault true; # avertit des conteneurs qui contournent Traefik ou le proxy
 stc.relics.preSwitchChecks.enable = true;             # voir plus bas
 stc.relics.serverSurvivability.enable = lib.mkDefault true;  # redémarrer plutôt qu'attendre une console
 stc.relics.nixHousekeeping.enable = lib.mkDefault true;      # store et journal bornés
