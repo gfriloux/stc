@@ -3,6 +3,29 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.20.0] — 2026-10-25
+
+### Documentation
+
+- **plans**: add the v0.20.0 state-manifest plan and ledger ([`0927d95`](https://github.com/gfriloux/stc/commit/0927d95b2d1a1c1b49b41c906364d189be9962d9))
+- **reference**: document the state manifest (en, fr) ([`6e6db35`](https://github.com/gfriloux/stc/commit/6e6db352918ee34425c31a3e10fd85b24910bb1f))
+- **plans**: add the v0.20.0 SMART relic plan and ledger ([`dc0b07c`](https://github.com/gfriloux/stc/commit/dc0b07cc9a9d00dabb8dd64cebec4d3ff9ccd7a3))
+- **relics**: document the SMART relic (en, fr) ([`b398d3f`](https://github.com/gfriloux/stc/commit/b398d3ff13df7bdca580c601437a7e59af5f633e))
+- **plans**: add the v0.20.0 polkit unit delegation plan and ledger ([`4f73260`](https://github.com/gfriloux/stc/commit/4f7326028dd5922f9fa14e0635fa7409d0596e88))
+- **relics**: document the polkit unit delegation relic (en, fr) ([`d406486`](https://github.com/gfriloux/stc/commit/d4064864a5376743c0e267185f40de58b64058a9))
+
+### Features
+
+- **relics-state**: add stc.relics.state.paths, a descriptive manifest of relic state ([`63d1e31`](https://github.com/gfriloux/stc/commit/63d1e31ecf5908fefdab0c8608930a9a92ad8265))
+- **relics**: declare the persistent state of six relics in the manifest ([`9855830`](https://github.com/gfriloux/stc/commit/98558307147606e56cb6986697a896fcd96a5956))
+- **relics-smart**: add a SMART relic that hands smartd alerts to notifyCommand ([`34e562b`](https://github.com/gfriloux/stc/commit/34e562baf7086c4e6edc78ab26b6114d1b40f549))
+- **relics-polkit-units**: delegate named systemd units to a group through polkit ([`4ab8549`](https://github.com/gfriloux/stc/commit/4ab8549e7114bc78c5f2bb5d39ce46b653715e39))
+
+### Testing
+
+- **provings**: prove the state manifest names real paths ([`02f9c49`](https://github.com/gfriloux/stc/commit/02f9c49d64fd66afc78e01f788f0f9a2eeef47a1))
+- **provings**: prove smartd's own alerts reach notifyCommand ([`35c3c46`](https://github.com/gfriloux/stc/commit/35c3c4689742c81ce6a5c589beac261c8d193856))
+- **provings**: prove polkit delegation grants only its group, units and verbs ([`6fb4a6f`](https://github.com/gfriloux/stc/commit/6fb4a6fdad0400a5942d0b111f3918dda4ba4e99))
 ## [0.19.0] — 2026-10-24
 
 ### Documentation
