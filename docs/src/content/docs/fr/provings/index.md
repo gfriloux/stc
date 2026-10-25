@@ -25,8 +25,8 @@ rapide et statique.
 - Linux uniquement (`x86_64-linux` / `aarch64-linux`) — l'attribut est vide ailleurs.
 - Builder : `pkgs.testers.runNixOSTest`.
 
-**Ce que `just test` coûte maintenant.** Onze épreuves, **quinze boots de VM** —
-`vm`, `gaming` et `home-desktop` démarrent deux nœuds chacune, `dreadnought` en
+**Ce que `just test` coûte maintenant.** Douze épreuves, **dix-huit boots de VM** —
+`vm`, `gaming`, `home-desktop`, `docker-server` et `smart` démarrent deux nœuds chacune, `dreadnought` en
 déclare un second qu'elle ne démarre jamais, et `sarcophagus-kvm` démarre son
 nœud unique deux fois — et les clôtures contiennent
 KDE deux fois (`workstation` et `plasma`), Steam une fois, les 31 paquets nommés
@@ -70,6 +70,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `enginseer` | `cogitator-enginseer` (Home Manager) | Active le profil pour un utilisateur de test dans une VM et vérifie ses revendications de runtime : les trois alias qu'il déclare se résolvent dans un shell réellement lancé (pas les six que rend aussi `programs.lsd`), `oh-my-posh` s'initialise depuis le thème que le cogitator livre, `git` choisit lui-même `delta` comme pager de diff avec l'`interactive.diffFilter` de delta en place, direnv est accroché à fish avec nix-direnv et silencieux, `FZF_CTRL_R_COMMAND` est posée et vide donc Ctrl-R appartient à atuin, `~/.ssh/config` porte le multiplexage **sans** le bloc par défaut legacy de Home Manager, le `pinentry-program` de gpg-agent est le `pinentry-curses` sans tête, et la saveur catppuccin déclarée atteint le thème de bat |
 | `home-desktop` | `cogitator-desktop` (Home Manager) | Deux nœuds. Sur le profil **seul** : kitty rend sa configuration, la relique ghostty rend son unité utilisateur et ses overrides, zen-browser atteint le profil utilisateur sous le nom `zen-beta`, les `gimp` et `vlc` propres au cogitator sont installés, et l'option `fonts` de la relique kitty rend les polices Nerd visibles de `fc-list`. Sur un nœud portant les **deux** profils Home Manager : le `mkForce pinentry-qt` de desktop gagne l'arbitrage contre le `mkDefault pinentry-curses` d'enginseer — la seule interaction entre cogitators vérifiée de toute la suite — et une revendication de chaque profil tient encore sous composition |
 | `dreadnought` | `cogitator-dreadnought` | Cinq reliques composées sur un même hôte démarrent, avec exactement une unité chargée en échec faute de pool ; le support ZFS est fonctionnel sur le noyau booté ; les deux paramètres noyau AWS qui discriminent atteignent `/proc/cmdline` ; le script d'agrandissement porte les `poolName`, `ebsDisk` et `ebsPartition` du profil ; le timer de scrub ZFS porte `scrubInterval` ; la persistance explicite est bien bind-montée, y compris une entrée posée par l'option du cogitator ; le durcissement survit à la composition ; le rollback d'impermanence a tourné dans l'initrd et échoué comme prévu, et cet échec est lisible depuis le système démarré via `stc-impermanence-state.service` et non plus seulement dans un journal d'initrd |
+| `smart` | `relics-smart` (aucun cogitator ne l'active) | Sur un disque SATA émulé qui répond au SMART, les alertes `EmailTest` et `Temperature` de smartd lui-même arrivent dans `notifyCommand` avec l'environnement documenté, et sa sortie arrive dans le journal ; smartd.conf ne porte qu'un chemin d'alerte ; le fichier d'état existe. Un second nœud avec un seul disque virtio montre `smartd.service` en échec avec le code « aucun disque » de smartd, et aucune alerte |
 
 ## Ajouter une épreuve
 
@@ -264,7 +265,7 @@ trois reliques apportent.
 
 ## Démarrer une vraie image — le patron « image externe »
 
-Neuf des onze épreuves laissent le pilote de test synthétiser un nœud.
+Dix des douze épreuves laissent le pilote de test synthétiser un nœud.
 `sarcophagus-kvm` ne le peut pas : la revendication de son profil **est** le
 disque, et sur un nœud synthétisé le module qemu-vm remplace `fileSystems` par le
 sien à la priorité 10 — ni le pool, ni les datasets, ni le rollback ne seraient
