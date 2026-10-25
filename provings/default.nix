@@ -61,6 +61,7 @@
         home-desktop = pkgs.testers.runNixOSTest (import ./home-desktop.nix {inherit self inputs;});
         # The only line built from pkgs-unfree — see the comment on that instance.
         gaming = pkgs-unfree.testers.runNixOSTest (import ./gaming.nix {inherit self;});
+        smart = pkgs.testers.runNixOSTest (import ./smart.nix {inherit self;});
       };
     };
 }
