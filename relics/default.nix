@@ -24,6 +24,7 @@
     relics-state = ./nixos/state.nix;
     relics-smart = ./nixos/smart.nix;
     relics-polkit-units = ./nixos/polkit-units.nix;
+    relics-heartbeat = ./nixos/heartbeat.nix;
 
     # Impermanence needs the upstream module injected via inputs closure.
     relics-impermanence = {...}: {

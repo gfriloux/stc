@@ -24,7 +24,7 @@ the `just ci` gate**: a VM test is heavy, and the CI gate stays fast and static.
 - Linux only (`x86_64-linux` / `aarch64-linux`) — the attribute is empty elsewhere.
 - Builder: `pkgs.testers.runNixOSTest`.
 
-**What `just test` now costs.** Thirteen provings, **nineteen VM boots** — `vm`,
+**What `just test` now costs.** Fourteen provings, **twenty VM boots** — `vm`,
 `gaming`, `home-desktop`, `docker-server` and `smart` each boot two nodes, `dreadnought` declares a second
 node it never starts, `docker-server` a third, and `sarcophagus-kvm` boots its single node twice — and the closures include KDE twice (`workstation` and
 `plasma`), Steam once, the enginseer toolkit's 31 named packages, and GIMP, VLC
@@ -67,6 +67,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `dreadnought` | `cogitator-dreadnought` | Five relics composed on one host come up, with exactly one loaded unit failing for want of a pool; ZFS support is functional on the booted kernel; the two discriminating AWS kernel parameters reach `/proc/cmdline`; the pool-growth script carries the profile's `poolName`, `ebsDisk` and `ebsPartition`; the ZFS scrub timer carries `scrubInterval`; explicit persistence is bind-mounted, including an entry set through the cogitator's own option; the hardening suite survives the composition; the impermanence rollback ran in the initrd and failed as expected, and that failure is legible from the booted system through `stc-impermanence-state.service` rather than only from an initrd journal |
 | `smart` | `relics-smart` (no cogitator enables it) | On an emulated SATA disk that answers SMART, smartd's own `EmailTest` and `Temperature` alerts reach `notifyCommand` with the documented environment, and its output reaches the journal; smartd.conf carries one alert path; the state file exists. A second node with only a virtio disk shows `smartd.service` failed with smartd's "no device" exit, and no alert |
 | `polkit-units` | `relics-polkit-units` (no cogitator enables it) | Unprivileged users run `systemctl`: a group member restarts, stops and starts the named unit and restarts one covered only by the prefix, and drives a listed template instance; another instance, another unit, another verb, freeze/thaw, `enable`, a non-member, a manager-level call with no unit and `systemd-run --unit=` under a prefixed or delegated name are all refused, with no rule error in polkit's log. Run twice, the second time with `/proc` remounted `hidepid=2` as the hardening relic sets it |
+| `heartbeat` | `relics-heartbeat` (no cogitator enables it) | Against a local HTTP stub: a successful job pings, and so does one ending with a status it declares in `SuccessExitStatus=`; a manual start of the heartbeat does not; a failed job, a oneshot stopped midway and a long-running service stopped midway (which systemd records as `Result=success`) do not; an unreachable receiver fails only the heartbeat unit; the URL appears in no unit file or script |
 
 ## Adding a proving
 
@@ -259,7 +260,7 @@ packaging rather than STC's wiring, which is all these three relics contribute.
 
 ## Booting a real image — the external-image pattern
 
-Eleven of the thirteen provings let the test driver synthesise a node. `sarcophagus-kvm`
+Twelve of the fourteen provings let the test driver synthesise a node. `sarcophagus-kvm`
 cannot: its profile's claim *is* the disk, and on a synthesised node the qemu-vm
 module replaces `fileSystems` with its own set at priority 10 — so neither the
 pool, nor the datasets, nor the rollback would be observable.

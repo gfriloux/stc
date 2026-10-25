@@ -70,6 +70,7 @@ test:
     nix build .#legacyPackages.x86_64-linux.provings.gaming -L --no-write-lock-file
     nix build .#legacyPackages.x86_64-linux.provings.smart -L --no-write-lock-file
     nix build .#legacyPackages.x86_64-linux.provings.polkit-units -L --no-write-lock-file
+    nix build .#legacyPackages.x86_64-linux.provings.heartbeat -L --no-write-lock-file
 
 
 # ── Documentation ─────────────────────────────────────────────────────────────
