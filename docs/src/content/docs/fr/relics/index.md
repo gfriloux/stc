@@ -20,7 +20,7 @@ stc.relics.zfs.enable = true;
 stc.relics.networking.enable = true;
 stc.relics.hardening.kernel.enable = true;
 stc.relics.docker.traefik.enable = true;
-stc.relics.gui.kitty.enable = true;
+stc.relics.gui.ghostty.enable = true;
 ```
 
 Ce namespace est isolé des options NixOS et Home Manager. Pas de collision.
@@ -84,8 +84,8 @@ modules = [
 
 | Nom du module | Option d'activation | Objet |
 |---------------|---------------------|-------|
-| `relics-kitty` | `stc.relics.gui.kitty.enable` | Terminal Kitty + Nerd Fonts |
-| `relics-ghostty` | `stc.relics.gui.ghostty.enable` | Terminal Ghostty (accéléré GPU, GTK4 natif) |
+| `relics-ghostty` | `stc.relics.gui.ghostty.enable` | Terminal Ghostty (accéléré GPU, GTK4 natif) + Nerd Fonts |
+| `relics-kitty` | `stc.relics.gui.kitty.enable` | **Retirée en `v0.22.0`** — avertit si posée ; utiliser `relics-ghostty` |
 | `relics-zen-browser` | `stc.relics.gui.zen-browser.enable` | Zen Browser |
 | `relics-yubikey-user` | `stc.relics.yubikey.enable` | Outils utilisateur YubiKey : ykman, détecteur de toucher, app OATH |
 | `relics-plasma-manager` | `stc.relics.plasmaManager.enable` | Configuration KDE déclarative via plasma-manager |

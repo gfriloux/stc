@@ -1,22 +1,26 @@
 ---
 title: Home Apps
-description: Home Manager relics for GUI applications — Kitty, Ghostty, and Zen Browser.
+description: Home Manager relics for GUI applications — Ghostty and Zen Browser.
 ---
 
-Three Home Manager relics for GUI applications that carry real configuration beyond
+Two Home Manager relics for GUI applications that carry real configuration beyond
 a bare package install.
 
-## Kitty
+## Ghostty
 
-**Module:** `stc.homeModules.relics-kitty`
+**Module:** `stc.homeModules.relics-ghostty`
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.relics.gui.kitty.enable` | bool | `false` | Enable Kitty terminal emulator |
-| `stc.relics.gui.kitty.fonts.enable` | bool | `true` | Install a curated set of Nerd Fonts |
+| `stc.relics.gui.ghostty.enable` | bool | `false` | Enable Ghostty terminal emulator |
+| `stc.relics.gui.ghostty.fonts.enable` | bool | `true` | Install a curated set of Nerd Fonts |
 
-Enables `programs.kitty` via Home Manager. When `fonts.enable = true` (the default),
-installs the following Nerd Fonts alongside Kitty:
+Enables `programs.ghostty` via Home Manager. Ghostty is a GPU-accelerated terminal
+written in Zig, with a native GTK4 renderer on Linux and an extended terminal
+protocol.
+
+When `fonts.enable = true` (the default), installs the following fonts alongside
+Ghostty:
 
 - JetBrainsMono Nerd Font
 - ProFont Nerd Font
@@ -27,39 +31,14 @@ installs the following Nerd Fonts alongside Kitty:
 - Iosevka (upstream)
 
 ```nix
-modules = [ stc.homeModules.relics-kitty ];
-
-# home.nix
-{
-  stc.relics.gui.kitty.enable = true;
-
-  # Set false to skip the Nerd Font installation
-  stc.relics.gui.kitty.fonts.enable = false;
-}
-```
-
----
-
-## Ghostty
-
-**Module:** `stc.homeModules.relics-ghostty`
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `stc.relics.gui.ghostty.enable` | bool | `false` | Enable Ghostty terminal emulator |
-
-Enables `programs.ghostty` via Home Manager. Ghostty is a GPU-accelerated terminal
-with a native GTK4 renderer on Linux, an extended terminal protocol, and a Rust/Zig
-implementation.
-
-Ghostty and Kitty can coexist — each has its own configuration namespace and binary.
-
-```nix
 modules = [ stc.homeModules.relics-ghostty ];
 
 # home.nix
 {
   stc.relics.gui.ghostty.enable = true;
+
+  # Set false to skip the Nerd Font installation
+  stc.relics.gui.ghostty.fonts.enable = false;
 
   # Configure via programs.ghostty.settings:
   programs.ghostty.settings = {
@@ -90,6 +69,21 @@ modules = [ stc.homeModules.relics-zen-browser ];
 ```
 
 :::tip[Desktop profile]
-If you want kitty + ghostty + zen-browser + GIMP + VLC in one option, use the
+If you want ghostty + zen-browser + GIMP + VLC in one option, use the
 [`cogitator-desktop`](/stc/en/cogitator/desktop/) profile instead.
 :::
+
+## Kitty (removed)
+
+The kitty relic was removed in `v0.22.0` (#1); Ghostty replaces it, and the Nerd
+Fonts moved to `stc.relics.gui.ghostty.fonts.enable`. `stc.homeModules.relics-kitty`
+still exists so that importing it does not break your build, but it configures
+nothing: setting `stc.relics.gui.kitty.enable` or `stc.relics.gui.kitty.fonts.enable`
+(to any value, `false` included) only raises an evaluation warning. Drop those
+lines; the options themselves disappear at `v1.0.0`.
+
+Code that *reads* these options breaks instead: they now default to `null`, so
+`lib.mkIf config.stc.relics.gui.kitty.enable …` fails with "'mkIf' called with
+a non-Boolean condition". `null` is what lets an explicit `false` warn too.
+
+To keep kitty, enable it yourself with `programs.kitty.enable = true;`.

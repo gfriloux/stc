@@ -17,7 +17,7 @@
 # The rule these rows serve is in docs/*/reference/overridable-defaults.md.
 
 # ── counts ──────────────────────────────────────────────────────────────────
-count	cogitator/home/desktop.nix	3	0	1	three GUI relics as defaults so one terminal can be dropped; pinentry at mkOverride 900 to beat enginseer's default without beating the consumer
+count	cogitator/home/desktop.nix	2	0	1	two GUI relics as defaults so either can be declined (kitty removed, #1); pinentry at mkOverride 900 to beat enginseer's default without beating the consumer
 count	cogitator/home/enginseer/default.nix	13	0	0	tool settings are the consumer's taste, not the profile's trade; the tool list itself stays at normal priority
 count	cogitator/nixos/docker-server.nix	7	0	0	socketProxy, crowdsec and preSwitchChecks are additive; autoPrune is a default kept off because a missed weekly window takes the stack down; serverSurvivability, nixHousekeeping and the docker guards are additive
 count	cogitator/nixos/dreadnought.nix	4	0	0	networking and the hardening suite are additive; zfs, impermanence and aws stay at normal priority because this profile declares the filesystems that assume them; serverSurvivability and nixHousekeeping are additive
