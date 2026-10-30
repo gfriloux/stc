@@ -151,6 +151,10 @@ in {
             # A plain definition, which is the whole point: it must win without
             # the consumer knowing anything about Nix priorities.
             services.gpg-agent.pinentry.package = pkgs.pinentry-gnome3;
+            # The line the docs taught before #1 to keep ghostty only. The
+            # kitty relic is gone; this must still evaluate, with a warning —
+            # asserted at the top of the testScript.
+            stc.relics.gui.kitty.enable = false;
             home.stateVersion = "25.11";
           };
         };
@@ -188,114 +192,121 @@ in {
     };
   };
 
-  testScript = ''
-    HOME = "/home/proving"
-    PROFILE = "/etc/profiles/per-user/proving"
+  # Asserted at evaluation, not in the VM: a warning leaves nothing at runtime.
+  # The promise of #1 is that a consumer still setting a kitty option gets a
+  # warning, not an error. If the cogitator stopped importing the tombstone,
+  # the consumer node would not evaluate; if the tombstone stopped warning,
+  # this assert would fail.
+  testScript = {nodes, ...}:
+    assert inputs.nixpkgs.lib.any (inputs.nixpkgs.lib.hasPrefix "stc.relics.gui.kitty.enable has no effect")
+    nodes.consumer.home-manager.users.proving.warnings; ''
+      HOME = "/home/proving"
+      PROFILE = "/etc/profiles/per-user/proving"
 
-    start_all()
-    desktop.wait_for_unit("multi-user.target")
-    composed.wait_for_unit("multi-user.target")
+      start_all()
+      desktop.wait_for_unit("multi-user.target")
+      composed.wait_for_unit("multi-user.target")
 
-    with subtest("both profiles activate, and both hosts stay healthy"):
-        for machine in [desktop, composed]:
-            machine.wait_for_unit("home-manager-proving.service")
-            state = machine.succeed("systemctl is-system-running --wait || true").strip()
-            assert state == "running", f"{machine.name}: unexpected state {state}"
+      with subtest("both profiles activate, and both hosts stay healthy"):
+          for machine in [desktop, composed]:
+              machine.wait_for_unit("home-manager-proving.service")
+              state = machine.succeed("systemctl is-system-running --wait || true").strip()
+              assert state == "running", f"{machine.name}: unexpected state {state}"
 
-    with subtest("kitty is gone from the profile"):
-        # The kitty relic was removed (#1); the cogitator still imports its
-        # tombstone, which must render nothing. Before #1 this node had both.
-        desktop.fail(f"test -e {HOME}/.config/kitty")
-        desktop.fail(f"test -e {PROFILE}/bin/kitty")
+      with subtest("kitty is gone from the profile"):
+          # The kitty relic was removed (#1); the cogitator still imports its
+          # tombstone, which must render nothing. Before #1 this node had both.
+          desktop.fail(f"test -e {HOME}/.config/kitty")
+          desktop.fail(f"test -e {PROFILE}/bin/kitty")
 
-    with subtest("the ghostty relic's own option makes the nerd fonts visible"):
-        # stc.relics.gui.ghostty.fonts.enable, default true — the only option of
-        # STC's own across these relics beyond their enable toggles (set by the
-        # cogitator itself), and the only one whose absence would be invisible
-        # without this check. Seven font packages ride on it; they rode on the
-        # kitty relic until #1, and losing them silently is what this guards.
-        #
-        # Asserted through fontconfig rather than by a path test, after measuring
-        # that the obvious path does not exist: environment.pathsToLink has no
-        # /share/fonts entry, so /etc/profiles/per-user/<u>/share/fonts is never
-        # populated. The fonts live inside the home-manager-path derivation, and
-        # ~/.config/fontconfig/conf.d/10-hm-fonts.conf is what points at it. So
-        # the behavioural question — can the session actually find these fonts —
-        # is both the right one and the only one with a true answer.
-        families = desktop.succeed("su - proving -c 'fc-list : family'")
-        for family in ["JetBrainsMono Nerd Font", "Iosevka Nerd Font"]:
-            assert family in families, (
-                f"{family!r} is not visible to fontconfig — the relic's fonts "
-                "option did not reach the session"
-            )
+      with subtest("the ghostty relic's own option makes the nerd fonts visible"):
+          # stc.relics.gui.ghostty.fonts.enable, default true — the only option of
+          # STC's own across these relics beyond their enable toggles (set by the
+          # cogitator itself), and the only one whose absence would be invisible
+          # without this check. Seven font packages ride on it; they rode on the
+          # kitty relic until #1, and losing them silently is what this guards.
+          #
+          # Asserted through fontconfig rather than by a path test, after measuring
+          # that the obvious path does not exist: environment.pathsToLink has no
+          # /share/fonts entry, so /etc/profiles/per-user/<u>/share/fonts is never
+          # populated. The fonts live inside the home-manager-path derivation, and
+          # ~/.config/fontconfig/conf.d/10-hm-fonts.conf is what points at it. So
+          # the behavioural question — can the session actually find these fonts —
+          # is both the right one and the only one with a true answer.
+          families = desktop.succeed("su - proving -c 'fc-list : family'")
+          for family in ["JetBrainsMono Nerd Font", "Iosevka Nerd Font"]:
+              assert family in families, (
+                  f"{family!r} is not visible to fontconfig — the relic's fonts "
+                  "option did not reach the session"
+              )
 
-    with subtest("the ghostty relic renders its user unit and overrides"):
-        # Measured: both of these appear on the desktop node and not on the
-        # reference node, so the pair is what discriminates the ghostty relic.
-        unit = f"{HOME}/.config/systemd/user/app-com.mitchellh.ghostty.service"
-        desktop.succeed(f"test -s {unit}")
-        desktop.succeed(f"test -s {unit}.d/overrides.conf")
-        desktop.succeed(f"test -x {PROFILE}/bin/ghostty")
+      with subtest("the ghostty relic renders its user unit and overrides"):
+          # Measured: both of these appear on the desktop node and not on the
+          # reference node, so the pair is what discriminates the ghostty relic.
+          unit = f"{HOME}/.config/systemd/user/app-com.mitchellh.ghostty.service"
+          desktop.succeed(f"test -s {unit}")
+          desktop.succeed(f"test -s {unit}.d/overrides.conf")
+          desktop.succeed(f"test -x {PROFILE}/bin/ghostty")
 
-    with subtest("the zen-browser relic reaches the user's profile"):
-        # The one relic of the three that renders no file at all, so the profile
-        # is the only place it is observable — which is what useUserPackages buys
-        # this proving.
-        #
-        # `zen-beta`, not `zen`: the cogitator imports
-        # inputs.zen-browser.homeModules.beta. Measured by listing the built
-        # profile; the obvious name would have been red.
-        desktop.succeed(f"test -x {PROFILE}/bin/zen-beta")
+      with subtest("the zen-browser relic reaches the user's profile"):
+          # The one relic of the three that renders no file at all, so the profile
+          # is the only place it is observable — which is what useUserPackages buys
+          # this proving.
+          #
+          # `zen-beta`, not `zen`: the cogitator imports
+          # inputs.zen-browser.homeModules.beta. Measured by listing the built
+          # profile; the obvious name would have been red.
+          desktop.succeed(f"test -x {PROFILE}/bin/zen-beta")
 
-    with subtest("the cogitator's own package list is installed"):
-        # home.packages of cogitator/home/desktop.nix, as opposed to anything a
-        # relic pulls in. libnotify ships no binary of that name, so the two that
-        # do are checked.
-        for binary in ["gimp", "vlc"]:
-            desktop.succeed(f"test -x {PROFILE}/bin/{binary}")
+      with subtest("the cogitator's own package list is installed"):
+          # home.packages of cogitator/home/desktop.nix, as opposed to anything a
+          # relic pulls in. libnotify ships no binary of that name, so the two that
+          # do are checked.
+          for binary in ["gimp", "vlc"]:
+              desktop.succeed(f"test -x {PROFILE}/bin/{binary}")
 
-    with subtest("on both profiles together, the graphical pinentry wins"):
-        # The headline claim, and the only cross-cogitator interaction proven in
-        # this suite.
-        #
-        # enginseer sets pinentry-curses with mkDefault and desktop forces
-        # pinentry-qt over it. provings/enginseer.nix asserts the curses side on a
-        # node carrying enginseer alone; this asserts the qt side on a node
-        # carrying both. Neither node alone would show the contest.
-        #
-        # Read from ~/.gnupg/gpg-agent.conf, not from the systemd unit: measured
-        # while writing the enginseer proving, the rendered unit says nothing
-        # about the pinentry.
-        conf = composed.succeed(f"cat {HOME}/.gnupg/gpg-agent.conf")
-        assert "pinentry-qt" in conf, (
-            f"the graphical pinentry did not win the contest:\n{conf}"
-        )
-        assert "pinentry-curses" not in conf, (
-            f"the headless pinentry survived desktop's override:\n{conf}"
-        )
+      with subtest("on both profiles together, the graphical pinentry wins"):
+          # The headline claim, and the only cross-cogitator interaction proven in
+          # this suite.
+          #
+          # enginseer sets pinentry-curses with mkDefault and desktop forces
+          # pinentry-qt over it. provings/enginseer.nix asserts the curses side on a
+          # node carrying enginseer alone; this asserts the qt side on a node
+          # carrying both. Neither node alone would show the contest.
+          #
+          # Read from ~/.gnupg/gpg-agent.conf, not from the systemd unit: measured
+          # while writing the enginseer proving, the rendered unit says nothing
+          # about the pinentry.
+          conf = composed.succeed(f"cat {HOME}/.gnupg/gpg-agent.conf")
+          assert "pinentry-qt" in conf, (
+              f"the graphical pinentry did not win the contest:\n{conf}"
+          )
+          assert "pinentry-curses" not in conf, (
+              f"the headless pinentry survived desktop's override:\n{conf}"
+          )
 
-    with subtest("but a consumer naming their own pinentry wins over the profile"):
-        # The other half of the contest, and the one issue #86 added. desktop
-        # has to beat enginseer's default without beating the person composing
-        # them: mkOverride 900 sits between a default (1000) and a definition
-        # (100). With mkForce (50) here instead, this node got pinentry-qt and
-        # never knew its own definition had been discarded.
-        conf = consumer.succeed(f"cat {HOME}/.gnupg/gpg-agent.conf")
-        assert "pinentry-gnome3" in conf, (
-            f"the consumer's own pinentry was discarded by the profile:\n{conf}"
-        )
-        assert "pinentry-qt" not in conf, (
-            f"the profile's pinentry survived a plain consumer definition:\n{conf}"
-        )
+      with subtest("but a consumer naming their own pinentry wins over the profile"):
+          # The other half of the contest, and the one issue #86 added. desktop
+          # has to beat enginseer's default without beating the person composing
+          # them: mkOverride 900 sits between a default (1000) and a definition
+          # (100). With mkForce (50) here instead, this node got pinentry-qt and
+          # never knew its own definition had been discarded.
+          conf = consumer.succeed(f"cat {HOME}/.gnupg/gpg-agent.conf")
+          assert "pinentry-gnome3" in conf, (
+              f"the consumer's own pinentry was discarded by the profile:\n{conf}"
+          )
+          assert "pinentry-qt" not in conf, (
+              f"the profile's pinentry survived a plain consumer definition:\n{conf}"
+          )
 
-    with subtest("composing the two profiles breaks neither one"):
-        # Cheap, and it is the regression this node is uniquely placed to catch:
-        # a future relic added to either cogitator could collide with the other.
-        # One claim from each profile, on the node that carries both.
-        composed.succeed(f"test -s {HOME}/.config/systemd/user/app-com.mitchellh.ghostty.service")
-        rendered = composed.succeed(f"cat {HOME}/.config/fish/config.fish")
-        assert "alias cat bat" in rendered, (
-            "enginseer's aliases did not survive composition with desktop"
-        )
-  '';
+      with subtest("composing the two profiles breaks neither one"):
+          # Cheap, and it is the regression this node is uniquely placed to catch:
+          # a future relic added to either cogitator could collide with the other.
+          # One claim from each profile, on the node that carries both.
+          composed.succeed(f"test -s {HOME}/.config/systemd/user/app-com.mitchellh.ghostty.service")
+          rendered = composed.succeed(f"cat {HOME}/.config/fish/config.fish")
+          assert "alias cat bat" in rendered, (
+              "enginseer's aliases did not survive composition with desktop"
+          )
+    '';
 }
