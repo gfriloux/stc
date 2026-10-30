@@ -33,10 +33,16 @@ l'installation.
 ### Pinentry graphique
 
 Couplé à `cogitator-enginseer`, le profil Desktop surcharge le pinentry de
-gpg-agent avec `pinentry-qt` (via `lib.mkForce`), remplaçant le défaut
+gpg-agent avec `pinentry-qt` (via `lib.mkOverride 900`), remplaçant le défaut
 `pinentry-curses` compatible headless afin que les demandes de passphrase
 apparaissent dans une fenêtre graphique. La surcharge est inerte si gpg-agent
 n'est pas activé.
+
+La priorité 900 se situe entre un défaut (1000) et une définition simple (100) :
+elle bat le `mkDefault` d'enginseer, mais pas toi. Pour choisir un autre
+pinentry, une définition simple
+`services.gpg-agent.pinentry.package = pkgs.pinentry-gnome3;` suffit — pas
+besoin de `mkForce`.
 
 ### Nerd Fonts
 
