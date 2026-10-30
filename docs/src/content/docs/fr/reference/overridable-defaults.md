@@ -56,7 +56,7 @@ Si tu as contourné l'une d'elles avec `lib.mkForce`, tu peux le retirer.
 | `cogitator-gaming` | `stc.relics.amdGpu.enable`, `stc.relics.pipewire.enable` |
 | `cogitator-docker-server` | `stc.relics.docker.socketProxy.enable`, `stc.relics.docker.crowdsec.enable`, `stc.relics.preSwitchChecks.enable` |
 | `cogitator-dreadnought`, `cogitator-sarcophagus-{kvm,aws}` | `stc.relics.networking.enable`, `stc.cogitator.hardening.enable` |
-| `cogitator-desktop` (Home Manager) | `stc.relics.gui.{kitty,ghostty,zen-browser}.enable` |
+| `cogitator-desktop` (Home Manager) | `stc.relics.gui.{ghostty,zen-browser}.enable` |
 | `cogitator-vm` | `nix.optimise.automatic` |
 
 La ligne `docker-server` mérite une phrase à elle seule. Les reliques Docker

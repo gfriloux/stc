@@ -53,7 +53,7 @@ If you worked around one of these with `lib.mkForce`, you can drop it.
 | `cogitator-gaming` | `stc.relics.amdGpu.enable`, `stc.relics.pipewire.enable` |
 | `cogitator-docker-server` | `stc.relics.docker.socketProxy.enable`, `stc.relics.docker.crowdsec.enable`, `stc.relics.preSwitchChecks.enable` |
 | `cogitator-dreadnought`, `cogitator-sarcophagus-{kvm,aws}` | `stc.relics.networking.enable`, `stc.cogitator.hardening.enable` |
-| `cogitator-desktop` (Home Manager) | `stc.relics.gui.{kitty,ghostty,zen-browser}.enable` |
+| `cogitator-desktop` (Home Manager) | `stc.relics.gui.{ghostty,zen-browser}.enable` |
 | `cogitator-vm` | `nix.optimise.automatic` |
 
 The `docker-server` row is worth a sentence of its own. The Docker relics

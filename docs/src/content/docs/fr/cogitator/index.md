@@ -42,7 +42,7 @@ sous-jacentes. Le profil t'évite simplement d'activer chacune individuellement.
 | Nom du module | Option d'activation | Ce qu'il compose |
 |---------------|---------------------|------------------|
 | `cogitator-enginseer` | `stc.cogitator.enginseer.enable` | Kit CLI complet (shell, outils dev, rites git) |
-| `cogitator-desktop` | `stc.cogitator.desktop.enable` | kitty + zen-browser + GIMP + VLC |
+| `cogitator-desktop` | `stc.cogitator.desktop.enable` | ghostty + zen-browser + GIMP + VLC |
 
 ## Quand utiliser les profils
 

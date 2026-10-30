@@ -1,44 +1,10 @@
 ---
 title: Applications graphiques
-description: Reliques Home Manager pour les applications graphiques — Kitty, Ghostty et Zen Browser.
+description: Reliques Home Manager pour les applications graphiques — Ghostty et Zen Browser.
 ---
 
-Trois reliques Home Manager pour les applications graphiques qui apportent une
+Deux reliques Home Manager pour les applications graphiques qui apportent une
 vraie configuration au-delà d'une simple installation de paquet.
-
-## Kitty
-
-**Module :** `stc.homeModules.relics-kitty`
-
-| Option | Type | Défaut | Description |
-|--------|------|--------|-------------|
-| `stc.relics.gui.kitty.enable` | bool | `false` | Active l'émulateur de terminal Kitty |
-| `stc.relics.gui.kitty.fonts.enable` | bool | `true` | Installe un ensemble de Nerd Fonts sélectionnées |
-
-Active `programs.kitty` via Home Manager. Quand `fonts.enable = true` (valeur par défaut),
-installe les Nerd Fonts suivantes avec Kitty :
-
-- JetBrainsMono Nerd Font
-- ProFont Nerd Font
-- Inconsolata Nerd Font
-- Iosevka Nerd Font
-- Bitstream Vera Sans Mono Nerd Font
-- Droid Sans Mono Nerd Font
-- Iosevka (upstream)
-
-```nix
-modules = [ stc.homeModules.relics-kitty ];
-
-# home.nix
-{
-  stc.relics.gui.kitty.enable = true;
-
-  # Poser false pour ignorer l'installation des Nerd Fonts
-  stc.relics.gui.kitty.fonts.enable = false;
-}
-```
-
----
 
 ## Ghostty
 
@@ -47,13 +13,21 @@ modules = [ stc.homeModules.relics-kitty ];
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
 | `stc.relics.gui.ghostty.enable` | bool | `false` | Active l'émulateur de terminal Ghostty |
+| `stc.relics.gui.ghostty.fonts.enable` | bool | `true` | Installe un ensemble de Nerd Fonts sélectionnées |
 
 Active `programs.ghostty` via Home Manager. Ghostty est un terminal accéléré GPU
-avec un rendu GTK4 natif sous Linux, un protocole terminal étendu, et une
-implémentation Rust/Zig.
+écrit en Zig, avec un rendu GTK4 natif sous Linux et un protocole terminal étendu.
 
-Ghostty et Kitty peuvent coexister — chacun a son propre namespace de configuration
-et son propre binaire.
+Quand `fonts.enable = true` (valeur par défaut), installe les polices suivantes
+avec Ghostty :
+
+- JetBrainsMono Nerd Font
+- ProFont Nerd Font
+- Inconsolata Nerd Font
+- Iosevka Nerd Font
+- Bitstream Vera Sans Mono Nerd Font
+- Droid Sans Mono Nerd Font
+- Iosevka (amont)
 
 ```nix
 modules = [ stc.homeModules.relics-ghostty ];
@@ -61,6 +35,9 @@ modules = [ stc.homeModules.relics-ghostty ];
 # home.nix
 {
   stc.relics.gui.ghostty.enable = true;
+
+  # Mettre à false pour ne pas installer les Nerd Fonts
+  stc.relics.gui.ghostty.fonts.enable = false;
 
   # Configurer via programs.ghostty.settings :
   programs.ghostty.settings = {
@@ -91,6 +68,18 @@ modules = [ stc.homeModules.relics-zen-browser ];
 ```
 
 :::tip[Profil Desktop]
-Si tu veux kitty + ghostty + zen-browser + GIMP + VLC en une seule option, utilise le
+Si tu veux ghostty + zen-browser + GIMP + VLC en une seule option, utilise le
 profil [`cogitator-desktop`](/stc/fr/cogitator/desktop/) à la place.
 :::
+
+## Kitty (retirée)
+
+La relique kitty a été retirée en `v0.22.0` (#1) : Ghostty la remplace, et les
+Nerd Fonts sont passées sur `stc.relics.gui.ghostty.fonts.enable`.
+`stc.homeModules.relics-kitty` existe toujours pour que son import ne casse pas
+ton build, mais il ne configure plus rien : poser `stc.relics.gui.kitty.enable`
+ou `stc.relics.gui.kitty.fonts.enable` (à n'importe quelle valeur, `false`
+compris) lève seulement un avertissement à l'évaluation. Supprime ces lignes ;
+les options elles-mêmes disparaissent à la `v1.0.0`.
+
+Pour garder kitty, active-le toi-même avec `programs.kitty.enable = true;`.

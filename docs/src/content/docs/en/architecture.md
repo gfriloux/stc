@@ -39,7 +39,7 @@ STC modules are exposed in two namespaces:
 |--------|--------|---------|
 | `nixosModules` | `relics-` | `stc.nixosModules.relics-networking` |
 | `nixosModules` | `cogitator-` | `stc.nixosModules.cogitator-hardening` |
-| `homeModules` | `relics-` | `stc.homeModules.relics-kitty` |
+| `homeModules` | `relics-` | `stc.homeModules.relics-ghostty` |
 | `homeModules` | `cogitator-` | `stc.homeModules.cogitator-enginseer` |
 | `devShells` | — | `stc.devShells.${system}.ansible` |
 | `templates` | — | `nix flake init -t github:gfriloux/stc#ansible` |

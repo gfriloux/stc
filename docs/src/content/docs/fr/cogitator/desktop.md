@@ -6,7 +6,7 @@ description: cogitator-desktop — le profil complet de station de travail GUI p
 **Module :** `stc.homeModules.cogitator-desktop`
 
 Le profil Desktop assemble la boîte à outils GUI complète pour une station de travail :
-deux terminaux accélérés GPU, un navigateur axé vie privée, un éditeur d'images et un
+un terminal accéléré GPU, un navigateur axé vie privée, un éditeur d'images et un
 lecteur multimédia.
 
 ## Options
@@ -19,8 +19,7 @@ lecteur multimédia.
 
 | Composant | Source | Notes |
 |-----------|--------|-------|
-| `programs.kitty` | `relics-kitty` | Terminal accéléré GPU + Nerd Fonts sélectionnées |
-| `programs.ghostty` | `relics-ghostty` | Terminal accéléré GPU, GTK4 natif, protocole étendu |
+| `programs.ghostty` | `relics-ghostty` | Terminal accéléré GPU, GTK4 natif, protocole étendu + Nerd Fonts sélectionnées |
 | `programs.zen-browser` | `relics-zen-browser` | Fork Firefox axé vie privée |
 | `services.gpg-agent.pinentry` | config directe | Pinentry graphique (`pinentry-qt`) |
 | `pkgs.gimp` | paquet direct | Éditeur d'images |
@@ -39,13 +38,13 @@ gpg-agent avec `pinentry-qt` (via `lib.mkForce`), remplaçant le défaut
 apparaissent dans une fenêtre graphique. La surcharge est inerte si gpg-agent
 n'est pas activé.
 
-Kitty et Ghostty coexistent sans conflit — chacun a son propre namespace `programs.*`.
-Les Nerd Fonts sont installées via `relics-kitty` et disponibles pour les deux terminaux.
+### Nerd Fonts
 
-L'installation des Nerd Fonts de Kitty est active par défaut. Pour la désactiver :
+Les Nerd Fonts sont installées via `relics-ghostty` et actives par défaut. Pour
+les désactiver :
 
 ```nix
-stc.relics.gui.kitty.fonts.enable = false;
+stc.relics.gui.ghostty.fonts.enable = false;
 ```
 
 ## Exemple d'utilisation
@@ -78,16 +77,19 @@ Le flake upstream `zen-browser` est intégré comme input STC — tu n'as pas be
 de l'ajouter toi-même. Si tu l'as déjà, il n'y a pas de conflit.
 :::
 
-## Garder un seul terminal au lieu de deux
+## Kitty retiré en `v0.22.0`
 
-Le profil livre kitty et ghostty. Depuis `v0.18.0`, les trois reliques GUI sont
-activées avec `lib.mkDefault` : tu peux prendre le profil et ne garder que le
-terminal que tu utilises :
+Jusqu'à `v0.21.0` le profil livrait kitty et ghostty ; depuis `v0.22.0` il ne
+livre plus que ghostty (#1), et les Nerd Fonts suivent `relics-ghostty`. Si tu
+mets à jour sans rien changer, kitty et son `kitty.conf` disparaissent de ton
+profil ; les polices restent.
 
-```nix
-stc.cogitator.desktop.enable = true;
-stc.relics.gui.kitty.enable = false;   # ghostty seulement
-```
+Si ta configuration pose encore `stc.relics.gui.kitty.enable` (l'ancienne façon
+de ne garder que ghostty était `stc.relics.gui.kitty.enable = false;`) ou
+`stc.relics.gui.kitty.fonts.enable`, le build passe toujours, avec un
+avertissement à l'évaluation : supprime la ligne. Pour garder kitty, active-le
+toi-même avec `programs.kitty.enable = true;`.
 
-Avant `v0.18.0` il fallait `lib.mkForce`. Voir
+Les reliques GUI sont activées avec `lib.mkDefault` : tu peux prendre le profil
+et en refuser une, par exemple `stc.relics.gui.ghostty.enable = false;`. Voir
 [Valeurs par défaut surchargeables](/stc/fr/reference/overridable-defaults/).

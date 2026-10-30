@@ -63,7 +63,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `sarcophagus-kvm` | `cogitator-sarcophagus-kvm` | Boots the qcow2 image the profile exists to build, twice on the same disk: the ZFS datasets the profile declares are what is actually mounted (`vmpool/root`, `vmpool/nix`, `vmpool/persist`), the relic creates the `@blank` reference the image builder does not ship, the initrd rollback runs and *succeeds*, and across a reboot a witness on the root dataset is gone while witnesses in `/persist` and under the cogitator's own `impermanence.extraDirectories` survive — with the SSH host key fingerprint unchanged, and the relic's failure reporting completely quiet on this healthy path |
 | `sarcophagus-aws` | `cogitator-sarcophagus-aws` | Boots the raw AMI image the profile exists to build, on a disk **larger than the image**: the ZFS pool actually grows to fill the volume under it (`stc-grow-pool` completes *and* `zpool list` clears the image's own size), the profile's datasets are what is mounted, `/boot` is a plain FAT ESP whose label resolves to the mounted device, the two discriminating AWS kernel parameters are live, `xen_fbfront` is blacklisted, the EC2 udev rules are installed, and both instance classes' network drivers are requested — with the Xen one failing to insert on this bench *without failing the boot*, which is what lets one image serve Nitro and Xen |
 | `enginseer` | `cogitator-enginseer` (Home Manager) | Activates the profile for a test user inside a VM and asserts its runtime claims: the three aliases it declares resolve in a shell that really started (not the six `programs.lsd` also renders), `oh-my-posh` initialises from the theme the cogitator ships, `git` itself selects `delta` as its diff pager with delta's `interactive.diffFilter` in place, direnv is hooked into fish with nix-direnv and silenced, `FZF_CTRL_R_COMMAND` is set and empty so Ctrl-R belongs to atuin, `~/.ssh/config` carries multiplexing *without* Home Manager's legacy default block, gpg-agent's `pinentry-program` is the headless `pinentry-curses`, and the declared catppuccin flavour reaches bat's theme |
-| `home-desktop` | `cogitator-desktop` (Home Manager) | Two nodes. On the profile **alone**: kitty renders its configuration, the ghostty relic renders its user unit and overrides, zen-browser reaches the user profile as `zen-beta`, the cogitator's own `gimp` and `vlc` are installed, and the kitty relic's `fonts` option makes the nerd fonts visible to `fc-list`. On a node carrying **both** Home Manager profiles: desktop's `mkForce pinentry-qt` wins the contest against enginseer's `mkDefault pinentry-curses` — the only cross-cogitator interaction proven in this suite — and one claim from each profile still holds under composition |
+| `home-desktop` | `cogitator-desktop` (Home Manager) | Two nodes. On the profile **alone**: kitty is absent, the ghostty relic renders its user unit and overrides, zen-browser reaches the user profile as `zen-beta`, the cogitator's own `gimp` and `vlc` are installed, and the ghostty relic's `fonts` option makes the nerd fonts visible to `fc-list`. On a node carrying **both** Home Manager profiles: desktop's `mkForce pinentry-qt` wins the contest against enginseer's `mkDefault pinentry-curses` — the only cross-cogitator interaction proven in this suite — and one claim from each profile still holds under composition |
 | `dreadnought` | `cogitator-dreadnought` | Five relics composed on one host come up, with exactly one loaded unit failing for want of a pool; ZFS support is functional on the booted kernel; the two discriminating AWS kernel parameters reach `/proc/cmdline`; the pool-growth script carries the profile's `poolName`, `ebsDisk` and `ebsPartition`; the ZFS scrub timer carries `scrubInterval`; explicit persistence is bind-mounted, including an entry set through the cogitator's own option; the hardening suite survives the composition; the impermanence rollback ran in the initrd and failed as expected, and that failure is legible from the booted system through `stc-impermanence-state.service` rather than only from an initrd journal |
 | `smart` | `relics-smart` (no cogitator enables it) | On an emulated SATA disk that answers SMART, smartd's own `EmailTest` and `Temperature` alerts reach `notifyCommand` with the documented environment, and its output reaches the journal; smartd.conf carries one alert path; the state file exists. A second node with only a virtio disk shows `smartd.service` failed with smartd's "no device" exit, and no alert |
 | `polkit-units` | `relics-polkit-units` (no cogitator enables it) | Unprivileged users run `systemctl`: a group member restarts, stops and starts the named unit and restarts one covered only by the prefix, and drives a listed template instance; another instance, another unit, another verb, freeze/thaw, `enable`, a non-member, a manager-level call with no unit and `systemd-run --unit=` under a prefixed or delegated name are all refused, with no rule error in polkit's log. Run twice, the second time with `/proc` remounted `hidepid=2` as the hardening relic sets it |
@@ -226,13 +226,14 @@ Two more candidates measurement corrected before they were written:
 
 - **zen-browser's binary is `zen-beta`, not `zen`** — the cogitator imports
   `inputs.zen-browser.homeModules.beta`. Asserting the obvious name would have
-  been red. It is also the only one of the three relics that renders no file at
+  been red. It is also the only one of these relics that renders no file at
   all, so the user profile is the only place it is observable, which is what
   `useUserPackages` buys this proving.
 - **The nerd fonts are not reachable at the obvious path.** They are what
-  `stc.relics.gui.kitty.fonts.enable` (default true) installs — the only option
-  of STC's own across these three relics, the other two doing nothing but setting
-  `programs.<x>.enable`. But `environment.pathsToLink` carries no `/share/fonts`
+  `stc.relics.gui.ghostty.fonts.enable` (default true) installs — the only option
+  of STC's own across these relics beyond their `enable` toggles. It sat on the
+  kitty relic until that relic was removed (#1). But
+  `environment.pathsToLink` carries no `/share/fonts`
   entry, so `/etc/profiles/per-user/<u>/share/fonts` is never populated: the
   fonts sit inside the `home-manager-path` derivation, which
   `~/.config/fontconfig/conf.d/10-hm-fonts.conf` points at. So the assertion goes
@@ -252,11 +253,11 @@ proves that a list of packages was written.
 ### Scope limit — the GUI relics are proven configured, not launched
 
 `home-desktop` brings up no graphical session, the same limit the `plasma`
-proving states for its own reasons. kitty, ghostty and Zen Browser are therefore
+proving states for its own reasons. ghostty and Zen Browser are therefore
 proven **installed and configured** — their files rendered, their binaries on the
 profile, their fonts visible to fontconfig — and not proven to *start*. Launching
-three GPU-oriented terminals and a browser in a VM would measure upstream's
-packaging rather than STC's wiring, which is all these three relics contribute.
+a GPU-oriented terminal and a browser in a VM would measure upstream's
+packaging rather than STC's wiring, which is all these relics contribute.
 
 ## Booting a real image — the external-image pattern
 

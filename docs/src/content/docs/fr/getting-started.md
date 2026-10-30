@@ -88,7 +88,7 @@ outputs = { nixpkgs, stc, home-manager, ... }: {
     pkgs = nixpkgs.legacyPackages.x86_64-linux;
     modules = [
       stc.homeModules.cogitator-enginseer
-      stc.homeModules.relics-kitty
+      stc.homeModules.relics-ghostty
       ./home.nix
     ];
   };
@@ -100,8 +100,8 @@ Puis dans `home.nix` :
 ```nix
 {
   stc.cogitator.enginseer.enable = true;
-  stc.relics.gui.kitty.enable = true;
-  stc.relics.gui.kitty.fonts.enable = true;
+  stc.relics.gui.ghostty.enable = true;
+  stc.relics.gui.ghostty.fonts.enable = true;
 }
 ```
 

@@ -42,7 +42,7 @@ options. The profile just saves you from enabling each one individually.
 | Module name | Enable option | What it composes |
 |-------------|---------------|------------------|
 | `cogitator-enginseer` | `stc.cogitator.enginseer.enable` | Full CLI toolkit (shell, dev tools, git rites) |
-| `cogitator-desktop` | `stc.cogitator.desktop.enable` | kitty + zen-browser + GIMP + VLC |
+| `cogitator-desktop` | `stc.cogitator.desktop.enable` | ghostty + zen-browser + GIMP + VLC |
 
 ## When to Use Profiles
 
