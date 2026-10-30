@@ -7,21 +7,21 @@
   cfg = config.stc.cogitator.desktop;
 in {
   imports = [
+    # The removed kitty relic, kept imported so that a consumer still setting
+    # its options gets its warning rather than "option does not exist" (#1).
     ../../relics/home/kitty.nix
     ../../relics/home/zen-browser.nix
     ../../relics/home/ghostty.nix
   ];
 
   options.stc.cogitator.desktop = {
-    enable = lib.mkEnableOption "STC desktop GUI profile (kitty, ghostty, zen-browser, GIMP, VLC)";
+    enable = lib.mkEnableOption "STC desktop GUI profile (ghostty, zen-browser, GIMP, VLC)";
   };
 
   config = lib.mkIf cfg.enable {
-    # All three mkDefault: each relic is independent, this profile writes
-    # nothing that assumes any of them, and shipping two terminals means a
-    # consumer wanting only one had to mkForce the other off. At normal priority
-    # there was no way to take the profile and decline a single program.
-    stc.relics.gui.kitty.enable = lib.mkDefault true;
+    # Both mkDefault: each relic is independent, this profile writes nothing
+    # that assumes either of them, and at normal priority there was no way to
+    # take the profile and decline a single program.
     stc.relics.gui.ghostty.enable = lib.mkDefault true;
     stc.relics.gui.zen-browser.enable = lib.mkDefault true;
 

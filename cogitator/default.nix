@@ -59,7 +59,7 @@
       ];
     };
 
-    # Desktop GUI profile: kitty terminal, zen-browser, GIMP, VLC.
+    # Desktop GUI profile: ghostty terminal, zen-browser, GIMP, VLC.
     cogitator-desktop = {...}: {
       imports = [
         inputs.zen-browser.homeModules.beta
