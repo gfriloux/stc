@@ -89,6 +89,16 @@ keep ghostty only was `stc.relics.gui.kitty.enable = false;`) or
 evaluation warning: drop the line. To keep kitty, enable it yourself with
 `programs.kitty.enable = true;`.
 
+Two cases change without a warning, because they set no kitty option:
+
+- **You kept kitty only** with `stc.relics.gui.ghostty.enable = false;`: you
+  now get neither kitty nor the Nerd Fonts, which follow the ghostty relic.
+  Add `programs.kitty.enable = true;` and list the fonts you want in
+  `home.packages`.
+- **You kept ghostty only** with `stc.relics.gui.kitty.enable = false;`: you
+  had no Nerd Fonts, and now get seven font packages. Set
+  `stc.relics.gui.ghostty.fonts.enable = false;` to keep the previous closure.
+
 The GUI relics are enabled with `lib.mkDefault`, so you can take the profile
 and decline any of them, for instance `stc.relics.gui.ghostty.enable = false;`.
 See [Overridable defaults](/stc/en/reference/overridable-defaults/).

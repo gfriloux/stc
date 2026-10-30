@@ -82,4 +82,8 @@ nothing: setting `stc.relics.gui.kitty.enable` or `stc.relics.gui.kitty.fonts.en
 (to any value, `false` included) only raises an evaluation warning. Drop those
 lines; the options themselves disappear at `v1.0.0`.
 
+Code that *reads* these options breaks instead: they now default to `null`, so
+`lib.mkIf config.stc.relics.gui.kitty.enable …` fails with "'mkIf' called with
+a non-Boolean condition". `null` is what lets an explicit `false` warn too.
+
 To keep kitty, enable it yourself with `programs.kitty.enable = true;`.

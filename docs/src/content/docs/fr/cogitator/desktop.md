@@ -90,6 +90,17 @@ de ne garder que ghostty était `stc.relics.gui.kitty.enable = false;`) ou
 avertissement à l'évaluation : supprime la ligne. Pour garder kitty, active-le
 toi-même avec `programs.kitty.enable = true;`.
 
+Deux cas changent sans avertissement, parce qu'ils ne posent aucune option kitty :
+
+- **Tu ne gardais que kitty** avec `stc.relics.gui.ghostty.enable = false;` :
+  tu n'as plus ni kitty ni les Nerd Fonts, qui suivent la relique ghostty.
+  Ajoute `programs.kitty.enable = true;` et liste les polices voulues dans
+  `home.packages`.
+- **Tu ne gardais que ghostty** avec `stc.relics.gui.kitty.enable = false;` :
+  tu n'avais pas de Nerd Fonts, tu en as désormais sept paquets. Pose
+  `stc.relics.gui.ghostty.fonts.enable = false;` pour garder la closure
+  d'avant.
+
 Les reliques GUI sont activées avec `lib.mkDefault` : tu peux prendre le profil
 et en refuser une, par exemple `stc.relics.gui.ghostty.enable = false;`. Voir
 [Valeurs par défaut surchargeables](/stc/fr/reference/overridable-defaults/).

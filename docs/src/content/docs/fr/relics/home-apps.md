@@ -82,4 +82,9 @@ ou `stc.relics.gui.kitty.fonts.enable` (à n'importe quelle valeur, `false`
 compris) lève seulement un avertissement à l'évaluation. Supprime ces lignes ;
 les options elles-mêmes disparaissent à la `v1.0.0`.
 
+Le code qui *lit* ces options casse, lui : elles valent désormais `null` par
+défaut, donc `lib.mkIf config.stc.relics.gui.kitty.enable …` échoue avec
+« 'mkIf' called with a non-Boolean condition ». C'est ce `null` qui permet à un
+`false` explicite d'avertir aussi.
+
 Pour garder kitty, active-le toi-même avec `programs.kitty.enable = true;`.

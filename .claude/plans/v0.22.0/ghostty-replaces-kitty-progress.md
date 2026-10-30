@@ -35,3 +35,19 @@ activationPackage evaluates with `--override-input`, no kitty warning.
 
 Deferred minor: `provings/index.md` (EN+FR) still says desktop wins with
 `mkForce pinentry-qt`; it is `mkOverride 900` since #86. Pre-existing, not #1.
+
+Review (fresh context, branch close): no blocker, four findings.
+- F1 (medium) consumer who declined ghostty to keep kitty loses kitty and the
+  fonts silently. Ruling: **documented, no warning** — declining ghostty is a
+  legitimate, lasting choice; a warning on it would be permanent noise.
+- F2 (low) old `kitty.enable = false` users gain seven font packages. Fixed:
+  documented with the `ghostty.fonts.enable = false` way back.
+- F3 (low) code reading `config.stc.relics.gui.kitty.enable` now hits a
+  `null` in `mkIf`. Fixed: documented in home-apps; `nullOr` kept (it is what
+  makes an explicit `false` warn).
+- F4 (low) nothing proved the warning itself. Fixed: the `consumer` node sets
+  `stc.relics.gui.kitty.enable = false` (the old documented line) and the
+  testScript asserts at evaluation that its HM warnings carry the tombstone
+  message. No flake `checks` output exists, so the proving holds it.
+  Measured: driver drvPath evaluates as is; with the tombstone's warnings
+  emptied it fails on that assert.
