@@ -52,7 +52,7 @@
 # assertion below targets a *binary* and not a package name.
 #
 # What the profile adds on top of that reference, hence what discriminates:
-# kitty/kitty.conf, the ghostty user unit with its overrides.conf,
+# the ghostty user unit with its overrides.conf,
 # .local/share/dbus-1/services, and the contents of the profile.
 #
 # Two things measurement corrected before anything was written:
@@ -60,11 +60,11 @@
 #   - zen-browser's binary is `zen-beta`, not `zen`: the cogitator imports
 #     inputs.zen-browser.homeModules.beta. Asserting `zen` would have been red.
 #   - The nerd fonts are *not* reachable at the obvious path. They matter,
-#     because `stc.relics.gui.kitty.fonts.enable` (default true) is the only
-#     option of STC's own across these three relics *beyond their three enable
-#     toggles* — the relics declare four options in all, and the cogitator sets
-#     the three toggles itself, so without this one it would have no tunable of
-#     its own to prove. Enabling it installs seven font packages,
+#     because `stc.relics.gui.ghostty.fonts.enable` (default true) is the only
+#     option of STC's own across these relics *beyond their enable toggles*,
+#     which the cogitator sets itself, so without this one it would have no
+#     tunable of its own to prove. It moved here from the kitty relic when
+#     kitty was removed (#1). Enabling it installs seven font packages,
 #     which is closure weight a consumer should know about. But measured,
 #     environment.pathsToLink carries no /share/fonts entry, so
 #     /etc/profiles/per-user/<u>/share/fonts is never populated: the fonts sit
@@ -202,20 +202,18 @@ in {
             state = machine.succeed("systemctl is-system-running --wait || true").strip()
             assert state == "running", f"{machine.name}: unexpected state {state}"
 
-    with subtest("the kitty relic renders its configuration"):
-        # The reference node has no kitty.conf at all, so existence discriminates
-        # here. Content is not asserted beyond that: the relic sets only
-        # programs.kitty.enable, so everything inside the file is upstream's and
-        # asserting it would measure Home Manager.
-        desktop.succeed(f"test -s {HOME}/.config/kitty/kitty.conf")
-        desktop.succeed(f"test -x {PROFILE}/bin/kitty")
+    with subtest("kitty is gone from the profile"):
+        # The kitty relic was removed (#1); the cogitator still imports its
+        # tombstone, which must render nothing. Before #1 this node had both.
+        desktop.fail(f"test -e {HOME}/.config/kitty")
+        desktop.fail(f"test -e {PROFILE}/bin/kitty")
 
-    with subtest("the kitty relic's own option makes the nerd fonts visible"):
-        # stc.relics.gui.kitty.fonts.enable, default true — the only option of
-        # STC's own across these three relics beyond their three enable toggles
-        # (four options in all, three of them set by the cogitator itself), and
-        # the only one whose absence would be invisible without this check.
-        # Seven font packages ride on it.
+    with subtest("the ghostty relic's own option makes the nerd fonts visible"):
+        # stc.relics.gui.ghostty.fonts.enable, default true — the only option of
+        # STC's own across these relics beyond their enable toggles (set by the
+        # cogitator itself), and the only one whose absence would be invisible
+        # without this check. Seven font packages ride on it; they rode on the
+        # kitty relic until #1, and losing them silently is what this guards.
         #
         # Asserted through fontconfig rather than by a path test, after measuring
         # that the obvious path does not exist: environment.pathsToLink has no
@@ -232,9 +230,8 @@ in {
             )
 
     with subtest("the ghostty relic renders its user unit and overrides"):
-        # Measured: both of these appear on the desktop node and on neither the
-        # reference node nor the kitty-only path, so the pair is what tells the
-        # ghostty relic apart from the kitty one.
+        # Measured: both of these appear on the desktop node and not on the
+        # reference node, so the pair is what discriminates the ghostty relic.
         unit = f"{HOME}/.config/systemd/user/app-com.mitchellh.ghostty.service"
         desktop.succeed(f"test -s {unit}")
         desktop.succeed(f"test -s {unit}.d/overrides.conf")
@@ -295,7 +292,7 @@ in {
         # Cheap, and it is the regression this node is uniquely placed to catch:
         # a future relic added to either cogitator could collide with the other.
         # One claim from each profile, on the node that carries both.
-        composed.succeed(f"test -s {HOME}/.config/kitty/kitty.conf")
+        composed.succeed(f"test -s {HOME}/.config/systemd/user/app-com.mitchellh.ghostty.service")
         rendered = composed.succeed(f"cat {HOME}/.config/fish/config.fish")
         assert "alias cat bat" in rendered, (
             "enginseer's aliases did not survive composition with desktop"
