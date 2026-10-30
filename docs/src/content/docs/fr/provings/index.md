@@ -68,7 +68,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `sarcophagus-kvm` | `cogitator-sarcophagus-kvm` | Démarre l'image qcow2 que le profil existe pour produire, deux fois sur le même disque : les datasets ZFS que le profil déclare sont bien ce qui est monté (`vmpool/root`, `vmpool/nix`, `vmpool/persist`), la relique crée elle-même la référence `@blank` que le builder d'image ne livre pas, le rollback de l'initrd tourne et *réussit*, et après un reboot un témoin posé sur le dataset racine a disparu tandis que ceux de `/persist` et du chemin déclaré via `impermanence.extraDirectories` ont survécu — l'empreinte de la clé d'hôte SSH restant inchangée, et le compte rendu d'échec de la relique restant totalement muet sur ce chemin sain |
 | `sarcophagus-aws` | `cogitator-sarcophagus-aws` | Démarre l'image raw de l'AMI que le profil existe pour produire, sur un disque **plus grand que l'image** : le pool ZFS grandit réellement pour remplir le volume qui est dessous (`stc-grow-pool` va au bout *et* `zpool list` dépasse la taille de l'image), les datasets du profil sont bien ce qui est monté, `/boot` est un ESP FAT dont le label résout vers le périphérique monté, les deux paramètres noyau AWS qui discriminent sont actifs, `xen_fbfront` est blacklisté, les règles udev EC2 sont posées, et les pilotes réseau des **deux** classes d'instance sont demandés — celui de Xen échouant à s'insérer sur ce banc *sans faire échouer le boot*, ce qui est précisément ce qui permet à une seule image de servir Nitro et Xen |
 | `enginseer` | `cogitator-enginseer` (Home Manager) | Active le profil pour un utilisateur de test dans une VM et vérifie ses revendications de runtime : les trois alias qu'il déclare se résolvent dans un shell réellement lancé (pas les six que rend aussi `programs.lsd`), `oh-my-posh` s'initialise depuis le thème que le cogitator livre, `git` choisit lui-même `delta` comme pager de diff avec l'`interactive.diffFilter` de delta en place, direnv est accroché à fish avec nix-direnv et silencieux, `FZF_CTRL_R_COMMAND` est posée et vide donc Ctrl-R appartient à atuin, `~/.ssh/config` porte le multiplexage **sans** le bloc par défaut legacy de Home Manager, le `pinentry-program` de gpg-agent est le `pinentry-curses` sans tête, et la saveur catppuccin déclarée atteint le thème de bat |
-| `home-desktop` | `cogitator-desktop` (Home Manager) | Deux nœuds. Sur le profil **seul** : kitty est absent, la relique ghostty rend son unité utilisateur et ses overrides, zen-browser atteint le profil utilisateur sous le nom `zen-beta`, les `gimp` et `vlc` propres au cogitator sont installés, et l'option `fonts` de la relique ghostty rend les polices Nerd visibles de `fc-list`. Sur un nœud portant les **deux** profils Home Manager : le `mkForce pinentry-qt` de desktop gagne l'arbitrage contre le `mkDefault pinentry-curses` d'enginseer — la seule interaction entre cogitators vérifiée de toute la suite — et une revendication de chaque profil tient encore sous composition |
+| `home-desktop` | `cogitator-desktop` (Home Manager) | Trois nœuds. Sur le profil **seul** : kitty est absent, la relique ghostty rend son unité utilisateur et ses overrides, zen-browser atteint le profil utilisateur sous le nom `zen-beta`, les `gimp` et `vlc` propres au cogitator sont installés, et l'option `fonts` de la relique ghostty rend les polices Nerd visibles de `fc-list`. Sur un nœud portant les **deux** profils Home Manager : le `mkOverride 900 pinentry-qt` de desktop gagne l'arbitrage contre le `mkDefault pinentry-curses` d'enginseer — la seule interaction entre cogitators vérifiée de toute la suite — et une revendication de chaque profil tient encore sous composition |
 | `dreadnought` | `cogitator-dreadnought` | Cinq reliques composées sur un même hôte démarrent, avec exactement une unité chargée en échec faute de pool ; le support ZFS est fonctionnel sur le noyau booté ; les deux paramètres noyau AWS qui discriminent atteignent `/proc/cmdline` ; le script d'agrandissement porte les `poolName`, `ebsDisk` et `ebsPartition` du profil ; le timer de scrub ZFS porte `scrubInterval` ; la persistance explicite est bien bind-montée, y compris une entrée posée par l'option du cogitator ; le durcissement survit à la composition ; le rollback d'impermanence a tourné dans l'initrd et échoué comme prévu, et cet échec est lisible depuis le système démarré via `stc-impermanence-state.service` et non plus seulement dans un journal d'initrd |
 | `smart` | `relics-smart` (aucun cogitator ne l'active) | Sur un disque SATA émulé qui répond au SMART, les alertes `EmailTest` et `Temperature` de smartd lui-même arrivent dans `notifyCommand` avec l'environnement documenté, et sa sortie arrive dans le journal ; smartd.conf ne porte qu'un chemin d'alerte ; le fichier d'état existe. Un second nœud avec un seul disque virtio montre `smartd.service` en échec avec le code « aucun disque » de smartd, et aucune alerte |
 | `polkit-units` | `relics-polkit-units` (aucun cogitator ne l'active) | Des utilisateurs sans privilèges lancent `systemctl` : un membre du groupe redémarre, arrête et démarre l'unité nommée et redémarre une unité couverte seulement par le préfixe, et pilote une instance de modèle listée ; une autre instance, une autre unité, un autre verbe, geler/dégeler, `enable`, un non-membre, un appel du gestionnaire sans unité et `systemd-run --unit=` sous un nom préfixé ou délégué sont tous refusés, sans erreur de règle dans le journal de polkit. Joué deux fois, la seconde avec `/proc` remonté en `hidepid=2` comme le pose la relique de durcissement |
@@ -201,7 +201,7 @@ là où la présence de `ControlMaster` ne distingue rien.
 
 ### Deux nœuds, et la revendication qui réclamait un contre-factuel impossible
 
-`home-desktop` porte deux nœuds. Le profil **seul** est l'épreuve de #50 à
+`home-desktop` porte trois nœuds. Le profil **seul** est l'épreuve de #50 à
 proprement parler, et l'isolement est délibéré : une épreuve nommée
 `home-desktop` qui rougirait parce que quelque chose a cassé dans enginseer
 serait un mauvais diagnostic. Le nœud **composé** existe pour une seule
@@ -210,12 +210,17 @@ revendication, écrite dans `cogitator/home/desktop.nix` :
 ```nix
 # Graphical pinentry for gpg-agent. Overrides the headless-safe default set
 # by cogitator-enginseer; inert if gpg-agent is not enabled.
-services.gpg-agent.pinentry.package = lib.mkForce pkgs.pinentry-qt;
+services.gpg-agent.pinentry.package = lib.mkOverride 900 pkgs.pinentry-qt;
 ```
 
 La première moitié est un arbitrage de priorité entre deux cogitators, et aucun
 nœud seul ne peut le montrer : `enginseer` vérifie le côté `pinentry-curses`,
-`composed` vérifie le côté `pinentry-qt`.
+`composed` vérifie le côté `pinentry-qt`. Le troisième nœud, **consumer**,
+ajouté avec #86, porte les deux profils plus une définition simple
+`pinentry.package = pkgs.pinentry-gnome3;` et vérifie que le consommateur gagne :
+le profil doit battre le défaut d'enginseer sans battre la personne qui les
+compose. Avec `mkForce` (50), qu'utilisait le profil avant #86, ce nœud
+recevait `pinentry-qt` sans le moindre avertissement.
 
 **La seconde moitié — « inert if gpg-agent is not enabled » — n'est
 délibérément pas vérifiée en VM.** Le plan prévoyait de vérifier qu'aucune unité

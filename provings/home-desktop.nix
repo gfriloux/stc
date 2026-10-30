@@ -7,7 +7,7 @@
 # concessions that are repeated here.
 #
 # ---------------------------------------------------------------------------
-# Two nodes, and what each one is for
+# Three nodes, and what each one is for
 #
 # `desktop` carries the profile alone and asserts its three relics in isolation.
 # Isolation is the point: a proving named home-desktop that went red because
@@ -18,12 +18,17 @@
 #
 #     # Graphical pinentry for gpg-agent. Overrides the headless-safe default set
 #     # by cogitator-enginseer; inert if gpg-agent is not enabled.
-#     services.gpg-agent.pinentry.package = lib.mkForce pkgs.pinentry-qt;
+#     services.gpg-agent.pinentry.package = lib.mkOverride 900 pkgs.pinentry-qt;
 #
 # The first half of that comment is a claim about a priority contest between two
 # cogitators. Measured: pinentry-curses on enginseer alone (asserted in
 # provings/enginseer.nix), pinentry-qt once desktop joins. That is the only
 # cross-cogitator interaction proven anywhere in this suite.
+#
+# `consumer` (added with #86) carries both profiles plus a plain definition of
+# the pinentry, and proves the other side of that contest: the profile beats
+# enginseer's default, not the person composing them. Its node comment below
+# has the detail.
 #
 # ---------------------------------------------------------------------------
 # The second half of that comment — "inert if gpg-agent is not enabled" — is
@@ -77,7 +82,7 @@
   inputs,
 }: let
   # The two Home Manager-level concessions settled by provings/enginseer.nix,
-  # bound once so this file's two nodes cannot disagree about them.
+  # bound once so this file's nodes cannot disagree about them.
   #
   # It does no more than that, and the difference matters: the `composed` node
   # also has to match the *enginseer* node option for option — same user, same

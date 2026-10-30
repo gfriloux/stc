@@ -63,7 +63,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `sarcophagus-kvm` | `cogitator-sarcophagus-kvm` | Boots the qcow2 image the profile exists to build, twice on the same disk: the ZFS datasets the profile declares are what is actually mounted (`vmpool/root`, `vmpool/nix`, `vmpool/persist`), the relic creates the `@blank` reference the image builder does not ship, the initrd rollback runs and *succeeds*, and across a reboot a witness on the root dataset is gone while witnesses in `/persist` and under the cogitator's own `impermanence.extraDirectories` survive — with the SSH host key fingerprint unchanged, and the relic's failure reporting completely quiet on this healthy path |
 | `sarcophagus-aws` | `cogitator-sarcophagus-aws` | Boots the raw AMI image the profile exists to build, on a disk **larger than the image**: the ZFS pool actually grows to fill the volume under it (`stc-grow-pool` completes *and* `zpool list` clears the image's own size), the profile's datasets are what is mounted, `/boot` is a plain FAT ESP whose label resolves to the mounted device, the two discriminating AWS kernel parameters are live, `xen_fbfront` is blacklisted, the EC2 udev rules are installed, and both instance classes' network drivers are requested — with the Xen one failing to insert on this bench *without failing the boot*, which is what lets one image serve Nitro and Xen |
 | `enginseer` | `cogitator-enginseer` (Home Manager) | Activates the profile for a test user inside a VM and asserts its runtime claims: the three aliases it declares resolve in a shell that really started (not the six `programs.lsd` also renders), `oh-my-posh` initialises from the theme the cogitator ships, `git` itself selects `delta` as its diff pager with delta's `interactive.diffFilter` in place, direnv is hooked into fish with nix-direnv and silenced, `FZF_CTRL_R_COMMAND` is set and empty so Ctrl-R belongs to atuin, `~/.ssh/config` carries multiplexing *without* Home Manager's legacy default block, gpg-agent's `pinentry-program` is the headless `pinentry-curses`, and the declared catppuccin flavour reaches bat's theme |
-| `home-desktop` | `cogitator-desktop` (Home Manager) | Two nodes. On the profile **alone**: kitty is absent, the ghostty relic renders its user unit and overrides, zen-browser reaches the user profile as `zen-beta`, the cogitator's own `gimp` and `vlc` are installed, and the ghostty relic's `fonts` option makes the nerd fonts visible to `fc-list`. On a node carrying **both** Home Manager profiles: desktop's `mkForce pinentry-qt` wins the contest against enginseer's `mkDefault pinentry-curses` — the only cross-cogitator interaction proven in this suite — and one claim from each profile still holds under composition |
+| `home-desktop` | `cogitator-desktop` (Home Manager) | Three nodes. On the profile **alone**: kitty is absent, the ghostty relic renders its user unit and overrides, zen-browser reaches the user profile as `zen-beta`, the cogitator's own `gimp` and `vlc` are installed, and the ghostty relic's `fonts` option makes the nerd fonts visible to `fc-list`. On a node carrying **both** Home Manager profiles: desktop's `mkOverride 900 pinentry-qt` wins the contest against enginseer's `mkDefault pinentry-curses` — the only cross-cogitator interaction proven in this suite — and one claim from each profile still holds under composition |
 | `dreadnought` | `cogitator-dreadnought` | Five relics composed on one host come up, with exactly one loaded unit failing for want of a pool; ZFS support is functional on the booted kernel; the two discriminating AWS kernel parameters reach `/proc/cmdline`; the pool-growth script carries the profile's `poolName`, `ebsDisk` and `ebsPartition`; the ZFS scrub timer carries `scrubInterval`; explicit persistence is bind-mounted, including an entry set through the cogitator's own option; the hardening suite survives the composition; the impermanence rollback ran in the initrd and failed as expected, and that failure is legible from the booted system through `stc-impermanence-state.service` rather than only from an initrd journal |
 | `smart` | `relics-smart` (no cogitator enables it) | On an emulated SATA disk that answers SMART, smartd's own `EmailTest` and `Temperature` alerts reach `notifyCommand` with the documented environment, and its output reaches the journal; smartd.conf carries one alert path; the state file exists. A second node with only a virtio disk shows `smartd.service` failed with smartd's "no device" exit, and no alert |
 | `polkit-units` | `relics-polkit-units` (no cogitator enables it) | Unprivileged users run `systemctl`: a group member restarts, stops and starts the named unit and restarts one covered only by the prefix, and drives a listed template instance; another instance, another unit, another verb, freeze/thaw, `enable`, a non-member, a manager-level call with no unit and `systemd-run --unit=` under a prefixed or delegated name are all refused, with no rule error in polkit's log. Run twice, the second time with `/proc` remounted `hidepid=2` as the hardening relic sets it |
@@ -196,7 +196,7 @@ presence of `ControlMaster` does not.
 
 ### Two nodes, and the one claim that needed a counterfactual it could not have
 
-`home-desktop` carries two nodes. The profile **alone** is the `#50` proving
+`home-desktop` carries three nodes. The profile **alone** is the `#50` proving
 proper, and isolation is the point: a proving named `home-desktop` that went red
 because something in enginseer broke would be a bad diagnosis. The **composed**
 node exists for a single claim, written in `cogitator/home/desktop.nix`:
@@ -204,12 +204,16 @@ node exists for a single claim, written in `cogitator/home/desktop.nix`:
 ```nix
 # Graphical pinentry for gpg-agent. Overrides the headless-safe default set
 # by cogitator-enginseer; inert if gpg-agent is not enabled.
-services.gpg-agent.pinentry.package = lib.mkForce pkgs.pinentry-qt;
+services.gpg-agent.pinentry.package = lib.mkOverride 900 pkgs.pinentry-qt;
 ```
 
 The first half is a priority contest between two cogitators, and neither node
 alone can show it: `enginseer` asserts the `pinentry-curses` side, `composed`
-asserts the `pinentry-qt` side.
+asserts the `pinentry-qt` side. The third node, **consumer**, added with #86,
+carries both profiles plus a plain `pinentry.package = pkgs.pinentry-gnome3;`
+and asserts that the consumer wins: the profile must beat enginseer's default
+without beating the person composing them. With `mkForce` (50), which the
+profile used before #86, that node got `pinentry-qt` with no warning.
 
 **The second half — "inert if gpg-agent is not enabled" — is deliberately not
 asserted in a VM.** The plan called for checking that no `gpg-agent` user unit
