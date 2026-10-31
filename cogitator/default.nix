@@ -7,7 +7,7 @@
 # Activate a profile, and the Cogitator does the rest.
 {inputs, ...}: {
   flake.nixosModules = {
-    # Full hardening suite — composes kernel + network + filesystem + ssh relics.
+    # Full hardening suite — composes the seven hardening relics, audit included.
     cogitator-hardening = ./nixos/hardening.nix;
     # Base VM profile: fish, SSH, user, Docker, Nix GC.
     cogitator-vm = ./nixos/vm.nix;
