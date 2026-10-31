@@ -165,6 +165,8 @@ tout à fait avoir à déboguer.
 |-------------|-------|--------|------|
 | `/tmp` `nosuid,nodev,noexec` | R28 | ✅ | `noexec` omis si `gaming=true` |
 | `/proc` `hidepid=2` | R28 | ✅ | |
+| `/var/tmp` `nosuid,nodev,noexec` | R28 | ✅ | Self-bind, reste sur disque ; `noexec` omis si `gaming=true` ; désactivable par `varTmp.enable` ; le persister via impermanence est refusé par une assertion |
+| `/home` `nosuid,nodev` | R28 | ⚪ | Seulement si `/home` est un montage séparé — pas le cas sur les layouts STC ; documenté dans la page hardening |
 | `/dev/shm` `nosuid,nodev,noexec` | R28 | 🟡 | Même logique ; hors table R28 |
 | Partitions séparées `/boot /var /home /usr /opt /srv /var/log /var/tmp` | R28 | ⚪ | STC ne partitionne pas — c'est le layout disko du schematic, pas une relique |
 

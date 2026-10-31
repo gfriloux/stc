@@ -84,13 +84,15 @@ and other container setups.
 |--------|------|---------|-------------|
 | `stc.relics.hardening.filesystem.tmpSize` | string | `"2G"` | Maximum size of the /tmp tmpfs |
 | `stc.relics.hardening.filesystem.shmSize` | string | `"256M"` | Maximum size of the /dev/shm tmpfs |
-| `stc.relics.hardening.filesystem.gaming` | bool | `false` | Remove `noexec` from /tmp and /dev/shm — required for Wine/Proton and DXVK |
+| `stc.relics.hardening.filesystem.varTmp.enable` | bool | `true` | Remount /var/tmp onto itself with `nosuid,nodev,noexec` |
+| `stc.relics.hardening.filesystem.gaming` | bool | `false` | Remove `noexec` from /tmp, /var/tmp and /dev/shm — required for Wine/Proton and DXVK |
 
-Mounts three filesystems with restrictive options:
+Mounts four filesystems with restrictive options:
 
 | Mount | What changes |
 |-------|-------------|
 | `/tmp` | tmpfs with `nosuid,noexec,nodev`, size-capped — `noexec` omitted when `gaming = true` |
+| `/var/tmp` | bound onto itself with `nosuid,noexec,nodev` — stays on disk, `noexec` omitted when `gaming = true` |
 | `/proc` | `hidepid=2,gid=proc` — users only see their own processes; system services retain access via the `proc` group |
 | `/dev/shm` | tmpfs with `nosuid,noexec,nodev`, size-capped — `noexec` omitted when `gaming = true` |
 
@@ -110,9 +112,47 @@ detects a desktop alongside this hardening.
 The `/tmp noexec` mount prevents attackers from writing and executing code in a
 world-writable directory — a classic exploitation vector.
 
+### /var/tmp
+
+`/var/tmp` is the other world-writable directory, so it gets the same three
+flags. It is **bound onto itself** rather than onto the `/tmp` tmpfs: its data
+stays where your layout puts it and keeps whatever persistence the layout gives
+it, and the relic needs no knowledge of the disk layout. On a classic disk it
+survives a reboot (its FHS purpose). On an impermanence host it lives on the
+rolled-back root, so it is wiped at boot, as before: the mount creates the
+directory if needed (`X-mount.mkdir`), then `systemd-tmpfiles` sets its `1777`
+mode.
+
+Persisting `/var/tmp` through impermanence (`extraDirectories` or
+`environment.persistence`) is **refused by an assertion**: the persistence bind
+mount would replace the hardened one and silently drop the three flags. Either
+stop persisting it, or set `varTmp.enable = false` to accept `/var/tmp` without
+them. Nix
+builds are unaffected: `nix-daemon` builds under `/nix/var/nix/builds`.
+
+If your layout already mounts `/var/tmp` (its own dataset or partition), the two
+definitions conflict at evaluation. Set `varTmp.enable = false` and put the
+flags on your own mount instead:
+
+```nix
+stc.relics.hardening.filesystem.varTmp.enable = false;
+fileSystems."/var/tmp".options = [ "nosuid" "nodev" "noexec" ];
+```
+
+### /home
+
+The relic does not touch `/home`: it cannot tell whether `/home` is a separate
+mount, and on STC's own ZFS layouts it is not (only `/`, `/nix` and `/persist`
+are). If `/home` is a separate mount in your layout, add the flags yourself:
+
+```nix
+fileSystems."/home".options = [ "nosuid" "nodev" ];
+```
+
 :::caution[Wine, Proton, and DXVK]
 Wine and Proton extract and run binaries under `/tmp`. DXVK and VKD3D-Proton
-map executable code into `/dev/shm`. Set `stc.relics.hardening.filesystem.gaming = true`
+map executable code into `/dev/shm`. `/var/tmp` follows `/tmp` for consistency.
+Set `stc.relics.hardening.filesystem.gaming = true`
 on gaming machines and raise `shmSize` to at least `2G` for heavy workloads.
 The `/proc` hardening is unaffected.
 :::
@@ -375,7 +415,7 @@ Gaming machine with hardening:
   stc.relics.hardening.kernel.enable = true;
 
   stc.relics.hardening.filesystem.enable = true;
-  stc.relics.hardening.filesystem.gaming = true;  # allow exec in /tmp and /dev/shm
+  stc.relics.hardening.filesystem.gaming = true;  # allow exec in /tmp, /var/tmp and /dev/shm
   stc.relics.hardening.filesystem.shmSize = "4G"; # DXVK/VKD3D need more than 256M
 
   stc.relics.hardening.network.enable = true;
