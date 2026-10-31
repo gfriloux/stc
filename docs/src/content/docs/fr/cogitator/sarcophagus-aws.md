@@ -23,7 +23,7 @@ Les instances déployées depuis cette AMI sont destinées à être gérées ave
 | `relics-networking` | DHCP, DNS Quad9 |
 | `relics-impermanence` | Rollback du root vers `@blank` à chaque démarrage |
 | `relics-aws` | Pilotes NVMe/ENA, NTP, console série, expansion pool EBS |
-| `cogitator-hardening` | Durcissement noyau + réseau + système de fichiers + SSH |
+| `cogitator-hardening` | La suite de durcissement — noyau, réseau, système de fichiers, SSH, blacklist de modules, accès aux ordonnanceurs et auditd (`audit=1` sur la ligne de commande du noyau, enregistrements dans `/var/log/audit`) |
 | `relics-server-survivability` | Pas de shell d'urgence, reboot sur panique, watchdog matériel, `/boot` borné, pas de veille (`mkDefault`) |
 | `relics-nix-housekeeping` | GC planifié, GC sous pression disque, déduplication hebdomadaire, builds qui cèdent, journal plafonné (`mkDefault`) |
 | Schéma disque | GPT sur `/dev/vda` — BIOS/GRUB : bios_grub + ESP (`/boot`) + pool ZFS (3 partitions) |

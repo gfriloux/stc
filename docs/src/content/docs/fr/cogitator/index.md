@@ -27,7 +27,7 @@ sous-jacentes. Le profil t'évite simplement d'activer chacune individuellement.
 
 | Nom du module | Option d'activation | Ce qu'il compose |
 |---------------|---------------------|------------------|
-| `cogitator-hardening` | `stc.cogitator.hardening.enable` | Durcissement noyau + réseau + système de fichiers + SSH + blacklist de modules |
+| `cogitator-hardening` | `stc.cogitator.hardening.enable` | Durcissement noyau + réseau + système de fichiers + SSH + blacklist de modules + accès aux ordonnanceurs, plus auditd |
 | `cogitator-vm` | `stc.cogitator.vm.enable` | Shell fish, SSH, utilisateur principal, Docker optionnel, GC Nix |
 | `cogitator-docker-server` | `stc.cogitator.docker-server.enable` | Traefik + CrowdSec + notifications optionnelles + démon Docker |
 | `cogitator-plasma` | `stc.cogitator.plasma.enable` | Bureau KDE Plasma 6 Wayland + audio Pipewire |

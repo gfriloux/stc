@@ -50,7 +50,7 @@ Si tu as contourné l'une d'elles avec `lib.mkForce`, tu peux le retirer.
 
 | Profil | Désormais déclinable |
 |---|---|
-| `cogitator-hardening` | les six sous-reliques : `stc.relics.hardening.{kernel,network,filesystem,ssh,modules,scheduler}.enable` |
+| `cogitator-hardening` | les sept sous-reliques : `stc.relics.hardening.{kernel,network,filesystem,ssh,modules,scheduler,audit}.enable` |
 | `cogitator-workstation` | `stc.relics.hardening.{kernel,network,modules}.enable` |
 | `cogitator-plasma` | `stc.relics.pipewire.enable` |
 | `cogitator-gaming` | `stc.relics.amdGpu.enable`, `stc.relics.pipewire.enable` |
@@ -81,6 +81,7 @@ toujours comme défaut.
 | `relics-impermanence` | `environment.persistence.<chemin>.hideMounts` | voir les bind mounts en déboguant la persistance |
 | `relics-aws` | `services.udisks2.enable` | un hôte qui le veut sciemment. À noter : ce n'est plus la relique qui te bloque — mais sur une image bâtie avec le module `amazon-image` de nixpkgs, ce module écrit `false` à priorité normale, donc une définition nue entre en conflit avec l'**amont** et il te faut `lib.mkForce` là |
 | `relics-hardening-kernel` | `systemd.coredump.enable` | réactiver les core dumps le temps d'un débogage — lis d'abord l'avertissement sur la [page des reliques de durcissement](/stc/fr/relics/hardening/) : avec le handler actif, les démons écrivent des secrets et la limite PAM de la relique ne l'empêche **pas** |
+| `relics-hardening-audit` | `security.audit.backlogLimit`, `security.auditd.settings.{max_log_file,num_logs,max_log_file_action}` | un noyau plus chargé ou une autre rétention ; ce sont des tailles, pas une politique |
 | `relics-docker-traefik` | logrotate `compress`, `delaycompress`, `missingok`, `notifempty` | ta propre politique de rétention, ou un collecteur qui veut des fichiers non compressés |
 | `relics-yubikey-user` (Home Manager) | `programs.gpg.scdaemonSettings.{disable-ccid,pcsc-shared}` | une machine qui utilise gpg sans pcscd, et a donc besoin du pilote CCID propre à scdaemon |
 | `cogitator-enginseer` (Home Manager) | tout `programs.micro.settings`, `programs.direnv.silent`, `services.gpg-agent.enableSshSupport`, `catppuccin.autoEnable`, `programs.fzf.historyWidget.command` | goûts d'éditeur ; utiliser gpg-agent comme agent SSH ; thématiser ses outils un par un |
