@@ -93,7 +93,6 @@ modules = [
   stc.relics.nixHousekeeping.gc.keepDays = 7;
 
   stc.cogitator.hardening.enable = true;
-  stc.relics.hardening.network.allowedTCPPorts = [ 22 ];
 
   networking.hostName = "dev-vm";
   networking.hostId = "a1b2c3d4";

@@ -207,6 +207,15 @@ Login and logout records need no rule: libpam emits `USER_START` and
 exists, and one rule that fails disables all auditing — see the
 [relic page](/stc/en/relics/hardening/#audit).
 
+## `relics.hardening.firewall`
+
+A host firewall is **out of ANSSI-BP-028 scope**: the guide mentions iptables
+and nftables only in passing, and no rule asks for a default-deny inbound
+policy. The relic stands on the CIS ~3.5.x family (informative only, see *Why
+not CIS?*) and on one gap: upstream drops refused connections without logging
+them. It asserts `networking.firewall.enable`, logs refused TCP connections,
+and owns no port list.
+
 ## `relics.hardening.ssh`
 
 SSH hardening (`PermitRootLogin no`, `PasswordAuthentication no`, modern

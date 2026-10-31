@@ -1,9 +1,9 @@
 ---
 title: Durcissement
-description: Sept reliques de durcissement — noyau, réseau, système de fichiers, SSH, blacklist de modules, accès aux ordonnanceurs et audit — plus le raccourci cogitator-hardening.
+description: Huit reliques de durcissement — noyau, réseau, système de fichiers, SSH, blacklist de modules, accès aux ordonnanceurs, audit et pare-feu — plus le raccourci cogitator-hardening.
 ---
 
-STC fournit sept reliques de durcissement indépendantes. Chacune adresse une
+STC fournit huit reliques de durcissement indépendantes. Chacune adresse une
 surface d'attaque distincte et peut être activée individuellement.
 
 ## Durcissement du noyau
@@ -487,6 +487,89 @@ règles encore. Passe par cette option plutôt que par
 `security.audit.enable = "lock"` : la relique écrit déjà cette option, et une
 seconde définition entre en conflit.
 
+## Pare-feu
+
+**Module :** `stc.nixosModules.relics-hardening-firewall`
+
+**Option d'activation :** `stc.relics.hardening.firewall.enable`
+
+Le pare-feu NixOS est actif par défaut et ignore (DROP) toute connexion
+entrante vers un port que personne n'a ouvert. Cette relique transforme ce
+défaut en affirmation vérifiée et journalise ce que le pare-feu refuse. Elle
+s'appuie sur `networking.firewall` amont et fonctionne de la même façon avec le
+backend iptables (le défaut NixOS) et avec nftables
+(`networking.nftables.enable = true`). Sous firewalld, l'amont traduit l'option
+de journalisation en `LogDenied` de firewalld, avec son propre format : ce qui
+suit sur les lignes de journal ne s'y applique pas.
+
+**Options :**
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `stc.relics.hardening.firewall.enable` | bool | `false` | Vérifie que le pare-feu est actif et journalise les connexions refusées |
+| `stc.relics.hardening.firewall.logRefusedConnections` | bool | `true` | Journalise chaque connexion TCP entrante refusée dans le journal noyau |
+
+Ce qu'elle fait :
+
+- **Deux assertions.** `networking.firewall.enable` doit être vrai, et ni ferm
+  ni shorewall ne doivent être actifs : tous deux désactivent l'unité du
+  pare-feu NixOS en laissant cette option à vrai, et le jeu de règles par défaut
+  de ferm laisse tout passer. Un hôte dans l'un de ces cas échoue à
+  l'évaluation au lieu d'afficher un durcissement qu'il n'a pas.
+- **Les connexions refusées sont journalisées**, ce que l'amont ne fait pas :
+  chaque SYN TCP refusé arrive dans le journal noyau, en IPv4 comme en IPv6.
+
+```bash
+journalctl -k -g 'refused connection'
+```
+
+Seules les tentatives de connexion TCP sont journalisées. L'UDP refusé ne laisse
+aucune ligne ; `networking.firewall.logRefusedPackets` amont journalise chaque
+paquet refusé, broadcasts compris, et sert au débogage. Ne compte pas non plus
+sur une ligne par tentative pendant un scan : un scan de 200 ports lors d'un test
+n'en a produit qu'une poignée.
+
+:::note[Couper la journalisation]
+Pose `stc.relics.hardening.firewall.logRefusedConnections = false;`, et non
+`networking.firewall.logRefusedConnections`. La relique écrit l'option amont en
+priorité normale, parce que le profil installation-device de nixpkgs y pose déjà
+un `mkDefault false` et qu'un second `mkDefault` entrerait en conflit ; un
+`false` simple de ta part entrerait en conflit avec celui de la relique.
+:::
+
+**Ouvrir des ports.** La relique ne gère aucune liste de ports. Les reliques et
+les consommateurs ajoutent les leurs, et rien dans STC ne désactive ni ne vide
+jamais le pare-feu :
+
+```nix
+networking.firewall.allowedTCPPorts = [ 80 443 ];
+networking.firewall.allowedUDPPorts = [ 51820 ];
+```
+
+Les services amont qui ont une option `openFirewall` ouvrent leur port par là
+(`services.openssh` le fait par défaut, c'est pour ça que SSH n'a besoin d'aucune
+ligne). Les reliques traefik ajoutent elles-mêmes 80 et 443.
+
+**Tes propres règles à la place.** Si une autre couche filtre le trafic de cet
+hôte — ton propre jeu de règles nftables avec le pare-feu NixOS coupé, ferm,
+shorewall, un security group cloud seul — dis-le explicitement :
+
+```nix
+networking.firewall.enable = false;
+stc.relics.hardening.firewall.enable = false;
+```
+
+**Ce qu'elle ne couvre pas.**
+
+- Les ports publiés par Docker. Les règles DNAT et FORWARD de Docker passent
+  avant `networking.firewall` : un conteneur en `-p 8080:80` est joignable quoi
+  que dise le pare-feu. C'est ce que signale
+  [`docker.guards`](/stc/fr/relics/docker/#garde-fous-docker).
+- La limitation de débit. Le brute force SSH est freiné par le
+  `PerSourcePenalties` de sshd (durcissement SSH plus haut), pas par le
+  pare-feu : une limite au niveau du pare-feu demanderait un jeu de règles par
+  backend pour le même effet.
+
 ## Pas une relique : sudo
 
 Il n'existe pas de `relics.hardening.sudo`, et cette absence est délibérée. Les
@@ -510,6 +593,7 @@ modules = [
   stc.nixosModules.relics-hardening-modules
   stc.nixosModules.relics-hardening-scheduler
   stc.nixosModules.relics-hardening-audit
+  stc.nixosModules.relics-hardening-firewall
   ./configuration.nix
 ];
 
@@ -523,9 +607,10 @@ modules = [
   stc.relics.hardening.modules.enable = true;
   stc.relics.hardening.scheduler.enable = true;
   stc.relics.hardening.audit.enable = true;
+  stc.relics.hardening.firewall.enable = true;
 
-  # Le pare-feu est géré séparément — ouvre les ports ici selon tes besoins :
-  networking.firewall.allowedTCPPorts = [ 22 80 443 ];
+  # Les ports restent à toi de les ouvrir (SSH est ouvert par services.openssh) :
+  networking.firewall.allowedTCPPorts = [ 80 443 ];
 }
 ```
 
@@ -546,8 +631,8 @@ Machine gaming avec durcissement :
 
 ## Le raccourci cogitator-hardening
 
-Pour le cas courant d'activation des sept reliques avec les valeurs par défaut,
-utilise [`cogitator-hardening`](/stc/fr/cogitator/hardening/). Une option au lieu de sept :
+Pour le cas courant d'activation des huit reliques avec les valeurs par défaut,
+utilise [`cogitator-hardening`](/stc/fr/cogitator/hardening/). Une option au lieu de huit :
 
 ```nix
 modules = [ stc.nixosModules.cogitator-hardening ];

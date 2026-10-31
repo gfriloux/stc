@@ -1,9 +1,9 @@
 ---
 title: Hardening
-description: Seven hardening relics — kernel, network, filesystem, SSH, module blacklist, scheduler access and audit — plus the cogitator-hardening shortcut.
+description: Eight hardening relics — kernel, network, filesystem, SSH, module blacklist, scheduler access, audit and firewall — plus the cogitator-hardening shortcut.
 ---
 
-STC provides seven independent hardening relics. Each addresses a distinct attack
+STC provides eight independent hardening relics. Each addresses a distinct attack
 surface and can be enabled individually.
 
 ## Kernel Hardening
@@ -469,6 +469,85 @@ on once the ruleset is settled, not while you are still tuning it. Set it
 through this option rather than `security.audit.enable = "lock"`: the relic
 writes that option itself, and a second definition conflicts.
 
+## Firewall
+
+**Module:** `stc.nixosModules.relics-hardening-firewall`
+
+**Enable option:** `stc.relics.hardening.firewall.enable`
+
+The NixOS firewall is on by default and drops every inbound connection to a
+port nobody opened. This relic turns that default into a checked claim and
+logs what the firewall refuses. It sits on upstream `networking.firewall` and
+works the same on the iptables backend (the NixOS default) and on nftables
+(`networking.nftables.enable = true`). Under firewalld, upstream translates the
+logging option into firewalld's own `LogDenied`, with its own format: what
+follows about log lines does not apply there.
+
+**Options:**
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `stc.relics.hardening.firewall.enable` | bool | `false` | Assert the firewall is on and log refused connections |
+| `stc.relics.hardening.firewall.logRefusedConnections` | bool | `true` | Log each refused inbound TCP connection to the kernel log |
+
+What it does:
+
+- **Two assertions.** `networking.firewall.enable` must be true, and neither
+  ferm nor shorewall may be enabled: both disable the NixOS firewall unit while
+  leaving that option true, and ferm's default ruleset lets everything in. A
+  host in either case fails evaluation instead of claiming a hardening it does
+  not have.
+- **Refused connections logged**, which upstream does not do: every refused TCP
+  SYN lands in the kernel log, IPv4 and IPv6 alike.
+
+```bash
+journalctl -k -g 'refused connection'
+```
+
+Only TCP connection attempts are logged. Refused UDP leaves no line; upstream's
+`networking.firewall.logRefusedPackets` logs every refused packet, broadcasts
+included, and is meant for debugging. Do not count on one line per attempt
+under a scan either: a 200-port scan in a test produced only a handful.
+
+:::note[Turning logging off]
+Set `stc.relics.hardening.firewall.logRefusedConnections = false;`, not
+`networking.firewall.logRefusedConnections`. The relic writes the upstream
+option at normal priority, because nixpkgs' installation-device profile already
+holds a `mkDefault false` on it and a second `mkDefault` would conflict; a
+plain `false` of your own would conflict with the relic's.
+:::
+
+**Opening ports.** The relic owns no port list. Relics and consumers add their
+own, and nothing in STC ever disables or flushes the firewall:
+
+```nix
+networking.firewall.allowedTCPPorts = [ 80 443 ];
+networking.firewall.allowedUDPPorts = [ 51820 ];
+```
+
+Upstream services that take an `openFirewall` option open their port that way
+(`services.openssh` does it by default, which is why SSH needs no line). The
+traefik relics add 80 and 443 themselves.
+
+**Your own ruleset instead.** If another layer filters this host's traffic — your
+own nftables ruleset with the NixOS firewall off, ferm, shorewall, a cloud
+security group alone — say so explicitly:
+
+```nix
+networking.firewall.enable = false;
+stc.relics.hardening.firewall.enable = false;
+```
+
+**What it does not cover.**
+
+- Ports published by Docker. Docker's DNAT and FORWARD rules sit ahead of
+  `networking.firewall`, so a `-p 8080:80` container is reachable whatever the
+  firewall says. That is what [`docker.guards`](/stc/en/relics/docker/#docker-guards) warns
+  about.
+- Rate limiting. SSH brute force is throttled by sshd's `PerSourcePenalties`
+  (SSH hardening above), not by the firewall: a firewall rate limit would need
+  one rule set per backend for the same effect.
+
 ## Not a relic: sudo
 
 There is no `relics.hardening.sudo`, and the absence is deliberate. The two
@@ -492,6 +571,7 @@ modules = [
   stc.nixosModules.relics-hardening-modules
   stc.nixosModules.relics-hardening-scheduler
   stc.nixosModules.relics-hardening-audit
+  stc.nixosModules.relics-hardening-firewall
   ./configuration.nix
 ];
 
@@ -505,9 +585,10 @@ modules = [
   stc.relics.hardening.modules.enable = true;
   stc.relics.hardening.scheduler.enable = true;
   stc.relics.hardening.audit.enable = true;
+  stc.relics.hardening.firewall.enable = true;
 
-  # Firewall is managed separately — open ports here as needed:
-  networking.firewall.allowedTCPPorts = [ 22 80 443 ];
+  # Ports stay yours to open (SSH is opened by services.openssh):
+  networking.firewall.allowedTCPPorts = [ 80 443 ];
 }
 ```
 
@@ -528,8 +609,8 @@ Gaming machine with hardening:
 
 ## The cogitator-hardening Shortcut
 
-For the common case of enabling all seven relics with defaults, use
-[`cogitator-hardening`](/stc/en/cogitator/hardening/). One option instead of seven:
+For the common case of enabling all eight relics with defaults, use
+[`cogitator-hardening`](/stc/en/cogitator/hardening/). One option instead of eight:
 
 ```nix
 modules = [ stc.nixosModules.cogitator-hardening ];

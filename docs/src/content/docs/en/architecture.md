@@ -75,7 +75,7 @@ modules = [
 
 ```nix
 modules = [
-  stc.nixosModules.cogitator-hardening   # enables the seven hardening relics
+  stc.nixosModules.cogitator-hardening   # enables the eight hardening relics
 ];
 ```
 

@@ -1,13 +1,13 @@
 ---
 title: Profil de durcissement
-description: cogitator-hardening — active les sept reliques de durcissement avec une seule option.
+description: cogitator-hardening — active les huit reliques de durcissement avec une seule option.
 ---
 
 **Module :** `stc.nixosModules.cogitator-hardening`
 
 Une option pour tous les durcir. Active le durcissement noyau, réseau, système de
-fichiers, SSH, la blacklist de modules, l'accès aux ordonnanceurs et l'audit en
-un seul interrupteur. Pour un contrôle
+fichiers, SSH, la blacklist de modules, l'accès aux ordonnanceurs, l'audit et le
+pare-feu en un seul interrupteur. Pour un contrôle
 chirurgical, utilise les reliques individuelles à la place et active-les
 indépendamment.
 
@@ -15,11 +15,11 @@ indépendamment.
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
-| `stc.cogitator.hardening.enable` | bool | `false` | Active la suite de durcissement complète (noyau + réseau + système de fichiers + SSH + blacklist de modules + accès aux ordonnanceurs + audit) |
+| `stc.cogitator.hardening.enable` | bool | `false` | Active la suite de durcissement complète (noyau + réseau + système de fichiers + SSH + blacklist de modules + accès aux ordonnanceurs + audit + pare-feu) |
 
 ## Ce qu'il compose
 
-Activer `stc.cogitator.hardening.enable = true` est équivalent à poser les sept options suivantes :
+Activer `stc.cogitator.hardening.enable = true` est équivalent à poser les huit options suivantes :
 
 ```nix
 stc.relics.hardening.kernel.enable = true;
@@ -29,9 +29,10 @@ stc.relics.hardening.ssh.enable = true;
 stc.relics.hardening.modules.enable = true;
 stc.relics.hardening.scheduler.enable = true;
 stc.relics.hardening.audit.enable = true;
+stc.relics.hardening.firewall.enable = true;
 ```
 
-Les options des reliques individuelles — `allowedTCPPorts`, `tmpSize`, `allowedTCPForwarding` — restent
+Les options des reliques individuelles — `filesystem.tmpSize`, `ssh.allowedTCPForwarding`, `firewall.logRefusedConnections` — restent
 entièrement configurables. Le profil ne pose que les flags `enable`.
 
 ## Exemple d'utilisation
@@ -47,8 +48,8 @@ modules = [
 {
   stc.cogitator.hardening.enable = true;
 
-  # Ouvrir des ports supplémentaires au-delà de SSH (22)
-  stc.relics.hardening.network.allowedTCPPorts = [ 22 80 443 ];
+  # Ouvrir des ports supplémentaires (SSH est ouvert par services.openssh)
+  networking.firewall.allowedTCPPorts = [ 80 443 ];
 
   # Augmenter la taille de /tmp sur les machines riches en mémoire
   stc.relics.hardening.filesystem.tmpSize = "4G";

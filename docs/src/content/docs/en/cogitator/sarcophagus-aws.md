@@ -23,7 +23,7 @@ Instances deployed from this AMI are intended to be managed with
 | `relics-networking` | DHCP, Quad9 DNS |
 | `relics-impermanence` | Root rollback to `@blank` on every boot |
 | `relics-aws` | NVMe/ENA drivers, NTP, serial console, EBS pool expansion |
-| `cogitator-hardening` | The hardening suite — kernel, network, filesystem, SSH, module blacklist, scheduler access, and auditd (`audit=1` on the kernel command line, records in `/var/log/audit`) |
+| `cogitator-hardening` | The hardening suite — kernel, network, filesystem, SSH, module blacklist, scheduler access, auditd (`audit=1` on the kernel command line, records in `/var/log/audit`), and a checked firewall logging refused connections |
 | `relics-server-survivability` | No emergency shell, reboot on panic, hardware watchdog, bounded `/boot`, no suspend (`mkDefault`) |
 | `relics-nix-housekeeping` | Scheduled GC, GC under disk pressure, weekly dedup, builds that yield, journal cap (`mkDefault`) |
 | Disk layout | GPT on `/dev/vda` — BIOS/GRUB: bios_grub + ESP(`/boot`) + ZFS pool (3 partitions) |

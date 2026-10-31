@@ -24,9 +24,11 @@ the `just ci` gate**: a VM test is heavy, and the CI gate stays fast and static.
 - Linux only (`x86_64-linux` / `aarch64-linux`) — the attribute is empty elsewhere.
 - Builder: `pkgs.testers.runNixOSTest`.
 
-**What `just test` now costs.** Fourteen provings, **twenty VM boots** — `vm`,
-`gaming`, `home-desktop`, `docker-server` and `smart` each boot two nodes, `dreadnought` declares a second
-node it never starts, `docker-server` a third, and `sarcophagus-kvm` boots its single node twice — and the closures include KDE twice (`workstation` and
+**What `just test` now costs.** Fourteen provings, **twenty-three VM boots** —
+`vm`, `gaming`, `docker-server`, `plasma`, `smart` and `hardening` each boot two
+nodes, `home-desktop` three, `dreadnought` declares a second node it never
+starts, `docker-server` a third, and `sarcophagus-kvm` boots its single node
+twice — and the closures include KDE twice (`workstation` and
 `plasma`), Steam once, the enginseer toolkit's 31 named packages, and GIMP, VLC
 and Zen Browser for the desktop profile. On a cold store that is a few GiB of
 downloads; warm, most scripts finish in 23-30 s, `enginseer` in 25 s. The two
@@ -54,7 +56,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 
 | Proving | Cogitator under test | What it asserts |
 |---------|----------------------|-----------------|
-| `hardening` | `cogitator-hardening` | Kernel and network sysctl hardening are live; SSH is key-only with root login refused; the audit rules loaded at boot (`enabled 1`, every declared rule present) and record an identity-file change, a module load, a setuid `execve` and a mount attempt from an SSH session, plus PAM's own session record |
+| `hardening` | `cogitator-hardening` | Kernel and network sysctl hardening are live; SSH is key-only with root login refused; a client's probe to a closed port is refused while SSH answers, and the refusal is in the kernel log; the audit rules loaded at boot (`enabled 1`, every declared rule present) and record an identity-file change, a module load, a setuid `execve` and a mount attempt from an SSH session, plus PAM's own session record |
 | `docker-server` | `cogitator-docker-server` | Container units carry their pinned image and healthcheck flags; docker networks, the notify `OnFailure` hook and health-watch timers are wired; the Traefik static config renders with the CrowdSec bouncer plugin and socket-proxy endpoint; the docker guards warn about exactly the unlabelled public port and raw socket mount — not a labelled container, not STC's own Traefik 80/443 and proxy, not a loopback bind, but a port appended to Traefik; nothing on a node that declines them; and, read from a third node that never boots, Traefik's raw-socket fallback and a stand-in named like the proxy once the proxy relic is off |
 | `workstation` | `cogitator-workstation` | The profile wires its three concerns: the hardening socle (kernel/network sysctl, module blacklist) is live, YubiKey `pcscd` is present, and the desktop's display-manager unit exists |
 | `vm` | `cogitator-vm` | The primary user is in `wheel` with a working fish login shell and lingering enabled; a key declared through `authorizedKeys` actually authenticates over SSH, not merely that port 22 answers; the GC timer fires weekly and its script carries the declared retention; Docker is absent by default and, on a second node, the opt-in path wires both the daemon and the `docker` group |
