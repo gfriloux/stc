@@ -70,6 +70,16 @@
   testScript = {nodes, ...}: ''
     machine.wait_for_unit("multi-user.target")
 
+    # -n is load-bearing: without it ssh reads the console's stdin and eats
+    # the marker the test driver writes there, which surfaces as the driver
+    # failing to parse an exit status rather than as an SSH problem.
+    ssh = (
+        "ssh -n -i /etc/proving-ssh-key"
+        " -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+        " -o BatchMode=yes -o ConnectTimeout=10"
+        " -o PreferredAuthentications=publickey"
+    )
+
     with subtest("kernel sysctl hardening"):
         assert machine.succeed("sysctl -n kernel.kptr_restrict").strip() == "2"
         assert machine.succeed("sysctl -n kernel.randomize_va_space").strip() == "2"
@@ -181,6 +191,59 @@
         assert banner_path.startswith("/nix/store/"), f"unexpected banner path: {banner_path}"
         assert "Authorized access only" in machine.succeed(f"cat {banner_path}")
 
+    with subtest("audit rules loaded at boot"):
+        # auditd alone being active proves nothing: when a rule fails to load,
+        # audit-rules-nixos turns auditing off and auditd keeps running.
+        machine.wait_for_unit("auditd.service")
+        assert machine.succeed(
+            "systemctl is-active audit-rules-nixos.service"
+        ).strip() == "active", "the audit rules did not load"
+        status = machine.succeed("auditctl -s")
+        assert "enabled 1" in status, f"auditing is off: {status}"
+        assert "backlog_limit 8192" in status, f"unexpected backlog: {status}"
+        # Upstream ships no rule: everything listed here is the relic's.
+        loaded = machine.succeed("auditctl -l").strip().splitlines()
+        expected = ${toString (builtins.length nodes.machine.security.audit.rules)}
+        assert len(loaded) == expected, f"{len(loaded)} rules loaded, {expected} declared: {loaded}"
+        # auditctl -l prints watches as `-k <key>` and syscall rules as `-F key=<key>`.
+        for key in ["identity", "scope", "user_emulation", "kernel_modules", "mounts"]:
+            assert any(line.endswith((f" -k {key}", f" key={key}")) for line in loaded), f"no rule with key {key}"
+        # Without these, auditd's built-in defaults never rotate audit.log.
+        conf = machine.succeed("cat /etc/audit/auditd.conf")
+        for setting in ["max_log_file = 8", "num_logs = 5", "max_log_file_action = rotate"]:
+            assert setting in conf, f"auditd.conf lacks {setting!r}: {conf}"
+
+    with subtest("audit records the baseline events"):
+        def recorded(query):
+            machine.wait_until_succeeds(f"ausearch -i {query}", timeout=30)
+
+        # Root from the test driver has no login session (auid unset): the
+        # watch and module rules carry no auid filter, so they still fire.
+        machine.succeed("chmod 644 /etc/passwd")
+        recorded("-k identity | grep -q 'proctitle=chmod 644 /etc/passwd'")
+        machine.succeed("modprobe dummy")
+        recorded("-k kernel_modules | grep -q 'name=dummy'")
+
+        # The other two rules filter on auid!=unset, so they need a real login.
+        # This runs before the authorized-keys subtest on purpose: its refused
+        # login earns 127.0.0.1 the ssh relic's authfail penalty, after which
+        # sshd resets every connection from it.
+        #
+        # sshd's pam_loginuid gives the session declared's auid. sudo refuses
+        # (no password, no rule), but the setuid execve happened and is
+        # recorded. A plain `mount` from declared would be refused by
+        # util-linux before any syscall, so the mount runs in a user namespace,
+        # where tmpfs is mountable without root and the auid is unchanged.
+        # `-ul` matches the audit uid alone (`-ua` would also match the plain
+        # uid, declared's anyway), so the records prove the session's auid.
+        machine.execute(f"{ssh} declared@127.0.0.1 sudo -n true")
+        recorded("-k user_emulation -ul declared | grep -q 'comm=sudo'")
+        machine.succeed(f"{ssh} declared@127.0.0.1 unshare -rm mount -t tmpfs none /tmp")
+        recorded("-k mounts -ul declared | grep -q 'syscall=mount'")
+
+        # Logins need no rule: PAM emits the session records itself.
+        recorded("-m USER_START | grep -q 'acct=declared'")
+
     with subtest("authorized keys come from the flake only"):
         rendered = [
             line for line in machine.succeed("sshd -T").splitlines()
@@ -190,16 +253,6 @@
         paths = rendered[0].split(None, 1)[1].strip()
         assert paths == "/etc/ssh/authorized_keys.d/%u", f"unexpected search path: {paths}"
         assert "%h" not in paths, f"the home directory is still in the auth path: {paths}"
-
-        # -n is load-bearing: without it ssh reads the console's stdin and eats
-        # the marker the test driver writes there, which surfaces as the driver
-        # failing to parse an exit status rather than as an SSH problem.
-        ssh = (
-            "ssh -n -i /etc/proving-ssh-key"
-            " -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-            " -o BatchMode=yes -o ConnectTimeout=10"
-            " -o PreferredAuthentications=publickey"
-        )
 
         # The rendered path is only half the claim: prove that a declared key
         # still authenticates, or a total lockout would satisfy the assertion

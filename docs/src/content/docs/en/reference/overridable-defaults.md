@@ -47,7 +47,7 @@ If you worked around one of these with `lib.mkForce`, you can drop it.
 
 | Profile | Now declinable |
 |---|---|
-| `cogitator-hardening` | all six sub-relics: `stc.relics.hardening.{kernel,network,filesystem,ssh,modules,scheduler}.enable` |
+| `cogitator-hardening` | all seven sub-relics: `stc.relics.hardening.{kernel,network,filesystem,ssh,modules,scheduler,audit}.enable` |
 | `cogitator-workstation` | `stc.relics.hardening.{kernel,network,modules}.enable` |
 | `cogitator-plasma` | `stc.relics.pipewire.enable` |
 | `cogitator-gaming` | `stc.relics.amdGpu.enable`, `stc.relics.pipewire.enable` |
@@ -78,6 +78,7 @@ default.
 | `relics-impermanence` | `environment.persistence.<path>.hideMounts` | seeing the bind mounts while debugging persistence |
 | `relics-aws` | `services.udisks2.enable` | a host that knowingly wants it. Note the relic is no longer what blocks you — but on an image built from `nixpkgs`' own `amazon-image` module, that module writes `false` at normal priority, so a plain definition conflicts with **upstream** and you need `lib.mkForce` there |
 | `relics-hardening-kernel` | `systemd.coredump.enable` | re-enabling core dumps for one debugging session — read the warning on the [hardening relics page](/stc/en/relics/hardening/) first: with the handler on, daemons dump secrets and the relic's PAM limit does **not** prevent it |
+| `relics-hardening-audit` | `security.audit.backlogLimit`, `security.auditd.settings.{max_log_file,num_logs,max_log_file_action}` | a busier kernel or a different retention; they are sizes, not policy |
 | `relics-docker-traefik` | logrotate `compress`, `delaycompress`, `missingok`, `notifempty` | your own retention policy, or a shipper that wants uncompressed files |
 | `relics-yubikey-user` (Home Manager) | `programs.gpg.scdaemonSettings.{disable-ccid,pcsc-shared}` | a host running gpg without pcscd, which needs scdaemon's own CCID driver |
 | `cogitator-enginseer` (Home Manager) | all of `programs.micro.settings`, `programs.direnv.silent`, `services.gpg-agent.enableSshSupport`, `catppuccin.autoEnable`, `programs.fzf.historyWidget.command` | editor taste; using gpg-agent as your SSH agent; theming tools one by one |

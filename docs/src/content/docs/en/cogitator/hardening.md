@@ -1,23 +1,23 @@
 ---
 title: Hardening Profile
-description: cogitator-hardening — enable all six hardening relics with a single option.
+description: cogitator-hardening — enable all seven hardening relics with a single option.
 ---
 
 **Module:** `stc.nixosModules.cogitator-hardening`
 
 One option to harden them all. Activates kernel, network, filesystem, SSH,
-module-blacklist and scheduler-access hardening in a single toggle. For surgical control, use the
+module-blacklist, scheduler-access and audit hardening in a single toggle. For surgical control, use the
 individual relics instead and enable them independently.
 
 ## Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.cogitator.hardening.enable` | bool | `false` | Enable the full hardening suite (kernel + network + filesystem + SSH + module blacklist + scheduler access) |
+| `stc.cogitator.hardening.enable` | bool | `false` | Enable the full hardening suite (kernel + network + filesystem + SSH + module blacklist + scheduler access + audit) |
 
 ## What It Composes
 
-Enabling `stc.cogitator.hardening.enable = true` is equivalent to setting all six of these:
+Enabling `stc.cogitator.hardening.enable = true` is equivalent to setting all seven of these:
 
 ```nix
 stc.relics.hardening.kernel.enable = true;
@@ -26,6 +26,7 @@ stc.relics.hardening.filesystem.enable = true;
 stc.relics.hardening.ssh.enable = true;
 stc.relics.hardening.modules.enable = true;
 stc.relics.hardening.scheduler.enable = true;
+stc.relics.hardening.audit.enable = true;
 ```
 
 The individual relic options — `allowedTCPPorts`, `tmpSize`, `allowedTCPForwarding` — remain
@@ -54,7 +55,7 @@ modules = [
 
 ## Taking the suite minus a part
 
-Since `v0.18.0` the six sub-relics are enabled with `lib.mkDefault`, so you can
+Since `v0.18.0` the sub-relics are enabled with `lib.mkDefault`, so you can
 keep the single toggle and still decline one of them:
 
 ```nix
@@ -65,7 +66,7 @@ stc.relics.hardening.ssh.enable = false;
 ```
 
 Before `v0.18.0` this needed `lib.mkForce`, or giving up this profile entirely
-and importing the six relics à la carte. See
+and importing the relics à la carte. See
 [Overridable defaults](/stc/en/reference/overridable-defaults/) for the rule and
 the full list.
 

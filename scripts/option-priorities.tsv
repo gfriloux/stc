@@ -22,7 +22,7 @@ count	cogitator/home/enginseer/default.nix	13	0	0	tool settings are the consumer
 count	cogitator/nixos/docker-server.nix	7	0	0	socketProxy, crowdsec and preSwitchChecks are additive; autoPrune is a default kept off because a missed weekly window takes the stack down; serverSurvivability, nixHousekeeping and the docker guards are additive
 count	cogitator/nixos/dreadnought.nix	4	0	0	networking and the hardening suite are additive; zfs, impermanence and aws stay at normal priority because this profile declares the filesystems that assume them; serverSurvivability and nixHousekeeping are additive
 count	cogitator/nixos/gaming.nix	2	0	0	the profile is named for what it does, not the GPU or audio stack it assumes
-count	cogitator/nixos/hardening.nix	6	0	0	the six sub-relics are independent and nothing here assumes any one of them
+count	cogitator/nixos/hardening.nix	7	0	0	the seven sub-relics are independent and nothing here assumes any one of them
 count	cogitator/nixos/plasma.nix	1	0	0	pipewire is additive; plasma6 stays pinned because it is the profile's subject
 count	cogitator/nixos/sarcophagus-aws.nix	4	8	0	networking and hardening additive; the mkForce block is an image builder having the last word on its own boot layout, over STC's own boot relic; serverSurvivability and nixHousekeeping are additive
 count	cogitator/nixos/sarcophagus-kvm.nix	4	8	0	networking and hardening additive; the mkForce block is an image builder having the last word on its own boot layout, over STC's own boot relic; serverSurvivability and nixHousekeeping are additive
@@ -32,6 +32,7 @@ count	relics/home/yubikey.nix	2	0	0	sharing the card through pcscd is right with
 count	relics/nixos/aws.nix	2	0	0	the serial getty must yield to a nixosTest claiming ttyS0; udisks2 documents an intent upstream already defaults to false
 count	relics/nixos/boot.nix	1	0	0	firmware that refuses EFI variable writes, and chroot installs, need canTouchEfiVariables false
 count	relics/nixos/docker/traefik.nix	4	0	0	log rotation policy belongs to the operator; files, frequency, rotate and postrotate stay pinned because they are wired to this relic
+count	relics/nixos/hardening/audit.nix	4	0	0	the backlog limit and the log rotation are sizes, not policy: a host with a small disk, a busy kernel or its own retention picks its own
 count	relics/nixos/hardening/filesystem.nix	0	1	0	mkForce on /tmp because the relic replaces whatever the hardware configuration or disko declared for it with a tmpfs
 count	relics/nixos/hardening/kernel.nix	1	0	0	an operator must be able to re-enable core dumps for one crash; read the warning on the relic's doc page before doing it
 count	relics/nixos/impermanence.nix	1	0	0	hideMounts only changes what mount shows, so an operator debugging persistence can turn it off
@@ -66,6 +67,10 @@ watch	services.logrotate.settings.traefik.compress	relics/nixos/docker/traefik.n
 watch	services.logrotate.settings.traefik.delaycompress	relics/nixos/docker/traefik.nix	operator's retention policy
 watch	services.logrotate.settings.traefik.missingok	relics/nixos/docker/traefik.nix	operator's retention policy
 watch	services.logrotate.settings.traefik.notifempty	relics/nixos/docker/traefik.nix	operator's retention policy
+watch	security.audit.backlogLimit	relics/nixos/hardening/audit.nix	upstream sets a plain default (1024), no priority to collide with
+watch	security.auditd.settings.max_log_file	relics/nixos/hardening/audit.nix	freeform key upstream never sets
+watch	security.auditd.settings.num_logs	relics/nixos/hardening/audit.nix	freeform key upstream never sets
+watch	security.auditd.settings.max_log_file_action	relics/nixos/hardening/audit.nix	freeform key upstream never sets
 watch	systemd.coredump.enable	relics/nixos/hardening/kernel.nix	one debugging session; see the relic page for what it exposes
 watch	environment.persistence.hideMounts	relics/nixos/impermanence.nix	cosmetic; an operator debugging persistence wants the mounts visible
 watch	networking.usePredictableInterfaceNames	relics/nixos/networking.nix	a host with fixed naming replaces it

@@ -53,6 +53,8 @@ section *Threat model and non-goals*.
 | R13 | Désactivation d'IPv6 si inutilisé |
 | R14 | Configuration sysctl système de fichiers |
 | R28 | Partitionnement type et options de montage |
+| R33 | Imputabilité des actions d'administration |
+| R73 | Journalisation de l'activité système avec auditd |
 
 ## `relics.hardening.kernel`
 
@@ -191,6 +193,29 @@ La relique écrit `/var/cron/cron.allow` et `/etc/at/at.allow` — les chemins q
 NixOS lit réellement, pas les `/etc/cron.allow` et `/etc/at.allow` que citent les
 référentiels dérivés de RHEL. Elle n'active aucun ordonnanceur et reste inerte là
 où aucun ne tourne.
+
+## `relics.hardening.audit`
+
+R73 est une règle de **niveau minimal** : l'activité du système est
+journalisée par auditd. Le guide la fait suivre d'un exemple d'`audit.rules` ;
+la base de STC en reprend une partie, et les écarts sont voulus.
+
+| Réglage STC | Règle | Statut | Note |
+|-------------|-------|--------|------|
+| auditd actif, règles chargées au boot | R73 | ✅ | `audit=1` sur la ligne de commande du noyau ; le proving vérifie `enabled 1`, pas seulement le démon |
+| Chargement/déchargement de modules (`init_module`, `finit_module`, `delete_module`) | R73 | ✅ | Les surveillances `-w /sbin/insmod` du guide n'ont pas de sens sous NixOS — pas de `/sbin`, `kmod` vit dans le store ; les appels système attrapent tous les chargeurs |
+| `mount`, `umount2` | R73 | 🟡 | Filtré sur `auid!=unset` : sans filtre, les démontages de credentials de systemd à chaque unité noient le journal. Les montages depuis une session, `sudo` compris, sont enregistrés |
+| `-w /etc/ -p wa` | R73 | 🟡 | Restreint aux fichiers d'identité et à sudoers (clés `identity`, `scope`). Ajoute la ligne du guide via `security.audit.rules` pour couvrir tout `/etc` |
+| `ioperm`, `modify_ldt`, `get_kernel_syms`, `ptrace`, `prctl` | R73 | ⚪ | Absents de la base. `prctl` est appelé en permanence par des programmes ordinaires ; `get_kernel_syms` n'existe plus sur les noyaux actuels |
+| Surveillance des créations/suppressions de fichiers et des `EACCES` | R73 | ⚪ | Absente de la base ; le guide prévient lui-même du coût en performances |
+| `-e 2` (configuration verrouillée) | R73 | 🟡 | Sur demande via `immutable = true` : verrouillé, un `nixos-rebuild switch` qui change les règles échoue jusqu'au reboot |
+| `execve`/`execveat` de programmes setuid depuis une session (clé `user_emulation`) | R33 | 🟡 | La forme la plus forte du guide journalise **tous** les `execve` ; STC ne journalise que les changements de privilège. Les commandes lancées via sudo sont aussi dans le journal (`journalctl -t sudo`, voir plus bas) |
+
+Les connexions et déconnexions n'ont besoin d'aucune règle : libpam émet
+lui-même `USER_START` et `USER_END`. Et aucune surveillance
+n'est posée sous `/var` : les règles se chargent avant que `/var/log` existe,
+et une seule règle en échec désactive tout l'audit — voir la
+[page de la relique](/stc/fr/relics/hardening/#audit).
 
 ## `relics.hardening.ssh`
 

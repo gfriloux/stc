@@ -29,7 +29,7 @@ to build the service profile you need.
 | `relics-networking` | DHCP, Quad9 DNS |
 | `relics-impermanence` | Root rollback to `@blank` on every boot |
 | `relics-aws` | NVMe/ENA drivers, NTP, serial console, EBS pool expansion |
-| `cogitator-hardening` | Kernel + network + filesystem + SSH hardening |
+| `cogitator-hardening` | The hardening suite — kernel, network, filesystem, SSH, module blacklist, scheduler access, and auditd (`audit=1` on the kernel command line, records in `/var/log/audit`) |
 | `relics-server-survivability` | No emergency shell, reboot on panic, hardware watchdog, bounded `/boot`, no suspend (`mkDefault`) |
 | `relics-nix-housekeeping` | Scheduled GC, GC under disk pressure, weekly dedup, builds that yield, journal cap (`mkDefault`) |
 

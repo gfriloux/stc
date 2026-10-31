@@ -27,7 +27,7 @@ options. The profile just saves you from enabling each one individually.
 
 | Module name | Enable option | What it composes |
 |-------------|---------------|------------------|
-| `cogitator-hardening` | `stc.cogitator.hardening.enable` | kernel + network + filesystem + SSH + module-blacklist hardening |
+| `cogitator-hardening` | `stc.cogitator.hardening.enable` | kernel + network + filesystem + SSH + module-blacklist + scheduler-access hardening, plus auditd |
 | `cogitator-vm` | `stc.cogitator.vm.enable` | fish shell, SSH, primary user, optional Docker, Nix GC |
 | `cogitator-docker-server` | `stc.cogitator.docker-server.enable` | Traefik + CrowdSec + optional notifications + Docker daemon |
 | `cogitator-plasma` | `stc.cogitator.plasma.enable` | KDE Plasma 6 Wayland desktop + Pipewire audio |

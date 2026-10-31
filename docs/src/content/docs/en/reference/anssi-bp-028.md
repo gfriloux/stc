@@ -52,6 +52,8 @@ under *Threat model and non-goals*.
 | R13 | Disable IPv6 when unused |
 | R14 | Filesystem sysctl configuration |
 | R28 | Typical partitioning and mount options |
+| R33 | Accountability of administration actions |
+| R73 | Log system activity with auditd |
 
 ## `relics.hardening.kernel`
 
@@ -182,6 +184,28 @@ NixOS module reverses that. `atd` does the same with `/etc/at/at.deny`.
 The relic writes `/var/cron/cron.allow` and `/etc/at/at.allow` — the paths NixOS
 actually reads, not the `/etc/cron.allow` and `/etc/at.allow` that RHEL-derived
 baselines cite. It enables no scheduler and is inert where none runs.
+
+## `relics.hardening.audit`
+
+R73 is a **minimal-level** rule: system activity is logged through auditd. The
+guide follows it with an example `audit.rules`; STC's baseline takes part of
+it, and the gaps are deliberate.
+
+| STC setting | Rule | Status | Note |
+|-------------|------|--------|------|
+| auditd running, rules loaded at boot | R73 | ✅ | `audit=1` on the kernel command line; the proving checks `enabled 1`, not just the daemon |
+| Module load/unload (`init_module`, `finit_module`, `delete_module`) | R73 | ✅ | The guide's `-w /sbin/insmod` watches are pointless on NixOS — no `/sbin`, `kmod` lives in the store; the syscalls catch every loader |
+| `mount`, `umount2` | R73 | 🟡 | Filtered on `auid!=unset`: unfiltered, systemd's per-unit credential unmounts flood the log. Mounts from a login session, `sudo` included, are recorded |
+| `-w /etc/ -p wa` | R73 | 🟡 | Narrowed to the identity files and sudoers (keys `identity`, `scope`). Add the guide's line through `security.audit.rules` if you want all of `/etc` |
+| `ioperm`, `modify_ldt`, `get_kernel_syms`, `ptrace`, `prctl` | R73 | ⚪ | Not in the baseline. `prctl` is called by ordinary programs all the time; `get_kernel_syms` no longer exists on current kernels |
+| File creation/deletion and `EACCES` monitoring | R73 | ⚪ | Not in the baseline; the guide itself warns about the performance cost |
+| `-e 2` (locked configuration) | R73 | 🟡 | Opt-in through `immutable = true`: locked, a `nixos-rebuild switch` that changes the rules fails until reboot |
+| `execve`/`execveat` of setuid programs from a login session (key `user_emulation`) | R33 | 🟡 | The guide's strongest form logs **every** `execve`; STC logs privilege changes only. Commands run through sudo are also in the journal (`journalctl -t sudo`, see below) |
+
+Login and logout records need no rule: libpam emits `USER_START` and
+`USER_END` itself. And no watch sits under `/var`: rules load before `/var/log`
+exists, and one rule that fails disables all auditing — see the
+[relic page](/stc/en/relics/hardening/#audit).
 
 ## `relics.hardening.ssh`
 

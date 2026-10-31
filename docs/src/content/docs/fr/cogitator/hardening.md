@@ -1,13 +1,13 @@
 ---
 title: Profil de durcissement
-description: cogitator-hardening — active les six reliques de durcissement avec une seule option.
+description: cogitator-hardening — active les sept reliques de durcissement avec une seule option.
 ---
 
 **Module :** `stc.nixosModules.cogitator-hardening`
 
 Une option pour tous les durcir. Active le durcissement noyau, réseau, système de
-fichiers, SSH, la blacklist de modules et l'accès aux ordonnanceurs en un seul
-interrupteur. Pour un contrôle
+fichiers, SSH, la blacklist de modules, l'accès aux ordonnanceurs et l'audit en
+un seul interrupteur. Pour un contrôle
 chirurgical, utilise les reliques individuelles à la place et active-les
 indépendamment.
 
@@ -15,11 +15,11 @@ indépendamment.
 
 | Option | Type | Défaut | Description |
 |--------|------|--------|-------------|
-| `stc.cogitator.hardening.enable` | bool | `false` | Active la suite de durcissement complète (noyau + réseau + système de fichiers + SSH + blacklist de modules + accès aux ordonnanceurs) |
+| `stc.cogitator.hardening.enable` | bool | `false` | Active la suite de durcissement complète (noyau + réseau + système de fichiers + SSH + blacklist de modules + accès aux ordonnanceurs + audit) |
 
 ## Ce qu'il compose
 
-Activer `stc.cogitator.hardening.enable = true` est équivalent à poser les six options suivantes :
+Activer `stc.cogitator.hardening.enable = true` est équivalent à poser les sept options suivantes :
 
 ```nix
 stc.relics.hardening.kernel.enable = true;
@@ -28,6 +28,7 @@ stc.relics.hardening.filesystem.enable = true;
 stc.relics.hardening.ssh.enable = true;
 stc.relics.hardening.modules.enable = true;
 stc.relics.hardening.scheduler.enable = true;
+stc.relics.hardening.audit.enable = true;
 ```
 
 Les options des reliques individuelles — `allowedTCPPorts`, `tmpSize`, `allowedTCPForwarding` — restent
@@ -56,7 +57,7 @@ modules = [
 
 ## Prendre la suite moins une partie
 
-Depuis `v0.18.0`, les six sous-reliques sont activées avec `lib.mkDefault` : tu
+Depuis `v0.18.0`, les sous-reliques sont activées avec `lib.mkDefault` : tu
 peux garder l'interrupteur unique et décliner quand même l'une d'elles :
 
 ```nix
@@ -67,7 +68,7 @@ stc.relics.hardening.ssh.enable = false;
 ```
 
 Avant `v0.18.0` il fallait `lib.mkForce`, ou renoncer à ce profil et importer les
-six reliques à la carte. Voir
+reliques à la carte. Voir
 [Valeurs par défaut surchargeables](/stc/fr/reference/overridable-defaults/) pour
 la règle et la liste complète.
 

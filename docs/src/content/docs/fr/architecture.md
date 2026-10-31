@@ -75,7 +75,7 @@ sous un seul interrupteur `enable` pour les cas d'usage courants :
 
 ```nix
 modules = [
-  stc.nixosModules.cogitator-hardening   # active kernel + network + filesystem + SSH
+  stc.nixosModules.cogitator-hardening   # active les sept reliques de durcissement
 ];
 ```
 

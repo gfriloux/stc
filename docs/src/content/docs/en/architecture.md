@@ -75,7 +75,7 @@ modules = [
 
 ```nix
 modules = [
-  stc.nixosModules.cogitator-hardening   # enables kernel + network + filesystem + SSH hardening
+  stc.nixosModules.cogitator-hardening   # enables the seven hardening relics
 ];
 ```
 

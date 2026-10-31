@@ -1,9 +1,9 @@
 ---
 title: Durcissement
-description: Six reliques de durcissement — noyau, réseau, système de fichiers, SSH, blacklist de modules et accès aux ordonnanceurs — plus le raccourci cogitator-hardening.
+description: Sept reliques de durcissement — noyau, réseau, système de fichiers, SSH, blacklist de modules, accès aux ordonnanceurs et audit — plus le raccourci cogitator-hardening.
 ---
 
-STC fournit six reliques de durcissement indépendantes. Chacune adresse une
+STC fournit sept reliques de durcissement indépendantes. Chacune adresse une
 surface d'attaque distincte et peut être activée individuellement.
 
 ## Durcissement du noyau
@@ -383,6 +383,110 @@ rebuild. C'est tout l'intérêt de déclarer la liste ici, mais cela remplacera
 silencieusement une liste entretenue à la main.
 :::
 
+## Audit
+
+**Module :** `stc.nixosModules.relics-hardening-audit`
+
+**Option d'activation :** `stc.relics.hardening.audit.enable`
+
+Fait tourner auditd avec un jeu de règles de base chargé au boot (ANSSI-BP-028
+R73). La relique s'appuie sur les modules amont `security.audit` et
+`security.auditd` : elle ajoute les règles et deux valeurs par défaut, rien
+d'autre.
+
+**Options :**
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `stc.relics.hardening.audit.enable` | bool | `false` | Active auditd et le jeu de règles de base |
+| `stc.relics.hardening.audit.immutable` | bool | `false` | Verrouille la configuration d'audit jusqu'au reboot (`auditctl -e 2`) |
+
+La relique pose aussi `security.audit.backlogLimit = 8192` (`mkDefault` ;
+l'amont est à 1024), pour ne pas perdre les évènements émis avant le démarrage
+d'auditd. La ligne de commande du noyau reçoit `audit=1 audit_backlog_limit=8192`.
+
+**Ce qui est enregistré** — à chercher avec `ausearch -i -k <clé>` :
+
+| Clé | Règle | Enregistre |
+|-----|-------|------------|
+| `identity` | surveillance de `/etc/passwd`, `/etc/group`, `/etc/shadow`, `/etc/gshadow` | Toute écriture ou changement d'attribut |
+| `scope` | surveillance de `/etc/sudoers`, `/etc/sudoers.d` | Toute écriture ou changement d'attribut |
+| `user_emulation` | `execve`/`execveat` avec `euid != uid`, depuis une session ouverte | Lancer `sudo`, `su` ou tout programme setuid |
+| `kernel_modules` | `init_module`, `finit_module`, `delete_module` | Chaque chargement et déchargement de module, y compris par udev |
+| `mounts` | `mount`, `umount2`, depuis une session ouverte | Les montages d'un utilisateur connecté, `sudo mount` compris |
+
+Sur x86_64, les trois règles d'appels système existent aussi pour la table
+32 bits (`arch=b32`), le contournement classique d'une règle 64 bits seule.
+
+Les connexions et déconnexions n'ont pas besoin de règle. libpam lui-même
+(nixpkgs le construit avec le support d'audit) émet les enregistrements
+`USER_AUTH`, `USER_START` et `USER_END` pour toute pile PAM, connexion SSH par
+clé comprise : `ausearch -i -m USER_START`.
+
+Les deux règles « depuis une session ouverte » filtrent sur `auid!=unset`.
+Pour `mounts`, c'est une nécessité : sans filtre, systemd qui démonte
+`/run/credentials/<unité>` à chaque démarrage d'unité noie le journal. Pour
+`user_emulation`, c'est la forme du référentiel habituel. Un démon qui lance `mount` ou un programme
+setuid de lui-même n'est donc pas enregistré ; tout ce que fait un utilisateur
+connecté l'est, même via `sudo`, car l'uid d'audit suit la session.
+
+:::danger[Une seule règle invalide coupe tout l'audit]
+L'amont charge toutes les règles d'un seul `auditctl -R` dans
+`audit-rules-nixos.service`, très tôt au boot, avant `sysinit.target`. Si une
+ligne échoue, le chargement s'arrête, l'unité désactive l'audit en sortant, et
+**auditd continue de tourner comme si de rien n'était**. La seule trace est
+l'unité en échec :
+
+```bash
+systemctl status audit-rules-nixos.service   # doit être active
+auditctl -s | head -1                         # doit afficher « enabled 1 » (2 avec immutable)
+```
+
+Une surveillance sous `/var` est la façon classique d'en arriver là : `/var/log`
+n'existe pas encore à ce moment-là, et sur un hôte impermanence c'est un bind
+mount posé plus tard. C'est pour cela que la base n'a aucune surveillance de
+`wtmp` ou de `lastlog`. Garde tes propres surveillances sur des chemins
+présents sur la racine dès le départ, comme `/etc`.
+:::
+
+**Ajouter des règles.** Ajoute-les directement dans `security.audit.rules`.
+Une définition simple passe après la base ; une exclusion (`-a never`) doit
+venir en premier pour agir, donc donne-lui `lib.mkBefore` :
+
+```nix
+security.audit.rules = [
+  "-w /etc/nixos -p wa -k nixos-config"
+];
+```
+
+```nix
+# Ignorer tout ce que fait l'uid 990, avant les règles de base.
+security.audit.rules = lib.mkBefore [
+  "-a never,exit -F uid=990"
+];
+```
+
+Donne les uid en nombres. auditctl résout un nom d'utilisateur au chargement
+des règles, et un nom inconnu — un compte qui n'existe pas encore si tôt au
+boot — fait échouer tout le chargement.
+
+**Journaux.** Les enregistrements vont dans `/var/log/audit/audit.log`. NixOS
+n'écrit aucun réglage de rotation et les défauts internes d'auditd ne
+rotent jamais : la relique pose donc cinq fichiers de 8 Mio
+(`security.auditd.settings.{max_log_file,num_logs,max_log_file_action}`, tous
+en `mkDefault`), soit 40 Mio au plus. Sur un hôte impermanence, `/var/log` est
+persisté : la trace survit au rollback. journald reçoit aussi une copie de
+chaque enregistrement (`journalctl _TRANSPORT=audit`) ; pour garder l'audit
+hors du journal, pose `systemd.sockets.systemd-journald-audit.enable = false;`.
+
+**`immutable`.** Avec `immutable = true`, root ne peut plus modifier les règles
+jusqu'au prochain reboot. Un `nixos-rebuild switch` qui les change fait échouer
+l'unité `audit-rules-nixos`, et les nouvelles règles ne s'appliquent qu'après
+un reboot. Active-le une fois le jeu de règles stabilisé, pas pendant que tu le
+règles encore. Passe par cette option plutôt que par
+`security.audit.enable = "lock"` : la relique écrit déjà cette option, et une
+seconde définition entre en conflit.
+
 ## Pas une relique : sudo
 
 Il n'existe pas de `relics.hardening.sudo`, et cette absence est délibérée. Les
@@ -405,6 +509,7 @@ modules = [
   stc.nixosModules.relics-hardening-ssh
   stc.nixosModules.relics-hardening-modules
   stc.nixosModules.relics-hardening-scheduler
+  stc.nixosModules.relics-hardening-audit
   ./configuration.nix
 ];
 
@@ -417,6 +522,7 @@ modules = [
   stc.relics.hardening.ssh.enable = true;
   stc.relics.hardening.modules.enable = true;
   stc.relics.hardening.scheduler.enable = true;
+  stc.relics.hardening.audit.enable = true;
 
   # Le pare-feu est géré séparément — ouvre les ports ici selon tes besoins :
   networking.firewall.allowedTCPPorts = [ 22 80 443 ];
@@ -440,8 +546,8 @@ Machine gaming avec durcissement :
 
 ## Le raccourci cogitator-hardening
 
-Pour le cas courant d'activation des six reliques avec les valeurs par défaut,
-utilise [`cogitator-hardening`](/stc/fr/cogitator/hardening/). Une option au lieu de six :
+Pour le cas courant d'activation des sept reliques avec les valeurs par défaut,
+utilise [`cogitator-hardening`](/stc/fr/cogitator/hardening/). Une option au lieu de sept :
 
 ```nix
 modules = [ stc.nixosModules.cogitator-hardening ];

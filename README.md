@@ -108,7 +108,7 @@ See the `schematics/` directory for complete working examples:
 
 | Module | Option | Description |
 |--------|--------|-------------|
-| `cogitator-hardening` | `stc.cogitator.hardening` | Full hardening suite (all 4 hardening relics) |
+| `cogitator-hardening` | `stc.cogitator.hardening` | Full hardening suite (all seven hardening relics) |
 | `cogitator-vm` | `stc.cogitator.vm` | Base VM: fish, SSH, user, Docker, Nix GC |
 | `cogitator-docker-server` | `stc.cogitator.docker-server` | Traefik + socket-proxy + CrowdSec + ntfy Docker stack |
 | `cogitator-plasma` | `stc.cogitator.plasma` | KDE Plasma 6 + Pipewire |
