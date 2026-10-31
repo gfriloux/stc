@@ -125,6 +125,18 @@
         machine.succeed("cp /var/tmp/stc-exec /root/stc-exec && /root/stc-exec")
         machine.succeed("rm /var/tmp/stc-exec /root/stc-exec")
 
+    def assert_audit_loaded(boot):
+        # relics-hardening-audit (#31) on a real layout: the rules load before
+        # sysinit.target, and here /var/log is the impermanence bind mount set up
+        # after them. A rule that fails to load leaves auditd active and auditing
+        # off, so the rules unit and the kernel state are what is asserted.
+        assert machine.succeed(
+            "systemctl is-active audit-rules-nixos.service"
+        ).strip() == "active", f"{boot}: the audit rules did not load"
+        status = machine.succeed("auditctl -s")
+        assert "enabled 1" in status, f"{boot}: auditing is off: {status}"
+        assert "-k identity" in machine.succeed("auditctl -l"), f"{boot}: no identity watch"
+
     machine.start()
     machine.wait_for_unit("multi-user.target")
 
@@ -150,6 +162,15 @@
 
     with subtest("boot 1: /var/tmp is mounted nosuid,nodev,noexec"):
         assert_var_tmp_hardened("boot 1")
+
+    with subtest("boot 1: the audit rules are loaded"):
+        assert_audit_loaded("boot 1")
+        # A marker for boot 2: the record must outlive the rollback, since
+        # /var/log is persisted.
+        machine.succeed("chmod 644 /etc/passwd")
+        machine.wait_until_succeeds(
+            "ausearch -i -k identity | grep -q 'proctitle=chmod 644 /etc/passwd'", timeout=30
+        )
 
     with subtest("boot 1: the relic created the @blank reference itself"):
         # Measured: make-single-disk-zfs-image.nix creates no snapshot at all
@@ -299,6 +320,12 @@
 
     with subtest("boot 2: /var/tmp is still hardened after the rollback"):
         assert_var_tmp_hardened("boot 2")
+
+    with subtest("boot 2: the audit rules are loaded, and boot 1's trail survived"):
+        assert_audit_loaded("boot 2")
+        # Nothing ran chmod on this boot: the record is boot 1's, read back from
+        # the persisted /var/log/audit.
+        machine.succeed("ausearch -i -k identity | grep -q 'proctitle=chmod 644 /etc/passwd'")
 
     with subtest("boot 2: the rollback ran again on a @blank it did not recreate"):
         # The second boot takes the *existing* snapshot path, which is the branch
