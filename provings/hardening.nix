@@ -13,6 +13,11 @@
 {self}: {
   name = "hardening";
 
+  # Probes the firewall from outside: traffic on lo is always accepted.
+  nodes.client = {pkgs, ...}: {
+    environment.systemPackages = [pkgs.netcat];
+  };
+
   nodes.machine = {pkgs, ...}: let
     # Snakeoil keypair shipped with nixpkgs' own test suite.
     sshKeys = import (pkgs.path + "/nixos/tests/ssh-keys.nix") pkgs;
@@ -35,6 +40,14 @@
     # allowlist assertions to prove anything.
     services.cron.enable = true;
     services.atd.enable = true;
+
+    # A listener on a port the firewall does not open, so a refused probe is
+    # the firewall's doing and not a closed port's.
+    systemd.services.closed-port-listener = {
+      wantedBy = ["multi-user.target"];
+      serviceConfig.ExecStart = "${pkgs.netcat}/bin/nc -lk 8080";
+    };
+    environment.systemPackages = [pkgs.netcat];
 
     # An unprivileged user to prove the restriction from the outside: root is on
     # the allowlist, so only a normal user can show that the gate closes.
@@ -190,6 +203,21 @@
         banner_path = banner_lines[0].split()[1]
         assert banner_path.startswith("/nix/store/"), f"unexpected banner path: {banner_path}"
         assert "Authorized access only" in machine.succeed(f"cat {banner_path}")
+
+    with subtest("firewall refuses and logs a probe to a closed port"):
+        machine.wait_for_unit("firewall.service")
+        machine.wait_for_unit("closed-port-listener.service")
+        client.wait_for_unit("multi-user.target")
+        # Controls: the listener answers on lo, and an allowed port answers the
+        # client, so the refusal below is the firewall's and the network works.
+        machine.wait_until_succeeds("nc -z -w2 127.0.0.1 8080")
+        client.wait_until_succeeds("nc -z -w3 machine 22")
+        client.fail("nc -z -w3 machine 8080")
+        # The refusal is upstream's default policy; the log line is the relic's
+        # (upstream logs nothing).
+        machine.wait_until_succeeds(
+            "journalctl -k --no-pager | grep 'refused connection:' | grep -q 'DPT=8080'", timeout=30
+        )
 
     with subtest("audit rules loaded at boot"):
         # auditd alone being active proves nothing: when a rule fails to load,
