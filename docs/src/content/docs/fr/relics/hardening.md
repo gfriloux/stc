@@ -87,13 +87,15 @@ avec Docker et d'autres configurations de conteneurs.
 |--------|------|--------|-------------|
 | `stc.relics.hardening.filesystem.tmpSize` | string | `"2G"` | Taille maximale du tmpfs /tmp |
 | `stc.relics.hardening.filesystem.shmSize` | string | `"256M"` | Taille maximale du tmpfs /dev/shm |
-| `stc.relics.hardening.filesystem.gaming` | bool | `false` | Retire `noexec` de /tmp et /dev/shm — requis pour Wine/Proton et DXVK |
+| `stc.relics.hardening.filesystem.varTmp.enable` | bool | `true` | Remonte /var/tmp sur lui-même avec `nosuid,nodev,noexec` |
+| `stc.relics.hardening.filesystem.gaming` | bool | `false` | Retire `noexec` de /tmp, /var/tmp et /dev/shm — requis pour Wine/Proton et DXVK |
 
-Monte trois systèmes de fichiers avec des options restrictives :
+Monte quatre systèmes de fichiers avec des options restrictives :
 
 | Point de montage | Ce qui change |
 |------------------|---------------|
 | `/tmp` | tmpfs avec `nosuid,noexec,nodev`, taille limitée — `noexec` omis si `gaming = true` |
+| `/var/tmp` | lié sur lui-même avec `nosuid,noexec,nodev` — reste sur disque, `noexec` omis si `gaming = true` |
 | `/proc` | `hidepid=2,gid=proc` — les utilisateurs ne voient que leurs propres processus ; les services système gardent l'accès via le groupe `proc` |
 | `/dev/shm` | tmpfs avec `nosuid,noexec,nodev`, taille limitée — `noexec` omis si `gaming = true` |
 
@@ -114,9 +116,48 @@ durcissement.
 Le montage `/tmp noexec` empêche les attaquants d'écrire et d'exécuter du code dans un
 répertoire accessible à tous — un vecteur d'exploitation classique.
 
+### /var/tmp
+
+`/var/tmp` est l'autre répertoire accessible à tous en écriture, il reçoit donc
+les trois mêmes options. Il est **lié sur lui-même** et non sur le tmpfs `/tmp` :
+ses données restent là où ton layout les met et gardent la persistance que ce
+layout leur donne, et la relique n'a pas besoin de connaître le layout disque.
+Sur un disque classique, elles survivent à un reboot (sa raison d'être selon le
+FHS). Sur un hôte impermanence, `/var/tmp` vit sur la racine restaurée, donc il
+est vidé au boot, comme avant : le montage crée le répertoire si besoin
+(`X-mount.mkdir`), puis `systemd-tmpfiles` pose son mode `1777`.
+
+Persister `/var/tmp` via impermanence (`extraDirectories` ou
+`environment.persistence`) est **refusé par une assertion** : le bind mount de
+persistance remplacerait le montage durci et ferait tomber les trois options
+sans rien dire. Soit tu arrêtes de le persister, soit tu poses
+`varTmp.enable = false` pour accepter `/var/tmp` sans elles. Les builds Nix ne sont pas concernés :
+`nix-daemon` compile sous `/nix/var/nix/builds`.
+
+Si ton layout monte déjà `/var/tmp` (dataset ou partition dédiés), les deux
+définitions entrent en conflit à l'évaluation. Pose `varTmp.enable = false` et
+mets les options sur ton propre montage :
+
+```nix
+stc.relics.hardening.filesystem.varTmp.enable = false;
+fileSystems."/var/tmp".options = [ "nosuid" "nodev" "noexec" ];
+```
+
+### /home
+
+La relique ne touche pas `/home` : elle ne peut pas savoir si `/home` est un
+montage séparé, et sur les layouts ZFS de STC il ne l'est pas (seuls `/`, `/nix`
+et `/persist` le sont). Si `/home` est un montage séparé dans ton layout, ajoute
+les options toi-même :
+
+```nix
+fileSystems."/home".options = [ "nosuid" "nodev" ];
+```
+
 :::caution[Wine, Proton et DXVK]
 Wine et Proton extraient et exécutent des binaires dans `/tmp`. DXVK et
-VKD3D-Proton mappent du code exécutable dans `/dev/shm`. Définis
+VKD3D-Proton mappent du code exécutable dans `/dev/shm`. `/var/tmp` suit `/tmp`
+par cohérence. Définis
 `stc.relics.hardening.filesystem.gaming = true` sur les machines gaming et augmente
 `shmSize` à au moins `2G` pour les charges lourdes. Le durcissement `/proc`
 n'est pas affecté.
@@ -389,7 +430,7 @@ Machine gaming avec durcissement :
   stc.relics.hardening.kernel.enable = true;
 
   stc.relics.hardening.filesystem.enable = true;
-  stc.relics.hardening.filesystem.gaming = true;  # autorise exec dans /tmp et /dev/shm
+  stc.relics.hardening.filesystem.gaming = true;  # autorise exec dans /tmp, /var/tmp et /dev/shm
   stc.relics.hardening.filesystem.shmSize = "4G"; # DXVK/VKD3D ont besoin de plus que 256M
 
   stc.relics.hardening.network.enable = true;

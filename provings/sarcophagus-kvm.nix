@@ -105,6 +105,26 @@
     PERSIST_WITNESS = "/persist/stc-proving-witness-persist"
     OPTION_WITNESS = "/var/lib/stc-proving/witness"
 
+    def assert_var_tmp_hardened(boot):
+        # The /var/tmp self-bind of relics-hardening-filesystem (#40). This node
+        # is where it can be seen: the qemu-vm override hides fileSystems on a
+        # synthesised node (see provings/hardening.nix), and only a real
+        # rollback shows the X-mount.mkdir case — / comes back from @blank
+        # before the mount. Upstream mounts nothing on /var/tmp, so a mount
+        # entry at all already discriminates; the flags and the refused exec
+        # are what the hardening is for.
+        options = machine.succeed("findmnt -no OPTIONS /var/tmp").strip().split(",")
+        for flag in ["nosuid", "nodev", "noexec"]:
+            assert flag in options, f"{boot}: /var/tmp lacks {flag}: {options}"
+        mode = machine.succeed("stat -c %a /var/tmp").strip()
+        assert mode == "1777", f"{boot}: /var/tmp has mode {mode}, expected 1777"
+        machine.succeed("printf '#!/bin/sh\\nexit 0\\n' > /var/tmp/stc-exec && chmod +x /var/tmp/stc-exec")
+        machine.fail("/var/tmp/stc-exec")
+        # Control: the same file runs from /root, so the refusal above is the
+        # mount's noexec and not a broken script.
+        machine.succeed("cp /var/tmp/stc-exec /root/stc-exec && /root/stc-exec")
+        machine.succeed("rm /var/tmp/stc-exec /root/stc-exec")
+
     machine.start()
     machine.wait_for_unit("multi-user.target")
 
@@ -127,6 +147,9 @@
         ]:
             got = machine.succeed(f"findmnt -no SOURCE,FSTYPE {path}").split()
             assert got == [source, "zfs"], f"{path} is {got}, expected [{source}, zfs]"
+
+    with subtest("boot 1: /var/tmp is mounted nosuid,nodev,noexec"):
+        assert_var_tmp_hardened("boot 1")
 
     with subtest("boot 1: the relic created the @blank reference itself"):
         # Measured: make-single-disk-zfs-image.nix creates no snapshot at all
@@ -273,6 +296,9 @@
         assert machine.succeed(
             "systemctl is-active stc-impermanence-state.service"
         ).strip() == "active", "the reporting unit is not green on a healthy boot"
+
+    with subtest("boot 2: /var/tmp is still hardened after the rollback"):
+        assert_var_tmp_hardened("boot 2")
 
     with subtest("boot 2: the rollback ran again on a @blank it did not recreate"):
         # The second boot takes the *existing* snapshot path, which is the branch

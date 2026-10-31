@@ -159,6 +159,8 @@ and make profiling useless on a machine STC may well be asked to debug.
 |-------------|------|--------|------|
 | `/tmp` `nosuid,nodev,noexec` | R28 | ✅ | `noexec` dropped when `gaming=true` |
 | `/proc` `hidepid=2` | R28 | ✅ | |
+| `/var/tmp` `nosuid,nodev,noexec` | R28 | ✅ | Self-bind, stays on disk; `noexec` dropped when `gaming=true`; opt-out `varTmp.enable`; persisting it through impermanence is refused by an assertion |
+| `/home` `nosuid,nodev` | R28 | ⚪ | Only when `/home` is a separate mount — not the case on STC's layouts; documented in the hardening page |
 | `/dev/shm` `nosuid,nodev,noexec` | R28 | 🟡 | Same rationale; not in the R28 table |
 | Separate `/boot /var /home /usr /opt /srv /var/log /var/tmp` partitions | R28 | ⚪ | STC does not partition — that is the schematic's disko layout, not a relic |
 

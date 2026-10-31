@@ -8,7 +8,8 @@
 # `mkVMOverride` (priority 10), which overrides the relic's `mkForce` (priority
 # 50). Those mounts therefore never exist inside the test VM, so a runtime check
 # would fail for framework reasons, not real ones. sysctl-based hardening
-# (kernel, network) is unaffected and IS asserted below.
+# (kernel, network) is unaffected and IS asserted below. The /var/tmp mount
+# (#40) is asserted in provings/sarcophagus-kvm.nix, which boots a real image.
 {self}: {
   name = "hardening";
 
