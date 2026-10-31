@@ -3,6 +3,36 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.22.0] — 2026-10-31
+
+### Documentation
+
+- **plans**: plan and ledger for ghostty replacing kitty (#1) ([`5eccfb0`](https://github.com/gfriloux/stc/commit/5eccfb042020293f8600d16d329910f9286673c3))
+- replace kitty with ghostty across relic, cogitator and proving pages (en, fr) (#1) ([`05c1ca6`](https://github.com/gfriloux/stc/commit/05c1ca6544f629bfb2ce475f993c3744ffb1f26a))
+- name the silent kitty-removal cases and the null-read break (en, fr) (#1) ([`4be7f27`](https://github.com/gfriloux/stc/commit/4be7f2743cd06f0e56eb9a06d86ad0751dad6e05))
+- catch up with #86 — desktop pinentry is mkOverride 900, home-desktop has three nodes (en, fr) ([`3bddd80`](https://github.com/gfriloux/stc/commit/3bddd807bdbab6195bde4281450bdc3daa6fe870))
+- /var/tmp hardening, /home guidance and R28 rows (en, fr) (#40) ([`7daa5e9`](https://github.com/gfriloux/stc/commit/7daa5e94ee1ee0136559994676b715d09587f893))
+- **plans**: plan and ledger for the auditd relic (#31) ([`a54d0bb`](https://github.com/gfriloux/stc/commit/a54d0bb70a24bc2040795a19ec275320105fb8ca))
+- auditd relic, baseline keys, R33/R73 rows and profile pages (en, fr) (#31) ([`693ec09`](https://github.com/gfriloux/stc/commit/693ec09ccd81315923f41ff2cf58f35a6b18b0d0))
+- **plans**: plan and ledger for the firewall relic (#33) ([`38f32de`](https://github.com/gfriloux/stc/commit/38f32de61d70e17f5cd22576d5ba95e277cc79b1))
+- firewall relic, port convention, phantom network.allowedTCPPorts fixed, boots recounted (en, fr) (#33) ([`7bd553c`](https://github.com/gfriloux/stc/commit/7bd553c4df86536ccc2841e997453eb26cf9adba))
+
+### Features
+
+- **relics-ghostty**: carry the curated Nerd Fonts behind fonts.enable (#1) ([`42f70f7`](https://github.com/gfriloux/stc/commit/42f70f7a4f0113c7380e8982c65c8979fac2a0cd))
+- **relics-kitty**: remove the relic, keep its options as warning-only tombstones (#1) ([`b860885`](https://github.com/gfriloux/stc/commit/b86088564b31bfa2b50f77c481f6b5ebbdde6ea2))
+- **cogitator-desktop**: ship ghostty as the only terminal (#1) ([`cf72b2d`](https://github.com/gfriloux/stc/commit/cf72b2d545275e7df23fdaa64717e590be8763e6))
+- **relics-hardening-filesystem**: harden /var/tmp with a nosuid,nodev,noexec self-bind (#40) ([`0be7f2a`](https://github.com/gfriloux/stc/commit/0be7f2a5009c554e00f5a5405eaba5fd634beeed))
+- **relics-hardening-audit**: auditd with a boot-safe baseline ruleset (#31) ([`2bcfcf8`](https://github.com/gfriloux/stc/commit/2bcfcf8e710cbeeeeecbe16b38a8bff49d2dc29f))
+- **relics-hardening-firewall**: checked default-deny firewall with refused connections logged (#33) ([`ffb896b`](https://github.com/gfriloux/stc/commit/ffb896b262410210c423ef19445bd2c5fe22c8e1))
+
+### Testing
+
+- **provings**: home-desktop proves the ghostty fonts and the absence of kitty (#1) ([`4900a9f`](https://github.com/gfriloux/stc/commit/4900a9fc8a45e1aaf5fecec17fc057d78afcf2fe))
+- **provings**: assert a leftover kitty option warns instead of failing (#1) ([`ff2ac43`](https://github.com/gfriloux/stc/commit/ff2ac4334fc6a999ef670e122a0f0dff7bddffa4))
+- **provings**: sarcophagus-kvm asserts the /var/tmp mount on both boots (#40) ([`380b437`](https://github.com/gfriloux/stc/commit/380b4378f3269f0e492a21888dfe40e8129e1fbe))
+- **provings**: auditd rules load at boot and record the baseline events (#31) ([`dd28aec`](https://github.com/gfriloux/stc/commit/dd28aecf1164f57c38bc07b0b888b17a0c73585b))
+- **provings**: hardening refuses and logs a probe to a closed port (#33) ([`424c47c`](https://github.com/gfriloux/stc/commit/424c47c2fbc66d64a86f20430312248f986c073f))
 ## [0.21.0] — 2026-10-25
 
 ### Bug Fixes
