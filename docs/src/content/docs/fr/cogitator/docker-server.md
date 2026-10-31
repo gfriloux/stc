@@ -147,8 +147,9 @@ modules = [
   #     "https://ntfy.sh/$(cat ${config.sops.secrets."ntfy/topic".path})"
   # '';
 
-  # Optionnel : ouvrir les ports pour Traefik (la relique traefik le fait aussi automatiquement)
-  # stc.relics.hardening.network.allowedTCPPorts = [ 22 80 443 ];
+  # Autres ports : 80 et 443 de Traefik sont ouverts par la relique traefik, SSH
+  # par services.openssh.
+  # networking.firewall.allowedTCPPorts = [ 8443 ];
 }
 ```
 

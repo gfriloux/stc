@@ -25,10 +25,11 @@ rapide et statique.
 - Linux uniquement (`x86_64-linux` / `aarch64-linux`) — l'attribut est vide ailleurs.
 - Builder : `pkgs.testers.runNixOSTest`.
 
-**Ce que `just test` coûte maintenant.** Quatorze épreuves, **vingt boots de VM** —
-`vm`, `gaming`, `home-desktop`, `docker-server` et `smart` démarrent deux nœuds chacune, `dreadnought` en
-déclare un second qu'elle ne démarre jamais, `docker-server` un troisième, et `sarcophagus-kvm` démarre son
-nœud unique deux fois — et les clôtures contiennent
+**Ce que `just test` coûte maintenant.** Quatorze épreuves, **vingt-trois boots de
+VM** — `vm`, `gaming`, `docker-server`, `plasma`, `smart` et `hardening`
+démarrent deux nœuds chacune, `home-desktop` trois, `dreadnought` en déclare un
+second qu'elle ne démarre jamais, `docker-server` un troisième, et
+`sarcophagus-kvm` démarre son nœud unique deux fois — et les clôtures contiennent
 KDE deux fois (`workstation` et `plasma`), Steam une fois, les 31 paquets nommés
 de la trousse enginseer, et GIMP, VLC et Zen Browser pour le profil desktop. Sur un
 store froid, ça fait quelques Gio de téléchargement ; à chaud, la plupart des
@@ -59,7 +60,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 
 | Épreuve | Cogitator testé | Ce qu'elle vérifie |
 |---------|-----------------|--------------------|
-| `hardening` | `cogitator-hardening` | Durcissement sysctl kernel et réseau effectif ; SSH par clés uniquement, login root refusé ; les règles d'audit sont chargées au boot (`enabled 1`, toutes les règles déclarées présentes) et enregistrent une modification d'un fichier d'identité, un chargement de module, un `execve` setuid et une tentative de montage depuis une session SSH, plus l'enregistrement de session émis par PAM |
+| `hardening` | `cogitator-hardening` | Durcissement sysctl kernel et réseau effectif ; SSH par clés uniquement, login root refusé ; la sonde d'un client vers un port fermé est refusée alors que SSH répond, et le refus figure dans le journal noyau ; les règles d'audit sont chargées au boot (`enabled 1`, toutes les règles déclarées présentes) et enregistrent une modification d'un fichier d'identité, un chargement de module, un `execve` setuid et une tentative de montage depuis une session SSH, plus l'enregistrement de session émis par PAM |
 | `docker-server` | `cogitator-docker-server` | Les unités des conteneurs portent leur image épinglée et les flags de healthcheck ; les réseaux docker, le hook notify `OnFailure` et les timers de health-watch sont câblés ; la config statique Traefik est rendue avec le plugin bouncer CrowdSec et l'endpoint socket-proxy ; les garde-fous docker avertissent exactement du port public et du montage de socket brut sans label — ni du conteneur labellisé, ni des 80/443 du Traefik de STC et du proxy, ni d'une écoute sur loopback, mais d'un port ajouté à Traefik ; de rien sur un nœud qui les décline ; et, lu sur un troisième nœud jamais démarré, du repli de Traefik sur le socket brut et d'un imposteur portant le nom du proxy quand la relique proxy est coupée |
 | `workstation` | `cogitator-workstation` | Le profil câble ses trois concerns : le socle de durcissement (sysctl kernel/réseau, blacklist de modules) est effectif, le `pcscd` YubiKey est présent, et l'unité display-manager du bureau existe |
 | `vm` | `cogitator-vm` | L'utilisateur primaire est dans `wheel`, son shell fish de login fonctionne et le lingering est actif ; une clé déclarée via `authorizedKeys` authentifie réellement en SSH, et pas seulement le port 22 qui répond ; le timer de GC part chaque semaine et son script porte bien la rétention déclarée ; Docker est absent par défaut et, sur un second nœud, le chemin opt-in câble à la fois le daemon et le groupe `docker` |

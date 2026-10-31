@@ -22,7 +22,7 @@ count	cogitator/home/enginseer/default.nix	13	0	0	tool settings are the consumer
 count	cogitator/nixos/docker-server.nix	7	0	0	socketProxy, crowdsec and preSwitchChecks are additive; autoPrune is a default kept off because a missed weekly window takes the stack down; serverSurvivability, nixHousekeeping and the docker guards are additive
 count	cogitator/nixos/dreadnought.nix	4	0	0	networking and the hardening suite are additive; zfs, impermanence and aws stay at normal priority because this profile declares the filesystems that assume them; serverSurvivability and nixHousekeeping are additive
 count	cogitator/nixos/gaming.nix	2	0	0	the profile is named for what it does, not the GPU or audio stack it assumes
-count	cogitator/nixos/hardening.nix	7	0	0	the seven sub-relics are independent and nothing here assumes any one of them
+count	cogitator/nixos/hardening.nix	8	0	0	the eight sub-relics are independent and nothing here assumes any one of them
 count	cogitator/nixos/plasma.nix	1	0	0	pipewire is additive; plasma6 stays pinned because it is the profile's subject
 count	cogitator/nixos/sarcophagus-aws.nix	4	8	0	networking and hardening additive; the mkForce block is an image builder having the last word on its own boot layout, over STC's own boot relic; serverSurvivability and nixHousekeeping are additive
 count	cogitator/nixos/sarcophagus-kvm.nix	4	8	0	networking and hardening additive; the mkForce block is an image builder having the last word on its own boot layout, over STC's own boot relic; serverSurvivability and nixHousekeeping are additive

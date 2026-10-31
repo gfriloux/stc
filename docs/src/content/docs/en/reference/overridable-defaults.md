@@ -47,7 +47,7 @@ If you worked around one of these with `lib.mkForce`, you can drop it.
 
 | Profile | Now declinable |
 |---|---|
-| `cogitator-hardening` | all seven sub-relics: `stc.relics.hardening.{kernel,network,filesystem,ssh,modules,scheduler,audit}.enable` |
+| `cogitator-hardening` | all six sub-relics of the time: `stc.relics.hardening.{kernel,network,filesystem,ssh,modules,scheduler}.enable` (`audit` and `firewall`, added in v0.22.0, are `mkDefault` from the start) |
 | `cogitator-workstation` | `stc.relics.hardening.{kernel,network,modules}.enable` |
 | `cogitator-plasma` | `stc.relics.pipewire.enable` |
 | `cogitator-gaming` | `stc.relics.amdGpu.enable`, `stc.relics.pipewire.enable` |
@@ -101,6 +101,13 @@ stc.relics.hardening.ssh = {
   allowedTunnel = true;
 };
 ```
+
+`relics-hardening-firewall` (v0.22.0) does the same for the refused-connection
+log, for the same reason found before any build broke: nixpkgs'
+installation-device profile writes
+`networking.firewall.logRefusedConnections = mkDefault false`. The relic writes
+that option from `stc.relics.hardening.firewall.logRefusedConnections` (default
+`true`) at normal priority; set the STC option, not the upstream one.
 
 ## What stays pinned, and why
 

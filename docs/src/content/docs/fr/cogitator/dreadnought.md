@@ -29,7 +29,7 @@ etc.) pour construire le profil de services dont tu as besoin.
 | `relics-networking` | DHCP, DNS Quad9 |
 | `relics-impermanence` | Rollback du root vers `@blank` à chaque démarrage |
 | `relics-aws` | Pilotes NVMe/ENA, NTP, console série, expansion pool EBS |
-| `cogitator-hardening` | La suite de durcissement — noyau, réseau, système de fichiers, SSH, blacklist de modules, accès aux ordonnanceurs et auditd (`audit=1` sur la ligne de commande du noyau, enregistrements dans `/var/log/audit`) |
+| `cogitator-hardening` | La suite de durcissement — noyau, réseau, système de fichiers, SSH, blacklist de modules, accès aux ordonnanceurs, auditd (`audit=1` sur la ligne de commande du noyau, enregistrements dans `/var/log/audit`) et un pare-feu vérifié qui journalise les connexions refusées |
 | `relics-server-survivability` | Pas de shell d'urgence, reboot sur panique, watchdog matériel, `/boot` borné, pas de veille (`mkDefault`) |
 | `relics-nix-housekeeping` | GC planifié, GC sous pression disque, déduplication hebdomadaire, builds qui cèdent, journal plafonné (`mkDefault`) |
 

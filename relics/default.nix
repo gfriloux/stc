@@ -42,6 +42,7 @@
     relics-hardening-modules = ./nixos/hardening/modules.nix;
     relics-hardening-scheduler = ./nixos/hardening/scheduler.nix;
     relics-hardening-audit = ./nixos/hardening/audit.nix;
+    relics-hardening-firewall = ./nixos/hardening/firewall.nix;
 
     # --- Hardware ---
     relics-amd-gpu = ./nixos/amd-gpu.nix;

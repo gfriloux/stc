@@ -50,7 +50,7 @@ Si tu as contourné l'une d'elles avec `lib.mkForce`, tu peux le retirer.
 
 | Profil | Désormais déclinable |
 |---|---|
-| `cogitator-hardening` | les sept sous-reliques : `stc.relics.hardening.{kernel,network,filesystem,ssh,modules,scheduler,audit}.enable` |
+| `cogitator-hardening` | les six sous-reliques de l'époque : `stc.relics.hardening.{kernel,network,filesystem,ssh,modules,scheduler}.enable` (`audit` et `firewall`, ajoutées en v0.22.0, sont en `mkDefault` dès le départ) |
 | `cogitator-workstation` | `stc.relics.hardening.{kernel,network,modules}.enable` |
 | `cogitator-plasma` | `stc.relics.pipewire.enable` |
 | `cogitator-gaming` | `stc.relics.amdGpu.enable`, `stc.relics.pipewire.enable` |
@@ -106,6 +106,13 @@ stc.relics.hardening.ssh = {
   allowedTunnel = true;
 };
 ```
+
+`relics-hardening-firewall` (v0.22.0) fait de même pour le journal des
+connexions refusées, pour la même raison, trouvée avant toute casse : le profil
+installation-device de nixpkgs pose
+`networking.firewall.logRefusedConnections = mkDefault false`. La relique écrit
+cette option depuis `stc.relics.hardening.firewall.logRefusedConnections`
+(défaut `true`) à priorité normale ; pose l'option STC, pas l'option amont.
 
 ## Ce qui reste épinglé, et pourquoi
 

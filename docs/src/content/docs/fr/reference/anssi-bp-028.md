@@ -217,6 +217,16 @@ n'est posée sous `/var` : les règles se chargent avant que `/var/log` existe,
 et une seule règle en échec désactive tout l'audit — voir la
 [page de la relique](/stc/fr/relics/hardening/#audit).
 
+## `relics.hardening.firewall`
+
+Un pare-feu d'hôte est **hors périmètre ANSSI-BP-028** : le guide ne cite
+iptables et nftables qu'en passant, et aucune règle ne demande une politique
+entrante default-deny. La relique s'appuie sur la famille CIS ~3.5.x (purement
+informative, voir *Pourquoi pas CIS ?*) et sur un manque : l'amont ignore (DROP) les
+connexions refusées sans les journaliser. Elle vérifie
+`networking.firewall.enable`, journalise les connexions TCP refusées et ne
+gère aucune liste de ports.
+
 ## `relics.hardening.ssh`
 
 Le durcissement SSH (`PermitRootLogin no`, `PasswordAuthentication no`,

@@ -1,23 +1,23 @@
 ---
 title: Hardening Profile
-description: cogitator-hardening — enable all seven hardening relics with a single option.
+description: cogitator-hardening — enable all eight hardening relics with a single option.
 ---
 
 **Module:** `stc.nixosModules.cogitator-hardening`
 
 One option to harden them all. Activates kernel, network, filesystem, SSH,
-module-blacklist, scheduler-access and audit hardening in a single toggle. For surgical control, use the
+module-blacklist, scheduler-access, audit and firewall hardening in a single toggle. For surgical control, use the
 individual relics instead and enable them independently.
 
 ## Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `stc.cogitator.hardening.enable` | bool | `false` | Enable the full hardening suite (kernel + network + filesystem + SSH + module blacklist + scheduler access + audit) |
+| `stc.cogitator.hardening.enable` | bool | `false` | Enable the full hardening suite (kernel + network + filesystem + SSH + module blacklist + scheduler access + audit + firewall) |
 
 ## What It Composes
 
-Enabling `stc.cogitator.hardening.enable = true` is equivalent to setting all seven of these:
+Enabling `stc.cogitator.hardening.enable = true` is equivalent to setting all eight of these:
 
 ```nix
 stc.relics.hardening.kernel.enable = true;
@@ -27,9 +27,10 @@ stc.relics.hardening.ssh.enable = true;
 stc.relics.hardening.modules.enable = true;
 stc.relics.hardening.scheduler.enable = true;
 stc.relics.hardening.audit.enable = true;
+stc.relics.hardening.firewall.enable = true;
 ```
 
-The individual relic options — `allowedTCPPorts`, `tmpSize`, `allowedTCPForwarding` — remain
+The individual relic options — `filesystem.tmpSize`, `ssh.allowedTCPForwarding`, `firewall.logRefusedConnections` — remain
 fully configurable. The profile only sets the `enable` flags.
 
 ## Usage Example
@@ -45,8 +46,8 @@ modules = [
 {
   stc.cogitator.hardening.enable = true;
 
-  # Open additional ports beyond SSH (22)
-  stc.relics.hardening.network.allowedTCPPorts = [ 22 80 443 ];
+  # Open additional ports (SSH is opened by services.openssh)
+  networking.firewall.allowedTCPPorts = [ 80 443 ];
 
   # Increase /tmp size on memory-rich machines
   stc.relics.hardening.filesystem.tmpSize = "4G";
