@@ -3,6 +3,15 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.22.1] — 2026-11-01
+
+### Dependencies
+
+- **deps**: Update actions/setup-node digest to 949feb2 ([`53317ea`](https://github.com/gfriloux/stc/commit/53317ea94a026a8c433c067daaf34d5791be1006))
+- **deps**: Update dependency astro to v7.4.4 ([`2123748`](https://github.com/gfriloux/stc/commit/2123748f8ed602aba88dad3e6b04d8512662ba52))
+- **deps**: Update dependency node to v26 ([`fba973d`](https://github.com/gfriloux/stc/commit/fba973d15c977e6ba9a7fbb89d8b24898b552c8c))
+- **deps**: Update dependency @astrojs/starlight to v0.42.8 ([`61afbb3`](https://github.com/gfriloux/stc/commit/61afbb3ff797b3044cbab9142f6fec7bd9edaec1))
+- **deps**: Lock file maintenance ([`fcda4d1`](https://github.com/gfriloux/stc/commit/fcda4d107b76aced1416e07a95d8139dbb5866b2))
 ## [0.22.0] — 2026-10-31
 
 ### Documentation
