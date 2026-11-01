@@ -11,6 +11,7 @@
 {
   config,
   lib,
+  options,
   pkgs,
   ...
 }: let
@@ -145,9 +146,14 @@ in {
     # systemd stage-1 initrd is required: postDeviceCommands is not available
     # in the systemd initrd path. The service runs after pool import and before
     # root mount, so the dataset is clean before userspace reads it.
+    #
+    # nixpkgs dropped scripted stage 1 on 2026-10-18 and turned `enable` into a
+    # mkRemovedOptionModule (declared `visible = false`): defining it there is a
+    # failed assertion. On an older nixpkgs the option is live and must be set,
+    # or scripted stage 1 takes over and the rollback silently never runs.
     # -------------------------------------------------------------------------
     boot.initrd.systemd = {
-      enable = true;
+      enable = lib.mkIf (options.boot.initrd.systemd.enable.visible or true) true;
       storePaths = [rollbackScript];
 
       services.zfs-rollback = {
