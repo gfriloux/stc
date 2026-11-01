@@ -3,6 +3,16 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.22.2] — 2026-11-01
+
+### Bug Fixes
+
+- **impermanence**: only set boot.initrd.systemd.enable while the option is live ([`56940fe`](https://github.com/gfriloux/stc/commit/56940fe915d798406941a4cd6a2d58956913d11b))
+- **polkit-units**: never grant freeze/thaw now that systemd 262 lets them reach polkit ([`8870d79`](https://github.com/gfriloux/stc/commit/8870d798b2d4604177420150ae42bc62ef254e77))
+
+### Dependencies
+
+- **deps**: Lock file maintenance ([`e624d6f`](https://github.com/gfriloux/stc/commit/e624d6f34ceb1e2bda34a474b14cc35136bddc74))
 ## [0.22.1] — 2026-11-01
 
 ### Dependencies
