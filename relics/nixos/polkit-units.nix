@@ -26,9 +26,12 @@
 #     org.freedesktop.systemd1.manage-unit-files, which carries no unit at all.
 #     It cannot be scoped: granting it lets a group link a unit file it wrote,
 #     then start it as root. The relic never grants it.
-#   - Freeze and thaw ask manage-units with verbs "stop" and "start", but
-#     systemd's D-Bus policy refuses FreezeUnit/ThawUnit to unprivileged
-#     callers before polkit is asked. Measured in the proving.
+#   - Freeze and thaw ask manage-units with verbs "stop" and "start". Up to
+#     systemd 261 its D-Bus policy refused FreezeUnit/ThawUnit to unprivileged
+#     callers; 262 lets them through to polkit, and a delegated operator froze
+#     a unit they could stop (measured in the proving). The only detail that
+#     tells them apart is systemd's polkit.message, so the rule does not grant
+#     a request whose message mentions freezing.
 #   - The caller picks the job mode (`--job-mode=flush` cancels every queued
 #     job on the host); polkit sees no mode, so no rule can restrict it. The
 #     docs say so.
@@ -196,6 +199,11 @@ in {
         var verb = action.lookup("verb");
         // Manager-level calls carry no unit and no verb: not ours to grant.
         if (!unit || !verb) {
+          return;
+        }
+        // Freeze and thaw reuse "stop" and "start"; only the message differs.
+        var message = action.lookup("polkit.message");
+        if (message && message.indexOf("freeze") >= 0) {
           return;
         }
         var delegations = ${builtins.toJSON rules};

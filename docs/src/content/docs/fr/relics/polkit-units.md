@@ -101,8 +101,9 @@ cadre est refusé :
 - **Verbe.** Seules les `actions` listées passent.
   - `kill`, `set-property`, `clean` et `bind-mount` ne sont jamais accordés :
     ils changent ce que fait une unité ou effacent son état.
-  - Geler et dégeler demandent `stop` et `start` à polkit, mais la politique
-    D-Bus de systemd les refuse elle-même aux appelants sans privilèges.
+  - Geler et dégeler demandent `stop` et `start` à polkit. Depuis systemd 262,
+    sa politique D-Bus ne les arrête plus en amont : la règle les reconnaît au
+    message polkit de systemd et ne les accorde jamais.
 
 ## `units` ou `unitPrefixes`
 
