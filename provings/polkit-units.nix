@@ -89,9 +89,10 @@
 
         with subtest("freeze and thaw stay out of reach"):
             # systemd asks polkit with verb "stop" to freeze and "start" to
-            # thaw, so the rule alone would grant them. systemd's D-Bus policy
-            # does not let an unprivileged caller send FreezeUnit or ThawUnit,
-            # and `systemctl freeze` first asks for the ungranted "ref" verb.
+            # thaw. Up to 261 its D-Bus policy refused FreezeUnit/ThawUnit to
+            # unprivileged callers; 262 lets them through, and before the rule
+            # skipped freeze messages op froze stc-named (FreezerState=frozen).
+            # `systemctl freeze` first asks for the ungranted "ref" verb.
             refused("op", "freeze stc-named")
             for method in ["FreezeUnit", "ThawUnit"]:
                 rc, out = machine.execute(
@@ -99,7 +100,10 @@
                     " /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager"
                     f" {method} s stc-named.service' 2>&1"
                 )
+                # D-Bus policy or polkit: both answer "Access denied".
                 assert rc != 0 and "Access denied" in out, f"{method}: {out}"
+                state = machine.succeed("systemctl show -p FreezerState --value stc-named")
+                assert state.strip() == "running", f"{method}: FreezerState={state}"
 
         with subtest("each scope holds: unit, verb, group"):
             refused("op", "restart stc-other")

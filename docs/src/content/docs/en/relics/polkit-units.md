@@ -93,8 +93,9 @@ Each grant is scoped three ways, and everything outside is refused:
 - **Verb.** Only the listed `actions` pass.
   - `kill`, `set-property`, `clean` and `bind-mount` are never granted: they
     change what a unit does or delete its state.
-  - Freezing and thawing ask polkit for `stop` and `start`, but systemd's own
-    D-Bus policy refuses them to unprivileged callers.
+  - Freezing and thawing ask polkit for `stop` and `start`. Since systemd 262
+    its D-Bus policy no longer stops them first, so the rule recognises them
+    by systemd's polkit message and never grants them.
 
 ## `units` or `unitPrefixes`
 
