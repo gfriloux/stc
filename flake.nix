@@ -68,6 +68,12 @@
     # forge/shells/ansible.nix.
     nixpkgs-ansible-legacy.url = "github:nixos/nixpkgs/nixos-25.11";
 
+    # Declares the repo's own pre-commit hooks — see the perSystem block below.
+    git-hooks = {
+      url = "github:cachix/git-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     ansible-recap = {
       url = "github:gfriloux/ansible-recap";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -84,6 +90,7 @@
       ];
 
       imports = [
+        inputs.git-hooks.flakeModule
         ./relics
         ./cogitator
         ./forge
@@ -91,8 +98,30 @@
         ./provings
       ];
 
-      perSystem = {pkgs, ...}: {
+      perSystem = {
+        config,
+        pkgs,
+        ...
+      }: {
         formatter = pkgs.alejandra;
+
+        # STC's own pre-commit hooks — the fast seals only. `nix flake check`
+        # stays out: it takes minutes since every proving node is a check, and CI
+        # and `just ci` run it. The module also adds checks.pre-commit, so CI runs
+        # these same hooks. The forge shells keep their own pre-commit.yaml: they
+        # serve consumer repos, which need not use flake-parts.
+        pre-commit.settings.hooks = {
+          alejandra.enable = true;
+          statix.enable = true;
+          deadnix.enable = true;
+          docs-parity = {
+            enable = true;
+            name = "docs-parity";
+            entry = "bash scripts/check-docs-parity.sh";
+            files = "^docs/src/content/docs/";
+            pass_filenames = false;
+          };
+        };
 
         devShells.default = pkgs.mkShell {
           name = "stc-forge";
@@ -104,8 +133,13 @@
             just
             nix-tree
             statix
+            # Same pinned pre-commit as the installed hook, for `pre-commit run`.
+            config.pre-commit.settings.package
           ];
+          # Rewrites .git/hooks/pre-commit on every shell entry, so the hook always
+          # points into this shell's closure and survives a garbage collection.
           shellHook = ''
+            ${config.pre-commit.installationScript}
             echo ""
             echo "  ██████ ████████  ██████"
             echo " ██         ██    ██"

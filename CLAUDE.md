@@ -105,6 +105,11 @@ nix develop .#docs   # Node.js for Astro/Starlight docs
 just ci              # format + lint + flake check
 ```
 
+Pre-commit hooks (alejandra, statix, deadnix, docs parity) are declared in
+`flake.nix` with git-hooks.nix and installed by the default dev shell on every
+entry — re-enter the shell after a garbage collection, never `--no-verify`.
+`nix flake check` is not a hook: CI and `just ci` run it.
+
 ## Secrets pattern
 
 Options that accept secrets use a `*File` suffix — never inline values.
