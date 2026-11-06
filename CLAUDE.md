@@ -130,8 +130,8 @@ The module reads the file at runtime. STC is agnostic to the secrets backend.
 4. Register in `cogitator/default.nix`.
 5. Add a bilingual doc page.
 6. **Write the proving** — `provings/<name>.nix`, registered in
-   `provings/default.nix` **and** added to the `test` recipe in the `Justfile`
-   (a proving the recipe does not build never runs). Mandatory, same change, not
+   `provings/default.nix` (the `test` recipe and the Provings CI workflow both
+   read their list from that registry). Mandatory, same change, not
    a follow-up: a cogitator claims a bootable use case and the proving is what
    makes the claim checkable. Verify with `just test`.
 

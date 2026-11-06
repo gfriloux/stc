@@ -1,0 +1,79 @@
+name: Provings
+
+# The provings boot one VM per cogitator: too heavy for every push. They run
+# weekly on main, on a pull request carrying the `run-provings` label, and by
+# hand.
+on:
+  schedule:
+    - cron: "0 3 * * 0" # Sunday 03:00 UTC
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+  workflow_dispatch:
+
+# Least privilege: the workflow only reads the repo.
+permissions:
+  contents: read
+
+jobs:
+  # The matrix comes from provings/default.nix, the same source `just test`
+  # reads, so a registered proving cannot be left out of CI.
+  list:
+    if: >-
+      github.event_name != 'pull_request'
+      || (contains(github.event.pull_request.labels.*.name, 'run-provings')
+          && (github.event.action != 'labeled' || github.event.label.name == 'run-provings'))
+    runs-on: ubuntu-latest
+    outputs:
+      provings: ${{ steps.list.outputs.provings }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
+
+      - name: List registered provings
+        id: list
+        run: |
+          provings=$(nix eval --json .#legacyPackages.x86_64-linux.provings \
+            --apply builtins.attrNames --no-write-lock-file)
+          echo "provings=$provings" >> "$GITHUB_OUTPUT"
+
+  proving:
+    needs: list
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    # Per job, not per workflow: a workflow-level group would let a run skipped
+    # by an unrelated label cancel the provings in flight.
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.proving }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        proving: ${{ fromJSON(needs.list.outputs.provings) }}
+    name: ${{ matrix.proving }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # Standard runners expose /dev/kvm, but only to root; the nix build users
+      # need it too, or the VMs fall back to (unusable) software emulation.
+      - name: Open /dev/kvm to the build users
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
+        with:
+          extra-conf: system-features = nixos-test benchmark big-parallel kvm
+
+      # Pulls from the project cache; pushes what this job built on main only
+      # (PRs, forks and tags read but never write).
+      - uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
+        with:
+          name: stc
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          skipPush: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: Build proving ${{ matrix.proving }}
+        run: nix build ".#legacyPackages.x86_64-linux.provings.${{ matrix.proving }}" -L --no-write-lock-file

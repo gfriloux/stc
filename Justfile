@@ -66,23 +66,15 @@ changelog tag="":
 # Run the provings — internal nixosTests that boot a VM per cogitator and assert
 # it behaves as claimed. Heavy and manual: deliberately NOT part of `just ci`.
 # Exposed via legacyPackages, which `nix flake check` skips. Linux only.
-# Every proving registered in provings/default.nix must be listed here — one the
-# recipe does not build never runs, and a green `just test` would be a false green.
+# The list is read from provings/default.nix, the same source as the CI matrix
+# (.github/workflows/provings.yml), so a registered proving cannot be skipped.
 test:
-    nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-file
-    nix build .#legacyPackages.x86_64-linux.provings.docker-server -L --no-write-lock-file
-    nix build .#legacyPackages.x86_64-linux.provings.workstation -L --no-write-lock-file
-    nix build .#legacyPackages.x86_64-linux.provings.vm -L --no-write-lock-file
-    nix build .#legacyPackages.x86_64-linux.provings.plasma -L --no-write-lock-file
-    nix build .#legacyPackages.x86_64-linux.provings.dreadnought -L --no-write-lock-file
-    nix build .#legacyPackages.x86_64-linux.provings.sarcophagus-kvm -L --no-write-lock-file
-    nix build .#legacyPackages.x86_64-linux.provings.sarcophagus-aws -L --no-write-lock-file
-    nix build .#legacyPackages.x86_64-linux.provings.enginseer -L --no-write-lock-file
-    nix build .#legacyPackages.x86_64-linux.provings.home-desktop -L --no-write-lock-file
-    nix build .#legacyPackages.x86_64-linux.provings.gaming -L --no-write-lock-file
-    nix build .#legacyPackages.x86_64-linux.provings.smart -L --no-write-lock-file
-    nix build .#legacyPackages.x86_64-linux.provings.polkit-units -L --no-write-lock-file
-    nix build .#legacyPackages.x86_64-linux.provings.heartbeat -L --no-write-lock-file
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for p in $(nix eval --raw .#legacyPackages.x86_64-linux.provings --no-write-lock-file \
+        --apply 'p: builtins.concatStringsSep " " (builtins.attrNames p)'); do
+        nix build ".#legacyPackages.x86_64-linux.provings.$p" -L --no-write-lock-file
+    done
 
 
 # ── Documentation ─────────────────────────────────────────────────────────────

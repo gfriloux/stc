@@ -33,6 +33,11 @@ deux fois. Les schematics, qui sont des flakes séparés, sont évalués par
 `just schematics`, une étape de `just ci` et un job CI à part.
 
 - On les lance à la main : `just test` (chaque épreuve builde et exécute sa VM).
+- En CI, `.github/workflows/provings.yml` les lance chaque dimanche sur `main`,
+  sur une pull request portant le label `run-provings`, et à la demande
+  (`workflow_dispatch`) : un job par épreuve, donc un échec nomme son épreuve.
+  Jamais à chaque push. La recette et le workflow lisent tous deux la liste dans
+  `provings/default.nix`, aucun des deux ne peut donc oublier une épreuve.
 - Linux uniquement (`x86_64-linux` / `aarch64-linux`) — l'attribut est vide ailleurs.
 - Builder : `pkgs.testers.runNixOSTest`.
 
@@ -53,7 +58,8 @@ la discipline qui compte, c'est de lancer `just test` avant de fermer une branch
 qui a touché un cogitator : une recette trop lourde à lancer est un gate qui cesse
 discrètement d'en être un. Pour itérer, builder une seule épreuve —
 `nix build .#legacyPackages.x86_64-linux.provings.<nom> -L` — et lancer la recette
-complète avant la clôture.
+complète avant la clôture — ou poser le label `run-provings` sur la pull request
+et laisser la CI la lancer.
 
 À ne pas confondre avec `forge/purity-seals/`, qui produit des *builders de checks*
 réutilisables par les flakes **consommateurs**. Les épreuves testent STC ; elles
@@ -94,10 +100,9 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
    doit importer le module NixOS de Home Manager depuis un input — voir *Vérifier
    un cogitator Home Manager* plus bas. Les deux signatures coexistent à dessein.
 2. La câbler dans `provings/default.nix` sous `legacyPackages.provings.<nom>`.
-3. **L'ajouter à la recette `test` du `Justfile`.** Une épreuve enregistrée dans
-   `provings/default.nix` mais absente de la recette ne tourne jamais, et un
-   `just test` vert est alors un faux vert — cette étape n'est pas optionnelle.
-4. Ajouter une ligne au tableau de couverture ci-dessus (et son miroir anglais).
+   C'est le seul enregistrement : `just test` et la matrice CI lisent cet
+   attrset.
+3. Ajouter une ligne au tableau de couverture ci-dessus (et son miroir anglais).
 
 ## Paquets unfree dans une épreuve
 
