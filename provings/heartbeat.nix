@@ -62,6 +62,7 @@
   testScript = ''
     machine.wait_for_unit("multi-user.target")
     machine.succeed("systemctl start stc-hb-stub")
+    machine.succeed("test -e /scratch-broken-on-purpose")
     machine.wait_for_open_port(8000)
 
 
