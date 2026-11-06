@@ -13,6 +13,13 @@
       "groupSlug": "nix"
     },
     {
+      "description": "nixpkgs-ansible-legacy is frozen on nixos-25.11 on purpose (last branch with ansible_2_16/2_17, see flake.nix): never bump its branch",
+      "matchManagers": ["nix"],
+      "matchDepNames": ["nixpkgs-ansible-legacy"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false
+    },
+    {
       "description": "Group GitHub Actions updates into a single PR",
       "matchManagers": ["github-actions"],
       "groupName": "GitHub Actions",
