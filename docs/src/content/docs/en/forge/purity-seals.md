@@ -31,7 +31,7 @@ stc.lib.puritySeals.<system> = {
 |------|-----------|--------------|
 | `nix` | `path` | `deadnix --fail`, `statix check`, `alejandra --check` |
 | `gitleaks` | `path` | `gitleaks dir --no-banner --verbose --redact` |
-| `terraform` | `path` | `terraform fmt -check`, `tflint --recursive`, `tfsec` |
+| `terraform` | `path` | `terraform fmt -check`, `tflint --recursive`, `trivy config` |
 | `ansible` | `path` | `ansible-lint --offline --profile production --exclude=tests` |
 | `shell` | `path` | `shellcheck` over `*.sh`, `shfmt -d -s -i 2 -ci` |
 | `markdown` | `{ path, args ? "" }` | `rumdl check` (pass rule excludes via `args`) |
@@ -41,6 +41,38 @@ The `terraform` seal uses a nixpkgs instance with `allowUnfree = true` (Terrafor
 is BSL-licensed since v1.6). This is scoped to the terraform seal only — the other
 seals never pull in unfree packages.
 :::
+
+## Migrating from tfsec (v0.23.0)
+
+:::caution[Breaking change]
+Since v0.23.0 the `terraform` seal runs **Trivy** (`trivy config`) instead of
+tfsec, which Aqua Security deprecated in its favour. A Terraform repository that
+passed the seal before can fail it without changing a line:
+
+- **`.tfsec/config.yml` (or `.tfsec/` custom checks) is ignored.** Exclusions
+  listed there no longer apply, so the findings they hid come back.
+- **The rule sets differ.** Trivy can report findings tfsec did not, under its
+  own IDs (`AVD-AWS-0107`) and severities.
+
+Inline `# tfsec:ignore:<id>` comments keep working: Trivy honours them, with or
+without `:exp:<date>` (measured on `aws-ec2-no-public-ingress-sgr`). Check any
+ignore whose rule Trivy may have renamed or dropped.
+:::
+
+To migrate a `.tfsec/config.yml` exclusion list, move the IDs into a
+`.trivyignore` file at the root of the scanned tree, one per line. Both the
+tfsec ID and the Trivy ID are accepted:
+
+```text
+# .trivyignore
+aws-ec2-no-public-ingress-sgr
+AVD-AWS-0107
+```
+
+Prefer an inline `# trivy:ignore:<id>` next to the resource when the exception
+is local: the reason then sits next to the code it excuses. The `terraform`
+dev shell ships `trivy` instead of `tfsec`, so `trivy config .` reproduces the
+seal locally.
 
 ## Usage in a flake
 

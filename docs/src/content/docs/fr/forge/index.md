@@ -26,7 +26,7 @@ un workflow spécifique, plus des hooks `pre-commit` et un exécuteur de tâches
 | Shell | Outils clés |
 |-------|-------------|
 | `ansible` | ansible (3 versions), ansible-lint, rbw, shellcheck |
-| `terraform` | terraform, terragrunt, tflint, tfsec, terraform-docs |
+| `terraform` | terraform, terragrunt, tflint, trivy, terraform-docs |
 | `mdbook` | mdbook, rumdl |
 | `mkdocs` | pipenv, python312, rumdl |
 | `zensical` | pipenv, python312, rumdl |
@@ -69,7 +69,7 @@ fuités, formatage propre.
 |------|------------------|
 | `nix` | deadnix + statix + alejandra |
 | `gitleaks` | scan de secrets gitleaks |
-| `terraform` | terraform fmt + tflint + tfsec |
+| `terraform` | terraform fmt + tflint + trivy |
 | `ansible` | ansible-lint (profil production) |
 | `shell` | shellcheck + shfmt |
 | `markdown` | rumdl |

@@ -85,7 +85,7 @@ de documentation.
 | `terragrunt` | Wrapper DRY pour les déploiements multi-environnements |
 | `terraform-docs` | Génération automatique de documentation de modules |
 | `tflint` | Lint (syntaxe dépréciée, erreurs de type) |
-| `tfsec` | Analyse de sécurité statique |
+| `trivy` | Analyse de sécurité statique (`trivy config`, mêmes règles que le seal terraform) |
 | `just` | Exécuteur de tâches |
 | `glow` | Rendu Markdown |
 | `pre-commit` | Exécuteur de hooks git |
