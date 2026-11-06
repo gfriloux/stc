@@ -5,7 +5,8 @@
 #
 # Exposed under legacyPackages.<system>.provings.*, which `nix flake check`
 # deliberately skips — so provings are NOT part of the `just ci` gate. Run them
-# by hand with `just test`. Linux only (VM tests are meaningless on Darwin).
+# by hand with `just test`, or in CI via .github/workflows/provings.yml; both
+# read their list from the `provings` attrset below. Linux only.
 #
 # Their nodes are, though: every node of every proving is also exposed as
 # checks.<system>.eval-<proving>-<node>, which forces the node's system toplevel

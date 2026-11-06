@@ -486,9 +486,8 @@ together:
    enabled and asserts what it claims. Take `provings/hardening.nix` as the
    reference for the shape; `self` is threaded in so the node can import the real
    flake module.
-2. `provings/default.nix` — register it under `legacyPackages.provings`.
-3. `Justfile` — add the build to the `test` recipe, or `just test` will pass
-   without ever running it.
+2. `provings/default.nix` — register it under `legacyPackages.provings`. The
+   `test` recipe and the Provings CI workflow read their list from there.
 
 **Verification:**
 ```bash
@@ -839,7 +838,7 @@ claimed.** Before any statement that something passes, works, or is done:
 | "the schematics still evaluate" | one `nix eval …drvPath` **per** schematic |
 | "no stale namespace left" | the filtered `grep` from [Quality Gates](#quality-gates), zero matches — and a grep written to match the language the file is in, not only English |
 | "`en/` and `fr/` hold the same pages" | `just docs-parity` → OK. It compares file paths only; it says nothing about whether the two pages agree |
-| "the VM behaves as claimed" | `just test`, read the proving's output — **and** check the `test` recipe actually builds the proving covering what changed |
+| "the VM behaves as claimed" | `just test`, read the proving's output — or the `run-provings` label on the PR |
 | "the bug is fixed" | the original symptom re-tested, not the code re-read |
 
 "Should be fine", "the change is trivial", "the linter passed" prove nothing —
@@ -862,7 +861,7 @@ What binds instead:
 - **Every new cogitator ships a proving.** A cogitator claims a complete,
   bootable use case; the proving in `provings/<name>.nix` is what makes the claim
   checkable. It is part of the same plan, not a follow-up. Register it in
-  `provings/default.nix` and add it to the `test` recipe in the `Justfile`.
+  `provings/default.nix`; `just test` and the Provings workflow read it from there.
 - **A relic needs no proving of its own** when a cogitator's proving already
   composes it. A relic nothing composes yet, and whose behaviour cannot be read
   from an `nix eval`, is the exception — say so in the plan and justify it.
@@ -1237,10 +1236,11 @@ If the change added or touched a cogitator:
 just test
 ```
 
-Every proving the recipe builds must pass. Before trusting a green run, check
-that the recipe actually builds the proving covering what changed — a proving
-registered in `provings/default.nix` but absent from the `test` recipe never
-runs, and the green is false. See [Tests](#tests--what-replaces-tdd).
+Every proving must pass. The recipe reads its list from `provings/default.nix`,
+so a registered proving cannot be left out. The same suite runs in CI
+(`.github/workflows/provings.yml`) weekly on `main` and on a pull request
+labelled `run-provings` — adding the label is the same gate, run remotely. See
+[Tests](#tests--what-replaces-tdd).
 
 Changes that touch no cogitator skip this gate. It is not part of `just ci`:
 provings boot VMs, they take minutes, and they are Linux-only.

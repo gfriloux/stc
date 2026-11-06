@@ -31,6 +31,11 @@ second registration. The schematics, which are separate flakes, are evaluated
 by `just schematics`, a step of `just ci` and its own CI job.
 
 - Run them by hand: `just test` (each proving builds and runs its VM).
+- In CI, `.github/workflows/provings.yml` runs them every Sunday on `main`, on a
+  pull request carrying the `run-provings` label, and on demand
+  (`workflow_dispatch`): one job per proving, so a failure names its proving.
+  Never on every push. Both the recipe and the workflow read the list from
+  `provings/default.nix`, so neither can miss a proving.
 - Linux only (`x86_64-linux` / `aarch64-linux`) — the attribute is empty elsewhere.
 - Builder: `pkgs.testers.runNixOSTest`.
 
@@ -49,7 +54,8 @@ This is said out loud because the discipline that matters is running
 `just test` before closing a branch that touched a cogitator: a recipe too heavy
 to run is a gate that quietly stops being one. Build a single proving while
 iterating — `nix build .#legacyPackages.x86_64-linux.provings.<name> -L` — and run
-the full recipe before the branch closes.
+the full recipe before the branch closes — or add the `run-provings` label to
+the pull request and let CI run it.
 
 Not to be confused with `forge/purity-seals/`, which produces reusable *check
 builders* for **consumer** flakes. Provings test STC; they are not exported.
@@ -89,10 +95,9 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
    to import Home Manager's NixOS module out of an input — see *Proving a Home
    Manager cogitator* below. The two signatures coexist on purpose.
 2. Wire it in `provings/default.nix` under `legacyPackages.provings.<name>`.
-3. **Add it to the `test` recipe in the `Justfile`.** A proving registered in
-   `provings/default.nix` but absent from the recipe never runs, and a green
-   `just test` is then a false green — this step is not optional.
-4. Add a row to the coverage table above (and its French mirror).
+   That is the only registration: `just test` and the CI matrix read this
+   attrset.
+3. Add a row to the coverage table above (and its French mirror).
 
 ## Unfree packages in a proving
 
