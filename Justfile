@@ -33,6 +33,9 @@ check:
 # STC as `path:../..`, so they cannot be checks of this flake; their input
 # follows the working tree, so this evaluates the current code. Evaluation
 # only: the drvPath is computed, nothing is built. CI runs this same recipe.
+# Each schematic's flake.lock records STC's own input list: after adding an
+# STC input, run `nix flake update stc` in each schematic or this fails with
+# "attribute '<input>' missing".
 schematics:
     nix eval ./schematics/local-vm#nixosConfigurations.local-vm.config.system.build.qcow2.drvPath --no-write-lock-file
     nix eval ./schematics/aws-ami#nixosConfigurations.aws-ami.config.system.build.awsImage.drvPath --no-write-lock-file
