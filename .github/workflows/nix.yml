@@ -35,6 +35,18 @@ jobs:
       - name: nix flake check (x86_64-linux)
         run: nix flake check --no-write-lock-file --show-trace
 
+  # Schematics are separate flakes (`path:../..` input), so `nix flake check`
+  # above cannot reach them. Same recipe as `just ci`, so the two stay in step.
+  schematics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
+
+      - name: Evaluate each schematic's artefact
+        run: nix develop --command just schematics
+
   docs-parity:
     runs-on: ubuntu-latest
     steps:
