@@ -61,9 +61,12 @@
       inputs.home-manager.follows = "home-manager";
     };
 
-    # nixos-25.11 stable — used by forge/builders for tools not yet on unstable
-    # (e.g. specific Terraform/Ansible versions requiring stable package sets).
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
+    # Frozen on purpose: nixos-25.11 is end-of-life, and kept only because it is
+    # the last branch carrying ansible_2_16 and ansible_2_17, which the ansible
+    # forge shell needs to manage legacy hosts (CentOS 7, Amazon Linux 2). Used
+    # by that shell alone — nothing else in the flake may read it. See
+    # forge/shells/ansible.nix.
+    nixpkgs-ansible-legacy.url = "github:nixos/nixpkgs/nixos-25.11";
 
     ansible-recap = {
       url = "github:gfriloux/ansible-recap";

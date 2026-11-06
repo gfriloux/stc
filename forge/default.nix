@@ -5,7 +5,7 @@
   flake.templates = {
     ansible = {
       path = ./templates/ansible;
-      description = "Ansible project — multi-version shell (2.16, 2.17, latest) + CI checks";
+      description = "Ansible project — shell with latest + legacy 2.16/2.17 + CI checks";
     };
     terraform = {
       path = ./templates/terraform;
@@ -32,7 +32,8 @@
   }: let
     preCommitConfig = ./shells/pre-commit.yaml;
 
-    pkgs-stable = import inputs.nixpkgs-stable {inherit system;};
+    # End-of-life package set, scoped to the ansible shell — see flake.nix.
+    pkgs-ansible-legacy = import inputs.nixpkgs-ansible-legacy {inherit system;};
 
     pkgs-ansible = import inputs.nixpkgs {
       inherit system;
@@ -50,7 +51,7 @@
     devShells = {
       ansible = import ./shells/ansible.nix {
         pkgs = pkgs-ansible;
-        inherit pkgs-stable preCommitConfig;
+        inherit pkgs-ansible-legacy preCommitConfig;
       };
       terraform = import ./shells/terraform.nix {
         pkgs = pkgs-unfree;
