@@ -29,6 +29,15 @@ lint-fix:
 check:
     nix flake check --no-write-lock-file --show-trace
 
+# Evaluate each schematic's artefact. Schematics are separate flakes that take
+# STC as `path:../..`, so they cannot be checks of this flake; their input
+# follows the working tree, so this evaluates the current code. Evaluation
+# only: the drvPath is computed, nothing is built. CI runs this same recipe.
+schematics:
+    nix eval ./schematics/local-vm#nixosConfigurations.local-vm.config.system.build.qcow2.drvPath --no-write-lock-file
+    nix eval ./schematics/aws-ami#nixosConfigurations.aws-ami.config.system.build.awsImage.drvPath --no-write-lock-file
+    nix eval ./schematics/dreadnought#nixosConfigurations.dreadnought.config.system.build.toplevel.drvPath --no-write-lock-file
+
 # Update all flake inputs
 update:
     nix flake update
@@ -37,8 +46,8 @@ update:
 show:
     nix flake show
 
-# Full CI gate: formatting + linting + flake check + doc parity
-ci: fmt-check lint check docs-parity option-priorities
+# Full CI gate: formatting + linting + flake check + schematics + doc parity
+ci: fmt-check lint check schematics docs-parity option-priorities
 
 # Regenerate CHANGELOG.md from Conventional Commits + tags (git-cliff).
 # Pass the tag being released — `just changelog v0.8.0` — so its commits land
