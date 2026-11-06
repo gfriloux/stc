@@ -40,11 +40,20 @@ pas déjà présente) et câblent les hooks git automatiquement dans un dépôt 
 
 Fournit trois versions d'Ansible simultanément pour tester sur des environnements mixtes.
 
+Les deux versions fixées sont une dette assumée : ansible-core 2.16 est la
+dernière version qui gère des cibles en Python 2.7/3.6 (CentOS 7), et 2.17 la
+dernière pour Python 3.7 (Amazon Linux 2). Toutes deux sont en fin de vie en
+amont et absentes de toute branche nixpkgs maintenue : elles viennent donc d'une
+entrée `nixos-25.11` figée (`nixpkgs-ansible-legacy`), utilisée par ce seul
+shell. Cette branche est elle aussi en fin de vie : elle ne reçoit **aucun
+correctif de sécurité**. N'utilisez ces deux versions que contre les hôtes qui
+en ont besoin ; tout le reste passe par `ansible`.
+
 | Outil | Utilité |
 |-------|---------|
 | `ansible` | Dernière version de nixpkgs unstable |
-| `ansible_2_16` | Version fixée (nixos-25.05), correctement enveloppée avec PYTHONPATH |
-| `ansible_2_17` | Version fixée (nixos-25.05), correctement enveloppée avec PYTHONPATH |
+| `ansible_2_16` | Héritée, `nixos-25.11` figée (fin de vie), enveloppée avec PYTHONPATH |
+| `ansible_2_17` | Héritée, `nixos-25.11` figée (fin de vie), enveloppée avec PYTHONPATH |
 | `ansible-lint` | Lint des playbooks |
 | `ansible-recap` | Formateur de résumé d'exécution |
 | `rbw` | CLI Bitwarden (accès au coffre pendant les exécutions) |
@@ -58,7 +67,7 @@ Fournit trois versions d'Ansible simultanément pour tester sur des environnemen
 
 ```
 [stc:ansible] Operational. Three ansible versions at your service.
-  ansible         ansible [core 2.18.x]
+  ansible         ansible [core 2.21.x]
   ansible_2_16    ansible [core 2.16.x]
   ansible_2_17    ansible [core 2.17.x]
 ```

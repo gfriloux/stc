@@ -41,11 +41,19 @@ present) and wire up git hooks automatically when inside a git repository.
 Provides three Ansible versions simultaneously for testing against mixed
 environments.
 
+The two pinned versions are legacy debt, kept on purpose: ansible-core 2.16 is
+the last release that manages Python 2.7/3.6 targets (CentOS 7), and 2.17 the
+last for Python 3.7 (Amazon Linux 2). Both are end-of-life upstream and gone
+from every maintained nixpkgs branch, so they come from a frozen `nixos-25.11`
+input (`nixpkgs-ansible-legacy`), used by this shell alone. That branch is
+end-of-life too: it receives **no security fixes**. Use these two versions only
+against the hosts that need them; everything else goes through `ansible`.
+
 | Tool | Purpose |
 |------|---------|
 | `ansible` | Latest from nixpkgs unstable |
-| `ansible_2_16` | Pinned version (nixos-25.05), correctly wrapped with PYTHONPATH |
-| `ansible_2_17` | Pinned version (nixos-25.05), correctly wrapped with PYTHONPATH |
+| `ansible_2_16` | Legacy, frozen `nixos-25.11` (end-of-life), wrapped with PYTHONPATH |
+| `ansible_2_17` | Legacy, frozen `nixos-25.11` (end-of-life), wrapped with PYTHONPATH |
 | `ansible-lint` | Linting playbooks |
 | `ansible-recap` | Run summary formatter |
 | `rbw` | Bitwarden CLI (vault access during runs) |
@@ -59,7 +67,7 @@ On shell entry, the installed versions are printed:
 
 ```
 [stc:ansible] Operational. Three ansible versions at your service.
-  ansible         ansible [core 2.18.x]
+  ansible         ansible [core 2.21.x]
   ansible_2_16    ansible [core 2.16.x]
   ansible_2_17    ansible [core 2.17.x]
 ```
