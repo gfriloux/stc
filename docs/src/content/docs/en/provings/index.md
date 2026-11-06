@@ -20,6 +20,16 @@ Provings are exposed under `legacyPackages.<system>.provings.*`, an output tree
 that `nix flake check` **deliberately skips**. They are therefore **not part of
 the `just ci` gate**: a VM test is heavy, and the CI gate stays fast and static.
 
+Their **nodes**, on the other hand, are in the gate. Every node of every proving
+is also exposed as `checks.<system>.eval-<proving>-<node>`, which forces that
+node's system toplevel to *evaluate* without building it. A node imports the
+real cogitator and enables it, so `nix flake check` puts every cogitator inside
+a `nixosSystem`: a typo in a `config` block or a stale option reference fails
+CI, while the VM itself is only booted by `just test`. The checks are derived
+from the same attrset as `legacyPackages.provings`, so a new proving needs no
+second registration. The schematics, which are separate flakes, are evaluated
+by `just schematics`, a step of `just ci` and its own CI job.
+
 - Run them by hand: `just test` (each proving builds and runs its VM).
 - Linux only (`x86_64-linux` / `aarch64-linux`) — the attribute is empty elsewhere.
 - Builder: `pkgs.testers.runNixOSTest`.

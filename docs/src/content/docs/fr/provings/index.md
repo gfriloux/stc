@@ -21,6 +21,17 @@ d'outputs que `nix flake check` **ignore délibérément**. Elles ne font donc
 **pas partie du gate `just ci`** : un test de VM est lourd, et le gate CI reste
 rapide et statique.
 
+Leurs **nœuds**, en revanche, sont dans le gate. Chaque nœud de chaque épreuve
+est aussi exposé en `checks.<system>.eval-<épreuve>-<nœud>`, qui force
+l'*évaluation* du toplevel système de ce nœud sans le construire. Un nœud importe
+le vrai cogitator et l'active, donc `nix flake check` place chaque cogitator dans
+un `nixosSystem` : une faute de frappe dans un bloc `config` ou une référence
+d'option périmée fait échouer la CI, tandis que la VM elle-même n'est bootée que
+par `just test`. Les checks sont dérivés du même attrset que
+`legacyPackages.provings`, donc une nouvelle épreuve n'a pas à être enregistrée
+deux fois. Les schematics, qui sont des flakes séparés, sont évalués par
+`just schematics`, une étape de `just ci` et un job CI à part.
+
 - On les lance à la main : `just test` (chaque épreuve builde et exécute sa VM).
 - Linux uniquement (`x86_64-linux` / `aarch64-linux`) — l'attribut est vide ailleurs.
 - Builder : `pkgs.testers.runNixOSTest`.
