@@ -85,7 +85,7 @@ documentation generation.
 | `terragrunt` | DRY wrapper for multi-environment deployments |
 | `terraform-docs` | Auto-generate module documentation |
 | `tflint` | Linting (deprecated syntax, type errors) |
-| `tfsec` | Static security analysis |
+| `trivy` | Static security analysis (`trivy config`, same checks as the terraform seal) |
 | `just` | Task runner |
 | `glow` | Markdown renderer |
 | `pre-commit` | Git hook runner |

@@ -36,7 +36,17 @@
       echo Running check terraform
       ${pkgs-unfree.terraform}/bin/terraform fmt -diff -write=false -check -recursive
       ${pkgs.tflint}/bin/tflint --recursive
-      ${pkgs.findutils}/bin/find . -type d | ${pkgs.findutils}/bin/xargs -I {} -t ${pkgs.tfsec}/bin/tfsec --exclude-downloaded-modules {}
+      # Trivy replaces the deprecated tfsec. Recursive in one call; every severity
+      # fails, as tfsec did. --skip-check-update keeps it to the checks embedded
+      # in the binary: the sandbox has no network to download the bundle.
+      # Inline tfsec:ignore comments are honoured; .tfsec/config.yml is not —
+      # list those IDs in .trivyignore (see the purity-seals docs).
+      HOME="$TMPDIR" ${pkgs.trivy}/bin/trivy config \
+        --cache-dir "$TMPDIR/trivy" \
+        --skip-check-update \
+        --tf-exclude-downloaded-modules \
+        --exit-code 1 \
+        .
       mkdir "$out"
     '';
 

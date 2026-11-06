@@ -5,7 +5,7 @@
 #   terragrunt      — DRY wrapper for multi-env deployments
 #   terraform-docs  — auto-generate module documentation
 #   tflint          — linting (catches deprecated syntax, type errors)
-#   tfsec           — static security analysis
+#   trivy           — static security analysis (`trivy config`), same as the seal
 #   just            — task runner (replaces Makefile for common operations)
 #   glow            — render markdown docs in the terminal
 {
@@ -23,7 +23,7 @@ pkgs.mkShell {
     terraform-docs
     terragrunt
     tflint
-    tfsec
+    trivy
   ];
 
   shellHook = ''

@@ -26,7 +26,7 @@ specific workflow, plus `pre-commit` hooks and a `just` task runner.
 | Shell | Key tools |
 |-------|-----------|
 | `ansible` | ansible (3 versions), ansible-lint, rbw, shellcheck |
-| `terraform` | terraform, terragrunt, tflint, tfsec, terraform-docs |
+| `terraform` | terraform, terragrunt, tflint, trivy, terraform-docs |
 | `mdbook` | mdbook, rumdl |
 | `mkdocs` | pipenv, python312, rumdl |
 | `zensical` | pipenv, python312, rumdl |
@@ -68,7 +68,7 @@ of heresy — no dead Nix, no antipatterns, no leaked secrets, clean formatting.
 |------|--------------|
 | `nix` | deadnix + statix + alejandra |
 | `gitleaks` | gitleaks secret scan |
-| `terraform` | terraform fmt + tflint + tfsec |
+| `terraform` | terraform fmt + tflint + trivy |
 | `ansible` | ansible-lint (production profile) |
 | `shell` | shellcheck + shfmt |
 | `markdown` | rumdl |
