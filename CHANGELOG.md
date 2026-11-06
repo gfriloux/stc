@@ -3,6 +3,17 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.23.0] — 2026-11-06
+
+### Documentation
+
+- **provings**: describe the eval checks and the schematics gate ([`53e724a`](https://github.com/gfriloux/stc/commit/53e724a51895378cae7942c26f48e71c85119461))
+- **forge**: explain the legacy ansible 2.16/2.17 exception ([`0e8e9bb`](https://github.com/gfriloux/stc/commit/0e8e9bb82188bafacd64974f8b9b597a9518d29c))
+- explain the git-hooks.nix hooks and the schematic lock refresh ([`44c8149`](https://github.com/gfriloux/stc/commit/44c814998bc6d7800e27f2726579a731cac889e6))
+
+### Features
+
+- **BREAKING** **forge**: replace tfsec with trivy in the terraform seal and shell ([`71a7ed7`](https://github.com/gfriloux/stc/commit/71a7ed78d3c58d8f2ea98c4865b16f1522c4179b))<br>a Terraform repo that passed checks.terraform can now fail without changing. .tfsec/config.yml exclusions and .tfsec/ custom checks are ignored (move the IDs to .trivyignore), and Trivy's rules differ from tfsec's. Inline tfsec:ignore comments still work. The terraform shell no longer provides tfsec.
 ## [0.22.2] — 2026-11-01
 
 ### Bug Fixes
@@ -39,8 +50,10 @@ Releases follow [Semantic Versioning](https://semver.org/).
 ### Features
 
 - **relics-ghostty**: carry the curated Nerd Fonts behind fonts.enable (#1) ([`42f70f7`](https://github.com/gfriloux/stc/commit/42f70f7a4f0113c7380e8982c65c8979fac2a0cd))
-- **relics-kitty**: remove the relic, keep its options as warning-only tombstones (#1) ([`b860885`](https://github.com/gfriloux/stc/commit/b86088564b31bfa2b50f77c481f6b5ebbdde6ea2))
-- **cogitator-desktop**: ship ghostty as the only terminal (#1) ([`cf72b2d`](https://github.com/gfriloux/stc/commit/cf72b2d545275e7df23fdaa64717e590be8763e6))
+- **BREAKING** **relics-kitty**: remove the relic, keep its options as warning-only tombstones (#1) ([`b860885`](https://github.com/gfriloux/stc/commit/b86088564b31bfa2b50f77c481f6b5ebbdde6ea2))<br>the kitty relic no longer installs kitty or the Nerd
+Fonts; use stc.relics.gui.ghostty (fonts.enable) or programs.kitty.
+- **BREAKING** **cogitator-desktop**: ship ghostty as the only terminal (#1) ([`cf72b2d`](https://github.com/gfriloux/stc/commit/cf72b2d545275e7df23fdaa64717e590be8763e6))<br>cogitator-desktop no longer enables kitty; the Nerd
+Fonts now come with the ghostty relic.
 - **relics-hardening-filesystem**: harden /var/tmp with a nosuid,nodev,noexec self-bind (#40) ([`0be7f2a`](https://github.com/gfriloux/stc/commit/0be7f2a5009c554e00f5a5405eaba5fd634beeed))
 - **relics-hardening-audit**: auditd with a boot-safe baseline ruleset (#31) ([`2bcfcf8`](https://github.com/gfriloux/stc/commit/2bcfcf8e710cbeeeeecbe16b38a8bff49d2dc29f))
 - **relics-hardening-firewall**: checked default-deny firewall with refused connections logged (#33) ([`ffb896b`](https://github.com/gfriloux/stc/commit/ffb896b262410210c423ef19445bd2c5fe22c8e1))
@@ -110,14 +123,21 @@ Releases follow [Semantic Versioning](https://semver.org/).
 
 ### Features
 
-- **relics-docker-notify**: promote the missing-healthcheck warning to an assertion ([`df311c9`](https://github.com/gfriloux/stc/commit/df311c914d0b764ad3684949e57c5f4c15cb2aac))
+- **BREAKING** **relics-docker-notify**: promote the missing-healthcheck warning to an assertion ([`df311c9`](https://github.com/gfriloux/stc/commit/df311c914d0b764ad3684949e57c5f4c15cb2aac))<br>a watched container with neither
+stc.lib.docker.mkHealthCheck nor labels."stc.docker/health-cmd-in-image"
+now fails the build instead of emitting a warning.
 - **relics-server-survivability**: add a relic that keeps a headless host recoverable ([`ed214ee`](https://github.com/gfriloux/stc/commit/ed214eef1c1032a758a14ddc969b8528b66b7c8a))
-- **cogitator**: enable server survivability on the four server profiles ([`d21e25c`](https://github.com/gfriloux/stc/commit/d21e25c4b355089d8591a7192f4e4fd11aa97642))
+- **BREAKING** **cogitator**: enable server survivability on the four server profiles ([`d21e25c`](https://github.com/gfriloux/stc/commit/d21e25c4b355089d8591a7192f4e4fd11aa97642))<br>a server profile with
+stc.relics.impermanence.onRollbackFailure = "emergency" now fails to
+build; set stc.relics.serverSurvivability.panicReboot = false to keep the
+stop. No known consumer sets it.
 - **relics-nix-housekeeping**: add a relic that bounds the Nix store and the journal ([`0be1329`](https://github.com/gfriloux/stc/commit/0be1329bce4bab2543574709697d73756be3db1f))
 
 ### Refactoring
 
-- **cogitator**: move vm's Nix GC into the housekeeping relic and enable it on servers ([`0737627`](https://github.com/gfriloux/stc/commit/0737627819f4f3769cd8ddd186523e0b6b339428))
+- **BREAKING** **cogitator**: move vm's Nix GC into the housekeeping relic and enable it on servers ([`0737627`](https://github.com/gfriloux/stc/commit/0737627819f4f3769cd8ddd186523e0b6b339428))<br>stc.cogitator.vm.nix.gc.{enable,dates,keepDays} are
+renamed to stc.relics.nixHousekeeping.gc.*. The old names still work and
+emit a deprecation warning; they are removed at v1.0.0.
 
 ### Testing
 
@@ -540,14 +560,14 @@ Releases follow [Semantic Versioning](https://semver.org/).
 ### Features
 
 - **relics**: add docker-socket-proxy and route Traefik through it ([`58cd655`](https://github.com/gfriloux/stc/commit/58cd6551495de925f8e6f3307ddd18f705c1470d))
-- **cogitator-vm**: make docker opt-in (default false) ([`ad7669c`](https://github.com/gfriloux/stc/commit/ad7669c9107a7cf8bd7c89294d47fe9b9f81ca12))
-- **relics-zfs**: add kernel selection, default to LTS ([`322ea10`](https://github.com/gfriloux/stc/commit/322ea1002d391047ba6dc35662675c39e183f2c1))
+- **BREAKING** **cogitator-vm**: make docker opt-in (default false) ([`ad7669c`](https://github.com/gfriloux/stc/commit/ad7669c9107a7cf8bd7c89294d47fe9b9f81ca12))
+- **BREAKING** **relics-zfs**: add kernel selection, default to LTS ([`322ea10`](https://github.com/gfriloux/stc/commit/322ea1002d391047ba6dc35662675c39e183f2c1))
 
 ### Refactoring
 
 - **all**: stabilize namespace ([`6bae1b7`](https://github.com/gfriloux/stc/commit/6bae1b787fb7b9558ddd85831f552e562e4d5dd2))
 - apply statix fixes and disable repeated_keys lint ([`83875cf`](https://github.com/gfriloux/stc/commit/83875cfdb9fd00e4d2ad57b62e431d1d49f7e65b))
-- **relics-docker-traefik**: rename ACME resolver to letsencrypt ([`50821ec`](https://github.com/gfriloux/stc/commit/50821ec70709c4ae3a67b63cade112242cf0a5f3))
+- **BREAKING** **relics-docker-traefik**: rename ACME resolver to letsencrypt ([`50821ec`](https://github.com/gfriloux/stc/commit/50821ec70709c4ae3a67b63cade112242cf0a5f3))
 ## [0.1.0] — 2026-06-02
 
 ### Documentation
