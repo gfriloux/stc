@@ -7,13 +7,22 @@
 #
 # The multi-version approach is intentional: real-world environments often run
 # mixed ansible versions. Test against all of them without leaving the shell.
+#
+# The two pinned versions are legacy debt, kept on purpose. ansible-core 2.16 is
+# the last release that manages Python 2.7/3.6 targets (CentOS 7), 2.17 the last
+# for Python 3.7 (Amazon Linux 2). Both are end-of-life upstream and no longer
+# in any maintained nixpkgs branch, so they come from the frozen nixos-25.11
+# input, which receives no security fixes. Rebuilding them on unstable was
+# tried and rejected: building ansible-core 2.16 against unstable's Python 3.12
+# ran for over eleven minutes without finishing, for versions that would be
+# just as unmaintained. Drop them when the last such host is gone.
 {
   pkgs,
-  pkgs-stable,
+  pkgs-ansible-legacy,
   preCommitConfig,
 }: let
   wrapAnsible = name: pkg:
-    pkgs-stable.runCommand name
+    pkgs.runCommand name
     {
       buildInputs = [
         pkg
@@ -34,8 +43,8 @@ in
     name = "stc-ansible";
 
     packages = [
-      (wrapAnsible "ansible_2_16" pkgs-stable.ansible_2_16)
-      (wrapAnsible "ansible_2_17" pkgs-stable.ansible_2_17)
+      (wrapAnsible "ansible_2_16" pkgs-ansible-legacy.ansible_2_16)
+      (wrapAnsible "ansible_2_17" pkgs-ansible-legacy.ansible_2_17)
       pkgs.ansible
       pkgs.ansible-lint
       pkgs.fzf-make

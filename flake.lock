@@ -343,7 +343,7 @@
         "type": "github"
       }
     },
-    "nixpkgs-stable": {
+    "nixpkgs-ansible-legacy": {
       "locked": {
         "lastModified": 1782847189,
         "narHash": "sha256-twXPFqFsrrY5r28Zh7Homgcp2gUMBgQ6WDS98Q/3xFI=",
@@ -393,7 +393,7 @@
         "home-manager": "home-manager",
         "impermanence": "impermanence",
         "nixpkgs": "nixpkgs",
-        "nixpkgs-stable": "nixpkgs-stable",
+        "nixpkgs-ansible-legacy": "nixpkgs-ansible-legacy",
         "plasma-manager": "plasma-manager",
         "television-ssh": "television-ssh",
         "zen-browser": "zen-browser"
