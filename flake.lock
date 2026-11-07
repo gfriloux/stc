@@ -7,16 +7,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1794043054,
+        "lastModified": 1794044510,
         "narHash": "sha256-i3XefwKbQAg8xtrUvf82cySmgnWutgL6ukWh2JjHMtA=",
         "owner": "gfriloux",
         "repo": "ansible-recap",
-        "rev": "905f4f2475dd3f1f144a42eacd76f85a57cfa0ee",
+        "rev": "8b37f5e490bfd5027e4a1fd53a56022b5f9f2fae",
         "type": "github"
       },
       "original": {
         "owner": "gfriloux",
-        "ref": "refactor/drop-snowfall-lib",
         "repo": "ansible-recap",
         "type": "github"
       }
@@ -125,16 +124,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1794043061,
+        "lastModified": 1794044527,
         "narHash": "sha256-WiAnXWw8Iklwyu72AWr3vowauw5NJDSVrB+eBgK0Isk=",
         "owner": "gfriloux",
         "repo": "gitflow-toolkit-flake",
-        "rev": "0b9bc5508e52564e5c9eb236dd08557bce4c4715",
+        "rev": "4c403526df9a5959b7075442177d12c0fc013dc2",
         "type": "github"
       },
       "original": {
         "owner": "gfriloux",
-        "ref": "refactor/drop-snowfall-lib",
         "repo": "gitflow-toolkit-flake",
         "type": "github"
       }
@@ -258,16 +256,15 @@
     },
     "television-ssh": {
       "locked": {
-        "lastModified": 1794043063,
+        "lastModified": 1794044550,
         "narHash": "sha256-lWgyZGdAQTn1jgYj9w51WaiGBYgNkdBrhVM/q/kt0F4=",
         "owner": "gfriloux",
         "repo": "television-ssh-flake",
-        "rev": "7d33663b0dc885e48bd92864832714a907ec1290",
+        "rev": "46e9f80b55616d313250a0df231435b169a1073b",
         "type": "github"
       },
       "original": {
         "owner": "gfriloux",
-        "ref": "refactor/drop-snowfall-lib",
         "repo": "television-ssh-flake",
         "type": "github"
       }

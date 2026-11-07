@@ -27,12 +27,12 @@
     };
 
     gitflow-toolkit = {
-      url = "github:gfriloux/gitflow-toolkit-flake?ref=refactor/drop-snowfall-lib";
+      url = "github:gfriloux/gitflow-toolkit-flake";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     # Module-only flake, no inputs of its own.
-    television-ssh.url = "github:gfriloux/television-ssh-flake?ref=refactor/drop-snowfall-lib";
+    television-ssh.url = "github:gfriloux/television-ssh-flake";
 
     zen-browser = {
       url = "github:0xc000022070/zen-browser-flake";
@@ -71,7 +71,7 @@
     };
 
     ansible-recap = {
-      url = "github:gfriloux/ansible-recap?ref=refactor/drop-snowfall-lib";
+      url = "github:gfriloux/ansible-recap";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
