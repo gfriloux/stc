@@ -551,7 +551,7 @@ reports `AppArmorProfile: docker-default`, yet the container runs
 
 <NixosHardeningApparmorOptions />
 
-Three things are missing on NixOS, and the relic adds them when
+Four things are missing on NixOS, and the relic adds them when
 `virtualisation.docker.enable` is on:
 
 - `/sbin/apparmor_parser`. containerd only believes the host supports AppArmor
@@ -561,6 +561,16 @@ Three things are missing on NixOS, and the relic adds them when
 - `apparmor_parser` in dockerd's `PATH`, to load the profile.
 - `tunables/global` in `/etc/apparmor.d`. The profile Docker generates needs
   it; without it, every `docker run` fails.
+- A `docker-default` name in `/etc/apparmor.d`. A `nixos-rebuild switch` that
+  changes AppArmor's files reloads `apparmor.service`, whose
+  `aa-remove-unknown` unloads every profile not named there — and dockerd
+  loads `docker-default` at runtime, so every running container would turn
+  `unconfined` until restarted. The file only carries the name; NixOS never
+  loads it.
+
+A `systemctl restart apparmor` (or a stop) still unloads every profile: a
+container started or restarted afterwards is confined again. Rootless Docker
+and Podman are not covered.
 
 Check it on a running host:
 
@@ -570,7 +580,8 @@ docker exec <container> cat /proc/1/attr/current      # docker-default (enforce)
 ```
 
 `docker-default` is Docker's own profile, always in enforce mode — the profile
-Debian and Ubuntu apply to every container. It denies writes under most of
+Debian and Ubuntu apply to every container. Per Docker's template, it denies
+writes under most of
 `/proc` and `/sys`, `mount`, and reading `/proc/kcore` and
 `/proc/sysrq-trigger`. A container that really needs more opts out on its own:
 
@@ -602,7 +613,8 @@ available, and leaves it off.
 
 `provings/apparmor.nix` runs the same container with and without the relic:
 with it, `docker-default` refuses a `mount` the container's capabilities
-allow; with `security.apparmor.enable` alone, the container is `unconfined`.
+allow, still after a reload of `apparmor.service`; with
+`security.apparmor.enable` alone, the container is `unconfined`.
 
 ## Not a relic: sudo
 

@@ -68,7 +68,6 @@ in {
         status = confined.succeed("aa-status")
         print(status)
         assert "docker-default" in status, status
-        assert "1 processes are in enforce mode." in status, status
 
     with subtest("the relic: docker-default denies what the capability allows"):
         out = confined.fail(f"docker exec dflt {mount} 2>&1")
@@ -76,6 +75,17 @@ in {
         # Same capability, profile off: the mount goes through.
         assert attr(confined, "unc") == "unconfined", attr(confined, "unc")
         confined.succeed(f"docker exec unc {mount}")
+
+    with subtest("the relic: a reload of AppArmor leaves running containers confined"):
+        # What a switch that changes /etc/apparmor.d runs. Without the relic's
+        # docker-default name there, aa-remove-unknown unloads the profile and
+        # the running container turns unconfined.
+        confined.succeed("systemctl reload apparmor.service")
+        assert attr(confined, "dflt") == "docker-default (enforce)", attr(confined, "dflt")
+        # Docker's profile, not the never-loaded stub: an empty profile would
+        # deny the exec itself.
+        out = confined.fail(f"docker exec dflt {mount} 2>&1")
+        assert "Permission denied" in out, out
 
     with subtest("upstream alone: Docker names the profile, the kernel never loads it"):
         run(upstream)

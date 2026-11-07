@@ -26,3 +26,26 @@ rows live in their own `relics.hardening.apparmor` section (between audit and
 firewall), like every other relic on the page.
 Step 3: complete (docs build 104 pages, parity OK, #apparmor anchor present on
 both language pages).
+Gate: schematic drvPaths unchanged vs main (local-vm 6w83sj19…, aws-ami
+6cfzl6gi…), measured before and after the review fixes.
+Review (fresh context, branch close): MEDIUM — apparmor.service's ExecReload
+runs aa-remove-unknown, which unloads docker-default (loaded at runtime by
+dockerd, never under /etc/apparmor.d): running containers turned unconfined.
+Measured on a spike: old container `unconfined` after `systemctl reload
+apparmor`, new ones confined, `docker restart` re-confines.
+Ruling (user): stub `profile docker-default {}` in /etc/apparmor.d via
+security.apparmor.includes — names it for aa-remove-unknown, never loaded by
+NixOS (only security.apparmor.policies are). Measured: after reload the running
+container stays `docker-default (enforce)` and the mount is still denied (so
+Docker's profile, not the empty stub). A restart of apparmor.service still
+tears everything down (aa-teardown, source-read): documented, not fixed.
+Review LOW, fixed: security.apparmor.packages = [apparmor-profiles] was
+redundant (nixpkgs profiles.nix:6) — removed, parser.conf no longer has the
+duplicate Include; brittle "1 processes are in enforce mode." assert dropped;
+"per Docker's template" for the deny list; rootless Docker/Podman named as
+not covered.
+Review note, ruled: the FR R37/R45/R46 wording is in the "Sujet" column, a
+paraphrase like every other row; the guide's exact FR text could not be
+fetched, so no exact-title claim is made.
+Review fixes: complete (proving 4 subtests pass, 37 s; fmt-check + lint 0;
+flake check 0; docs 104 pages, parity OK; drvPaths unchanged).

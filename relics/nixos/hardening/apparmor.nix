@@ -14,6 +14,12 @@
 #     and which uses @{HOMEDIRS}; that variable comes from <tunables/global>,
 #     included only if /etc/apparmor.d/tunables/global exists. NixOS does not
 #     ship it, and with the first two fixed alone every `docker run` fails.
+# And one more once it works: apparmor.service's reload unloads
+# docker-default under the running containers (see the stub below). A
+# restart of apparmor.service tears every profile down and still does; a
+# container started or restarted afterwards is confined again.
+#
+# Docker only: rootless Docker and Podman are not covered.
 # provings/apparmor.nix keeps a node with AppArmor and Docker but without this
 # relic: the day its container is confined, upstream fixed it and the Docker
 # half of this file can go.
@@ -53,11 +59,21 @@ in {
       ];
       virtualisation.docker.extraPackages = [pkgs.apparmor-parser];
 
-      # The include path for what tunables/global includes in turn
-      # (<tunables/home>, <tunables/proc>, …).
-      security.apparmor.packages = [pkgs.apparmor-profiles];
+      # What it includes in turn (<tunables/home>, …) resolves through
+      # apparmor-profiles, which nixpkgs already puts on the include path.
       security.apparmor.includes."tunables/global" = ''
         include "${pkgs.apparmor-profiles}/etc/apparmor.d/tunables/global"
+      '';
+
+      # A name for aa-remove-unknown, never loaded. apparmor.service's reload
+      # (a switch that changes /etc/apparmor.d) runs aa-remove-unknown, which
+      # unloads every kernel profile not named under /etc/apparmor.d — and the
+      # kernel then moves the processes it confined to unconfined, for good.
+      # dockerd loads docker-default at runtime, so every running container
+      # lost it. NixOS only loads security.apparmor.policies, never this file;
+      # were it loaded, an empty profile denies everything rather than nothing.
+      security.apparmor.includes."docker-default" = ''
+        profile docker-default {}
       '';
     })
   ]);

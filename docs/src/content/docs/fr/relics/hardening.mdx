@@ -573,7 +573,7 @@ annonce `AppArmorProfile: docker-default`, mais le conteneur tourne
 
 <NixosHardeningApparmorOptions />
 
-Il manque trois choses sur NixOS, et la relique les ajoute quand
+Il manque quatre choses sur NixOS, et la relique les ajoute quand
 `virtualisation.docker.enable` est actif :
 
 - `/sbin/apparmor_parser`. containerd ne croit l'hôte compatible AppArmor que
@@ -583,6 +583,16 @@ Il manque trois choses sur NixOS, et la relique les ajoute quand
 - `apparmor_parser` dans le `PATH` de dockerd, pour charger le profil.
 - `tunables/global` dans `/etc/apparmor.d`. Le profil que génère Docker en a
   besoin ; sans lui, chaque `docker run` échoue.
+- Un nom `docker-default` dans `/etc/apparmor.d`. Un `nixos-rebuild switch`
+  qui change les fichiers d'AppArmor recharge `apparmor.service`, dont
+  `aa-remove-unknown` décharge tout profil qui n'y est pas nommé — or dockerd
+  charge `docker-default` à chaud, donc chaque conteneur en marche passerait
+  `unconfined` jusqu'à son redémarrage. Le fichier ne porte que le nom ; NixOS
+  ne le charge jamais.
+
+Un `systemctl restart apparmor` (ou un arrêt) décharge toujours tous les
+profils : un conteneur lancé ou relancé ensuite est de nouveau confiné. Docker
+rootless et Podman ne sont pas couverts.
 
 Pour le vérifier sur un hôte en marche :
 
@@ -592,8 +602,8 @@ docker exec <conteneur> cat /proc/1/attr/current      # docker-default (enforce)
 ```
 
 `docker-default` est le profil de Docker lui-même, toujours en mode enforce —
-celui que Debian et Ubuntu appliquent à chaque conteneur. Il interdit l'écriture
-dans la plus grande partie de `/proc` et `/sys`, `mount`, et la lecture de
+celui que Debian et Ubuntu appliquent à chaque conteneur. D'après le modèle de
+Docker, il interdit l'écriture dans la plus grande partie de `/proc` et `/sys`, `mount`, et la lecture de
 `/proc/kcore` et `/proc/sysrq-trigger`. Un conteneur qui a vraiment besoin de
 plus s'en exclut lui-même :
 
@@ -626,7 +636,8 @@ est disponible, et la laisse désactivée.
 
 `provings/apparmor.nix` lance le même conteneur avec et sans la relique :
 avec, `docker-default` refuse un `mount` que les capacités du conteneur
-autorisent ; avec `security.apparmor.enable` seul, le conteneur est `unconfined`.
+autorisent, encore après un rechargement d'`apparmor.service` ; avec
+`security.apparmor.enable` seul, le conteneur est `unconfined`.
 
 ## Pas une relique : sudo
 
