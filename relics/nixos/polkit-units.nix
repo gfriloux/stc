@@ -104,7 +104,7 @@
       group = lib.mkOption {
         type = lib.types.str;
         example = "wheel";
-        description = "Members of this group receive the delegation.";
+        description = "Members of this group receive the delegation. Must exist in `users.groups`: the build fails otherwise.";
       };
 
       units = lib.mkOption {
@@ -144,7 +144,7 @@
   };
 in {
   options.stc.relics.polkitUnits = {
-    enable = lib.mkEnableOption "polkit delegation of named systemd units to groups";
+    enable = lib.mkEnableOption "polkit delegation of named systemd units to groups (enables polkit itself)";
 
     delegations = lib.mkOption {
       type = lib.types.listOf delegationType;

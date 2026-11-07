@@ -278,20 +278,23 @@ nix flake check --no-write-lock-file
 **Step 3: Create bilingual documentation**
 
 Create two files:
-- `docs/src/content/docs/en/relics/<name>.md`
-- `docs/src/content/docs/fr/relics/<name>.md`
+- `docs/src/content/docs/en/relics/<name>.mdx`
+- `docs/src/content/docs/fr/relics/<name>.mdx`
 
 Each page must document:
 - What the relic does (1-2 paragraphs)
-- All available options with examples
+- All available options, imported from the generated reference (never a
+  hand-written table: `just options-doc` renders them from the module)
 - Common use cases
 - Any prerequisites or dependencies
 
-```markdown
+```mdx
 ---
 title: Relic Name
 description: Brief description of what this relic does
 ---
+
+import Options from '../../../../options/en/relics-nixos-<name>.md';
 
 ## Overview
 
@@ -299,19 +302,7 @@ Detailed explanation...
 
 ## Options
 
-### `stc.relics.<group>.<name>.enable`
-
-Type: `bool`
-Default: `false`
-
-Enable this relic.
-
-### `stc.relics.<group>.<name>.option1`
-
-Type: `string`
-Default: `"value"`
-
-Description of the option.
+<Options />
 
 ## Example
 
@@ -1227,6 +1218,14 @@ grep -rn "stc\." docs/src/content/docs --include="*.md" --include="*.mdx" \
 ```
 
 Should return **zero matches** for unqualified or deprecated namespaces.
+
+```bash
+nix build .#checks.x86_64-linux.options-doc --no-write-lock-file
+```
+
+The option reference is generated from the modules (`docs/options.nix`) and
+committed under `docs/src/options/`. The check fails when a fragment is out of
+date (run `just options-doc`) or when no page renders it in one language.
 
 ### Gate 5: Behaviour (cogitators only)
 

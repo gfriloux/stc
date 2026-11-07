@@ -91,6 +91,7 @@
         ./forge
         ./rites
         ./provings
+        ./docs/options.nix
       ];
 
       perSystem = {

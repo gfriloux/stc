@@ -38,7 +38,9 @@ in {
         the right host. This container holds the Docker socket, so pin it (tag and
         optionally digest):
 
-          stc.relics.docker.socketProxy.image = "tecnativa/docker-socket-proxy:0.3.0"; # renovate
+        ```nix
+        stc.relics.docker.socketProxy.image = "tecnativa/docker-socket-proxy:0.3.0"; # renovate
+        ```
       '';
     };
 

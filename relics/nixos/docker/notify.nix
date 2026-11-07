@@ -126,6 +126,7 @@ in {
     hostname = lib.mkOption {
       type = lib.types.str;
       default = config.networking.hostName;
+      defaultText = lib.literalExpression "config.networking.hostName";
       description = "Hostname exposed to notifyCommand as STC_NOTIFY_HOSTNAME.";
     };
 
@@ -135,7 +136,7 @@ in {
       description = ''
         Docker label used to mark containers for health monitoring.
         Set this on each container you want watched:
-          labels."stc.docker/health-watch" = "true";
+        `labels."stc.docker/health-watch" = "true";`
       '';
     };
 
@@ -153,8 +154,9 @@ in {
       description = ''
         Shell snippet run when a watched service fails. Receives the failed
         service and the host through the environment:
-          STC_NOTIFY_SERVICE   — the systemd service that entered failed state
-          STC_NOTIFY_HOSTNAME  — value of the `hostname` option
+
+        - `STC_NOTIFY_SERVICE`: the systemd service that entered failed state
+        - `STC_NOTIFY_HOSTNAME`: value of the `hostname` option
 
         STC is agnostic to the notification backend: put your ntfy curl, webhook
         POST, e-mail, etc. here, and read any secret it needs from its own file

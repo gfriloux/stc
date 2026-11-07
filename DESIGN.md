@@ -246,6 +246,12 @@ le **même changement**. Documentation fractionnée = documentation fausse.
 > Vérification : `grep -rn "stc\." docs/src/content/docs` filtré sur les namespaces
 > attendus doit ne renvoyer aucune référence obsolète.
 
+La référence des options n'est pas écrite à la main : `docs/options.nix` la
+génère depuis les modules (type, défaut, description), une page l'importe, et
+`checks.options-doc` mesure deux choses dans `nix flake check` — un fragment
+périmé, et une option qu'aucune page n'affiche dans l'une des deux langues.
+La page garde le *pourquoi* ; le module garde le *quoi*.
+
 ---
 
 ## La porte CI
