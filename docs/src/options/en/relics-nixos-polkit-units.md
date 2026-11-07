@@ -28,9 +28,10 @@ cannot be scoped to a unit, so it is never delegated.
 
 #### `stc.relics.polkitUnits.delegations.*.group`
 
-Members of this group receive the delegation.
+Members of this group receive the delegation. Must exist in `users.groups`: the build fails otherwise.
 
 - **Type:** string
+- **Default:** *none, must be set*
 - **Example:** `"wheel"`
 - **Declared in:** [`relics/nixos/polkit-units.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/polkit-units.nix)
 
@@ -74,7 +75,7 @@ fails: a name with no unit file could be claimed by systemd-run.
 
 #### `stc.relics.polkitUnits.enable`
 
-Whether to enable polkit delegation of named systemd units to groups.
+Whether to enable polkit delegation of named systemd units to groups (enables polkit itself).
 
 - **Type:** boolean
 - **Default:** `false`

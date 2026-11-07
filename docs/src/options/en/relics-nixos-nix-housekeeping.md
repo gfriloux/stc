@@ -91,7 +91,8 @@ Nix collects garbage until `maxFreeGiB` is free (`nix.settings.min-free`).
 #### `stc.relics.nixHousekeeping.optimise`
 
 Deduplicate the store on a timer (`nix.optimise.automatic`). Upstream
-already runs it at idle CPU and IO priority.
+already runs it at idle CPU and IO priority. Skipped in a container,
+whose store is the host's.
 
 - **Type:** boolean
 - **Default:** `true`

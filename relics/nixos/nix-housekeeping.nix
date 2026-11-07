@@ -95,7 +95,8 @@ in {
       default = true;
       description = ''
         Deduplicate the store on a timer (`nix.optimise.automatic`). Upstream
-        already runs it at idle CPU and IO priority.
+        already runs it at idle CPU and IO priority. Skipped in a container,
+        whose store is the host's.
       '';
     };
 

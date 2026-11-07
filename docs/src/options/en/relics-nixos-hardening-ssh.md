@@ -13,7 +13,7 @@ Turn it on to hop through a bastion with your own agent.
 
 #### `stc.relics.hardening.ssh.allowedTCPForwarding`
 
-Allow TCP forwarding. Disabled by default on server VMs.
+Allow TCP forwarding. Disabled by default on server VMs. Also drives `StreamLocalBindUnlink`, which only has an object when forwarding is allowed.
 
 - **Type:** boolean
 - **Default:** `false`

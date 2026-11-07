@@ -37,7 +37,7 @@ in {
     allowedTCPForwarding = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = "Allow TCP forwarding. Disabled by default on server VMs.";
+      description = "Allow TCP forwarding. Disabled by default on server VMs. Also drives `StreamLocalBindUnlink`, which only has an object when forwarding is allowed.";
     };
 
     # The three below exist for the same reason as the one above, and are

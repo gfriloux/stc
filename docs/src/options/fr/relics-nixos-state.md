@@ -14,6 +14,7 @@ nothing reads it, and it guarantees no backup by itself.
 What the path holds, and what breaks without it.
 
 - **Type:** string
+- **Valeur par défaut:** *aucune, à définir*
 - **Déclarée dans:** [`relics/nixos/state.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/state.nix)
 
 #### `stc.relics.state.paths.*.kind`
@@ -27,6 +28,7 @@ The nature of the data, which is what a backup decision needs:
 - `log`: history, not state; keep it for as long as you need it.
 
 - **Type:** one of "data", "credentials", "cache", "log"
+- **Valeur par défaut:** *aucune, à définir*
 - **Déclarée dans:** [`relics/nixos/state.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/state.nix)
 
 #### `stc.relics.state.paths.*.path`
@@ -34,6 +36,7 @@ The nature of the data, which is what a backup decision needs:
 Absolute path of the file or directory.
 
 - **Type:** string matching the pattern /.*
+- **Valeur par défaut:** *aucune, à définir*
 - **Déclarée dans:** [`relics/nixos/state.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/state.nix)
 
 #### `stc.relics.state.paths.*.type`
@@ -43,4 +46,5 @@ to in stc.relics.impermanence (extraFiles or extraDirectories), or
 how a backup tool should take it.
 
 - **Type:** one of "file", "directory"
+- **Valeur par défaut:** *aucune, à définir*
 - **Déclarée dans:** [`relics/nixos/state.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/state.nix)

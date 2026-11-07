@@ -84,12 +84,14 @@
       en = {
         type = "Type";
         default = "Default";
+        required = "none, must be set";
         example = "Example";
         declared = "Declared in";
       };
       fr = {
         type = "Type";
         default = "Valeur par défaut";
+        required = "aucune, à définir";
         example = "Exemple";
         declared = "Déclarée dans";
       };
@@ -117,7 +119,14 @@
           ""
           "- **${l.type}:** ${o.type}"
         ]
-        ++ lib.optional (o ? default) (value l.default o.default)
+        # Every option without a default is one the consumer must set.
+        ++ [
+          (
+            if o ? default
+            then value l.default o.default
+            else "- **${l.default}:** *${l.required}*"
+          )
+        ]
         ++ lib.optional (o ? example) (value l.example o.example)
         ++ ["- **${l.declared}:** [`${o.file}`](https://github.com/gfriloux/stc/blob/main/${o.file})"]
       );

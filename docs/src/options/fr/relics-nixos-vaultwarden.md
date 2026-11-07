@@ -22,6 +22,7 @@ Whether to enable Vaultwarden — unofficial Bitwarden-compatible server.
 Public domain name for Vaultwarden (used for the Traefik route).
 
 - **Type:** string
+- **Valeur par défaut:** *aucune, à définir*
 - **Déclarée dans:** [`relics/nixos/vaultwarden.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/vaultwarden.nix)
 
 #### `stc.relics.vaultwarden.invitationsAllowed`

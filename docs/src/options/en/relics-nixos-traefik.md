@@ -5,6 +5,7 @@
 Email address used for Let's Encrypt ACME registration.
 
 - **Type:** string
+- **Default:** *none, must be set*
 - **Declared in:** [`relics/nixos/traefik.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/traefik.nix)
 
 #### `stc.relics.traefik.enable`

@@ -57,5 +57,6 @@ File holding the URL to ping on each success, read at runtime.
 The URL is a secret: whoever knows it can silence the alert.
 
 - **Type:** string matching the pattern /.*
+- **Valeur par défaut:** *aucune, à définir*
 - **Exemple:** `"/run/secrets/kuma/push-borg"`
 - **Déclarée dans:** [`relics/nixos/heartbeat.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/heartbeat.nix)

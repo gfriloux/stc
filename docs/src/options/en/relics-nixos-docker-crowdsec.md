@@ -5,6 +5,7 @@
 Base directory for CrowdSec data and config volumes.
 
 - **Type:** string
+- **Default:** *none, must be set*
 - **Declared in:** [`relics/nixos/docker/crowdsec.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/crowdsec.nix)
 
 #### `stc.relics.docker.crowdsec.enable`

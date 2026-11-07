@@ -30,4 +30,5 @@ Whether to enable AWS EC2 platform configuration (drivers, NTP, serial console, 
 ZFS pool name to expand when the EBS volume is larger than the built image.
 
 - **Type:** string
+- **Valeur par défaut:** *aucune, à définir*
 - **Déclarée dans:** [`relics/nixos/aws.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/aws.nix)

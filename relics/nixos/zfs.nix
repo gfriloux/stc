@@ -93,7 +93,7 @@ in {
 
       poolName = lib.mkOption {
         type = lib.types.str;
-        description = "ZFS pool name. Snapshots are enabled on <poolName>/persist and disabled on the root pool to avoid snapshotting ephemeral datasets.";
+        description = "ZFS pool name. Snapshots are enabled on `<poolName>/persist` and disabled on the root pool to avoid snapshotting ephemeral datasets.";
       };
     };
   };

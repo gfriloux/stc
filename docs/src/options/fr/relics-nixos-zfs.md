@@ -19,9 +19,10 @@ Whether to enable periodic ZFS snapshots on the persist dataset.
 
 #### `stc.relics.zfs.autoSnapshot.poolName`
 
-ZFS pool name. Snapshots are enabled on <poolName>/persist and disabled on the root pool to avoid snapshotting ephemeral datasets.
+ZFS pool name. Snapshots are enabled on `<poolName>/persist` and disabled on the root pool to avoid snapshotting ephemeral datasets.
 
 - **Type:** string
+- **Valeur par défaut:** *aucune, à définir*
 - **Déclarée dans:** [`relics/nixos/zfs.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/zfs.nix)
 
 #### `stc.relics.zfs.enable`

@@ -30,3 +30,27 @@ none, a missing file makes grep fail loudly.
 Step 2: no description moved — the module already carried the `<name>` and
 `packageUnit` notes the table held.
 Step 2: complete (docs build OK, 104 pages; `retries` in EN and FR pages; `unsigned integer` shown; parity OK; checks.options-doc → OK).
+Step 3: Ruling: an option with no default renders "Default: *none, must be set*"
+(FR "*aucune, à définir*") — the tables' **Required** marks had no counterpart;
+all 12 such options are ones the consumer must set (aws.poolName, traefik.email,
+the docker image/dataDir/email options, heartbeat urlFile, polkit group, state
+paths fields, vaultwarden.hostname, zfs autoSnapshot.poolName) — cost if wrong:
+a future option without default that is not required would be mislabelled;
+the label is one line of the generator.
+Step 3: Ruling: `hardening` and `home-apps` do have tables (the plan said not):
+they go like any other; only the kernel section has none and gets the
+`**Options:**` label + component the other hardening sections use. Yubikey:
+`### Options` at the end of each `##` relic section. State manifest: a
+`## Options` section before `## Proving` (the map named no section).
+Step 3: Ruling: multi-fragment pages name each component after its slug
+without `relics-` (`NixosDockerTraefikOptions`); single-fragment pages keep
+`Options` — cost if wrong: none, names are page-local.
+Step 3: moved from tables — polkit-units: "(also enables polkit)" → enable
+option text; group "must exist in users.groups" → its description.
+nix-housekeeping: optimise "skipped in a container" → description.
+hardening-ssh: allowedTCPForwarding "also drives StreamLocalBindUnlink" →
+description. docker guards: "true in cogitator-docker-server" → page prose
+(EN/FR), it is the cogitator's mkDefault, not the relic's. zfs: `<poolName>`
+put in backticks (rendered as an HTML tag otherwise). Every other row was
+covered by the module description (compared row by row).
+Step 3: complete (docs build OK, 104 pages; per page rendered h4 count = fragment option count; parity OK; no `| \`stc.relics.` table left outside cogitator/docker-server (step 4); fmt-check + lint OK; nix flake check → exit 0 incl. options-doc).
