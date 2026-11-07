@@ -3,6 +3,30 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.25.0] — 2026-11-07
+
+### Bug Fixes
+
+- **docs**: review fixes for the generated option reference ([`6181ac0`](https://github.com/gfriloux/stc/commit/6181ac055d128d7ad892453ebf2487553949da47))
+- **docs**: evaluate the option reference once per class ([`7e7b5e4`](https://github.com/gfriloux/stc/commit/7e7b5e444d8371babe01c7992c8733b14eabd7db))
+- **relics**: keep docker-default loaded across an AppArmor reload ([`1ae9efa`](https://github.com/gfriloux/stc/commit/1ae9efa9400af1f8d3e19cfca3b4041d605c9c89))
+
+### Documentation
+
+- **relics**: heartbeat options from the generated reference ([`516776d`](https://github.com/gfriloux/stc/commit/516776da00074d665d00775ea0b1a732e7b88604))
+- **relics**: option tables from the generated reference ([`d5b5bc5`](https://github.com/gfriloux/stc/commit/d5b5bc5aea311f29a592c1d965409d52efab0d21))
+- **cogitator**: option tables from the generated reference ([`0922949`](https://github.com/gfriloux/stc/commit/092294950e7571b163e33572344c73e9b3910fc1))
+- **reference**: AppArmor in the ANSSI-BP-028 fidelity map ([`8b56cd4`](https://github.com/gfriloux/stc/commit/8b56cd45c61d90bd84fb207b547a6c281c97c3ce))
+
+### Features
+
+- **docs**: generate the option reference from the modules ([`a06440d`](https://github.com/gfriloux/stc/commit/a06440dc79ab9bd3fa190fe70c65056d10d8f2ca))
+- **docs**: fail when an option has no page ([`e3efe4d`](https://github.com/gfriloux/stc/commit/e3efe4d47f30458e6cee6b0ec9808500c623e3bb))
+- **relics**: add hardening.apparmor, confining docker containers ([`ec8b7c6`](https://github.com/gfriloux/stc/commit/ec8b7c682afcb7b90c26cfac75a6edd53b4f1855))
+
+### Testing
+
+- **provings**: apparmor confines docker containers ([`f6eb003`](https://github.com/gfriloux/stc/commit/f6eb003dead022f09c2b8ec3a445e7cf7e03afdb))
 ## [0.24.0] — 2026-11-07
 
 ### Bug Fixes
