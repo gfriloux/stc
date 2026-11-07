@@ -21,3 +21,8 @@ proving, not the relic.
 Step 2: complete (proving passes, script 36 s; fmt-check + lint OK; nix flake
 check "all checks passed!" with eval-apparmor-confined/-upstream; docs build
 104 pages, parity OK).
+Step 3: Ruling: R37/R45/R46 also added to the "Relevant rules" table, and the
+rows live in their own `relics.hardening.apparmor` section (between audit and
+firewall), like every other relic on the page.
+Step 3: complete (docs build 104 pages, parity OK, #apparmor anchor present on
+both language pages).

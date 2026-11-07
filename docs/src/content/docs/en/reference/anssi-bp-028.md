@@ -53,6 +53,9 @@ under *Threat model and non-goals*.
 | R14 | Filesystem sysctl configuration |
 | R28 | Typical partitioning and mount options |
 | R33 | Accountability of administration actions |
+| R37 | Using access control features (MAC) |
+| R45 | Enable AppArmor security profiles |
+| R46 | Enable SELinux with the targeted policy |
 | R73 | Log system activity with auditd |
 
 ## `relics.hardening.kernel`
@@ -206,6 +209,22 @@ Login and logout records need no rule: libpam emits `USER_START` and
 `USER_END` itself. And no watch sits under `/var`: rules load before `/var/log`
 exists, and one rule that fails disables all auditing — see the
 [relic page](/stc/en/relics/hardening/#audit).
+
+## `relics.hardening.apparmor`
+
+R37 and R45 are **enhanced-level** rules: a mandatory access control system,
+and, with AppArmor, every profile enabled in enforce mode. The relic is opt-in;
+nothing in STC turns it on. Issue [#32](https://github.com/gfriloux/stc/issues/32)
+came from CIS 1.6.x; ANSSI covers the same ground, so the rows below cite it.
+
+| STC setting | Rule | Status | Note |
+|-------------|------|--------|------|
+| `security.apparmor.enable`, Docker containers confined by `docker-default` | R37 | 🟡 | AppArmor is the MAC. What it confines is the container boundary; host services run unconfined. Without the relic, NixOS loads no profile for Docker even with AppArmor on — the proving keeps that node as a witness |
+| Loaded profiles in enforce mode | R45 | 🟡 | `docker-default` is always enforced, as are the profiles nixpkgs modules ship. STC writes no host profile: distribution profiles name FHS paths, binaries here live in `/nix/store` |
+| SELinux | R46 | ⚪ | No labelling of the Nix store on NixOS. R45 and R46 are alternatives; STC takes AppArmor |
+
+Enabling it changes the kernel command line, so it takes effect at the next
+boot — see the [relic page](/stc/en/relics/hardening/#apparmor).
 
 ## `relics.hardening.firewall`
 
