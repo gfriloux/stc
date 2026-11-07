@@ -33,6 +33,9 @@ stc.relics.hardening.firewall.enable = true;
 The individual relic options — `filesystem.tmpSize`, `ssh.allowedTCPForwarding`, `firewall.logRefusedConnections` — remain
 fully configurable. The profile only sets the `enable` flags.
 
+The ninth hardening relic, [AppArmor](/stc/en/relics/hardening/#apparmor), is imported
+but not enabled: set `stc.relics.hardening.apparmor.enable = true;` to add it.
+
 ## Usage Example
 
 ```nix

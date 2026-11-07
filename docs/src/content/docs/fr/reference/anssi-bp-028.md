@@ -54,6 +54,9 @@ section *Threat model and non-goals*.
 | R14 | Configuration sysctl système de fichiers |
 | R28 | Partitionnement type et options de montage |
 | R33 | Imputabilité des actions d'administration |
+| R37 | Utiliser des fonctionnalités de contrôle d'accès obligatoire (MAC) |
+| R45 | Activer les profils de sécurité AppArmor |
+| R46 | Activer SELinux avec la politique targeted |
 | R73 | Journalisation de l'activité système avec auditd |
 
 ## `relics.hardening.kernel`
@@ -216,6 +219,23 @@ lui-même `USER_START` et `USER_END`. Et aucune surveillance
 n'est posée sous `/var` : les règles se chargent avant que `/var/log` existe,
 et une seule règle en échec désactive tout l'audit — voir la
 [page de la relique](/stc/fr/relics/hardening/#audit).
+
+## `relics.hardening.apparmor`
+
+R37 et R45 sont des règles de **niveau renforcé** : un contrôle d'accès
+obligatoire et, avec AppArmor, tous les profils activés en mode enforce. La
+relique est à activer explicitement ; rien dans STC ne l'active. L'issue
+[#32](https://github.com/gfriloux/stc/issues/32) venait de CIS 1.6.x ; l'ANSSI
+couvre le même terrain, donc les lignes ci-dessous la citent.
+
+| Réglage STC | Règle | Statut | Note |
+|-------------|-------|--------|------|
+| `security.apparmor.enable`, conteneurs Docker confinés par `docker-default` | R37 | 🟡 | AppArmor est le MAC. Ce qu'il confine, c'est la frontière des conteneurs ; les services de l'hôte tournent non confinés. Sans la relique, NixOS ne charge aucun profil pour Docker même avec AppArmor activé — l'épreuve garde ce nœud comme témoin |
+| Profils chargés en mode enforce | R45 | 🟡 | `docker-default` est toujours en enforce, comme les profils que fournissent les modules nixpkgs. STC n'écrit aucun profil hôte : les profils des distributions nomment des chemins FHS, ici les binaires vivent dans `/nix/store` |
+| SELinux | R46 | ⚪ | Pas d'étiquetage du store Nix sur NixOS. R45 et R46 sont des alternatives ; STC retient AppArmor |
+
+L'activer modifie la ligne de commande du noyau : l'effet arrive au prochain
+démarrage — voir la [page de la relique](/stc/fr/relics/hardening/#apparmor).
 
 ## `relics.hardening.firewall`
 

@@ -88,6 +88,7 @@ nix build .#legacyPackages.x86_64-linux.provings.hardening -L --no-write-lock-fi
 | `smart` | `relics-smart` (no cogitator enables it) | On an emulated SATA disk that answers SMART, smartd's own `EmailTest` and `Temperature` alerts reach `notifyCommand` with the documented environment, and its output reaches the journal; smartd.conf carries one alert path; the state file exists. A second node with only a virtio disk shows `smartd.service` failed with smartd's "no device" exit, and no alert |
 | `polkit-units` | `relics-polkit-units` (no cogitator enables it) | Unprivileged users run `systemctl`: a group member restarts, stops and starts the named unit and restarts one covered only by the prefix, and drives a listed template instance; another instance, another unit, another verb, freeze/thaw, `enable`, a non-member, a manager-level call with no unit and `systemd-run --unit=` under a prefixed or delegated name are all refused, with no rule error in polkit's log. Run twice, the second time with `/proc` remounted `hidepid=2` as the hardening relic sets it |
 | `heartbeat` | `relics-heartbeat` (no cogitator enables it) | Against a local HTTP stub: a successful job pings, and so does one ending with a status it declares in `SuccessExitStatus=`; a manual start of the heartbeat does not; a failed job, a oneshot stopped midway and a long-running service stopped midway (which systemd records as `Result=success`) do not; an unreachable receiver fails only the heartbeat unit; the URL appears in no unit file or script |
+| `apparmor` | `relics-hardening-apparmor` (no cogitator enables it) | Two nodes run the same busybox containers. With the relic: `docker-default` is loaded in enforce mode and is the container's profile, and it refuses a `mount` that `CAP_SYS_ADMIN` allows, while a container run with `apparmor=unconfined` and the same capability mounts; after `systemctl reload apparmor`, the running container is still under Docker's profile. With `security.apparmor.enable` alone: Docker still names `docker-default`, but the container runs `unconfined` and the mount succeeds — the gap the relic closes, kept as a witness of upstream |
 
 ## Adding a proving
 
@@ -284,7 +285,7 @@ packaging rather than STC's wiring, which is all these relics contribute.
 
 ## Booting a real image — the external-image pattern
 
-Twelve of the fourteen provings let the test driver synthesise a node. `sarcophagus-kvm`
+Thirteen of the fifteen provings let the test driver synthesise a node. `sarcophagus-kvm`
 cannot: its profile's claim *is* the disk, and on a synthesised node the qemu-vm
 module replaces `fileSystems` with its own set at priority 10 — so neither the
 pool, nor the datasets, nor the rollback would be observable.

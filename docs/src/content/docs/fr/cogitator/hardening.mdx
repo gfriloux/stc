@@ -35,6 +35,9 @@ stc.relics.hardening.firewall.enable = true;
 Les options des reliques individuelles — `filesystem.tmpSize`, `ssh.allowedTCPForwarding`, `firewall.logRefusedConnections` — restent
 entièrement configurables. Le profil ne pose que les flags `enable`.
 
+La neuvième relique de durcissement, [AppArmor](/stc/fr/relics/hardening/#apparmor), est importée
+mais pas activée : pose `stc.relics.hardening.apparmor.enable = true;` pour l'ajouter.
+
 ## Exemple d'utilisation
 
 ```nix
