@@ -29,14 +29,10 @@
     gitflow-toolkit = {
       url = "github:gfriloux/gitflow-toolkit-flake";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.home-manager.follows = "home-manager";
     };
 
-    television-ssh = {
-      url = "github:gfriloux/television-ssh-flake";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.home-manager.follows = "home-manager";
-    };
+    # Module-only flake, no inputs of its own.
+    television-ssh.url = "github:gfriloux/television-ssh-flake";
 
     zen-browser = {
       url = "github:0xc000022070/zen-browser-flake";
@@ -85,7 +81,6 @@
       systems = [
         "x86_64-linux"
         "aarch64-linux"
-        "x86_64-darwin"
         "aarch64-darwin"
       ];
 

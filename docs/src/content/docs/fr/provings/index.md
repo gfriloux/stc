@@ -39,6 +39,8 @@ deux fois. Les schematics, qui sont des flakes séparés, sont évalués par
   Jamais à chaque push. La recette et le workflow lisent tous deux la liste dans
   `provings/default.nix`, aucun des deux ne peut donc oublier une épreuve.
 - Linux uniquement (`x86_64-linux` / `aarch64-linux`) — l'attribut est vide ailleurs.
+  `gaming` n'est enregistrée que sur `x86_64-linux` : Steam et la pile de
+  pilotes 32 bits n'existent pas sur aarch64.
 - Builder : `pkgs.testers.runNixOSTest`.
 
 **Ce que `just test` coûte maintenant.** Quatorze épreuves, **vingt-trois boots de

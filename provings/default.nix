@@ -47,31 +47,36 @@
       config.allowUnfree = true;
     };
 
-    provings = {
-      hardening = pkgs.testers.runNixOSTest (import ./hardening.nix {inherit self;});
-      docker-server = pkgs.testers.runNixOSTest (import ./docker-server.nix {inherit self;});
-      workstation = pkgs.testers.runNixOSTest (import ./workstation.nix {inherit self;});
-      vm = pkgs.testers.runNixOSTest (import ./vm.nix {inherit self;});
-      plasma = pkgs.testers.runNixOSTest (import ./plasma.nix {inherit self;});
-      dreadnought = pkgs.testers.runNixOSTest (import ./dreadnought.nix {inherit self;});
-      sarcophagus-kvm = pkgs.testers.runNixOSTest (import ./sarcophagus-kvm.nix {inherit self;});
-      sarcophagus-aws = pkgs.testers.runNixOSTest (import ./sarcophagus-aws.nix {inherit self;});
-      # These two provings take `inputs` as well as `self`, and the other
-      # nine do not. The reason is structural rather than stylistic: Home
-      # Manager's NixOS module lives in an input,
-      # and `self.homeModules.*` alone cannot attach a home configuration to a
-      # test node — the node has to import
-      # `inputs.home-manager.nixosModules.home-manager` first. The two
-      # signatures therefore coexist on purpose; do not "harmonise" the other
-      # nine onto a parameter they have no use for.
-      enginseer = pkgs.testers.runNixOSTest (import ./enginseer.nix {inherit self inputs;});
-      home-desktop = pkgs.testers.runNixOSTest (import ./home-desktop.nix {inherit self inputs;});
-      # The only line built from pkgs-unfree — see the comment on that instance.
-      gaming = pkgs-unfree.testers.runNixOSTest (import ./gaming.nix {inherit self;});
-      smart = pkgs.testers.runNixOSTest (import ./smart.nix {inherit self;});
-      polkit-units = pkgs.testers.runNixOSTest (import ./polkit-units.nix {inherit self;});
-      heartbeat = pkgs.testers.runNixOSTest (import ./heartbeat.nix {inherit self;});
-    };
+    provings =
+      {
+        hardening = pkgs.testers.runNixOSTest (import ./hardening.nix {inherit self;});
+        docker-server = pkgs.testers.runNixOSTest (import ./docker-server.nix {inherit self;});
+        workstation = pkgs.testers.runNixOSTest (import ./workstation.nix {inherit self;});
+        vm = pkgs.testers.runNixOSTest (import ./vm.nix {inherit self;});
+        plasma = pkgs.testers.runNixOSTest (import ./plasma.nix {inherit self;});
+        dreadnought = pkgs.testers.runNixOSTest (import ./dreadnought.nix {inherit self;});
+        sarcophagus-kvm = pkgs.testers.runNixOSTest (import ./sarcophagus-kvm.nix {inherit self;});
+        sarcophagus-aws = pkgs.testers.runNixOSTest (import ./sarcophagus-aws.nix {inherit self;});
+        # These two provings take `inputs` as well as `self`, and the other
+        # nine do not. The reason is structural rather than stylistic: Home
+        # Manager's NixOS module lives in an input,
+        # and `self.homeModules.*` alone cannot attach a home configuration to a
+        # test node — the node has to import
+        # `inputs.home-manager.nixosModules.home-manager` first. The two
+        # signatures therefore coexist on purpose; do not "harmonise" the other
+        # nine onto a parameter they have no use for.
+        enginseer = pkgs.testers.runNixOSTest (import ./enginseer.nix {inherit self inputs;});
+        home-desktop = pkgs.testers.runNixOSTest (import ./home-desktop.nix {inherit self inputs;});
+        smart = pkgs.testers.runNixOSTest (import ./smart.nix {inherit self;});
+        polkit-units = pkgs.testers.runNixOSTest (import ./polkit-units.nix {inherit self;});
+        heartbeat = pkgs.testers.runNixOSTest (import ./heartbeat.nix {inherit self;});
+      }
+      # x86_64 only: Steam and the 32-bit driver stack do not exist on aarch64,
+      # where the node fails its own `hardware.graphics.enable32Bit` assertion.
+      // lib.optionalAttrs (system == "x86_64-linux") {
+        # The only line built from pkgs-unfree — see the comment on that instance.
+        gaming = pkgs-unfree.testers.runNixOSTest (import ./gaming.nix {inherit self;});
+      };
 
     # Discarding the string context keeps the drvPath as plain text: the check
     # then depends on the toplevel being evaluated, not on it being built — so

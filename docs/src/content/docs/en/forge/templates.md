@@ -33,7 +33,7 @@ This writes a `flake.nix` into the current directory. Commit it, then run
 Provides:
 - `devShells.default` = `stc.devShells.${system}.ansible`
 - CI checks: `nix`, `gitleaks`, `ansible`, `shell`
-- Supports: `x86_64-linux`, `aarch64-linux`, `x86_64-darwin`, `aarch64-darwin`
+- Supports: `x86_64-linux`, `aarch64-linux`, `aarch64-darwin` (macOS: evaluated in CI, never run — no Intel Macs, which nixpkgs dropped in 26.11)
 
 ```bash
 mkdir my-playbooks && cd my-playbooks
@@ -48,7 +48,7 @@ nix develop
 Provides:
 - `devShells.default` = `stc.devShells.${system}.terraform`
 - CI checks: `nix`, `gitleaks`, `terraform`
-- Supports: `x86_64-linux`, `aarch64-linux`, `x86_64-darwin`, `aarch64-darwin`
+- Supports: `x86_64-linux`, `aarch64-linux`, `aarch64-darwin` (macOS: evaluated in CI, never run — no Intel Macs, which nixpkgs dropped in 26.11)
 
 ```bash
 mkdir my-infra && cd my-infra

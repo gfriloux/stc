@@ -37,6 +37,8 @@ by `just schematics`, a step of `just ci` and its own CI job.
   Never on every push. Both the recipe and the workflow read the list from
   `provings/default.nix`, so neither can miss a proving.
 - Linux only (`x86_64-linux` / `aarch64-linux`) — the attribute is empty elsewhere.
+  `gaming` is registered on `x86_64-linux` only: Steam and the 32-bit driver
+  stack do not exist on aarch64.
 - Builder: `pkgs.testers.runNixOSTest`.
 
 **What `just test` now costs.** Fourteen provings, **twenty-three VM boots** —
