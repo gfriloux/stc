@@ -3,6 +3,8 @@ title: Hardening Profile
 description: cogitator-hardening — enable all eight hardening relics with a single option.
 ---
 
+import Options from '../../../../options/en/cogitator-nixos-hardening.md';
+
 **Module:** `stc.nixosModules.cogitator-hardening`
 
 One option to harden them all. Activates kernel, network, filesystem, SSH,
@@ -11,9 +13,7 @@ individual relics instead and enable them independently.
 
 ## Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `stc.cogitator.hardening.enable` | bool | `false` | Enable the full hardening suite (kernel + network + filesystem + SSH + module blacklist + scheduler access + audit + firewall) |
+<Options />
 
 ## What It Composes
 

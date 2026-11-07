@@ -3,6 +3,8 @@ title: Sarcophagus KVM Profile
 description: cogitator-sarcophagus-kvm — QEMU/KVM NixOS disk image with ZFS, impermanence, and hardening.
 ---
 
+import Options from '../../../../options/en/cogitator-nixos-sarcophagus-kvm.md';
+
 **Module:** `stc.nixosModules.cogitator-sarcophagus-kvm`
 
 The Sarcophagus is the artificial life-support pod integrated into a Dreadnought's chassis, preserving the mortally wounded Space Marine in stasis between battles. This NixOS cogitator encases your configuration in a sealed, immutable qcow2 image—a hermetically preserved chamber awaiting deployment to any KVM hypervisor. The image is the Sarcophagus: the sealed vessel of your system's essence before it awakens on the battlefield.
@@ -30,14 +32,7 @@ injected automatically — the consumer does not need to import them.
 
 ## Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `stc.cogitator.sarcophagus-kvm.enable` | bool | `false` | Enable this cogitator |
-| `stc.cogitator.sarcophagus-kvm.poolName` | str | `"vmpool"` | ZFS pool name |
-| `stc.cogitator.sarcophagus-kvm.rootSize` | int | `20480` | Disk image size in MiB |
-| `stc.cogitator.sarcophagus-kvm.memSize` | int | `4096` | Build VM memory in MiB |
-| `stc.cogitator.sarcophagus-kvm.impermanence.extraDirectories` | list of str | `[]` | Additional directories to persist under `/persist` |
-| `stc.cogitator.sarcophagus-kvm.impermanence.extraFiles` | list of str | `[]` | Additional files to persist under `/persist` |
+<Options />
 
 ## Usage Example
 

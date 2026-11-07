@@ -3,6 +3,8 @@ title: Poste de travail
 description: cogitator-workstation — socle de poste durci (desktop + durcissement + YubiKey) en une seule option.
 ---
 
+import Options from '../../../../options/fr/cogitator-nixos-workstation.md';
+
 **Module :** `stc.nixosModules.cogitator-workstation`
 
 **Option d'activation :** `stc.cogitator.workstation.enable`
@@ -29,13 +31,7 @@ L'environnement de bureau reste orthogonal : ajouter i3 demain, c'est un nouveau
 
 ## Options
 
-| Option | Type | Défaut | Description |
-|--------|------|--------|-------------|
-| `stc.cogitator.workstation.enable` | bool | `false` | Active le profil poste de travail |
-| `stc.cogitator.workstation.desktop` | enum `"plasma"` | `"plasma"` | Environnement de bureau. Un poste a toujours un DE ; une machine sans DE est un serveur. Extensible à `"i3"`. |
-| `stc.cogitator.workstation.yubikey` | bool | `true` | Active le support YubiKey. Mettre `false` sur un poste sans clé. |
-| `stc.cogitator.workstation.hardening.filesystem.enable` | bool | `true` | Durcissement filesystem. Mettre `false` si hidepid=2 gêne polkit / D-Bus utilisateur et que tu ne les as pas ajoutés au groupe `proc`. |
-| `stc.cogitator.workstation.hardening.filesystem.gaming` | bool | `false` | Retire `noexec` de /tmp et /dev/shm pour que Steam/Proton tournent. Garde nosuid/nodev et hidepid. |
+<Options />
 
 Les autres options des reliques restent tunables directement via
 `stc.relics.hardening.*` (`tmpSize`, `shmSize`, …).

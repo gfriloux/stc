@@ -3,6 +3,8 @@ title: Profil Dreadnought
 description: cogitator-dreadnought — profil système en exploitation pour instances EC2 déployées depuis une AMI sarcophagus-aws.
 ---
 
+import Options from '../../../../options/fr/cogitator-nixos-dreadnought.md';
+
 **Module :** `stc.nixosModules.cogitator-dreadnought`
 
 Un Dreadnought est un walker blindé abritant un Space Marine vénéré mais mortellement blessé — l'Ancient éveillé du Sarcophagus et jeté au combat, fusionnant chair et machine, mémoire et acier. Ce cogitator est le rite d'éveil : il prend une AMI (le Sarcophagus scellé) et la ressuscite en instance EC2 en cours d'exécution (le Dreadnought). L'instance est maintenant opérationnelle, armée et liée au substrat durci de ton infrastructure, attendant ses ordres sur le champ de bataille.
@@ -37,14 +39,7 @@ etc.) pour construire le profil de services dont tu as besoin.
 
 ## Options
 
-| Option | Type | Défaut | Description |
-|--------|------|--------|-------------|
-| `stc.cogitator.dreadnought.enable` | bool | `false` | Active ce cogitator |
-| `stc.cogitator.dreadnought.poolName` | str | `"vmpool"` | Nom du pool ZFS — doit correspondre au pool créé par sarcophagus-aws |
-| `stc.cogitator.dreadnought.ebsDisk` | str | `"nvme0n1"` | Nom du périphérique EBS (sans `/dev/`). Utiliser `xvda` pour les instances Xen. |
-| `stc.cogitator.dreadnought.ebsPartition` | int | `3` | Numéro de partition contenant le pool ZFS sur le disque EBS |
-| `stc.cogitator.dreadnought.impermanence.extraDirectories` | list de str | `[]` | Répertoires supplémentaires à persister sous `/persist` |
-| `stc.cogitator.dreadnought.impermanence.extraFiles` | list de str | `[]` | Fichiers supplémentaires à persister sous `/persist` |
+<Options />
 
 ## Exemple d'utilisation
 

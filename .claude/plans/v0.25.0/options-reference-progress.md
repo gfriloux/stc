@@ -54,3 +54,13 @@ description. docker guards: "true in cogitator-docker-server" → page prose
 put in backticks (rendered as an HTML tag otherwise). Every other row was
 covered by the module description (compared row by row).
 Step 3: complete (docs build OK, 104 pages; per page rendered h4 count = fragment option count; parity OK; no `| \`stc.relics.` table left outside cogitator/docker-server (step 4); fmt-check + lint OK; nix flake check → exit 0 incl. options-doc).
+Step 4: Ruling: cogitator/docker-server's relic rows are not in its Options
+table but in a separate "Required Options" checklist (`| Option | Why |`, no
+type, no default) — it stays: it tells what the consumer must set for this
+profile, which no fragment says; only tables with a Type column are replaced.
+Step 3's leftover grep therefore keeps matching that page, by design — cost if
+wrong: a renamed relic option leaves a stale name in the checklist; the
+namespace-migration doc grep already covers `docs/`.
+Step 4: no description moved — every cogitator table row was covered by its
+module description (compared row by row).
+Step 4: complete (docs build OK, 104 pages; rendered h4 = fragment option count on all 22 pages; parity OK; no `| \`stc.cogitator.` table left; checks.options-doc → OK).

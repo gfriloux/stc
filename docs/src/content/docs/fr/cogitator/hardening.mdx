@@ -3,6 +3,8 @@ title: Profil de durcissement
 description: cogitator-hardening — active les huit reliques de durcissement avec une seule option.
 ---
 
+import Options from '../../../../options/fr/cogitator-nixos-hardening.md';
+
 **Module :** `stc.nixosModules.cogitator-hardening`
 
 Une option pour tous les durcir. Active le durcissement noyau, réseau, système de
@@ -13,9 +15,7 @@ indépendamment.
 
 ## Options
 
-| Option | Type | Défaut | Description |
-|--------|------|--------|-------------|
-| `stc.cogitator.hardening.enable` | bool | `false` | Active la suite de durcissement complète (noyau + réseau + système de fichiers + SSH + blacklist de modules + accès aux ordonnanceurs + audit + pare-feu) |
+<Options />
 
 ## Ce qu'il compose
 

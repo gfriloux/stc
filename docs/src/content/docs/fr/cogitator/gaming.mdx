@@ -3,6 +3,8 @@ title: Gaming
 description: cogitator-gaming — AMD GPU + Pipewire + Steam en une seule option pour les machines gaming NixOS.
 ---
 
+import Options from '../../../../options/fr/cogitator-nixos-gaming.md';
+
 **Module :** `stc.nixosModules.cogitator-gaming`
 
 **Option d'activation :** `stc.cogitator.gaming.enable`
@@ -21,10 +23,7 @@ une machine avec GPU AMD.
 
 ## Options
 
-| Option | Type | Défaut | Description |
-|--------|------|--------|-------------|
-| `stc.cogitator.gaming.enable` | bool | `false` | Active le profil gaming |
-| `stc.cogitator.gaming.steam.remotePlay` | bool | `false` | Ouvrir les ports pare-feu pour Steam Remote Play |
+<Options />
 
 Les options des reliques sous-jacentes restent réglables :
 

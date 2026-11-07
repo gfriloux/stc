@@ -3,6 +3,8 @@ title: Docker Server Profile
 description: cogitator-docker-server — full Docker reverse proxy stack in one option.
 ---
 
+import Options from '../../../../options/en/cogitator-nixos-docker-server.md';
+
 **Module:** `stc.nixosModules.cogitator-docker-server`
 
 Full Docker reverse-proxy stack: Traefik + a filtering socket-proxy + CrowdSec IDS/IPS,
@@ -15,10 +17,7 @@ want Traefik without CrowdSec, or a different notify provider.
 
 ## Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `stc.cogitator.docker-server.enable` | bool | `false` | Enable the STC Docker server stack |
-| `stc.cogitator.docker-server.notify.enable` | bool | `false` | Enable failure notifications for the stack (requires `notifyCommand`) |
+<Options />
 
 ## What It Enables
 

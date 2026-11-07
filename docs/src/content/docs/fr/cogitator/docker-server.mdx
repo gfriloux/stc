@@ -3,6 +3,8 @@ title: Profil serveur Docker
 description: cogitator-docker-server — pile Docker reverse proxy complète en une seule option.
 ---
 
+import Options from '../../../../options/fr/cogitator-nixos-docker-server.md';
+
 **Module :** `stc.nixosModules.cogitator-docker-server`
 
 Pile Docker reverse-proxy complète : Traefik + un socket-proxy filtrant + CrowdSec IDS/IPS,
@@ -15,10 +17,7 @@ par exemple, si tu veux Traefik sans CrowdSec, ou un provider de notification di
 
 ## Options
 
-| Option | Type | Défaut | Description |
-|--------|------|--------|-------------|
-| `stc.cogitator.docker-server.enable` | bool | `false` | Active la pile serveur Docker STC |
-| `stc.cogitator.docker-server.notify.enable` | bool | `false` | Active les notifications d'échec pour la pile (nécessite `notifyCommand`) |
+<Options />
 
 ## Ce qu'il active
 

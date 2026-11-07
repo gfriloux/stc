@@ -3,6 +3,8 @@ title: Workstation
 description: cogitator-workstation — hardened personal-workstation baseline (desktop + hardening + YubiKey) in a single enable option.
 ---
 
+import Options from '../../../../options/en/cogitator-nixos-workstation.md';
+
 **Module:** `stc.nixosModules.cogitator-workstation`
 
 **Enable option:** `stc.cogitator.workstation.enable`
@@ -29,13 +31,7 @@ The desktop environment stays orthogonal: adding i3 tomorrow is a new
 
 ## Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `stc.cogitator.workstation.enable` | bool | `false` | Enable the workstation profile |
-| `stc.cogitator.workstation.desktop` | enum `"plasma"` | `"plasma"` | Desktop environment. A workstation always has a DE; a machine without one is a server. Extensible to `"i3"`. |
-| `stc.cogitator.workstation.yubikey` | bool | `true` | Enable YubiKey system support. Set `false` on a workstation with no key. |
-| `stc.cogitator.workstation.hardening.filesystem.enable` | bool | `true` | Filesystem hardening. Set `false` if hidepid=2 disturbs polkit / user D-Bus and you have not wired them into the `proc` group. |
-| `stc.cogitator.workstation.hardening.filesystem.gaming` | bool | `false` | Drop `noexec` on /tmp and /dev/shm so Steam/Proton can run. Keeps nosuid/nodev and hidepid. |
+<Options />
 
 Other relic options remain tunable directly via `stc.relics.hardening.*`
 (`tmpSize`, `shmSize`, …).

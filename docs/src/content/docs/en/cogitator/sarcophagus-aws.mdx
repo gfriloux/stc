@@ -3,6 +3,8 @@ title: Sarcophagus AWS Profile
 description: cogitator-sarcophagus-aws — NixOS AMI disk image with ZFS, impermanence, and hardening.
 ---
 
+import Options from '../../../../options/en/cogitator-nixos-sarcophagus-aws.md';
+
 **Module:** `stc.nixosModules.cogitator-sarcophagus-aws`
 
 The Sarcophagus is the hermetically sealed pod that preserves the remains of a mortally wounded Space Marine. This cogitator seals your system into a raw disk image inscribed with ZFS, impermanence, and hardening: the inert sarcophagus, preserving your configuration's essence while awaiting deployment on the AWS battlefields. Once imported as an AMI and awakened in an EC2 instance, this sarcophagus becomes the living core of the complete Dreadnought.
@@ -35,16 +37,7 @@ injected automatically — the consumer does not need to import them.
 
 ## Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `stc.cogitator.sarcophagus-aws.enable` | bool | `false` | Enable this cogitator |
-| `stc.cogitator.sarcophagus-aws.poolName` | str | `"vmpool"` | ZFS pool name |
-| `stc.cogitator.sarcophagus-aws.rootSize` | int | `4096` | Disk image size in MiB |
-| `stc.cogitator.sarcophagus-aws.memSize` | int | `4096` | Build VM memory in MiB |
-| `stc.cogitator.sarcophagus-aws.ebsDisk` | str | `"nvme0n1"` | EBS device name (without `/dev/`). Use `xvda` for Xen instances. |
-| `stc.cogitator.sarcophagus-aws.ebsPartition` | int | `3` | ZFS pool partition number on the EBS disk |
-| `stc.cogitator.sarcophagus-aws.impermanence.extraDirectories` | list of str | `[]` | Additional directories to persist |
-| `stc.cogitator.sarcophagus-aws.impermanence.extraFiles` | list of str | `[]` | Additional files to persist |
+<Options />
 
 ## Usage Example
 

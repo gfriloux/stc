@@ -3,6 +3,8 @@ title: Profil VM
 description: cogitator-vm — base opinionée pour les VMs NixOS de développement et de staging.
 ---
 
+import Options from '../../../../options/fr/cogitator-nixos-vm.md';
+
 **Module :** `stc.nixosModules.cogitator-vm`
 
 Une base opinionée pour une machine virtuelle NixOS de développement ou de staging :
@@ -15,13 +17,7 @@ complète.
 
 ## Options
 
-| Option | Type | Défaut | Description |
-|--------|------|--------|-------------|
-| `stc.cogitator.vm.enable` | bool | `false` | Active le profil VM de base STC |
-| `stc.cogitator.vm.username` | string | `"admin"` | Compte utilisateur principal créé sur la VM |
-| `stc.cogitator.vm.authorizedKeys` | liste de strings | `[]` | Clés SSH autorisées pour l'utilisateur principal |
-| `stc.cogitator.vm.linger` | bool | `true` | Garde l'instance systemd/les services de l'utilisateur actifs sans session ouverte. Mettre à `false` sur un hôte durci. |
-| `stc.cogitator.vm.docker.enable` | bool | `false` | Active Docker et ajoute l'utilisateur principal au groupe docker (≈ root — opt-in) |
+<Options />
 
 ## Ce qu'il fait
 

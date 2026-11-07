@@ -3,6 +3,8 @@ title: Plasma Desktop
 description: cogitator-plasma — KDE Plasma 6 Wayland desktop composed with Pipewire audio in a single enable option.
 ---
 
+import Options from '../../../../options/en/cogitator-nixos-plasma.md';
+
 **Module:** `stc.nixosModules.cogitator-plasma`
 
 **Enable option:** `stc.cogitator.plasma.enable`
@@ -19,9 +21,7 @@ One option replaces manually enabling and wiring two relics.
 
 ## Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `stc.cogitator.plasma.enable` | bool | `false` | Enable the Plasma desktop profile |
+<Options />
 
 Underlying relic options remain tunable after activation:
 
