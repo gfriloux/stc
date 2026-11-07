@@ -3,6 +3,8 @@ title: Heartbeat
 description: Un job planifié pinge ta supervision à chaque succès, pour qu'un job qui ne tourne plus déclenche une alerte.
 ---
 
+import Options from '../../../../options/fr/relics-nixos-heartbeat.md';
+
 **Module :** `stc.nixosModules.relics-heartbeat`
 
 Une sauvegarde qui ne tourne plus ne déclenche aucune alerte. Chaque contrôle
@@ -25,13 +27,7 @@ Aucun cogitator ne l'active. Le récepteur, l'URL et la fenêtre d'alerte sont
 
 ## Options
 
-| Option | Type | Défaut | Description |
-|--------|------|--------|-------------|
-| `stc.relics.heartbeat.enable` | bool | `false` | Active la relique |
-| `stc.relics.heartbeat.units.<nom>.urlFile` | chemin absolu | — | Fichier contenant l'URL à pinger, lu à l'exécution. `<nom>` est le service tel que dans `systemd.services` (sans `.service`) |
-| `stc.relics.heartbeat.units.<nom>.packageUnit` | bool | `false` | L'unité vient de `systemd.packages` (`fstrim`, …) : saute la vérification d'existence, qui ne la voit pas |
-| `stc.relics.heartbeat.retries` | entier | `3` | Nouvelles tentatives de curl pour un ping raté |
-| `stc.relics.heartbeat.timeoutSec` | entier | `10` | Secondes accordées à chaque tentative |
+<Options />
 
 Le build échoue si un service listé :
 

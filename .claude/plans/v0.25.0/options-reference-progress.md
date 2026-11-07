@@ -24,3 +24,9 @@ to the check (measured: "docs/src/options: No such file or directory") — cost
 if wrong: the recipe touches the index, which a reader may not expect; the
 comment above the line says why.
 Step 1: complete (checks.options-doc → OK on the clean tree; a planted description change → fails with "out of date"; nix flake check → exit 0).
+Step 2: Ruling: the built pages live under `docs/dist/en/…`, not `docs/dist/…` —
+the plan's grep paths were wrong, steps 3–5 use `docs/dist/en/` — cost if wrong:
+none, a missing file makes grep fail loudly.
+Step 2: no description moved — the module already carried the `<name>` and
+`packageUnit` notes the table held.
+Step 2: complete (docs build OK, 104 pages; `retries` in EN and FR pages; `unsigned integer` shown; parity OK; checks.options-doc → OK).

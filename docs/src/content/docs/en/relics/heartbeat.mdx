@@ -3,6 +3,8 @@ title: Heartbeat
 description: A scheduled job pings your monitor each time it succeeds, so a job that stops running raises an alert.
 ---
 
+import Options from '../../../../options/en/relics-nixos-heartbeat.md';
+
 **Module:** `stc.nixosModules.relics-heartbeat`
 
 A backup that stops running raises no alert. Every check sees a healthy host,
@@ -24,13 +26,7 @@ STC owns the wiring.
 
 ## Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `stc.relics.heartbeat.enable` | bool | `false` | Enable the relic |
-| `stc.relics.heartbeat.units.<name>.urlFile` | absolute path | — | File holding the URL to ping, read at runtime. `<name>` is the service as in `systemd.services` (no `.service`) |
-| `stc.relics.heartbeat.units.<name>.packageUnit` | bool | `false` | The unit comes from `systemd.packages` (`fstrim`, …): skip the existence check, which cannot see it |
-| `stc.relics.heartbeat.retries` | int | `3` | curl retries for a failed ping |
-| `stc.relics.heartbeat.timeoutSec` | int | `10` | Seconds each ping attempt may take |
+<Options />
 
 The build fails when a listed service:
 
