@@ -80,6 +80,14 @@ test:
 
 # ── Documentation ─────────────────────────────────────────────────────────────
 
+# Regenerate the option reference fragments from the modules (docs/src/options).
+# checks.options-doc fails until they are committed in step with the modules.
+options-doc:
+    rm -rf docs/src/options
+    cp -rL --no-preserve=mode "$(nix build --no-link --print-out-paths .#legacyPackages.x86_64-linux.options-doc --no-write-lock-file)" docs/src/options
+    # Staged at once: the flake, and so checks.options-doc, only reads tracked files.
+    git add docs/src/options
+
 # Install doc dependencies (idempotent — safe to run repeatedly)
 docs-install:
     cd docs && npm install
