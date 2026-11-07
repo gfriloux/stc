@@ -4,7 +4,7 @@
 
 Whether to enable Enginseer CLI profile — full field-deployment toolkit.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`cogitator/home/enginseer`](https://github.com/gfriloux/stc/blob/main/cogitator/home/enginseer)

@@ -4,7 +4,7 @@
 
 Whether to enable AMD GPU support (VDPAU, VAAPI, 32-bit, optional early KMS).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/nixos/amd-gpu.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/amd-gpu.nix)
@@ -15,6 +15,6 @@ Load the amdgpu kernel module in the initrd for early KMS framebuffer.
 Enables a graphical framebuffer during boot (Plymouth, LUKS prompt, etc.).
 Not required for normal desktop use — only enable if you need early display.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Declared in:** [`relics/nixos/amd-gpu.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/amd-gpu.nix)

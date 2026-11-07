@@ -16,6 +16,10 @@
 #     drops one of them.
 #   - Submodule internals (`<path>.<name>._module.*`) come out visible and are
 #     filtered by name. Deprecated stc.* aliases are invisible already.
+#   - A default computed from the configuration (`config.networking.hostName`)
+#     renders this evaluation's value unless the option sets `defaultText`.
+#     The base modules carry a sentinel host name and home, and any rendered
+#     value holding one of them, or a store path, fails the build.
 #
 # x86_64-linux only: option docs do not depend on the system.
 {
@@ -29,14 +33,16 @@
     system,
     ...
   }: let
+    sentinel = "options-doc-sentinel";
     base = {
       system.stateVersion = "25.11";
+      networking.hostName = sentinel;
       boot.loader.grub.enable = false;
       fileSystems."/".device = "none";
     };
     hbase = {
-      home.username = "doc";
-      home.homeDirectory = "/home/doc";
+      home.username = sentinel;
+      home.homeDirectory = "/home/${sentinel}";
       home.stateVersion = "25.11";
     };
 
@@ -65,18 +71,38 @@
     # through every module that imports its relic.
     byName = opts: builtins.attrValues (lib.listToAttrs (map (o: lib.nameValuePair o.name o) opts));
 
+    textOf = v:
+      lib.trim (
+        if v._type or null == "literalMD"
+        then v.text
+        else v.text or (builtins.toJSON v)
+      );
+
     relative = d: lib.removePrefix "${self}/" (toString d);
+
+    leaks = o:
+      lib.any (v: lib.hasInfix sentinel v || lib.hasInfix "/nix/store/" v)
+      (map textOf (lib.optional (o ? default) o.default ++ lib.optional (o ? example) o.example));
 
     checked = o:
       if builtins.length o.declarations != 1
       then throw "options-doc: ${o.name} is declared in ${toString (builtins.length o.declarations)} files"
       else if (o.description or null) == null || lib.trim o.description == ""
       then throw "options-doc: ${o.name} has no description"
+      else if leaks o
+      then throw "options-doc: ${o.name} renders a value of the doc evaluation: give it a defaultText"
       else o // {file = relative (builtins.head o.declarations);};
 
     options = map checked (byName nixosOptions ++ byName homeOptions);
 
     byFile = lib.groupBy (o: o.file) options;
+
+    # docker-guards.nix and docker/guards.nix would share a slug.
+    slugs = map slug (builtins.attrNames byFile);
+    uniqueSlugs =
+      if builtins.length (lib.unique slugs) == builtins.length slugs
+      then slugs
+      else throw "options-doc: two declaring files map to the same slug";
 
     slug = file: lib.replaceStrings ["/"] ["-"] (lib.removeSuffix ".nix" file);
 
@@ -84,14 +110,14 @@
       en = {
         type = "Type";
         default = "Default";
-        required = "none, must be set";
+        required = "none, required when used";
         example = "Example";
         declared = "Declared in";
       };
       fr = {
         type = "Type";
         default = "Valeur par défaut";
-        required = "aucune, à définir";
+        required = "aucune, requise à l'usage";
         example = "Exemple";
         declared = "Déclarée dans";
       };
@@ -100,11 +126,7 @@
     # A one-line value stays inline; anything with a newline or a backtick goes
     # in a fenced block, where it cannot break the surrounding Markdown.
     value = label: v: let
-      text = lib.trim (
-        if v._type or null == "literalMD"
-        then v.text
-        else v.text or (builtins.toJSON v)
-      );
+      text = textOf v;
     in
       if lib.hasInfix "\n" text || lib.hasInfix "`" text
       then "- **${label}:**\n\n  ```nix\n${lib.concatMapStringsSep "\n" (l: "  ${l}") (lib.splitString "\n" text)}\n  ```"
@@ -117,7 +139,7 @@
           ""
           (lib.trim o.description)
           ""
-          "- **${l.type}:** ${o.type}"
+          "- **${l.type}:** `${o.type}`"
         ]
         # Every option without a default is one the consumer must set.
         ++ [
@@ -138,7 +160,7 @@
       )
       + "\n";
 
-    optionsDoc = pkgs.linkFarm "stc-options-doc" (lib.concatLists (lib.mapAttrsToList (file: opts:
+    optionsDoc = builtins.seq uniqueSlugs pkgs.linkFarm "stc-options-doc" (lib.concatLists (lib.mapAttrsToList (file: opts:
       map (lang: {
         name = "${lang}/${slug file}.md";
         path = pkgs.writeText "${slug file}-${lang}.md" (renderFile lang opts);
@@ -158,12 +180,12 @@
         fi
 
         missing=0
-        for slug in ${lib.concatMapStringsSep " " slug (builtins.attrNames byFile)}; do
+        for slug in ${lib.concatStringsSep " " uniqueSlugs}; do
           for lang in en fr; do
             found=0
-            for page in $(grep -rl "/options/$lang/$slug.md'" ${self}/docs/src/content/docs/$lang); do
-              name=$(sed -n "s|^import \([A-Za-z]*\) from '.*/options/$lang/$slug.md';\$|\1|p" "$page")
-              if [ -n "$name" ] && grep -q "<$name />" "$page"; then
+            for page in $(grep -rl --include='*.mdx' "/options/$lang/$slug.md'" ${self}/docs/src/content/docs/$lang); do
+              name=$(sed -n "s|^import \([A-Za-z0-9_]*\) from '.*/options/$lang/$slug.md';\$|\1|p" "$page")
+              if [ -n "$name" ] && grep -qx "<$name />" "$page"; then
                 found=1
               fi
             done

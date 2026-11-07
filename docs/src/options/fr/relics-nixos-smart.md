@@ -6,7 +6,7 @@ Monitor every SMART-capable device present when smartd starts, without
 naming disks per host. Set to false to monitor only
 services.smartd.devices.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `true`
 - **Déclarée dans:** [`relics/nixos/smart.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/smart.nix)
 
@@ -14,13 +14,15 @@ services.smartd.devices.
 
 smartd.conf directives applied to every device (see smartd.conf(5)).
 The default:
-  -a             every health check, attribute and log
-  -o on -S on    the drive's offline data collection and attribute autosave
-  -s (…)         short self-test daily at 02:00, long one Saturday at 03:00
-  -W 4,45,55     report a 4 °C jump, log at 45 °C, alert at 55 °C
+
+- `-a`: every health check, attribute and log
+- `-o on -S on`: the drive's offline data collection and attribute autosave
+- `-s (…)`: short self-test daily at 02:00, long one Saturday at 03:00
+- `-W 4,45,55`: report a 4 °C jump, log at 45 °C, alert at 55 °C
+
 The relic adds the notification directives itself.
 
-- **Type:** string
+- **Type:** `string`
 - **Valeur par défaut:** `"-a -o on -S on -s (S/../.././02|L/../../6/03) -W 4,45,55"`
 - **Déclarée dans:** [`relics/nixos/smart.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/smart.nix)
 
@@ -28,7 +30,7 @@ The relic adds the notification directives itself.
 
 Whether to enable SMART disk monitoring with smartd.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`relics/nixos/smart.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/smart.nix)
@@ -37,7 +39,7 @@ Whether to enable SMART disk monitoring with smartd.
 
 Hostname exposed to notifyCommand as STC_SMART_HOSTNAME.
 
-- **Type:** string
+- **Type:** `string`
 - **Valeur par défaut:** `config.networking.hostName`
 - **Déclarée dans:** [`relics/nixos/smart.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/smart.nix)
 
@@ -45,10 +47,11 @@ Hostname exposed to notifyCommand as STC_SMART_HOSTNAME.
 
 Shell snippet run for each smartd alert. Receives through the
 environment:
-  STC_SMART_DEVICE    — the device, as smartd names it
-  STC_SMART_MESSAGE   — smartd's message
-  STC_SMART_FAILTYPE  — the alert type (EmailTest for a -M test message)
-  STC_SMART_HOSTNAME  — value of the `hostname` option
+
+- `STC_SMART_DEVICE`: the device, as smartd names it
+- `STC_SMART_MESSAGE`: smartd's message
+- `STC_SMART_FAILTYPE`: the alert type (`EmailTest` for a `-M test` message)
+- `STC_SMART_HOSTNAME`: value of the `hostname` option
 
 STC is agnostic to the notification backend: put your ntfy curl,
 webhook POST, e-mail, etc. here, and read any secret it needs from its
@@ -57,7 +60,7 @@ own file. Required when the relic is enabled.
 smartd waits for it, so it runs under notifyTimeoutSec; its output goes
 to the journal under the tag stc-smart-notify.
 
-- **Type:** strings concatenated with "\n"
+- **Type:** `strings concatenated with "\n"`
 - **Valeur par défaut:** `""`
 - **Exemple:**
 
@@ -78,6 +81,6 @@ Seconds notifyCommand may run before it is killed. smartd blocks while
 the command runs, so a stalled endpoint would otherwise stop every
 SMART check.
 
-- **Type:** positive integer, meaning >0
+- **Type:** `positive integer, meaning >0`
 - **Valeur par défaut:** `60`
 - **Déclarée dans:** [`relics/nixos/smart.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/smart.nix)

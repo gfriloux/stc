@@ -4,7 +4,7 @@
 
 Whether to enable STC gaming profile (AMD GPU + Pipewire + Steam).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`cogitator/nixos/gaming.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/gaming.nix)
@@ -13,6 +13,6 @@ Whether to enable STC gaming profile (AMD GPU + Pipewire + Steam).
 
 Open firewall ports for Steam Remote Play.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Déclarée dans:** [`cogitator/nixos/gaming.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/gaming.nix)

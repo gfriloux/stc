@@ -245,7 +245,9 @@ in {
         versions live with the consumer, where your own renovate scans the right
         host. Set it in your host config, pinned by tag (and optionally digest):
 
-          stc.relics.docker.traefik.image = "traefik:v3.7.6"; # renovate
+        ```nix
+        stc.relics.docker.traefik.image = "traefik:v3.7.6"; # renovate
+        ```
 
         When socketProxy.enable = false this container mounts the raw Docker
         socket, so a silently-swapped image is dangerous — pin it.

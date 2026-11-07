@@ -4,7 +4,7 @@
 
 Whether to enable Zen Browser.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/home/zen-browser.nix`](https://github.com/gfriloux/stc/blob/main/relics/home/zen-browser.nix)

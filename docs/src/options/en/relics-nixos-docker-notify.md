@@ -4,7 +4,7 @@
 
 Whether to enable Docker container failure notifications and unhealthy-container restarts.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/nixos/docker/notify.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/notify.nix)
@@ -13,23 +13,24 @@ Whether to enable Docker container failure notifications and unhealthy-container
 
 Hostname exposed to notifyCommand as STC_NOTIFY_HOSTNAME.
 
-- **Type:** string
-- **Default:** `"nixos"`
+- **Type:** `string`
+- **Default:** `config.networking.hostName`
 - **Declared in:** [`relics/nixos/docker/notify.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/notify.nix)
 
 #### `stc.relics.docker.notify.notifyCommand`
 
 Shell snippet run when a watched service fails. Receives the failed
 service and the host through the environment:
-  STC_NOTIFY_SERVICE   — the systemd service that entered failed state
-  STC_NOTIFY_HOSTNAME  — value of the `hostname` option
+
+- `STC_NOTIFY_SERVICE`: the systemd service that entered failed state
+- `STC_NOTIFY_HOSTNAME`: value of the `hostname` option
 
 STC is agnostic to the notification backend: put your ntfy curl, webhook
 POST, e-mail, etc. here, and read any secret it needs from its own file
 (the same philosophy as the *File secrets pattern). Required when the
 relic is enabled.
 
-- **Type:** strings concatenated with "\n"
+- **Type:** `strings concatenated with "\n"`
 - **Default:** `""`
 - **Example:**
 
@@ -47,8 +48,8 @@ relic is enabled.
 
 Docker label used to mark containers for health monitoring.
 Set this on each container you want watched:
-  labels."stc.docker/health-watch" = "true";
+`labels."stc.docker/health-watch" = "true";`
 
-- **Type:** string
+- **Type:** `string`
 - **Default:** `"stc.docker/health-watch"`
 - **Declared in:** [`relics/nixos/docker/notify.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/notify.nix)

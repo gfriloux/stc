@@ -4,7 +4,7 @@
 
 EBS block device name (without /dev/). nvme0n1 for Nitro instances, xvda for Xen.
 
-- **Type:** string
+- **Type:** `string`
 - **Default:** `"nvme0n1"`
 - **Declared in:** [`cogitator/nixos/dreadnought.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/dreadnought.nix)
 
@@ -12,7 +12,7 @@ EBS block device name (without /dev/). nvme0n1 for Nitro instances, xvda for Xen
 
 Partition number holding the ZFS pool on the EBS disk.
 
-- **Type:** signed integer
+- **Type:** `signed integer`
 - **Default:** `3`
 - **Declared in:** [`cogitator/nixos/dreadnought.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/dreadnought.nix)
 
@@ -20,7 +20,7 @@ Partition number holding the ZFS pool on the EBS disk.
 
 Whether to enable NixOS EC2 running-system profile with ZFS + impermanence.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`cogitator/nixos/dreadnought.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/dreadnought.nix)
@@ -29,7 +29,7 @@ Whether to enable NixOS EC2 running-system profile with ZFS + impermanence.
 
 Additional directories under /persist to bind-mount into /.
 
-- **Type:** list of string
+- **Type:** `list of string`
 - **Default:** `[ ]`
 - **Declared in:** [`cogitator/nixos/dreadnought.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/dreadnought.nix)
 
@@ -37,7 +37,7 @@ Additional directories under /persist to bind-mount into /.
 
 Additional files under /persist to bind-mount into /.
 
-- **Type:** list of string
+- **Type:** `list of string`
 - **Default:** `[ ]`
 - **Declared in:** [`cogitator/nixos/dreadnought.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/dreadnought.nix)
 
@@ -45,6 +45,6 @@ Additional files under /persist to bind-mount into /.
 
 ZFS pool name — must match the pool created by sarcophagus-aws.
 
-- **Type:** string
+- **Type:** `string`
 - **Default:** `"vmpool"`
 - **Declared in:** [`cogitator/nixos/dreadnought.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/dreadnought.nix)

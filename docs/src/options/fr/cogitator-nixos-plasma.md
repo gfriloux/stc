@@ -4,7 +4,7 @@
 
 Whether to enable STC Plasma 6 desktop profile (Plasma 6 + Pipewire).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`cogitator/nixos/plasma.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/plasma.nix)

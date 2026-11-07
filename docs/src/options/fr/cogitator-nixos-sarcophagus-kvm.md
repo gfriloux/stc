@@ -4,7 +4,7 @@
 
 Whether to enable QEMU/KVM NixOS disk image with ZFS + impermanence.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`cogitator/nixos/sarcophagus-kvm.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/sarcophagus-kvm.nix)
@@ -13,7 +13,7 @@ Whether to enable QEMU/KVM NixOS disk image with ZFS + impermanence.
 
 Additional directories under /persist to bind-mount into /.
 
-- **Type:** list of string
+- **Type:** `list of string`
 - **Valeur par défaut:** `[ ]`
 - **Déclarée dans:** [`cogitator/nixos/sarcophagus-kvm.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/sarcophagus-kvm.nix)
 
@@ -21,7 +21,7 @@ Additional directories under /persist to bind-mount into /.
 
 Additional files under /persist to bind-mount into /.
 
-- **Type:** list of string
+- **Type:** `list of string`
 - **Valeur par défaut:** `[ ]`
 - **Déclarée dans:** [`cogitator/nixos/sarcophagus-kvm.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/sarcophagus-kvm.nix)
 
@@ -29,7 +29,7 @@ Additional files under /persist to bind-mount into /.
 
 Build VM memory in MiB.
 
-- **Type:** signed integer
+- **Type:** `signed integer`
 - **Valeur par défaut:** `4096`
 - **Déclarée dans:** [`cogitator/nixos/sarcophagus-kvm.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/sarcophagus-kvm.nix)
 
@@ -37,7 +37,7 @@ Build VM memory in MiB.
 
 ZFS pool name used for the root, nix, and persist datasets.
 
-- **Type:** string
+- **Type:** `string`
 - **Valeur par défaut:** `"vmpool"`
 - **Déclarée dans:** [`cogitator/nixos/sarcophagus-kvm.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/sarcophagus-kvm.nix)
 
@@ -45,6 +45,6 @@ ZFS pool name used for the root, nix, and persist datasets.
 
 Disk image size in MiB.
 
-- **Type:** signed integer
+- **Type:** `signed integer`
 - **Valeur par défaut:** `20480`
 - **Déclarée dans:** [`cogitator/nixos/sarcophagus-kvm.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/sarcophagus-kvm.nix)

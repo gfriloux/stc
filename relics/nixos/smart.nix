@@ -96,10 +96,12 @@ in {
       description = ''
         smartd.conf directives applied to every device (see smartd.conf(5)).
         The default:
-          -a             every health check, attribute and log
-          -o on -S on    the drive's offline data collection and attribute autosave
-          -s (…)         short self-test daily at 02:00, long one Saturday at 03:00
-          -W 4,45,55     report a 4 °C jump, log at 45 °C, alert at 55 °C
+
+        - `-a`: every health check, attribute and log
+        - `-o on -S on`: the drive's offline data collection and attribute autosave
+        - `-s (…)`: short self-test daily at 02:00, long one Saturday at 03:00
+        - `-W 4,45,55`: report a 4 °C jump, log at 45 °C, alert at 55 °C
+
         The relic adds the notification directives itself.
       '';
     };
@@ -126,10 +128,11 @@ in {
       description = ''
         Shell snippet run for each smartd alert. Receives through the
         environment:
-          STC_SMART_DEVICE    — the device, as smartd names it
-          STC_SMART_MESSAGE   — smartd's message
-          STC_SMART_FAILTYPE  — the alert type (EmailTest for a -M test message)
-          STC_SMART_HOSTNAME  — value of the `hostname` option
+
+        - `STC_SMART_DEVICE`: the device, as smartd names it
+        - `STC_SMART_MESSAGE`: smartd's message
+        - `STC_SMART_FAILTYPE`: the alert type (`EmailTest` for a `-M test` message)
+        - `STC_SMART_HOSTNAME`: value of the `hostname` option
 
         STC is agnostic to the notification backend: put your ntfy curl,
         webhook POST, e-mail, etc. here, and read any secret it needs from its

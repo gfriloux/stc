@@ -4,7 +4,7 @@
 
 Whether to enable STC desktop GUI profile (ghostty, zen-browser, GIMP, VLC).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`cogitator/home/desktop.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/home/desktop.nix)

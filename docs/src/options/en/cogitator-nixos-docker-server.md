@@ -6,7 +6,7 @@ Enable the STC Docker server stack: Traefik, socket-proxy and CrowdSec,
 plus the pre-switch checks relic — on a remotely deployed host, refusing
 to activate another host's closure is part of the profile, not an extra.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`cogitator/nixos/docker-server.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/docker-server.nix)
@@ -17,7 +17,7 @@ Enable the docker-notify relic for this stack. Off by default so the
 stack boots without forcing a notification transport; when enabled you
 must set stc.relics.docker.notify.notifyCommand.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`cogitator/nixos/docker-server.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/docker-server.nix)

@@ -4,7 +4,7 @@
 
 EBS block device name (without /dev/). nvme0n1 for Nitro instances, xvda for Xen.
 
-- **Type:** string
+- **Type:** `string`
 - **Valeur par défaut:** `"nvme0n1"`
 - **Déclarée dans:** [`relics/nixos/aws.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/aws.nix)
 
@@ -12,7 +12,7 @@ EBS block device name (without /dev/). nvme0n1 for Nitro instances, xvda for Xen
 
 Partition number holding the ZFS pool on the EBS disk. make-single-disk-zfs-image.nix creates bios_grub(1) + ESP(2) + ZFS(3).
 
-- **Type:** signed integer
+- **Type:** `signed integer`
 - **Valeur par défaut:** `3`
 - **Déclarée dans:** [`relics/nixos/aws.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/aws.nix)
 
@@ -20,7 +20,7 @@ Partition number holding the ZFS pool on the EBS disk. make-single-disk-zfs-imag
 
 Whether to enable AWS EC2 platform configuration (drivers, NTP, serial console, EBS grow).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`relics/nixos/aws.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/aws.nix)
@@ -29,6 +29,6 @@ Whether to enable AWS EC2 platform configuration (drivers, NTP, serial console, 
 
 ZFS pool name to expand when the EBS volume is larger than the built image.
 
-- **Type:** string
-- **Valeur par défaut:** *aucune, à définir*
+- **Type:** `string`
+- **Valeur par défaut:** *aucune, requise à l'usage*
 - **Déclarée dans:** [`relics/nixos/aws.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/aws.nix)

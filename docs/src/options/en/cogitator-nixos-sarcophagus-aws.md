@@ -4,7 +4,7 @@
 
 EBS block device name (without /dev/). nvme0n1 for Nitro instances, xvda for Xen.
 
-- **Type:** string
+- **Type:** `string`
 - **Default:** `"nvme0n1"`
 - **Declared in:** [`cogitator/nixos/sarcophagus-aws.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/sarcophagus-aws.nix)
 
@@ -12,7 +12,7 @@ EBS block device name (without /dev/). nvme0n1 for Nitro instances, xvda for Xen
 
 Partition number holding the ZFS pool. make-single-disk-zfs-image.nix creates bios_grub(1) + ESP(2) + ZFS(3).
 
-- **Type:** signed integer
+- **Type:** `signed integer`
 - **Default:** `3`
 - **Declared in:** [`cogitator/nixos/sarcophagus-aws.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/sarcophagus-aws.nix)
 
@@ -20,7 +20,7 @@ Partition number holding the ZFS pool. make-single-disk-zfs-image.nix creates bi
 
 Whether to enable AWS AMI NixOS disk image with ZFS + impermanence.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`cogitator/nixos/sarcophagus-aws.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/sarcophagus-aws.nix)
@@ -29,7 +29,7 @@ Whether to enable AWS AMI NixOS disk image with ZFS + impermanence.
 
 Additional directories under /persist to bind-mount into /.
 
-- **Type:** list of string
+- **Type:** `list of string`
 - **Default:** `[ ]`
 - **Declared in:** [`cogitator/nixos/sarcophagus-aws.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/sarcophagus-aws.nix)
 
@@ -37,7 +37,7 @@ Additional directories under /persist to bind-mount into /.
 
 Additional files under /persist to bind-mount into /.
 
-- **Type:** list of string
+- **Type:** `list of string`
 - **Default:** `[ ]`
 - **Declared in:** [`cogitator/nixos/sarcophagus-aws.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/sarcophagus-aws.nix)
 
@@ -45,7 +45,7 @@ Additional files under /persist to bind-mount into /.
 
 Build VM memory in MiB.
 
-- **Type:** signed integer
+- **Type:** `signed integer`
 - **Default:** `4096`
 - **Declared in:** [`cogitator/nixos/sarcophagus-aws.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/sarcophagus-aws.nix)
 
@@ -53,7 +53,7 @@ Build VM memory in MiB.
 
 ZFS pool name used for the root, nix, and persist datasets.
 
-- **Type:** string
+- **Type:** `string`
 - **Default:** `"vmpool"`
 - **Declared in:** [`cogitator/nixos/sarcophagus-aws.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/sarcophagus-aws.nix)
 
@@ -61,6 +61,6 @@ ZFS pool name used for the root, nix, and persist datasets.
 
 Disk image size in MiB.
 
-- **Type:** signed integer
+- **Type:** `signed integer`
 - **Default:** `4096`
 - **Declared in:** [`cogitator/nixos/sarcophagus-aws.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/sarcophagus-aws.nix)

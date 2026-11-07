@@ -9,7 +9,7 @@ and often no outbound network cannot do.
 The backend and any docker-network units stay, so the VM still proves that
 the Docker daemon comes up — it just runs nothing.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `true`
 - **Declared in:** [`relics/nixos/vm-variant.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/vm-variant.nix)
 
@@ -21,7 +21,7 @@ the snapshot, so the service can only fail.
 
 Ignored when the impermanence relic is not imported.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `true`
 - **Declared in:** [`relics/nixos/vm-variant.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/vm-variant.nix)
 
@@ -40,7 +40,7 @@ pool import that will fail.
 
 Ignored when the ZFS relic is not imported.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `true`
 - **Declared in:** [`relics/nixos/vm-variant.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/vm-variant.nix)
 
@@ -51,7 +51,7 @@ parts neutralised. Only ever writes into `virtualisation.vmVariant`, so the
 production build is untouched
 .
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/nixos/vm-variant.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/vm-variant.nix)
@@ -65,7 +65,7 @@ A name that matches nothing is silently accepted — it produces a disabled
 unit and no error — so a typo here fails open. There is no way to check a
 unit's existence at evaluation time without breaking the legitimate case.
 
-- **Type:** list of string
+- **Type:** `list of string`
 - **Default:** `[ ]`
 - **Example:**
 
@@ -94,7 +94,7 @@ inside the variant, because for an immutable user those two win over
 `password` in the upstream override order, and because upstream warns when
 several password options are set at once.
 
-- **Type:** null or string
+- **Type:** `null or string`
 - **Default:** `null`
 - **Example:** `"vm"`
 - **Declared in:** [`relics/nixos/vm-variant.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/vm-variant.nix)
@@ -113,7 +113,7 @@ path fails with it.
 The body is emptied rather than the attribute removed, so that other
 scripts declaring `deps = [ "setupSecrets" ]` still resolve.
 
-- **Type:** list of string
+- **Type:** `list of string`
 - **Default:** `[ ]`
 - **Example:**
 

@@ -4,7 +4,7 @@
 
 Number of daily snapshots to keep.
 
-- **Type:** signed integer
+- **Type:** `signed integer`
 - **Valeur par défaut:** `7`
 - **Déclarée dans:** [`relics/nixos/zfs.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/zfs.nix)
 
@@ -12,7 +12,7 @@ Number of daily snapshots to keep.
 
 Whether to enable periodic ZFS snapshots on the persist dataset.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`relics/nixos/zfs.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/zfs.nix)
@@ -21,15 +21,15 @@ Whether to enable periodic ZFS snapshots on the persist dataset.
 
 ZFS pool name. Snapshots are enabled on `<poolName>/persist` and disabled on the root pool to avoid snapshotting ephemeral datasets.
 
-- **Type:** string
-- **Valeur par défaut:** *aucune, à définir*
+- **Type:** `string`
+- **Valeur par défaut:** *aucune, requise à l'usage*
 - **Déclarée dans:** [`relics/nixos/zfs.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/zfs.nix)
 
 #### `stc.relics.zfs.enable`
 
 Whether to enable ZFS kernel, boot support, and pool maintenance (scrub, TRIM, ZED).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`relics/nixos/zfs.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/zfs.nix)
@@ -45,7 +45,7 @@ Which ZFS-compatible kernel to track.
 ZFS supports LTS kernels longest; non-LTS releases often reach EOL before
 ZFS supports the next one, which can force manual intervention.
 
-- **Type:** one of "lts", "latest"
+- **Type:** `one of "lts", "latest"`
 - **Valeur par défaut:** `"lts"`
 - **Déclarée dans:** [`relics/nixos/zfs.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/zfs.nix)
 
@@ -53,6 +53,6 @@ ZFS supports the next one, which can force manual intervention.
 
 systemd calendar expression for auto-scrub. Monthly is sufficient for most workloads.
 
-- **Type:** string
+- **Type:** `string`
 - **Valeur par défaut:** `"monthly"`
 - **Déclarée dans:** [`relics/nixos/zfs.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/zfs.nix)

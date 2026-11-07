@@ -4,7 +4,7 @@
 
 Enable periodic database backups to /var/backup/vaultwarden.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Déclarée dans:** [`relics/nixos/vaultwarden.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/vaultwarden.nix)
 
@@ -12,7 +12,7 @@ Enable periodic database backups to /var/backup/vaultwarden.
 
 Whether to enable Vaultwarden — unofficial Bitwarden-compatible server.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`relics/nixos/vaultwarden.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/vaultwarden.nix)
@@ -21,15 +21,15 @@ Whether to enable Vaultwarden — unofficial Bitwarden-compatible server.
 
 Public domain name for Vaultwarden (used for the Traefik route).
 
-- **Type:** string
-- **Valeur par défaut:** *aucune, à définir*
+- **Type:** `string`
+- **Valeur par défaut:** *aucune, requise à l'usage*
 - **Déclarée dans:** [`relics/nixos/vaultwarden.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/vaultwarden.nix)
 
 #### `stc.relics.vaultwarden.invitationsAllowed`
 
 Allow organization invitations. Disabled by default.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Déclarée dans:** [`relics/nixos/vaultwarden.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/vaultwarden.nix)
 
@@ -37,7 +37,7 @@ Allow organization invitations. Disabled by default.
 
 Show password hints on the login page. Disabled by default for security.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Déclarée dans:** [`relics/nixos/vaultwarden.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/vaultwarden.nix)
 
@@ -45,7 +45,7 @@ Show password hints on the login page. Disabled by default for security.
 
 Allow new user self-registration. Disabled by default — enable only if you intend to expose registration to users.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Déclarée dans:** [`relics/nixos/vaultwarden.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/vaultwarden.nix)
 
@@ -53,6 +53,6 @@ Allow new user self-registration. Disabled by default — enable only if you int
 
 Restrict self-registration to these email domains. Empty list allows all domains. Only has effect when signupsAllowed = true.
 
-- **Type:** list of string
+- **Type:** `list of string`
 - **Valeur par défaut:** `[ ]`
 - **Déclarée dans:** [`relics/nixos/vaultwarden.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/vaultwarden.nix)

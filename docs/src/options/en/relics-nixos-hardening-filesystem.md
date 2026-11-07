@@ -4,7 +4,7 @@
 
 Whether to enable filesystem hardening (/tmp and /var/tmp noexec, /proc hidepid, /dev/shm restricted).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/nixos/hardening/filesystem.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/filesystem.nix)
@@ -18,7 +18,7 @@ When true:
 - /var/tmp is mounted without noexec, for consistency with /tmp.
 The shmSize option still applies — increase it accordingly.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Declared in:** [`relics/nixos/hardening/filesystem.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/filesystem.nix)
 
@@ -28,7 +28,7 @@ Maximum size of the /dev/shm tmpfs. The default 256M is appropriate for
 server workloads. DXVK and VKD3D-Proton use shared memory intensively —
 set to 2G or more when gaming = true.
 
-- **Type:** string
+- **Type:** `string`
 - **Default:** `"256M"`
 - **Declared in:** [`relics/nixos/hardening/filesystem.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/filesystem.nix)
 
@@ -36,7 +36,7 @@ set to 2G or more when gaming = true.
 
 Maximum size of the /tmp tmpfs. Capped to prevent OOM on memory-constrained systems.
 
-- **Type:** string
+- **Type:** `string`
 - **Default:** `"2G"`
 - **Declared in:** [`relics/nixos/hardening/filesystem.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/filesystem.nix)
 
@@ -47,6 +47,6 @@ it stays on disk, so its contents still survive a reboot. Set false if
 your own layout already mounts /var/tmp: both definitions would
 otherwise conflict at evaluation.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `true`
 - **Declared in:** [`relics/nixos/hardening/filesystem.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/filesystem.nix)

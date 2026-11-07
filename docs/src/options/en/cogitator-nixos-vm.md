@@ -4,7 +4,7 @@
 
 SSH authorized keys for the primary user.
 
-- **Type:** list of string
+- **Type:** `list of string`
 - **Default:** `[ ]`
 - **Declared in:** [`cogitator/nixos/vm.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/vm.nix)
 
@@ -17,7 +17,7 @@ Off by default: membership of the `docker` group is equivalent to root
 opt-in rather than a silent default. Enable it only when the VM is meant
 to run containers.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Declared in:** [`cogitator/nixos/vm.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/vm.nix)
 
@@ -25,7 +25,7 @@ to run containers.
 
 Whether to enable STC base VM profile.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`cogitator/nixos/vm.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/vm.nix)
@@ -39,7 +39,7 @@ login session — useful for self-hosted user-level daemons on a headless VM.
 Default true preserves historical behaviour. Set to false on a hardened
 host where user services should only run while the user is logged in.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `true`
 - **Declared in:** [`cogitator/nixos/vm.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/vm.nix)
 
@@ -47,6 +47,6 @@ host where user services should only run while the user is logged in.
 
 Primary user account created on the VM.
 
-- **Type:** string
+- **Type:** `string`
 - **Default:** `"admin"`
 - **Declared in:** [`cogitator/nixos/vm.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/vm.nix)

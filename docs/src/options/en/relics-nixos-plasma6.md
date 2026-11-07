@@ -4,7 +4,7 @@
 
 Whether to enable KDE Plasma 6 desktop (SDDM + Wayland + XDG portal).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/nixos/plasma6.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/plasma6.nix)
@@ -13,7 +13,7 @@ Whether to enable KDE Plasma 6 desktop (SDDM + Wayland + XDG portal).
 
 xkb keyboard layout used by SDDM and Plasma (e.g. 'fr', 'de', 'us').
 
-- **Type:** string
+- **Type:** `string`
 - **Default:** `"us"`
 - **Declared in:** [`relics/nixos/plasma6.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/plasma6.nix)
 
@@ -24,7 +24,7 @@ When using a custom theme (e.g. "catppuccin-mocha-mauve"), add the
 corresponding theme package to environment.systemPackages yourself —
 this relic does not install theme packages.
 
-- **Type:** string
+- **Type:** `string`
 - **Default:** `""`
 - **Declared in:** [`relics/nixos/plasma6.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/plasma6.nix)
 
@@ -38,6 +38,6 @@ on, so a host taking the X11 route (older or incompatible GPUs) must set
 `services.xserver.enable = true` as well. The relic only defaults that
 option off, so the consumer's definition wins without `mkForce`.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `true`
 - **Declared in:** [`relics/nixos/plasma6.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/plasma6.nix)

@@ -4,7 +4,7 @@
 
 Name of the ZFS dataset to roll back on each boot. The @blank snapshot is created automatically on first boot if absent.
 
-- **Type:** string
+- **Type:** `string`
 - **Default:** `"root"`
 - **Declared in:** [`relics/nixos/impermanence.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/impermanence.nix)
 
@@ -12,7 +12,7 @@ Name of the ZFS dataset to roll back on each boot. The @blank snapshot is create
 
 Whether to enable ZFS-based impermanence (rollback root dataset at every boot).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/nixos/impermanence.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/impermanence.nix)
@@ -21,7 +21,7 @@ Whether to enable ZFS-based impermanence (rollback root dataset at every boot).
 
 Additional directories under persistPath to bind-mount into /.
 
-- **Type:** list of string
+- **Type:** `list of string`
 - **Default:** `[ ]`
 - **Declared in:** [`relics/nixos/impermanence.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/impermanence.nix)
 
@@ -29,7 +29,7 @@ Additional directories under persistPath to bind-mount into /.
 
 Additional files under persistPath to bind-mount into /.
 
-- **Type:** list of string
+- **Type:** `list of string`
 - **Default:** `[ ]`
 - **Declared in:** [`relics/nixos/impermanence.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/impermanence.nix)
 
@@ -54,7 +54,7 @@ emergency prompt. A headless host that lands there
 is one you have to reach out of band. Set `emergencyAccess` alongside
 it if you want to be able to take over.
 
-- **Type:** one of "continue", "emergency"
+- **Type:** `one of "continue", "emergency"`
 - **Default:** `"continue"`
 - **Declared in:** [`relics/nixos/impermanence.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/impermanence.nix)
 
@@ -62,7 +62,7 @@ it if you want to be able to take over.
 
 Name of the persistent ZFS dataset under poolName, mounted at persistPath.
 
-- **Type:** string
+- **Type:** `string`
 - **Default:** `"persist"`
 - **Declared in:** [`relics/nixos/impermanence.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/impermanence.nix)
 
@@ -70,7 +70,7 @@ Name of the persistent ZFS dataset under poolName, mounted at persistPath.
 
 Mount point of the persistent ZFS dataset.
 
-- **Type:** string
+- **Type:** `string`
 - **Default:** `"/persist"`
 - **Declared in:** [`relics/nixos/impermanence.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/impermanence.nix)
 
@@ -78,6 +78,6 @@ Mount point of the persistent ZFS dataset.
 
 Name of the ZFS pool containing the root dataset.
 
-- **Type:** string
+- **Type:** `string`
 - **Default:** `"rpool"`
 - **Declared in:** [`relics/nixos/impermanence.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/impermanence.nix)

@@ -15,7 +15,7 @@ Note that a system crontab declared through `services.cron.systemCronJobs`
 is unaffected: it runs from `/etc/crontab` as root and never goes through
 the per-user `crontab` command this list gates.
 
-- **Type:** list of string
+- **Type:** `list of string`
 - **Default:**
 
   ```nix
@@ -37,7 +37,7 @@ the per-user `crontab` command this list gates.
 
 Whether to enable cron/at access restricted to an explicit allowlist.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/nixos/hardening/scheduler.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/scheduler.nix)

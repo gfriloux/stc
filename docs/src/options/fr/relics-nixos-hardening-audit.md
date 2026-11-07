@@ -4,7 +4,7 @@
 
 Whether to enable auditd with STC's baseline audit ruleset (identity, sudoers, setuid execve, kernel modules, mounts).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`relics/nixos/hardening/audit.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/audit.nix)
@@ -16,6 +16,6 @@ Lock the audit configuration until the next reboot (`auditctl -e 2`,
 change the rules: a nixos-rebuild switch that touches them fails the
 audit-rules-nixos unit until the machine reboots.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Déclarée dans:** [`relics/nixos/hardening/audit.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/audit.nix)

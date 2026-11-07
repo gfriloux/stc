@@ -4,15 +4,15 @@
 
 Base directory for CrowdSec data and config volumes.
 
-- **Type:** string
-- **Default:** *none, must be set*
+- **Type:** `string`
+- **Default:** *none, required when used*
 - **Declared in:** [`relics/nixos/docker/crowdsec.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/crowdsec.nix)
 
 #### `stc.relics.docker.crowdsec.enable`
 
 Whether to enable CrowdSec IDS/IPS container.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/nixos/docker/crowdsec.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/crowdsec.nix)
@@ -23,7 +23,7 @@ Path to the environment file passed to the CrowdSec container.
 Point this at whatever your secrets provider materialises
 (e.g. config.sops.secrets."crowdsec/env".path).
 
-- **Type:** null or string
+- **Type:** `null or string`
 - **Default:** `null`
 - **Declared in:** [`relics/nixos/docker/crowdsec.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/crowdsec.nix)
 
@@ -33,9 +33,11 @@ Docker image to use for CrowdSec. Required — STC ships no default so image
 versions live with the consumer, where your own renovate scans the right
 host. Set it in your host config, pinned by tag (and optionally digest):
 
-  stc.relics.docker.crowdsec.image = "crowdsecurity/crowdsec:v1.7.8"; # renovate
+```nix
+stc.relics.docker.crowdsec.image = "crowdsecurity/crowdsec:v1.7.8"; # renovate
+```
 
-- **Type:** null or string
+- **Type:** `null or string`
 - **Default:** `null`
 - **Example:** `"crowdsecurity/crowdsec:v1.7.8"`
 - **Declared in:** [`relics/nixos/docker/crowdsec.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/crowdsec.nix)

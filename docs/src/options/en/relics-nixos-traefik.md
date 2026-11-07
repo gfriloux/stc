@@ -4,15 +4,15 @@
 
 Email address used for Let's Encrypt ACME registration.
 
-- **Type:** string
-- **Default:** *none, must be set*
+- **Type:** `string`
+- **Default:** *none, required when used*
 - **Declared in:** [`relics/nixos/traefik.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/traefik.nix)
 
 #### `stc.relics.traefik.enable`
 
 Whether to enable Traefik reverse proxy (native NixOS service).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/nixos/traefik.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/traefik.nix)
@@ -21,6 +21,6 @@ Whether to enable Traefik reverse proxy (native NixOS service).
 
 Traefik log level.
 
-- **Type:** one of "DEBUG", "INFO", "WARN", "ERROR"
+- **Type:** `one of "DEBUG", "INFO", "WARN", "ERROR"`
 - **Default:** `"INFO"`
 - **Declared in:** [`relics/nixos/traefik.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/traefik.nix)

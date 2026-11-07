@@ -4,7 +4,7 @@
 
 Whether to enable systemd-boot + EFI bootloader configuration.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`relics/nixos/boot.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/boot.nix)

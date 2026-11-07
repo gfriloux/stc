@@ -4,7 +4,7 @@
 
 Whether to enable network sysctl hardening (spoofing, redirects, SYN flood).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`relics/nixos/hardening/network.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/network.nix)
@@ -14,10 +14,10 @@ Whether to enable network sysctl hardening (spoofing, redirects, SYN flood).
 ARP hardening (arp_ignore=1, arp_announce=2). Off by default: these
 restrict which addresses a host answers/announces ARP for and can break
 multi-homed hosts, Linux bridges, and container/Docker networking (which
-`../nixos` uses). Enable only on single-homed hosts where you have
+the docker-server cogitator uses). Enable only on single-homed hosts where you have
 verified it does not disturb the network stack.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Déclarée dans:** [`relics/nixos/hardening/network.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/network.nix)
 
@@ -30,7 +30,7 @@ hosts with static IPv6 (or no IPv6 at all), where accepting an RA from
 an untrusted L2 segment would let a neighbour inject a prefix and a
 default route.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Déclarée dans:** [`relics/nixos/hardening/network.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/network.nix)
 
@@ -42,6 +42,6 @@ would not be used to reach the source are dropped. Set to false = loose
 (2) for asymmetric routing, multi-homed hosts, or WireGuard/policy-routing
 setups where strict mode breaks legitimate return paths.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `true`
 - **Déclarée dans:** [`relics/nixos/hardening/network.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/network.nix)

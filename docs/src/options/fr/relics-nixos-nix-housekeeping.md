@@ -13,7 +13,7 @@ runs:
   kernel kills a build before a served process;
 - the scheduled GC runs with CPU policy `batch` and IO class `idle`.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `true`
 - **Déclarée dans:** [`relics/nixos/nix-housekeeping.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/nix-housekeeping.nix)
 
@@ -21,7 +21,7 @@ runs:
 
 Whether to enable bounded Nix store and journal for a long-lived host.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`relics/nixos/nix-housekeeping.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/nix-housekeeping.nix)
@@ -30,7 +30,7 @@ Whether to enable bounded Nix store and journal for a long-lived host.
 
 When to run the GC (systemd calendar expression).
 
-- **Type:** string
+- **Type:** `string`
 - **Valeur par défaut:** `"weekly"`
 - **Déclarée dans:** [`relics/nixos/nix-housekeeping.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/nix-housekeeping.nix)
 
@@ -38,7 +38,7 @@ When to run the GC (systemd calendar expression).
 
 Run Nix garbage collection on a timer (`nix.gc.automatic`).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `true`
 - **Déclarée dans:** [`relics/nixos/nix-housekeeping.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/nix-housekeeping.nix)
 
@@ -48,7 +48,7 @@ Delete store paths, and the generations that hold them, older than
 this many days. 30 days is a server's rollback window; a throwaway VM
 can afford less.
 
-- **Type:** unsigned integer, meaning >=0
+- **Type:** `unsigned integer, meaning >=0`
 - **Valeur par défaut:** `30`
 - **Déclarée dans:** [`relics/nixos/nix-housekeeping.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/nix-housekeeping.nix)
 
@@ -56,7 +56,7 @@ can afford less.
 
 journald `MaxRetentionSec`. `null` leaves journald's own (no time limit).
 
-- **Type:** null or string
+- **Type:** `null or string`
 - **Valeur par défaut:** `"1month"`
 - **Déclarée dans:** [`relics/nixos/nix-housekeeping.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/nix-housekeeping.nix)
 
@@ -64,7 +64,7 @@ journald `MaxRetentionSec`. `null` leaves journald's own (no time limit).
 
 journald `SystemMaxUse`. `null` leaves journald's own (10% of the filesystem, up to 4G).
 
-- **Type:** null or string
+- **Type:** `null or string`
 - **Valeur par défaut:** `"500M"`
 - **Déclarée dans:** [`relics/nixos/nix-housekeeping.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/nix-housekeeping.nix)
 
@@ -74,7 +74,7 @@ How much free space, in GiB, a build-time collection stops at
 (`nix.settings.max-free`). Must be above `minFreeGiB`. Ignored when
 `minFreeGiB` is `null`.
 
-- **Type:** positive integer, meaning >0
+- **Type:** `positive integer, meaning >0`
 - **Valeur par défaut:** `15`
 - **Déclarée dans:** [`relics/nixos/nix-housekeeping.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/nix-housekeeping.nix)
 
@@ -84,7 +84,7 @@ When free space on the store drops below this many GiB during a build,
 Nix collects garbage until `maxFreeGiB` is free (`nix.settings.min-free`).
 `null` leaves both settings to Nix, which never collects during a build.
 
-- **Type:** null or (positive integer, meaning >0)
+- **Type:** `null or (positive integer, meaning >0)`
 - **Valeur par défaut:** `5`
 - **Déclarée dans:** [`relics/nixos/nix-housekeeping.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/nix-housekeeping.nix)
 
@@ -94,6 +94,6 @@ Deduplicate the store on a timer (`nix.optimise.automatic`). Upstream
 already runs it at idle CPU and IO priority. Skipped in a container,
 whose store is the host's.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `true`
 - **Déclarée dans:** [`relics/nixos/nix-housekeeping.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/nix-housekeeping.nix)

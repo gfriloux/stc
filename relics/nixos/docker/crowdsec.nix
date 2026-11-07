@@ -44,7 +44,9 @@ in {
         versions live with the consumer, where your own renovate scans the right
         host. Set it in your host config, pinned by tag (and optionally digest):
 
-          stc.relics.docker.crowdsec.image = "crowdsecurity/crowdsec:v1.7.8"; # renovate
+        ```nix
+        stc.relics.docker.crowdsec.image = "crowdsecurity/crowdsec:v1.7.8"; # renovate
+        ```
       '';
     };
 

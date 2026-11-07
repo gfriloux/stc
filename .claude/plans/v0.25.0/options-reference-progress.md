@@ -79,3 +79,27 @@ aws-ami 6cfzl6gi…); namespace grep: the only `.mdx` hits are `stc.inputs.*`
 flake-input references, present before this branch; docs build last run at
 step 4 on identical page content.
 Step 5: complete.
+Closing review (fresh context) — triage:
+- Fixed: docker-notify `hostname` rendered the doc evaluation's `"nixos"` —
+  `defaultText` added; generator now evaluates with a sentinel host name and
+  home and throws when a default/example holds one or a store path (measured:
+  without the `defaultText` the build fails naming the option).
+- Fixed: indented blocks in 7 descriptions (3 docker image pins, notify and
+  smart variable lists, smart default directives, notify watch label) ran into
+  prose with curly quotes — pins in ```nix fences (line unchanged), lists as
+  `- ` bullets. Rendered HTML checked: `<li><code>STC_NOTIFY_SERVICE`, pin in
+  `<pre>`, no curly-quoted image left.
+- Fixed: coverage reads `.mdx` only, requires the whole line `<Name />`,
+  accepts digits/underscore in names; duplicate slugs throw explicitly.
+- Fixed: `just options-doc` builds before it removes anything.
+- Fixed: label → "none, required when used" (FR "aucune, requise à
+  l'usage"): these options are required only once their relic or entry is in
+  use. Types render in backticks. strictArp's "`../nixos`" → "the
+  docker-server cogitator".
+- Kept, ruling: fragments use `####` under `## Options` (h2 → h4): h4 keeps
+  180 option names out of Starlight's on-page TOC (h2–h3) — cost if wrong: a
+  heading-level lint complaint, none runs today.
+- Kept, ruling: a `<Name />` inside a code fence would still count as
+  rendered — no page shows MDX components in fences; cost if wrong: one false
+  pass the docs build would not catch.
+Review fixes verified: docs build OK (104 pages), fmt-check + lint OK, parity OK, nix flake check → 0.

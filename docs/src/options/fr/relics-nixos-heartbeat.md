@@ -4,7 +4,7 @@
 
 Whether to enable success-only heartbeats from named systemd units.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`relics/nixos/heartbeat.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/heartbeat.nix)
@@ -13,7 +13,7 @@ Whether to enable success-only heartbeats from named systemd units.
 
 curl retries for a failed ping.
 
-- **Type:** unsigned integer, meaning >=0
+- **Type:** `unsigned integer, meaning >=0`
 - **Valeur par défaut:** `3`
 - **Déclarée dans:** [`relics/nixos/heartbeat.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/heartbeat.nix)
 
@@ -21,7 +21,7 @@ curl retries for a failed ping.
 
 Seconds each ping attempt may take.
 
-- **Type:** positive integer, meaning >0
+- **Type:** `positive integer, meaning >0`
 - **Valeur par défaut:** `10`
 - **Déclarée dans:** [`relics/nixos/heartbeat.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/heartbeat.nix)
 
@@ -30,7 +30,7 @@ Seconds each ping attempt may take.
 Services to watch, by name as in systemd.services (no ".service").
 Each one pings its URL when it succeeds, and only then.
 
-- **Type:** attribute set of (submodule)
+- **Type:** `attribute set of (submodule)`
 - **Valeur par défaut:** `{ }`
 - **Exemple:**
 
@@ -47,7 +47,7 @@ The unit comes from systemd.packages (fstrim, …), so its
 definition is not in systemd.services and the existence check
 cannot see it. Set to true to skip that check for this unit.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Déclarée dans:** [`relics/nixos/heartbeat.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/heartbeat.nix)
 
@@ -56,7 +56,7 @@ cannot see it. Set to true to skip that check for this unit.
 File holding the URL to ping on each success, read at runtime.
 The URL is a secret: whoever knows it can silence the alert.
 
-- **Type:** string matching the pattern /.*
-- **Valeur par défaut:** *aucune, à définir*
+- **Type:** `string matching the pattern /.*`
+- **Valeur par défaut:** *aucune, requise à l'usage*
 - **Exemple:** `"/run/secrets/kuma/push-borg"`
 - **Déclarée dans:** [`relics/nixos/heartbeat.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/heartbeat.nix)

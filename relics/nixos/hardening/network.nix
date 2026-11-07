@@ -35,7 +35,7 @@ in {
         ARP hardening (arp_ignore=1, arp_announce=2). Off by default: these
         restrict which addresses a host answers/announces ARP for and can break
         multi-homed hosts, Linux bridges, and container/Docker networking (which
-        `../nixos` uses). Enable only on single-homed hosts where you have
+        the docker-server cogitator uses). Enable only on single-homed hosts where you have
         verified it does not disturb the network stack.
       '';
     };

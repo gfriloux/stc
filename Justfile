@@ -83,8 +83,10 @@ test:
 # Regenerate the option reference fragments from the modules (docs/src/options).
 # checks.options-doc fails until they are committed in step with the modules.
 options-doc:
-    rm -rf docs/src/options
-    cp -rL --no-preserve=mode "$(nix build --no-link --print-out-paths .#legacyPackages.x86_64-linux.options-doc --no-write-lock-file)" docs/src/options
+    # Built before anything is removed: a failed evaluation leaves the fragments as they were.
+    out="$(nix build --no-link --print-out-paths .#legacyPackages.x86_64-linux.options-doc --no-write-lock-file)" \
+        && rm -rf docs/src/options \
+        && cp -rL --no-preserve=mode "$out" docs/src/options
     # Staged at once: the flake, and so checks.options-doc, only reads tracked files.
     git add docs/src/options
 

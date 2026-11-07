@@ -4,7 +4,7 @@
 
 Whether to enable blacklist of high-risk / unused kernel modules (DMA, rare network protocols, legacy filesystems).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/nixos/hardening/modules.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/modules.nix)
@@ -17,7 +17,7 @@ stacks, webcams, etc.) without forking the relic. `udf` (optical media)
 and `usb-storage` belong here rather than in the defaults: both are still
 legitimately used, so the choice is left to the host.
 
-- **Type:** list of string
+- **Type:** `list of string`
 - **Default:** `[ ]`
 - **Example:**
 

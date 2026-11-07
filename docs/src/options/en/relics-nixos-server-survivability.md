@@ -8,7 +8,7 @@ does not fill and make the next deploy fail at bootloader install. Older
 generations stay in the Nix store until garbage-collected; they just are
 no longer offered at boot. `null` leaves the bootloader's own default.
 
-- **Type:** null or (positive integer, meaning >0)
+- **Type:** `null or (positive integer, meaning >0)`
 - **Default:** `5`
 - **Declared in:** [`relics/nixos/server-survivability.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/server-survivability.nix)
 
@@ -21,7 +21,7 @@ starts and the failure can be investigated remotely.
 The initrd is not affected: it keeps its own emergency target. See
 `panicReboot` for how that target behaves on a server.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `true`
 - **Declared in:** [`relics/nixos/server-survivability.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/server-survivability.nix)
 
@@ -30,7 +30,7 @@ The initrd is not affected: it keeps its own emergency target. See
 Whether to enable defaults for a headless host that must recover without anyone at the console
 .
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/nixos/server-survivability.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/server-survivability.nix)
@@ -40,7 +40,7 @@ Whether to enable defaults for a headless host that must recover without anyone 
 Refuse suspend and hibernation (`AllowSuspend=no`,
 `AllowHibernation=no`). A suspended server has nothing to wake it.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `true`
 - **Declared in:** [`relics/nixos/server-survivability.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/server-survivability.nix)
 
@@ -61,7 +61,7 @@ failed rollback to stop and wait for a human; the two together would
 reboot in a loop. The combination is refused by assertion: set this to
 `false` to keep the stop, or set `onRollbackFailure` to `"continue"`.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `true`
 - **Declared in:** [`relics/nixos/server-survivability.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/server-survivability.nix)
 
@@ -76,7 +76,7 @@ one only if the hypervisor exposes it (QEMU's q35 machine exposes
 setting is harmless, but it protects nothing. Check with
 `journalctl -b | grep -i watchdog`.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `true`
 - **Declared in:** [`relics/nixos/server-survivability.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/server-survivability.nix)
 
@@ -86,7 +86,7 @@ setting is harmless, but it protects nothing. Check with
 at half this interval; if PID 1 stops pinging, the device resets the
 machine. Raise it if a slow firmware watchdog trips spuriously.
 
-- **Type:** string
+- **Type:** `string`
 - **Default:** `"30s"`
 - **Example:** `"1min"`
 - **Declared in:** [`relics/nixos/server-survivability.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/server-survivability.nix)

@@ -15,7 +15,7 @@ Set this to `false` and declare your interfaces yourself, or leave it on.
 Either way the relic's value is deterministic against whatever upstream
 defaults next release.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `true`
 - **Déclarée dans:** [`relics/nixos/networking.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/networking.nix)
 
@@ -23,7 +23,7 @@ defaults next release.
 
 DNS search domain. Null means no domain is set.
 
-- **Type:** null or string
+- **Type:** `null or string`
 - **Valeur par défaut:** `null`
 - **Déclarée dans:** [`relics/nixos/networking.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/networking.nix)
 
@@ -31,7 +31,7 @@ DNS search domain. Null means no domain is set.
 
 Whether to enable base networking configuration.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`relics/nixos/networking.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/networking.nix)
@@ -40,7 +40,7 @@ Whether to enable base networking configuration.
 
 DNS resolvers. Defaults to Quad9 (privacy-respecting, DNSSEC, no logging).
 
-- **Type:** list of string
+- **Type:** `list of string`
 - **Valeur par défaut:**
 
   ```nix

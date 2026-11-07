@@ -4,7 +4,7 @@
 
 Whether to enable filtering proxy in front of the Docker socket.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/nixos/docker/socket-proxy.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/socket-proxy.nix)
@@ -16,9 +16,11 @@ so image versions live with the consumer, where your own renovate scans
 the right host. This container holds the Docker socket, so pin it (tag and
 optionally digest):
 
-  stc.relics.docker.socketProxy.image = "tecnativa/docker-socket-proxy:0.3.0"; # renovate
+```nix
+stc.relics.docker.socketProxy.image = "tecnativa/docker-socket-proxy:0.3.0"; # renovate
+```
 
-- **Type:** null or string
+- **Type:** `null or string`
 - **Default:** `null`
 - **Example:** `"tecnativa/docker-socket-proxy:0.3.0"`
 - **Declared in:** [`relics/nixos/docker/socket-proxy.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/socket-proxy.nix)
@@ -29,7 +31,7 @@ Docker network shared between the proxy and its clients (e.g. Traefik).
 Clients reach the filtered Docker API at tcp://docker-socket-proxy:2375
 on this network.
 
-- **Type:** string
+- **Type:** `string`
 - **Default:** `"socket-proxy"`
 - **Declared in:** [`relics/nixos/docker/socket-proxy.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/socket-proxy.nix)
 
@@ -40,7 +42,7 @@ Docker API sections to expose, mapped to the proxy's env-var toggles
 exactly what the Traefik docker provider needs. Write access (POST) is
 always forced off — that is the whole point of the proxy.
 
-- **Type:** attribute set of boolean
+- **Type:** `attribute set of boolean`
 - **Default:**
 
   ```nix

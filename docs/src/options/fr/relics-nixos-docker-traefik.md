@@ -4,15 +4,15 @@
 
 Email address used for Let's Encrypt ACME registration.
 
-- **Type:** string
-- **Valeur par défaut:** *aucune, à définir*
+- **Type:** `string`
+- **Valeur par défaut:** *aucune, requise à l'usage*
 - **Déclarée dans:** [`relics/nixos/docker/traefik.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/traefik.nix)
 
 #### `stc.relics.docker.traefik.dataDir`
 
 Base directory for Traefik data (logs, acme.json, conf).
 
-- **Type:** string
+- **Type:** `string`
 - **Valeur par défaut:** `"/srv/docker/traefik"`
 - **Déclarée dans:** [`relics/nixos/docker/traefik.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/traefik.nix)
 
@@ -22,7 +22,7 @@ Path to the Traefik dynamic config file (traefik_dynamic.yml).
 Point this at whatever your secrets provider materialises.
 If null, an empty placeholder is used — add the file manually.
 
-- **Type:** null or string
+- **Type:** `null or string`
 - **Valeur par défaut:** `null`
 - **Déclarée dans:** [`relics/nixos/docker/traefik.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/traefik.nix)
 
@@ -30,7 +30,7 @@ If null, an empty placeholder is used — add the file manually.
 
 Whether to enable Traefik reverse proxy container.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`relics/nixos/docker/traefik.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/traefik.nix)
@@ -47,7 +47,7 @@ tunnel to the host cannot reach it either, since the host loopback is not
 the container's. To reach it, publish the port or add a dynamic-config
 route to the dashboard service.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Déclarée dans:** [`relics/nixos/docker/traefik.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/traefik.nix)
 
@@ -67,7 +67,7 @@ consumer that uses a file middleware.
 The `@file` suffix is optional here: `"crowdsec"` and `"crowdsec@file"`
 are the same entry.
 
-- **Type:** list of string
+- **Type:** `list of string`
 - **Valeur par défaut:** `[ ]`
 - **Exemple:**
 
@@ -86,12 +86,14 @@ Docker image to use for Traefik. Required — STC ships no default so image
 versions live with the consumer, where your own renovate scans the right
 host. Set it in your host config, pinned by tag (and optionally digest):
 
-  stc.relics.docker.traefik.image = "traefik:v3.7.6"; # renovate
+```nix
+stc.relics.docker.traefik.image = "traefik:v3.7.6"; # renovate
+```
 
 When socketProxy.enable = false this container mounts the raw Docker
 socket, so a silently-swapped image is dangerous — pin it.
 
-- **Type:** null or string
+- **Type:** `null or string`
 - **Valeur par défaut:** `null`
 - **Exemple:** `"traefik:v3.7.6"`
 - **Déclarée dans:** [`relics/nixos/docker/traefik.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/traefik.nix)

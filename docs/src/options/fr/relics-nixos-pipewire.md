@@ -4,7 +4,7 @@
 
 Whether to enable Pipewire audio server (RTKit + ALSA 32-bit + PulseAudio compat).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`relics/nixos/pipewire.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/pipewire.nix)

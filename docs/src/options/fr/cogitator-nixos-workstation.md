@@ -7,7 +7,7 @@ a machine without one is a server, not a workstation. Currently only
 "plasma" (KDE Plasma 6). Extensible: adding "i3" means a new cogitator-i3
 and an extra value here.
 
-- **Type:** value "plasma" (singular enum)
+- **Type:** `value "plasma" (singular enum)`
 - **Valeur par défaut:** `"plasma"`
 - **Déclarée dans:** [`cogitator/nixos/workstation.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/workstation.nix)
 
@@ -15,7 +15,7 @@ and an extra value here.
 
 Whether to enable hardened workstation profile (desktop + hardening + YubiKey).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`cogitator/nixos/workstation.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/workstation.nix)
@@ -26,7 +26,7 @@ Enable filesystem hardening (/tmp noexec, /proc hidepid=2, /dev/shm
 restricted). Set false if hidepid=2 disturbs polkit / user D-Bus agents
 on your desktop and you have not wired them into the "proc" group.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `true`
 - **Déclarée dans:** [`cogitator/nixos/workstation.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/workstation.nix)
 
@@ -36,7 +36,7 @@ Relax filesystem hardening for Steam/Proton: drop noexec on /tmp and
 /dev/shm (kept nosuid/nodev, hidepid stays). Set true on a gaming
 workstation. Pair with cogitator-gaming for the GPU + Steam side.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Déclarée dans:** [`cogitator/nixos/workstation.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/workstation.nix)
 
@@ -44,6 +44,6 @@ workstation. Pair with cogitator-gaming for the GPU + Steam side.
 
 Enable YubiKey system support (pcscd + udev rules). Set false on a workstation with no key.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `true`
 - **Déclarée dans:** [`cogitator/nixos/workstation.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/workstation.nix)

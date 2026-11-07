@@ -4,7 +4,7 @@
 
 Whether to enable kernel sysctl hardening.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`relics/nixos/hardening/kernel.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/kernel.nix)

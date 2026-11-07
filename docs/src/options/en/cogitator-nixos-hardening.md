@@ -4,7 +4,7 @@
 
 Whether to enable full hardening suite (kernel + network + filesystem + SSH + module blacklist + scheduler access + audit + firewall).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`cogitator/nixos/hardening.nix`](https://github.com/gfriloux/stc/blob/main/cogitator/nixos/hardening.nix)

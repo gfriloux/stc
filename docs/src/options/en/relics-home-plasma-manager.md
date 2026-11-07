@@ -4,7 +4,7 @@
 
 Whether to enable plasma-manager declarative KDE configuration.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/home/plasma-manager.nix`](https://github.com/gfriloux/stc/blob/main/relics/home/plasma-manager.nix)

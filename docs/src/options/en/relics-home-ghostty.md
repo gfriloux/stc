@@ -4,7 +4,7 @@
 
 Whether to enable Ghostty terminal emulator.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/home/ghostty.nix`](https://github.com/gfriloux/stc/blob/main/relics/home/ghostty.nix)
@@ -13,6 +13,6 @@ Whether to enable Ghostty terminal emulator.
 
 Install a curated set of Nerd Fonts alongside Ghostty.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `true`
 - **Declared in:** [`relics/home/ghostty.nix`](https://github.com/gfriloux/stc/blob/main/relics/home/ghostty.nix)

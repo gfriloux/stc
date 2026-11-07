@@ -5,7 +5,7 @@
 Who may do what to which units. Empty grants nothing. Each entry needs
 at least one unit or prefix.
 
-- **Type:** list of (submodule)
+- **Type:** `list of (submodule)`
 - **Valeur par défaut:** `[ ]`
 - **Déclarée dans:** [`relics/nixos/polkit-units.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/polkit-units.nix)
 
@@ -14,7 +14,7 @@ at least one unit or prefix.
 systemctl verbs granted. Job verbs only; enabling or disabling a unit
 cannot be scoped to a unit, so it is never delegated.
 
-- **Type:** list of (one of "start", "stop", "restart", "try-restart", "reload", "reload-or-restart", "reload-or-try-restart")
+- **Type:** `list of (one of "start", "stop", "restart", "try-restart", "reload", "reload-or-restart", "reload-or-try-restart")`
 - **Valeur par défaut:**
 
   ```nix
@@ -30,8 +30,8 @@ cannot be scoped to a unit, so it is never delegated.
 
 Members of this group receive the delegation. Must exist in `users.groups`: the build fails otherwise.
 
-- **Type:** string
-- **Valeur par défaut:** *aucune, à définir*
+- **Type:** `string`
+- **Valeur par défaut:** *aucune, requise à l'usage*
 - **Exemple:** `"wheel"`
 - **Déclarée dans:** [`relics/nixos/polkit-units.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/polkit-units.nix)
 
@@ -43,7 +43,7 @@ configuration installs ("docker-immich-" →
 unit added later with the prefix is included at the next rebuild, of
 any type. A prefix that matches nothing fails the build.
 
-- **Type:** list of string matching the pattern .+
+- **Type:** `list of string matching the pattern .+`
 - **Valeur par défaut:** `[ ]`
 - **Exemple:**
 
@@ -61,7 +61,7 @@ suffix gets ".service". Each must be a unit this configuration
 installs (or an instance of an installed template), or the build
 fails: a name with no unit file could be claimed by systemd-run.
 
-- **Type:** list of string
+- **Type:** `list of string`
 - **Valeur par défaut:** `[ ]`
 - **Exemple:**
 
@@ -77,7 +77,7 @@ fails: a name with no unit file could be claimed by systemd-run.
 
 Whether to enable polkit delegation of named systemd units to groups (enables polkit itself).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`relics/nixos/polkit-units.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/polkit-units.nix)

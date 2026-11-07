@@ -22,7 +22,7 @@ system.preSwitchChecks.myDiff = ''
 '';
 ```
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `true`
 - **Déclarée dans:** [`relics/nixos/pre-switch-checks.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/pre-switch-checks.nix)
 
@@ -31,7 +31,7 @@ system.preSwitchChecks.myDiff = ''
 Whether to enable checks that run on the target machine before a new closure is activated
 .
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `false`
 - **Exemple:** `true`
 - **Déclarée dans:** [`relics/nixos/pre-switch-checks.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/pre-switch-checks.nix)
@@ -67,6 +67,6 @@ inhibitors: writing the wrong host's bootloader entry is precisely the
 disaster this guards against, and it would only surface at the next
 reboot.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Valeur par défaut:** `true`
 - **Déclarée dans:** [`relics/nixos/pre-switch-checks.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/pre-switch-checks.nix)

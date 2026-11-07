@@ -4,7 +4,7 @@
 
 Whether to enable YubiKey user tools (manager, touch detector, OATH app).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/home/yubikey.nix`](https://github.com/gfriloux/stc/blob/main/relics/home/yubikey.nix)

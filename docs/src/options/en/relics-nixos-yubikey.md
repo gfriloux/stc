@@ -4,7 +4,7 @@
 
 Whether to enable YubiKey system support (pcscd + udev rules).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/nixos/yubikey.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/yubikey.nix)

@@ -7,7 +7,7 @@ be used by anyone with root on the intermediate host.
 
 Turn it on to hop through a bastion with your own agent.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Declared in:** [`relics/nixos/hardening/ssh.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/ssh.nix)
 
@@ -15,7 +15,7 @@ Turn it on to hop through a bastion with your own agent.
 
 Allow TCP forwarding. Disabled by default on server VMs. Also drives `StreamLocalBindUnlink`, which only has an object when forwarding is allowed.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Declared in:** [`relics/nixos/hardening/ssh.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/ssh.nix)
 
@@ -23,7 +23,7 @@ Allow TCP forwarding. Disabled by default on server VMs. Also drives `StreamLoca
 
 Allow tun device forwarding (`PermitTunnel`). Disabled by default.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Declared in:** [`relics/nixos/hardening/ssh.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/ssh.nix)
 
@@ -36,7 +36,7 @@ Turn it on for a workstation that forwards a remote graphical
 application, or for a host that is also a Slurm client (nixpkgs' slurm
 module expects it on).
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Declared in:** [`relics/nixos/hardening/ssh.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/ssh.nix)
 
@@ -51,7 +51,7 @@ banner changes nothing.
 
 For an existing file, use builtins.readFile ./banner.txt.
 
-- **Type:** null or strings concatenated with "\n"
+- **Type:** `null or strings concatenated with "\n"`
 - **Default:** `null`
 - **Example:** `"Authorized access only. All activity is logged."`
 - **Declared in:** [`relics/nixos/hardening/ssh.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/ssh.nix)
@@ -60,7 +60,7 @@ For an existing file, use builtins.readFile ./banner.txt.
 
 Whether to enable hardened OpenSSH server configuration.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/nixos/hardening/ssh.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/ssh.nix)
@@ -72,7 +72,7 @@ sshd PerSourcePenalties: rate-limits misbehaving source addresses
 enables this by default; STC sets explicit, tuned values. Set to
 "no" to disable.
 
-- **Type:** string
+- **Type:** `string`
 - **Default:** `"crash:3600s authfail:3600s max:86400s"`
 - **Declared in:** [`relics/nixos/hardening/ssh.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/ssh.nix)
 
@@ -103,6 +103,6 @@ Narrower escape: the underlying `services.openssh.authorizedKeysFiles` is
 a list and definitions merge, so a consumer can add one specific path
 back without giving up the lockdown.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `true`
 - **Declared in:** [`relics/nixos/hardening/ssh.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/ssh.nix)

@@ -4,7 +4,7 @@
 
 Whether to enable warnings for containers that publish on every interface or mount the raw Docker socket.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/nixos/docker/guards.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/docker/guards.nix)

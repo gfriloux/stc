@@ -4,7 +4,7 @@
 
 Whether to enable the NixOS firewall as a checked default-deny baseline, with refused connections logged.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `false`
 - **Example:** `true`
 - **Declared in:** [`relics/nixos/hardening/firewall.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/firewall.nix)
@@ -20,6 +20,6 @@ the relic writes that one at normal priority, because nixpkgs'
 installation-device profile already holds a mkDefault false on it, and
 a second mkDefault would conflict.
 
-- **Type:** boolean
+- **Type:** `boolean`
 - **Default:** `true`
 - **Declared in:** [`relics/nixos/hardening/firewall.nix`](https://github.com/gfriloux/stc/blob/main/relics/nixos/hardening/firewall.nix)
