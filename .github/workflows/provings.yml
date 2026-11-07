@@ -6,8 +6,10 @@ name: Provings
 on:
   schedule:
     - cron: "0 3 * * 0" # Sunday 03:00 UTC
+  # No `opened`: a pull request opened with the label also emits `labeled`, and
+  # listening to both runs the suite twice.
   pull_request:
-    types: [opened, reopened, synchronize, labeled]
+    types: [reopened, synchronize, labeled]
   workflow_dispatch:
 
 # Least privilege: the workflow only reads the repo.
