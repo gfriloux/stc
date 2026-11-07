@@ -64,3 +64,18 @@ namespace-migration doc grep already covers `docs/`.
 Step 4: no description moved — every cogitator table row was covered by its
 module description (compared row by row).
 Step 4: complete (docs build OK, 104 pages; rendered h4 = fragment option count on all 22 pages; parity OK; no `| \`stc.cogitator.` table left; checks.options-doc → OK).
+Step 5: coverage pass added to checks.options-doc — each slug must be imported
+*and* rendered (`<Name />`) by a page in en/ and in fr/. Negatives measured:
+render line dropped from fr/relics/boot → "fr: no page renders
+options/fr/relics-nixos-boot.md"; import line dropped from en/relics/boot →
+"en: no page renders …"; both reverted.
+Step 5: rules updated — CLAUDE.md (new relic step 4, new cogitator step 5),
+PROCEDURE_PLANS.md (relic doc template → `.mdx` + `<Options />`, Gate 4 lists
+checks.options-doc), DESIGN.md (sync invariant: the reference is generated).
+Step 5: Quality gates — `nix flake check --all-systems --no-build` → 0;
+`nix flake check` → 0; fmt-check + lint → 0; parity OK; schematic drvPaths
+identical to main with `--override-input stc` (local-vm 6w83sj19…,
+aws-ami 6cfzl6gi…); namespace grep: the only `.mdx` hits are `stc.inputs.*`
+flake-input references, present before this branch; docs build last run at
+step 4 on identical page content.
+Step 5: complete.

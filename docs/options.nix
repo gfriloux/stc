@@ -148,12 +148,32 @@
     lib.optionalAttrs (system == "x86_64-linux") {
       legacyPackages.options-doc = optionsDoc;
 
+      # Drift, then coverage: every fragment is imported by a page in each
+      # language, and that page renders it (an import alone shows nothing).
       checks.options-doc = pkgs.runCommand "options-doc" {} ''
         if ! diff -r ${optionsDoc} ${self}/docs/src/options; then
           echo
           echo "The option reference is out of date: run \`just options-doc\` and commit docs/src/options."
           exit 1
         fi
+
+        missing=0
+        for slug in ${lib.concatMapStringsSep " " slug (builtins.attrNames byFile)}; do
+          for lang in en fr; do
+            found=0
+            for page in $(grep -rl "/options/$lang/$slug.md'" ${self}/docs/src/content/docs/$lang); do
+              name=$(sed -n "s|^import \([A-Za-z]*\) from '.*/options/$lang/$slug.md';\$|\1|p" "$page")
+              if [ -n "$name" ] && grep -q "<$name />" "$page"; then
+                found=1
+              fi
+            done
+            if [ "$found" = 0 ]; then
+              echo "$lang: no page renders options/$lang/$slug.md — import it from its page (en and fr)."
+              missing=1
+            fi
+          done
+        done
+        [ "$missing" = 0 ] || exit 1
         touch $out
       '';
     };

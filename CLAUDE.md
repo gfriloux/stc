@@ -120,7 +120,9 @@ The module reads the file at runtime. STC is agnostic to the secrets backend.
 1. Create `relics/nixos/<name>.nix` or `relics/home/<name>.nix`.
 2. Declare options under `stc.relics.<name>` (or `stc.relics.<group>.<name>`).
 3. Register in `relics/default.nix` under `flake.nixosModules` or `flake.homeModules`.
-4. Add a bilingual doc page in `docs/src/content/docs/en/` and `fr/`.
+4. Add a bilingual doc page (`.mdx`) in `docs/src/content/docs/en/` and `fr/`
+   that imports its generated options from `docs/src/options/{en,fr}/<slug>.md`;
+   run `just options-doc`.
 
 ## Adding a new cogitator
 
@@ -128,7 +130,8 @@ The module reads the file at runtime. STC is agnostic to the secrets backend.
 2. Declare options under `stc.cogitator.<name>`.
 3. In the `config` block, reference relics via `stc.relics.*` (canonical namespace).
 4. Register in `cogitator/default.nix`.
-5. Add a bilingual doc page.
+5. Add a bilingual doc page (`.mdx`) that imports its generated options from
+   `docs/src/options/{en,fr}/<slug>.md`; run `just options-doc`.
 6. **Write the proving** — `provings/<name>.nix`, registered in
    `provings/default.nix` (the `test` recipe and the Provings CI workflow both
    read their list from that registry). Mandatory, same change, not
