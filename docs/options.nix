@@ -9,8 +9,16 @@
 # regenerates them.
 #
 # Measured choices (see .claude/plans/v0.25.0/options-reference.md):
-#   - One evaluation per exported module: importing them all at once declares
-#     environment.persistence twice (several cogitators import impermanence).
+#   - One evaluation per class, of STC's own files only. The exported
+#     wrappers also import upstream modules (impermanence, disko, …) that are
+#     functions, which the module system cannot deduplicate: importing every
+#     wrapper at once declares environment.persistence twice. Their path
+#     imports are kept, and each upstream module is imported once from
+#     `upstream` below. A wrapper gaining an upstream module missing there
+#     fails this evaluation ("option … does not exist") as soon as an STC file
+#     sets one of its options. One evaluation per module instead
+#     took CI's all-systems check past the runner's 16 GB (measured: 11.7 GiB
+#     on main, 16.1 GiB with ~45 evaluations).
 #   - Keyed by class, then name: stc.relics.yubikey.enable exists both as a
 #     NixOS and a Home Manager option, in two files. A merge by name alone
 #     drops one of them.
@@ -51,21 +59,49 @@
       && !(lib.hasInfix "._module." o.name)
       && (lib.hasPrefix "stc.relics." o.name || lib.hasPrefix "stc.cogitator." o.name);
 
-    optionsOf = options: builtins.filter keep (lib.optionAttrSetToDocList options);
+    optionsOf = options: builtins.filter keep (lib.optionAttrSetToDocList options.stc);
 
-    nixosOptions = lib.concatMap (m:
+    # Exported modules come wrapped by flake-parts (`{ _file; imports; }`) and
+    # sometimes by STC (`{...}: { imports = [...]; }`); the paths inside are
+    # STC's files. A function that requires arguments is an upstream module.
+    unwrap = m:
+      if builtins.isPath m
+      then [m]
+      else if builtins.isFunction m
+      then lib.optionals (builtins.functionArgs m == {}) (lib.concatMap unwrap ((m {}).imports or []))
+      else lib.concatMap unwrap (m.imports or []);
+
+    ownFiles = modules: lib.concatMap unwrap (builtins.attrValues modules);
+
+    # Every upstream module the exported wrappers import (relics/default.nix,
+    # cogitator/default.nix), once each.
+    upstream = {
+      nixos = [
+        inputs.impermanence.nixosModules.impermanence
+        inputs.disko.nixosModules.disko
+      ];
+      home = [
+        inputs.plasma-manager.homeModules.plasma-manager
+        inputs.zen-browser.homeModules.beta
+        inputs.gitflow-toolkit.homeModules.gitflow-toolkit
+        inputs.catppuccin.homeModules.catppuccin
+        inputs.television-ssh.homeModules.default
+      ];
+    };
+
+    nixosOptions =
       optionsOf
       (lib.nixosSystem {
         inherit system;
-        modules = [m base];
-      }).options) (builtins.attrValues self.nixosModules);
+        modules = ownFiles self.nixosModules ++ upstream.nixos ++ [base];
+      }).options;
 
-    homeOptions = lib.concatMap (m:
+    homeOptions =
       optionsOf
       (inputs.home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
-        modules = [m hbase];
-      }).options) (builtins.attrValues self.homeModules);
+        modules = ownFiles self.homeModules ++ upstream.home ++ [hbase];
+      }).options;
 
     # Deduplicated within a class, never across: the same option is reached
     # through every module that imports its relic.

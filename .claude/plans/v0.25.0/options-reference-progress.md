@@ -103,3 +103,16 @@ Closing review (fresh context) — triage:
   rendered — no page shows MDX components in fences; cost if wrong: one false
   pass the docs build would not catch.
 Review fixes verified: docs build OK (104 pages), fmt-check + lint OK, parity OK, nix flake check → 0.
+PR #147 CI: `check` job cancelled during `--all-systems --no-build`, no Nix
+error, 75 s of silence — the runner ran out of memory. Measured locally
+(peak RSS of `nix flake check --all-systems --no-build`): main 11.7 GiB,
+branch 16.1 GiB (GitHub runner: 16 GB). Walking only `options.stc`: 15.8 GiB —
+not the cause. Cause: ~45 NixOS/HM evaluations, one per exported module.
+Ruling: one evaluation per class over STC's own files (paths unwrapped from
+the flake-parts and STC wrappers) plus each upstream module once, listed
+explicitly in `upstream` — the function-valued upstream modules cannot be
+deduplicated by the module system, and Nix's pointer equality does not hold
+for them (measured `false`). Peak now 12.6 GiB, 155 s; fragments
+byte-identical (checks.options-doc green without regeneration) — cost if
+wrong: a new upstream module missing from the list fails the evaluation
+loudly once an STC file sets one of its options.
