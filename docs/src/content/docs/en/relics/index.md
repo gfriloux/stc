@@ -75,6 +75,7 @@ modules = [
 | `relics-hardening-scheduler` | `stc.relics.hardening.scheduler.enable` | cron/at restricted to an explicit allowlist (inert unless a scheduler runs) |
 | `relics-hardening-audit` | `stc.relics.hardening.audit.enable` | auditd with a boot-safe baseline ruleset (identity, sudoers, setuid execve, modules, mounts) |
 | `relics-hardening-firewall` | `stc.relics.hardening.firewall.enable` | Checked default-deny firewall, refused connections logged |
+| `relics-hardening-apparmor` | `stc.relics.hardening.apparmor.enable` | AppArmor on, every Docker container confined by `docker-default` |
 | `relics-docker-traefik` | `stc.relics.docker.traefik.enable` | Traefik v3 reverse proxy container (Docker) |
 | `relics-docker-socket-proxy` | `stc.relics.docker.socketProxy.enable` | Filtering proxy in front of the Docker socket |
 | `relics-docker-crowdsec` | `stc.relics.docker.crowdsec.enable` | CrowdSec IDS/IPS container |
@@ -94,7 +95,7 @@ modules = [
 ## See Also
 
 - [Cogitator profiles](/stc/en/cogitator/) — composed relics for common use cases
-- [Hardening relics](/stc/en/relics/hardening/) — all eight hardening modules in detail
+- [Hardening relics](/stc/en/relics/hardening/) — all nine hardening modules in detail
 - [AMD GPU](/stc/en/relics/amd-gpu/) — GPU relic with gaming compatibility
 - [Pipewire](/stc/en/relics/pipewire/) — audio relic
 - [Plasma 6](/stc/en/relics/plasma6/) — KDE Plasma 6 desktop relic

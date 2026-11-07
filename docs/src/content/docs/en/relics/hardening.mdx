@@ -1,6 +1,6 @@
 ---
 title: Hardening
-description: Eight hardening relics — kernel, network, filesystem, SSH, module blacklist, scheduler access, audit and firewall — plus the cogitator-hardening shortcut.
+description: Nine hardening relics — kernel, network, filesystem, SSH, module blacklist, scheduler access, audit, firewall and AppArmor — plus the cogitator-hardening shortcut.
 ---
 
 import NixosHardeningNetworkOptions from '../../../../options/en/relics-nixos-hardening-network.md';
@@ -11,8 +11,9 @@ import NixosHardeningSchedulerOptions from '../../../../options/en/relics-nixos-
 import NixosHardeningAuditOptions from '../../../../options/en/relics-nixos-hardening-audit.md';
 import NixosHardeningFirewallOptions from '../../../../options/en/relics-nixos-hardening-firewall.md';
 import NixosHardeningKernelOptions from '../../../../options/en/relics-nixos-hardening-kernel.md';
+import NixosHardeningApparmorOptions from '../../../../options/en/relics-nixos-hardening-apparmor.md';
 
-STC provides eight independent hardening relics. Each addresses a distinct attack
+STC provides nine independent hardening relics. Each addresses a distinct attack
 surface and can be enabled individually.
 
 ## Kernel Hardening
@@ -534,6 +535,71 @@ stc.relics.hardening.firewall.enable = false;
   (SSH hardening above), not by the firewall: a firewall rate limit would need
   one rule set per backend for the same effect.
 
+## AppArmor
+
+**Module:** `stc.nixosModules.relics-hardening-apparmor`
+
+**Enable option:** `stc.relics.hardening.apparmor.enable`
+
+Turns AppArmor on, and makes Docker confine every container with its
+`docker-default` profile. That second part is the point: on stock NixOS,
+`security.apparmor.enable = true` is **not** enough for Docker. `docker inspect`
+reports `AppArmorProfile: docker-default`, yet the container runs
+`unconfined` and no policy is loaded, without a word in the logs.
+
+**Options:**
+
+<NixosHardeningApparmorOptions />
+
+Three things are missing on NixOS, and the relic adds them when
+`virtualisation.docker.enable` is on:
+
+- `/sbin/apparmor_parser`. containerd only believes the host supports AppArmor
+  if that FHS path exists; without it Docker never loads its profile. The relic
+  creates it as a symlink (systemd-tmpfiles, so it is recreated at every boot,
+  impermanence included).
+- `apparmor_parser` in dockerd's `PATH`, to load the profile.
+- `tunables/global` in `/etc/apparmor.d`. The profile Docker generates needs
+  it; without it, every `docker run` fails.
+
+Check it on a running host:
+
+```bash
+aa-status | grep docker-default                       # loaded, enforce
+docker exec <container> cat /proc/1/attr/current      # docker-default (enforce)
+```
+
+`docker-default` is Docker's own profile, always in enforce mode — the profile
+Debian and Ubuntu apply to every container. It denies writes under most of
+`/proc` and `/sys`, `mount`, and reading `/proc/kcore` and
+`/proc/sysrq-trigger`. A container that really needs more opts out on its own:
+
+```nix
+virtualisation.oci-containers.containers.<name>.extraOptions = [
+  "--security-opt=apparmor=unconfined"
+];
+```
+
+:::caution[Takes effect at the next boot]
+AppArmor is a kernel security module: enabling it adds `lsm=…,apparmor
+apparmor=1` to the kernel command line. `nixos-rebuild switch` installs it;
+the host is protected after its next reboot.
+:::
+
+**What it does not do.**
+
+- **Host profiles.** Distribution profiles name FHS paths (`/usr/bin/foo`);
+  binaries here live in `/nix/store`, so those profiles do not apply as they
+  are. STC writes none: a profile for `sshd` would have to allow the user
+  shells it spawns, and services running in containers are confined by
+  `docker-default`, not by a host profile. Profiles that nixpkgs modules ship
+  themselves (`security.apparmor.policies`) load as usual.
+- **SELinux.** NixOS has no labelling for the Nix store; it is not an
+  alternative here.
+
+No cogitator enables it. `cogitator-hardening` imports it, so its option is
+available, and leaves it off.
+
 ## Not a relic: sudo
 
 There is no `relics.hardening.sudo`, and the absence is deliberate. The two
@@ -595,7 +661,7 @@ Gaming machine with hardening:
 
 ## The cogitator-hardening Shortcut
 
-For the common case of enabling all eight relics with defaults, use
+For the common case of enabling the eight relics other than AppArmor with defaults, use
 [`cogitator-hardening`](/stc/en/cogitator/hardening/). One option instead of eight:
 
 ```nix

@@ -21,6 +21,8 @@ in {
     ../../relics/nixos/hardening/scheduler.nix
     ../../relics/nixos/hardening/audit.nix
     ../../relics/nixos/hardening/firewall.nix
+    # Imported, never enabled here: opt-in with stc.relics.hardening.apparmor.enable.
+    ../../relics/nixos/hardening/apparmor.nix
     (lib.mkRenamedOptionModule ["stc" "hardening" "enable"] ["stc" "cogitator" "hardening" "enable"])
   ];
 

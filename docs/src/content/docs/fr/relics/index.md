@@ -76,6 +76,7 @@ modules = [
 | `relics-hardening-scheduler` | `stc.relics.hardening.scheduler.enable` | cron/at restreints à une liste explicite (inerte sans ordonnanceur actif) |
 | `relics-hardening-audit` | `stc.relics.hardening.audit.enable` | auditd avec un jeu de règles de base sûr au boot (identité, sudoers, execve setuid, modules, montages) |
 | `relics-hardening-firewall` | `stc.relics.hardening.firewall.enable` | Pare-feu default-deny vérifié, connexions refusées journalisées |
+| `relics-hardening-apparmor` | `stc.relics.hardening.apparmor.enable` | AppArmor actif, chaque conteneur Docker confiné par `docker-default` |
 | `relics-docker-traefik` | `stc.relics.docker.traefik.enable` | Conteneur reverse proxy Traefik v3 (Docker) |
 | `relics-docker-socket-proxy` | `stc.relics.docker.socketProxy.enable` | Proxy filtrant devant le socket Docker |
 | `relics-docker-crowdsec` | `stc.relics.docker.crowdsec.enable` | Conteneur IDS/IPS CrowdSec |
@@ -95,7 +96,7 @@ modules = [
 ## Voir aussi
 
 - [Profils Cogitator](/stc/fr/cogitator/) — reliques composées pour les cas d'usage courants
-- [Reliques de durcissement](/stc/fr/relics/hardening/) — les huit modules de durcissement en détail
+- [Reliques de durcissement](/stc/fr/relics/hardening/) — les neuf modules de durcissement en détail
 - [AMD GPU](/stc/fr/relics/amd-gpu/) — relique GPU avec compatibilité gaming
 - [Pipewire](/stc/fr/relics/pipewire/) — relique audio
 - [Plasma 6](/stc/fr/relics/plasma6/) — relique bureau KDE Plasma 6
