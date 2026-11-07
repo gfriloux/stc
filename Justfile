@@ -27,7 +27,8 @@ lint-fix:
 # Evaluate the full flake (modules, shells, templates, lib).
 # Flags kept in lockstep with .github/workflows/nix.yml so local and CI match.
 check:
-    nix flake check --all-systems --no-write-lock-file --show-trace
+    nix flake check --all-systems --no-build --no-write-lock-file --show-trace
+    nix flake check --no-write-lock-file --show-trace
 
 # Evaluate each schematic's artefact. Schematics are separate flakes that take
 # STC as `path:../..`, so they cannot be checks of this flake; their input

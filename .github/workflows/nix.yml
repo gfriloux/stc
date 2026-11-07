@@ -46,10 +46,15 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
           skipPush: ${{ github.ref != 'refs/heads/main' }}
 
-      # Evaluates every declared system (builds only the runner's own), so a
-      # system nobody runs locally still gets its outputs evaluated.
-      - name: nix flake check (all systems)
-        run: nix flake check --all-systems --no-write-lock-file --show-trace
+      # Every declared system is evaluated, so one nobody runs locally still
+      # fails CI when it breaks. Evaluation only: Determinate Nix would try to
+      # build the other systems' checks on this x86_64 runner and fail with a
+      # platform mismatch.
+      - name: nix flake check (evaluate all systems)
+        run: nix flake check --all-systems --no-build --no-write-lock-file --show-trace
+
+      - name: nix flake check (build x86_64-linux)
+        run: nix flake check --no-write-lock-file --show-trace
 
   # Schematics are separate flakes (`path:../..` input), so `nix flake check`
   # above cannot reach them. Same recipe as `just ci`, so the two stay in step.
