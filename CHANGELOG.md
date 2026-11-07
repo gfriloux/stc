@@ -3,6 +3,13 @@
 All notable changes to STC are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.24.0] — 2026-11-07
+
+### Bug Fixes
+
+- **ci**: run the provings once when a PR is opened with the label ([`39afd9f`](https://github.com/gfriloux/stc/commit/39afd9f7dbba26cae3b56e509df08559204fe959))
+- **provings**: register the gaming proving on x86_64-linux only ([`0be5d7e`](https://github.com/gfriloux/stc/commit/0be5d7e05266516af82c6d67d6773d65aa2bca42))
+- **ci**: evaluate other systems without building them ([`9aec0c6`](https://github.com/gfriloux/stc/commit/9aec0c684e17d59bcc1b341cdc231a3b59b84afb))
 ## [0.23.0] — 2026-11-06
 
 ### Documentation
