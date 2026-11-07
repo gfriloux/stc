@@ -33,7 +33,7 @@ Ceci écrit un `flake.nix` dans le répertoire courant. Commite-le, puis exécut
 Fournit :
 - `devShells.default` = `stc.devShells.${system}.ansible`
 - Checks CI : `nix`, `gitleaks`, `ansible`, `shell`
-- Supporte : `x86_64-linux`, `aarch64-linux`, `x86_64-darwin`, `aarch64-darwin`
+- Supporte : `x86_64-linux`, `aarch64-linux`, `aarch64-darwin` (macOS : évalué en CI, jamais exécuté — pas de Mac Intel, retirés de nixpkgs en 26.11)
 
 ```bash
 mkdir mes-playbooks && cd mes-playbooks
@@ -48,7 +48,7 @@ nix develop
 Fournit :
 - `devShells.default` = `stc.devShells.${system}.terraform`
 - Checks CI : `nix`, `gitleaks`, `terraform`
-- Supporte : `x86_64-linux`, `aarch64-linux`, `x86_64-darwin`, `aarch64-darwin`
+- Supporte : `x86_64-linux`, `aarch64-linux`, `aarch64-darwin` (macOS : évalué en CI, jamais exécuté — pas de Mac Intel, retirés de nixpkgs en 26.11)
 
 ```bash
 mkdir mon-infra && cd mon-infra
