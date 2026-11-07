@@ -600,6 +600,10 @@ the host is protected after its next reboot.
 No cogitator enables it. `cogitator-hardening` imports it, so its option is
 available, and leaves it off.
 
+`provings/apparmor.nix` runs the same container with and without the relic:
+with it, `docker-default` refuses a `mount` the container's capabilities
+allow; with `security.apparmor.enable` alone, the container is `unconfined`.
+
 ## Not a relic: sudo
 
 There is no `relics.hardening.sudo`, and the absence is deliberate. The two

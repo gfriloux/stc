@@ -624,6 +624,10 @@ l'hôte est protégé après son prochain redémarrage.
 Aucun cogitator ne l'active. `cogitator-hardening` l'importe, donc son option
 est disponible, et la laisse désactivée.
 
+`provings/apparmor.nix` lance le même conteneur avec et sans la relique :
+avec, `docker-default` refuse un `mount` que les capacités du conteneur
+autorisent ; avec `security.apparmor.enable` seul, le conteneur est `unconfined`.
+
 ## Pas une relique : sudo
 
 Il n'existe pas de `relics.hardening.sudo`, et cette absence est délibérée. Les

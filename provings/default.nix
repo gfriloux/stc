@@ -70,6 +70,7 @@
         smart = pkgs.testers.runNixOSTest (import ./smart.nix {inherit self;});
         polkit-units = pkgs.testers.runNixOSTest (import ./polkit-units.nix {inherit self;});
         heartbeat = pkgs.testers.runNixOSTest (import ./heartbeat.nix {inherit self;});
+        apparmor = pkgs.testers.runNixOSTest (import ./apparmor.nix {inherit self;});
       }
       # x86_64 only: Steam and the 32-bit driver stack do not exist on aarch64,
       # where the node fails its own `hardware.graphics.enable32Bit` assertion.
